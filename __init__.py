@@ -17,14 +17,14 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_info = {
-    "name": "BlenderKit Online Asset Library",
-    "author": "Vilem Duha, Petr Dlouhy",
-    "version": (1, 0, 30),
+    "name": "BlenderKit Online Asset Library - Real2U Fork",
+    "author": "Vilem Duha, Petr Dlouhy, Real2U",
+    "version": (0, 1, 0),
     "blender": (2, 82, 0),
     "location": "View3D > Properties > BlenderKit",
     "description": "Online BlenderKit library (materials, models, brushes and more). Connects to the internet.",
     "warning": "",
-    "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/blenderkit.html",
+    # "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/blenderkit.html",
     "category": "3D View",
 }
 
@@ -77,6 +77,8 @@ from bpy.types import (
     AddonPreferences,
     PropertyGroup,
 )
+
+from . import addon_updater_ops
 
 
 # logging.basicConfig(filename = 'blenderkit.log', level = logging.INFO,
@@ -1597,6 +1599,8 @@ classes = (
 
 
 def register():
+    addon_updater_ops.register(bl_info)
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
@@ -1656,6 +1660,8 @@ def register():
 
 
 def unregister():
+    addon_updater_ops.unregister()
+
     bpy.app.timers.unregister(check_timers_timer)
     ui_panels.unregister_ui_panels()
     ui.unregister_ui()
