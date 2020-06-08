@@ -34,6 +34,8 @@ from bpy.types import (
 
 import bpy
 
+from . import addon_updater_ops
+
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
     ''' draw a ui label, but try to split it in multiple lines.'''
@@ -410,6 +412,7 @@ class VIEW3D_PT_blenderkit_model_properties(Panel):
     bl_region_type = 'UI'
     bl_label = "Selected Model"
     bl_context = "objectmode"
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -458,6 +461,7 @@ class VIEW3D_PT_blenderkit_profile(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "BlenderKit Profile"
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -516,6 +520,7 @@ class VIEW3D_PT_blenderkit_login(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "BlenderKit Login"
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -1164,6 +1169,68 @@ def header_search_draw(self, context):
         draw_assetbar_show_hide(layout, props)
 
 
+@addon_updater_ops.make_annotations
+class UpdaterPreferences(bpy.types.AddonPreferences):
+    bl_idname = __package__
+
+    auto_check_update = bpy.props.BoolProperty(
+        name="Auto-check for Update",
+        description="If enabled, auto-check for updates using an interval",
+        default=False,
+    )
+    updater_intrval_months = bpy.props.IntProperty(
+        name='Months',
+        description="Number of months between checking for updates",
+        default=0,
+        min=0
+    )
+    updater_intrval_days = bpy.props.IntProperty(
+        name='Days',
+        description="Number of days between checking for updates",
+        default=7,
+        min=0,
+        max=31
+    )
+    updater_intrval_hours = bpy.props.IntProperty(
+        name='Hours',
+        description="Number of hours between checking for updates",
+        default=0,
+        min=0,
+        max=23
+    )
+    updater_intrval_minutes = bpy.props.IntProperty(
+        name='Minutes',
+        description="Number of minutes between checking for updates",
+        default=0,
+        min=0,
+        max=59
+    )
+
+    def draw(self, context):
+        addon_updater_ops.update_settings_ui(self, context)
+
+
+class VIEW3D_PT_UpdaterPanel(Panel):
+    """Panel to demo popup notice and ignoring functionality"""
+    bl_label = "Update"
+    bl_idname = "OBJECT_PT_hello"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_context = "objectmode"
+    bl_category = "BlenderKit"
+
+    def draw(self, context):
+        layout = self.layout
+
+        mainrow = layout.row()
+        col = mainrow.column()
+        addon_updater_ops.update_settings_ui_condensed(self, context, col)
+
+        addon_updater_ops.check_for_update_background()
+
+        addon_updater_ops.update_notice_box_ui(self, context)
+
+
 # We can store multiple preview collections here,
 # however in this example we only store "main"
 preview_collections = {}
@@ -1176,11 +1243,15 @@ classess = (
     VIEW3D_PT_blenderkit_model_properties,
     VIEW3D_PT_blenderkit_downloads,
     OBJECT_MT_blenderkit_asset_menu,
-    UrlPopupDialog
+    UrlPopupDialog,
+    UpdaterPreferences,
+    VIEW3D_PT_UpdaterPanel
 )
 
 
 def register_ui_panels():
+    addon_updater_ops.make_annotations(UpdaterPreferences)
+    addon_updater_ops.make_annotations(VIEW3D_PT_UpdaterPanel)
     for c in classess:
         bpy.utils.register_class(c)
     bpy.types.VIEW3D_MT_editor_menus.append(header_search_draw)
