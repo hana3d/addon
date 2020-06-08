@@ -1169,47 +1169,6 @@ def header_search_draw(self, context):
         draw_assetbar_show_hide(layout, props)
 
 
-@addon_updater_ops.make_annotations
-class UpdaterPreferences(bpy.types.AddonPreferences):
-    bl_idname = __package__
-
-    auto_check_update = bpy.props.BoolProperty(
-        name="Auto-check for Update",
-        description="If enabled, auto-check for updates using an interval",
-        default=False,
-    )
-    updater_intrval_months = bpy.props.IntProperty(
-        name='Months',
-        description="Number of months between checking for updates",
-        default=0,
-        min=0
-    )
-    updater_intrval_days = bpy.props.IntProperty(
-        name='Days',
-        description="Number of days between checking for updates",
-        default=7,
-        min=0,
-        max=31
-    )
-    updater_intrval_hours = bpy.props.IntProperty(
-        name='Hours',
-        description="Number of hours between checking for updates",
-        default=0,
-        min=0,
-        max=23
-    )
-    updater_intrval_minutes = bpy.props.IntProperty(
-        name='Minutes',
-        description="Number of minutes between checking for updates",
-        default=0,
-        min=0,
-        max=59
-    )
-
-    def draw(self, context):
-        addon_updater_ops.update_settings_ui(self, context)
-
-
 class VIEW3D_PT_UpdaterPanel(Panel):
     """Panel to demo popup notice and ignoring functionality"""
     bl_label = "Update"
@@ -1244,13 +1203,11 @@ classess = (
     VIEW3D_PT_blenderkit_downloads,
     OBJECT_MT_blenderkit_asset_menu,
     UrlPopupDialog,
-    UpdaterPreferences,
     VIEW3D_PT_UpdaterPanel
 )
 
 
 def register_ui_panels():
-    addon_updater_ops.make_annotations(UpdaterPreferences)
     addon_updater_ops.make_annotations(VIEW3D_PT_UpdaterPanel)
     for c in classess:
         bpy.utils.register_class(c)
