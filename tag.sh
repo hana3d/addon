@@ -1,6 +1,6 @@
 #!/bin/bash
 input="/builds/real2u/asset-manager/__init__.py"
-line=`sed "6q;d" $input`
+line=`sed "22q;d" $input`
 
 tmp="${line%%(*}"
 if [ "$tmp" != "$line" ]; then
