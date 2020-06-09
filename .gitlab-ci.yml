@@ -20,8 +20,8 @@ tests:
     - curl -SL "$BLENDER28_URL" | tar -Jx -C /opt/blender28 --strip-components=1
     - ln -s /opt/blender28/blender /usr/local/bin/blender28
     - rm -r /opt/blender28/2.8*/scripts/addons/blenderkit
-    - cp -r /builds/real2u/asset-manager/ /opt/blender28/2.8*/scripts/addons
-    - mv /opt/blender28/2.8*/scripts/addons/asset-manager /opt/blender28/2.8*/scripts/addons/blenderkit
+    # - cp -r /builds/real2u/asset-manager/ /opt/blender28/2.8*/scripts/addons
+    - mv -r /builds/real2u/asset-manager /opt/blender28/2.8*/scripts/addons/blenderkit
     - PATH="/opt/blender28/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
   script:
