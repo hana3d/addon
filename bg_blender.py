@@ -21,7 +21,7 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from blenderkit import utils
+    from asset_manager_real2u import utils
 
 import bpy
 import sys, threading, os
@@ -184,7 +184,7 @@ class KillBgProcess(bpy.types.Operator):
             props.uploading = False
         if self.process_type == 'THUMBNAILER':
             props.is_generating_thumbnail = False
-        global blenderkit_bg_process
+        global asset_manager_real2u_bg_process
         # print('killing', self.process_source, self.process_type)
         # then go kill the process. this wasn't working for unsetting props and that was the reason for changing to the method above.
 

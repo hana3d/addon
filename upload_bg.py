@@ -26,7 +26,7 @@ if "bpy" in locals():
     utils = reload(utils)
     rerequests = reload(rerequests)
 else:
-    from blenderkit import paths, append_link, bg_blender, utils, rerequests
+    from asset_manager_real2u import paths, append_link, bg_blender, utils, rerequests
 
 import sys, json, os, time
 import requests
@@ -34,7 +34,7 @@ import logging
 
 import bpy
 
-BLENDERKIT_EXPORT_DATA = sys.argv[-1]
+asset_manager_real2u_EXPORT_DATA = sys.argv[-1]
 
 
 def start_logging():
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     try:
         bg_blender.progress('preparing scene - append data')
-        with open(BLENDERKIT_EXPORT_DATA, 'r') as s:
+        with open(asset_manager_real2u_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
         bpy.app.debug_value = data.get('debug_value', 0)
@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
             bpy.ops.file.pack_all()
 
-            main_source.blenderkit.uploading = False
+            main_source.asset_manager_real2u.uploading = False
             fpath = os.path.join(data['temp_dir'], upload_data['assetBaseId'] + '.blend')
 
             bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)

@@ -24,7 +24,7 @@ if "bpy" in locals():
     rerequests = reload(rerequests)
     tasks_queue = reload(tasks_queue)
 else:
-    from blenderkit import paths, utils, rerequests, tasks_queue
+    from asset_manager_real2u import paths, utils, rerequests, tasks_queue
 
 import bpy
 import requests, threading
@@ -93,7 +93,7 @@ def upload_review_thread(url, reviews, headers):
 
 
 def get_rating(asset_id):
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     api_key = user_preferences.api_key
     headers = utils.get_headers(api_key)
     rl = paths.get_api_url() + 'assets/' + asset['asset_data']['id'] + '/rating/'
@@ -107,7 +107,7 @@ def get_rating(asset_id):
 
 
 def update_ratings_quality(self, context):
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     api_key = user_preferences.api_key
 
     headers = utils.get_headers(api_key)
@@ -121,7 +121,7 @@ def update_ratings_quality(self, context):
 
 
 def update_ratings_work_hours(self, context):
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     api_key = user_preferences.api_key
     headers = utils.get_headers(api_key)
     asset = self.id_data
@@ -134,7 +134,7 @@ def update_ratings_work_hours(self, context):
 
 
 def upload_rating(asset):
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     api_key = user_preferences.api_key
     headers = utils.get_headers(api_key)
 
@@ -173,7 +173,7 @@ def upload_rating(asset):
 
 class StarRatingOperator(bpy.types.Operator):
     """Tooltip"""
-    bl_idname = "object.blenderkit_rating"
+    bl_idname = "object.asset_manager_real2u_rating"
     bl_label = "Rate the Asset Quality"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -205,7 +205,7 @@ asset_types = (
 # TODO drop this operator, not needed anymore.
 class UploadRatingOperator(bpy.types.Operator):
     """Upload rating to the web db"""
-    bl_idname = "object.blenderkit_rating_upload"
+    bl_idname = "object.asset_manager_real2u_rating_upload"
     bl_label = "Send Rating"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -245,7 +245,7 @@ def draw_rating(layout, props, prop_name, name):
         else:
             icon = 'SOLO_ON'
 
-        op = row.operator('object.blenderkit_rating', icon=icon, emboss=False, text='')
+        op = row.operator('object.asset_manager_real2u_rating', icon=icon, emboss=False, text='')
         op.property_name = prop_name
         op.rating = a + 1
 

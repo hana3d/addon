@@ -24,16 +24,16 @@ if "bpy" in locals():
     append_link = reload(append_link)
     bg_blender = reload(bg_blender)
 else:
-    from blenderkit import utils, append_link, bg_blender
+    from asset_manager_real2u import utils, append_link, bg_blender
 
 import sys, json, math
 import bpy
 from pathlib import Path
 
-BLENDERKIT_EXPORT_TEMP_DIR = sys.argv[-1]
-BLENDERKIT_THUMBNAIL_PATH = sys.argv[-2]
-BLENDERKIT_EXPORT_FILE_INPUT = sys.argv[-3]
-BLENDERKIT_EXPORT_DATA = sys.argv[-4]
+asset_manager_real2u_EXPORT_TEMP_DIR = sys.argv[-1]
+asset_manager_real2u_THUMBNAIL_PATH = sys.argv[-2]
+asset_manager_real2u_EXPORT_FILE_INPUT = sys.argv[-3]
+asset_manager_real2u_EXPORT_DATA = sys.argv[-4]
 
 
 def render_thumbnails():
@@ -50,13 +50,13 @@ def unhide_collection(cname):
 if __name__ == "__main__":
     try:
         bg_blender.progress('preparing thumbnail scene')
-        with open(BLENDERKIT_EXPORT_DATA, 'r') as s:
+        with open(asset_manager_real2u_EXPORT_DATA, 'r') as s:
             data = json.load(s)
             # append_material(file_name, matname = None, link = False, fake_user = True)
-        mat = append_link.append_material(file_name=BLENDERKIT_EXPORT_FILE_INPUT, matname=data["material"], link=True,
+        mat = append_link.append_material(file_name=asset_manager_real2u_EXPORT_FILE_INPUT, matname=data["material"], link=True,
                                           fake_user=False)
 
-        user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
 
         s = bpy.context.scene
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
         bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
-        bpy.context.scene.render.filepath = BLENDERKIT_THUMBNAIL_PATH
+        bpy.context.scene.render.filepath = asset_manager_real2u_THUMBNAIL_PATH
         bg_blender.progress('rendering thumbnail')
         render_thumbnails()
         bg_blender.progress('background autothumbnailer finished successfully')

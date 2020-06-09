@@ -27,7 +27,7 @@ if "bpy" in locals():
     oauth = reload(oauth)
     ui = reload(ui)
 else:
-    from blenderkit import tasks_queue, utils, paths, search, categories, oauth, ui
+    from asset_manager_real2u import tasks_queue, utils, paths, search, categories, oauth, ui
 
 import bpy
 
@@ -63,7 +63,7 @@ def login(signup, url, r_url, authenticator):
 
 
 def refresh_token_thread():
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     if len(preferences.api_key_refresh) > 0 and preferences.refresh_in_progress == False:
         preferences.refresh_in_progress = True
         url = paths.get_bkit_url()
@@ -83,7 +83,7 @@ def refresh_token(api_key_refresh, url):
 
 def write_tokens(auth_token, refresh_token, oauth_response):
     utils.p('writing tokens')
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     preferences.api_key_refresh = refresh_token
     preferences.api_key = auth_token
     preferences.api_key_timeout = time.time() + oauth_response['expires_in']
@@ -93,16 +93,16 @@ def write_tokens(auth_token, refresh_token, oauth_response):
     props = utils.get_search_props()
     if props is not None:
         props.report = ''
-    ui.add_report('BlenderKit Re-Login success')
+    ui.add_report('asset_manager_real2u Re-Login success')
     search.get_profile()
     categories.fetch_categories_thread(auth_token)
 
 
 class RegisterLoginOnline(bpy.types.Operator):
-    """Login online on BlenderKit webpage"""
+    """Login online on asset_manager_real2u webpage"""
 
-    bl_idname = "wm.blenderkit_login"
-    bl_label = "BlenderKit login or signup"
+    bl_idname = "wm.asset_manager_real2u_login"
+    bl_label = "asset_manager_real2u login or signup"
     bl_options = {'REGISTER', 'UNDO'}
 
     signup: BoolProperty(
@@ -117,17 +117,17 @@ class RegisterLoginOnline(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         preferences.login_attempt = True
         login_thread(self.signup)
         return {'FINISHED'}
 
 
 class Logout(bpy.types.Operator):
-    """Logout from BlenderKit immediately"""
+    """Logout from asset_manager_real2u immediately"""
 
-    bl_idname = "wm.blenderkit_logout"
-    bl_label = "BlenderKit logout"
+    bl_idname = "wm.asset_manager_real2u_logout"
+    bl_label = "asset_manager_real2u logout"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -135,7 +135,7 @@ class Logout(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         preferences.login_attempt = False
         preferences.api_key_refresh = ''
         preferences.api_key = ''
@@ -146,8 +146,8 @@ class Logout(bpy.types.Operator):
 class CancelLoginOnline(bpy.types.Operator):
     """Cancel login attempt."""
 
-    bl_idname = "wm.blenderkit_login_cancel"
-    bl_label = "BlenderKit login cancel"
+    bl_idname = "wm.asset_manager_real2u_login_cancel"
+    bl_label = "asset_manager_real2u login cancel"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -156,7 +156,7 @@ class CancelLoginOnline(bpy.types.Operator):
 
     def execute(self, context):
         global active_authenticator
-        preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         preferences.login_attempt = False
         try:
             if active_authenticator is not None:

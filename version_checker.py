@@ -22,14 +22,14 @@ if "requests" in locals():
 
     paths = reload(paths)
 else:
-    from blenderkit import paths
+    from asset_manager_real2u import paths
 
 import requests, os, json, threading
 
 
 def get_addon_version():
-    import blenderkit
-    ver = blenderkit.bl_info['version']
+    import asset_manager_real2u
+    ver = asset_manager_real2u.bl_info['version']
     return '%i.%i.%i' % (ver[0], ver[1], ver[2])
 
 

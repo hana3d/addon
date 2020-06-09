@@ -19,21 +19,21 @@
 import bpy, os, sys
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-BLENDERKIT_LOCAL = "http://localhost:8001"
-BLENDERKIT_MAIN = "https://www.blenderkit.com"
-BLENDERKIT_DEVEL = "https://devel.blenderkit.com"
-BLENDERKIT_API = "/api/v1/"
-BLENDERKIT_REPORT_URL = "usage_report/"
-BLENDERKIT_USER_ASSETS = "/my-assets"
-BLENDERKIT_PLANS = "https://www.blenderkit.com/plans/pricing/"
-BLENDERKIT_MANUAL = "https://youtu.be/1hVgcQhIAo8"
-BLENDERKIT_MODEL_UPLOAD_INSTRUCTIONS_URL = "https://www.blenderkit.com/docs/upload/"
-BLENDERKIT_MATERIAL_UPLOAD_INSTRUCTIONS_URL = "https://www.blenderkit.com/docs/uploading-material/"
-BLENDERKIT_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.blenderkit.com/docs/uploading-brush/"
-BLENDERKIT_LOGIN_URL = "https://www.blenderkit.com/accounts/login"
-BLENDERKIT_OAUTH_LANDING_URL = "/oauth-landing/"
-BLENDERKIT_SIGNUP_URL = "https://www.blenderkit.com/accounts/register"
-BLENDERKIT_SETTINGS_FILENAME = os.path.join(_presets, "bkit.json")
+asset_manager_real2u_LOCAL = "http://localhost:8001"
+asset_manager_real2u_MAIN = "https://www.asset_manager_real2u.com"
+asset_manager_real2u_DEVEL = "https://devel.asset_manager_real2u.com"
+asset_manager_real2u_API = "/api/v1/"
+asset_manager_real2u_REPORT_URL = "usage_report/"
+asset_manager_real2u_USER_ASSETS = "/my-assets"
+asset_manager_real2u_PLANS = "https://www.asset_manager_real2u.com/plans/pricing/"
+asset_manager_real2u_MANUAL = "https://youtu.be/1hVgcQhIAo8"
+asset_manager_real2u_MODEL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/upload/"
+asset_manager_real2u_MATERIAL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-material/"
+asset_manager_real2u_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-brush/"
+asset_manager_real2u_LOGIN_URL = "https://www.asset_manager_real2u.com/accounts/login"
+asset_manager_real2u_OAUTH_LANDING_URL = "/oauth-landing/"
+asset_manager_real2u_SIGNUP_URL = "https://www.asset_manager_real2u.com/accounts/register"
+asset_manager_real2u_SETTINGS_FILENAME = os.path.join(_presets, "bkit.json")
 
 URL_3D_KIT_MAIN = 'http://3.211.165.243:8080'
 URL_3D_KIT_LOCAL = 'http://localhost:8080'
@@ -61,17 +61,17 @@ def find_in_local(text=''):
 
 
 def get_api_url():
-    return get_bkit_url() + BLENDERKIT_API
+    return get_bkit_url() + asset_manager_real2u_API
 
 
 def get_oauth_landing_url():
-    return get_bkit_url() + BLENDERKIT_OAUTH_LANDING_URL
+    return get_bkit_url() + asset_manager_real2u_OAUTH_LANDING_URL
 
 
 def default_global_dict():
     from os.path import expanduser
     home = expanduser("~")
-    return home + os.sep + 'blenderkit_data'
+    return home + os.sep + 'asset_manager_real2u_data'
 
 
 def get_categories_filepath():
@@ -80,7 +80,7 @@ def get_categories_filepath():
 
 
 def get_temp_dir(subdir=None):
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
 
     # tempdir = user_preferences.temp_dir
     tempdir = os.path.join(user_preferences.global_dir, 'temp')
@@ -109,7 +109,7 @@ def get_download_dirs(asset_type):
     subdmapping = {'brush': 'brushes', 'texture': 'textures', 'model': 'models', 'scene': 'scenes',
                    'material': 'materials'}
 
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     dirs = []
     if user_preferences.directory_behaviour == 'BOTH' or 'GLOBAL':
         ddir = user_preferences.global_dir
@@ -190,8 +190,8 @@ def get_download_filenames(asset_data):
 
 
 def delete_asset_debug(asset_data):
-    from blenderkit import download
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    from asset_manager_real2u import download
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     api_key = user_preferences.api_key
 
     download.get_download_url(asset_data, download.get_scene_id(), api_key)

@@ -24,7 +24,7 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from blenderkit import paths, utils, tasks_queue, rerequests
+    from asset_manager_real2u import paths, utils, tasks_queue, rerequests
 
 import requests
 import json

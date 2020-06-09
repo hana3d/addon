@@ -24,13 +24,13 @@ if "bpy" in locals():
     utils = reload(utils)
     bg_blender = reload(bg_blender)
 else:
-    from blenderkit import paths, utils, bg_blender
+    from asset_manager_real2u import paths, utils, bg_blender
 
 import tempfile, os, subprocess, json, sys
 
 import bpy
 
-BLENDERKIT_EXPORT_DATA_FILE = "data.json"
+asset_manager_real2u_EXPORT_DATA_FILE = "data.json"
 
 
 def check_thumbnail(props, imgpath):
@@ -60,14 +60,14 @@ def check_thumbnail(props, imgpath):
 def update_upload_model_preview(self, context):
     ob = utils.get_active_model()
     if ob is not None:
-        props = ob.blenderkit
+        props = ob.asset_manager_real2u
         imgpath = props.thumbnail
         check_thumbnail(props, imgpath)
 
 
 def update_upload_scene_preview(self, context):
     s = bpy.context.scene
-    props = s.blenderkit
+    props = s.asset_manager_real2u
     imgpath = props.thumbnail
     check_thumbnail(props, imgpath)
 
@@ -77,7 +77,7 @@ def update_upload_material_preview(self, context):
             and bpy.context.view_layer.objects.active is not None \
             and bpy.context.active_object.active_material is not None:
         mat = bpy.context.active_object.active_material
-        props = mat.blenderkit
+        props = mat.asset_manager_real2u
         imgpath = props.thumbnail
         check_thumbnail(props, imgpath)
 
@@ -85,7 +85,7 @@ def update_upload_material_preview(self, context):
 def update_upload_brush_preview(self, context):
     brush = utils.get_active_brush()
     if brush is not None:
-        props = brush.blenderkit
+        props = brush.asset_manager_real2u
         imgpath = bpy.path.abspath(brush.icon_filepath)
         check_thumbnail(props, imgpath)
 
@@ -93,8 +93,8 @@ def update_upload_brush_preview(self, context):
 def start_thumbnailer(self, context):
     # Prepare to save the file
     mainmodel = utils.get_active_model()
-    mainmodel.blenderkit.is_generating_thumbnail = True
-    mainmodel.blenderkit.thumbnail_generating_state = 'starting blender instance'
+    mainmodel.asset_manager_real2u.is_generating_thumbnail = True
+    mainmodel.asset_manager_real2u.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -116,9 +116,9 @@ def start_thumbnailer(self, context):
         rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
         i += 1
 
-    filepath = os.path.join(tempdir, "thumbnailer_blenderkit" + ext)
+    filepath = os.path.join(tempdir, "thumbnailer_asset_manager_real2u" + ext)
     tfpath = paths.get_thumbnailer_filepath()
-    datafile = os.path.join(tempdir, BLENDERKIT_EXPORT_DATA_FILE)
+    datafile = os.path.join(tempdir, asset_manager_real2u_EXPORT_DATA_FILE)
     try:
         # save a copy of actual scene but don't interfere with the users models
         bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
@@ -128,7 +128,7 @@ def start_thumbnailer(self, context):
         for ob in obs:
             obnames.append(ob.name)
         with open(datafile, 'w') as s:
-            bkit = mainmodel.blenderkit
+            bkit = mainmodel.asset_manager_real2u
             json.dump({
                 "type": "model",
                 "models": str(obnames),
@@ -149,15 +149,15 @@ def start_thumbnailer(self, context):
             "--", datafile, filepath, thumb_path, tempdir
         ], bufsize=1, stdout=subprocess.PIPE, stdin=subprocess.PIPE, creationflags=utils.get_process_flags())
 
-        eval_path_computing = "bpy.data.objects['%s'].blenderkit.is_generating_thumbnail" % mainmodel.name
-        eval_path_state = "bpy.data.objects['%s'].blenderkit.thumbnail_generating_state" % mainmodel.name
+        eval_path_computing = "bpy.data.objects['%s'].asset_manager_real2u.is_generating_thumbnail" % mainmodel.name
+        eval_path_state = "bpy.data.objects['%s'].asset_manager_real2u.thumbnail_generating_state" % mainmodel.name
         eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
         bg_blender.add_bg_process(eval_path_computing=eval_path_computing, eval_path_state=eval_path_state,
                                   eval_path=eval_path, process_type='THUMBNAILER', process=proc)
 
-        mainmodel.blenderkit.thumbnail = rel_thumb_path + '.jpg'
-        mainmodel.blenderkit.thumbnail_generating_state = 'Saving .blend file'
+        mainmodel.asset_manager_real2u.thumbnail = rel_thumb_path + '.jpg'
+        mainmodel.asset_manager_real2u.thumbnail_generating_state = 'Saving .blend file'
 
     except Exception as e:
         self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
@@ -167,8 +167,8 @@ def start_thumbnailer(self, context):
 def start_material_thumbnailer(self, context):
     # Prepare to save the file
     mat = bpy.context.active_object.active_material
-    mat.blenderkit.is_generating_thumbnail = True
-    mat.blenderkit.thumbnail_generating_state = 'starting blender instance'
+    mat.asset_manager_real2u.is_generating_thumbnail = True
+    mat.asset_manager_real2u.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -192,13 +192,13 @@ def start_material_thumbnailer(self, context):
 
     filepath = os.path.join(tempdir, "material_thumbnailer_cycles" + ext)
     tfpath = paths.get_material_thumbnailer_filepath()
-    datafile = os.path.join(tempdir, BLENDERKIT_EXPORT_DATA_FILE)
+    datafile = os.path.join(tempdir, asset_manager_real2u_EXPORT_DATA_FILE)
     try:
         # save a copy of actual scene but don't interfere with the users models
         bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
 
         with open(datafile, 'w') as s:
-            bkit = mat.blenderkit
+            bkit = mat.asset_manager_real2u
             json.dump({
                 "type": "material",
                 "material": mat.name,
@@ -222,15 +222,15 @@ def start_material_thumbnailer(self, context):
             "--", datafile, filepath, thumb_path, tempdir
         ], bufsize=1, stdout=subprocess.PIPE, stdin=subprocess.PIPE, creationflags=utils.get_process_flags())
 
-        eval_path_computing = "bpy.data.materials['%s'].blenderkit.is_generating_thumbnail" % mat.name
-        eval_path_state = "bpy.data.materials['%s'].blenderkit.thumbnail_generating_state" % mat.name
+        eval_path_computing = "bpy.data.materials['%s'].asset_manager_real2u.is_generating_thumbnail" % mat.name
+        eval_path_state = "bpy.data.materials['%s'].asset_manager_real2u.thumbnail_generating_state" % mat.name
         eval_path = "bpy.data.materials['%s']" % mat.name
 
         bg_blender.add_bg_process(eval_path_computing=eval_path_computing, eval_path_state=eval_path_state,
                                   eval_path=eval_path, process_type='THUMBNAILER', process=proc)
 
-        mat.blenderkit.thumbnail = rel_thumb_path + '.png'
-        mat.blenderkit.thumbnail_generating_state = 'Saving .blend file'
+        mat.asset_manager_real2u.thumbnail = rel_thumb_path + '.png'
+        mat.asset_manager_real2u.thumbnail_generating_state = 'Saving .blend file'
     except Exception as e:
         self.report({'WARNING'}, "Error while packing file: %s" % str(e))
         return {'FINISHED'}
@@ -239,7 +239,7 @@ def start_material_thumbnailer(self, context):
 def start_scene_thumbnailer(self, context):
     # Prepare to save the file
     s = bpy.context.scene
-    props = s.blenderkit
+    props = s.asset_manager_real2u
     props.is_generating_thumbnail = True
     props.thumbnail_generating_state = 'starting blender instance'
 
@@ -261,7 +261,7 @@ def start_scene_thumbnailer(self, context):
         i += 1
 
     try:
-        user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
 
         bpy.context.scene.render.filepath = thumb_path + '.png'
         if user_preferences.thumbnail_use_gpu:
@@ -293,8 +293,8 @@ def start_scene_thumbnailer(self, context):
 
 class GenerateThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
-    bl_idname = "object.blenderkit_generate_thumbnail"
-    bl_label = "BlenderKit Thumbnail Generator"
+    bl_idname = "object.asset_manager_real2u_generate_thumbnail"
+    bl_label = "asset_manager_real2u Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -305,7 +305,7 @@ class GenerateThumbnailOperator(bpy.types.Operator):
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
-        props = ob.blenderkit
+        props = ob.asset_manager_real2u
         layout = self.layout
         layout.label(text='thumbnailer settings')
         layout.prop(props, 'thumbnail_background_lightness')
@@ -314,7 +314,7 @@ class GenerateThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
@@ -338,8 +338,8 @@ class GenerateThumbnailOperator(bpy.types.Operator):
 
 class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     """Tooltip"""
-    bl_idname = "object.blenderkit_material_thumbnail"
-    bl_label = "BlenderKit Material Thumbnail Generator"
+    bl_idname = "object.asset_manager_real2u_material_thumbnail"
+    bl_label = "asset_manager_real2u Material Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -351,7 +351,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-        props = bpy.context.active_object.active_material.blenderkit
+        props = bpy.context.active_object.active_material.asset_manager_real2u
         layout.prop(props, 'thumbnail_generator_type')
         layout.prop(props, 'thumbnail_scale')
         layout.prop(props, 'thumbnail_background')
@@ -361,7 +361,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_denoising')
         layout.prop(props, 'adaptive_subdivision')
-        preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
@@ -376,21 +376,21 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
 class GenerateSceneThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for scene"""
-    bl_idname = "object.blenderkit_scene_thumbnail"
-    bl_label = "BlenderKit Thumbnail Generator"
+    bl_idname = "object.asset_manager_real2u_scene_thumbnail"
+    bl_label = "asset_manager_real2u Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     def draw(self, context):
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
-        props = ob.blenderkit
+        props = ob.asset_manager_real2u
         layout = self.layout
         layout.label(text='thumbnailer settings')
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):

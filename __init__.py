@@ -17,14 +17,14 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_info = {
-    "name": "BlenderKit Online Asset Library - Real2U Fork",
+    "name": "Asset Manager Real2U - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
     "version": (0, 1, 5),
     "blender": (2, 82, 0),
-    "location": "View3D > Properties > BlenderKit",
-    "description": "Online BlenderKit library (materials, models, brushes and more). Connects to the internet.",
+    "location": "View3D > Properties > asset_manager_real2u",
+    "description": "Online asset_manager_real2u library (materials, models, brushes and more). Connects to the internet.",
     "warning": "",
-    # "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/blenderkit.html",
+    # "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/asset_manager_real2u.html",
     "category": "3D View",
 }
 
@@ -49,7 +49,7 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     custom_props = reload(custom_props)
 else:
-    from blenderkit import asset_inspector, search, download, upload, ratings, autothumb, ui, icons, bg_blender, paths, \
+    from asset_manager_real2u import asset_inspector, search, download, upload, ratings, autothumb, ui, icons, bg_blender, paths, \
         utils, \
         overrides, ui_panels, categories, bkit_oauth, tasks_queue, custom_props
 
@@ -82,17 +82,17 @@ from bpy.types import (
 from . import addon_updater_ops
 
 
-# logging.basicConfig(filename = 'blenderkit.log', level = logging.INFO,
+# logging.basicConfig(filename = 'asset_manager_real2u.log', level = logging.INFO,
 #                     format = '	%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d:%(message)s')
 
 
 @persistent
 def scene_load(context):
     search.load_previews()
-    ui_props = bpy.context.scene.blenderkitUI
+    ui_props = bpy.context.scene.asset_manager_real2uUI
     ui_props.assetbar_on = False
     ui_props.turn_off = False
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     preferences.login_attempt = False
 
 @bpy.app.handlers.persistent
@@ -200,10 +200,10 @@ thumbnail_resolutions = (
 
 def get_upload_asset_type(self):
     typemapper = {
-        BlenderKitModelUploadProps: 'model',
-        BlenderKitSceneUploadProps: 'scene',
-        BlenderKitMaterialUploadProps: 'material',
-        BlenderKitBrushUploadProps: 'brush'
+        asset_manager_real2uModelUploadProps: 'model',
+        asset_manager_real2uSceneUploadProps: 'scene',
+        asset_manager_real2uMaterialUploadProps: 'material',
+        asset_manager_real2uBrushUploadProps: 'brush'
     }
     asset_type = typemapper[type(self)]
     return asset_type
@@ -233,7 +233,7 @@ def get_category_enums(self, context):
 
 def switch_search_results(self, context):
     s = bpy.context.scene
-    props = s.blenderkitUI
+    props = s.asset_manager_real2uUI
     if props.asset_type == 'MODEL':
         s['search results'] = s.get('bkit model search')
         s['search results orig'] = s.get('bkit model search orig')
@@ -267,7 +267,7 @@ def asset_type_callback(self, context):
     return items
 
 
-class BlenderKitUIProps(PropertyGroup):
+class asset_manager_real2uUIProps(PropertyGroup):
     down_up: EnumProperty(
         name="Download vs Upload",
         items=(
@@ -275,11 +275,11 @@ class BlenderKitUIProps(PropertyGroup):
             ('UPLOAD', 'Upload', 'Activate uploading', 'COPYDOWN', 1),
             # ('RATING', 'Rating', 'Activate rating', 'SOLO_ON', 2)
         ),
-        description="BLenderKit",
+        description="asset_manager_real2u",
         default="SEARCH",
     )
     asset_type: EnumProperty(
-        name="BlenderKit Active Asset Type",
+        name="asset_manager_real2u Active Asset Type",
         items=asset_type_callback,
         description="Activate asset in UI",
         default=None,
@@ -387,7 +387,7 @@ def search_procedural_update(self, context):
     search.search_update(self, context)
 
 
-class BlenderKitCommonSearchProps(object):
+class asset_manager_real2uCommonSearchProps(object):
     # STATES
     is_searching: BoolProperty(name="Searching", description="search is currently running (internal)", default=False)
     is_downloading: BoolProperty(name="Downloading", description="download is currently running (internal)",
@@ -513,8 +513,8 @@ def update_tags(self, context):
 def update_free(self, context):
     if self.is_free == False:
         self.is_free = True
-        title = "All BlenderKit materials are free"
-        message = "Any material uploaded to BlenderKit is free." \
+        title = "All asset_manager_real2u materials are free"
+        message = "Any material uploaded to asset_manager_real2u is free." \
                   " However, it can still earn money for the author," \
                   " based on our fair share system. " \
                   "Part of subscription is sent to artists based on usage by paying users."
@@ -525,7 +525,7 @@ def update_free(self, context):
         bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
 
 
-class BlenderKitCommonUploadProps(object):
+class asset_manager_real2uCommonUploadProps(object):
     id: StringProperty(
         name="Asset Version Id",
         description="Unique name of the asset version(hidden)",
@@ -641,7 +641,7 @@ class BlenderKitCommonUploadProps(object):
     )
 
 
-class BlenderKitRatingProps(PropertyGroup):
+class asset_manager_real2uRatingProps(PropertyGroup):
     rating_quality: IntProperty(name="Quality",
                                 description="quality of the material",
                                 default=0,
@@ -673,7 +673,7 @@ class BlenderKitRatingProps(PropertyGroup):
     )
 
 
-class BlenderKitMaterialSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
+class asset_manager_real2uMaterialSearchProps(PropertyGroup, asset_manager_real2uCommonSearchProps):
     search_keywords: StringProperty(
         name="Search",
         description="Search for these keywords",
@@ -712,7 +712,7 @@ class BlenderKitMaterialSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
                           default=False)
 
 
-class BlenderKitMaterialUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
+class asset_manager_real2uMaterialUploadProps(PropertyGroup, asset_manager_real2uCommonUploadProps):
     style: EnumProperty(
         name="Style",
         items=material_styles,
@@ -813,7 +813,7 @@ class BlenderKitMaterialUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
     custom_props: PointerProperty(type=custom_props.CustomPropsPropertyGroup)
 
 
-class BlenderKitTextureUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
+class asset_manager_real2uTextureUploadProps(PropertyGroup, asset_manager_real2uCommonUploadProps):
     style: EnumProperty(
         name="Style",
         items=material_styles,
@@ -833,7 +833,7 @@ class BlenderKitTextureUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
     resolution: IntProperty(name="Texture Resolution", description="texture resolution", default=0)
 
 
-class BlenderKitBrushSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
+class asset_manager_real2uBrushSearchProps(PropertyGroup, asset_manager_real2uCommonSearchProps):
     search_keywords: StringProperty(
         name="Search",
         description="Search for these keywords",
@@ -842,7 +842,7 @@ class BlenderKitBrushSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
     )
 
 
-class BlenderKitBrushUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
+class asset_manager_real2uBrushUploadProps(PropertyGroup, asset_manager_real2uCommonUploadProps):
     mode: EnumProperty(
         name="Mode",
         items=(
@@ -857,7 +857,7 @@ class BlenderKitBrushUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
 
 
 # upload properties
-class BlenderKitModelUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
+class asset_manager_real2uModelUploadProps(PropertyGroup, asset_manager_real2uCommonUploadProps):
     style: EnumProperty(
         name="Style",
         items=model_styles,
@@ -1071,7 +1071,7 @@ class BlenderKitModelUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
     custom_props: PointerProperty(type=custom_props.CustomPropsPropertyGroup)
 
 
-class BlenderKitSceneUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
+class asset_manager_real2uSceneUploadProps(PropertyGroup, asset_manager_real2uCommonUploadProps):
     style: EnumProperty(
         name="Style",
         items=model_styles,
@@ -1244,7 +1244,7 @@ class BlenderKitSceneUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
     )
 
 
-class BlenderKitModelSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
+class asset_manager_real2uModelSearchProps(PropertyGroup, asset_manager_real2uCommonSearchProps):
     search_keywords: StringProperty(
         name="Search",
         description="Search for these keywords",
@@ -1389,7 +1389,7 @@ class BlenderKitModelSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
                                         subtype='ANGLE')
 
 
-class BlenderKitSceneSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
+class asset_manager_real2uSceneSearchProps(PropertyGroup, asset_manager_real2uCommonSearchProps):
     search_keywords: StringProperty(
         name="Search",
         description="Search for these keywords",
@@ -1443,7 +1443,7 @@ class BlenderKitSceneSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
 
 
 @addon_updater_ops.make_annotations
-class BlenderKitAddonPreferences(AddonPreferences):
+class asset_manager_real2uAddonPreferences(AddonPreferences):
     # this must match the addon name, use '__package__'
     # when defining this in a submodule of a python package.
     bl_idname = __name__
@@ -1453,15 +1453,15 @@ class BlenderKitAddonPreferences(AddonPreferences):
     enable_oauth = True
 
     api_key: StringProperty(
-        name="BlenderKit API Key",
-        description="Your blenderkit API Key. Get it from your page on the website",
+        name="asset_manager_real2u API Key",
+        description="Your asset_manager_real2u API Key. Get it from your page on the website",
         default="",
         subtype="PASSWORD",
         update=utils.save_prefs
     )
 
     api_key_refresh: StringProperty(
-        name="BlenderKit refresh API Key",
+        name="asset_manager_real2u refresh API Key",
         description="API key used to refresh the token regularly.",
         default="",
         subtype="PASSWORD",
@@ -1487,7 +1487,7 @@ class BlenderKitAddonPreferences(AddonPreferences):
 
     login_attempt: BoolProperty(
         name="Login/Signup attempt",
-        description="When this is on, BlenderKit is trying to connect and login",
+        description="When this is on, asset_manager_real2u is trying to connect and login",
         default=False
     )
 
@@ -1504,8 +1504,8 @@ class BlenderKitAddonPreferences(AddonPreferences):
     )
 
     search_in_header: BoolProperty(
-        name="Show BlenderKit search in 3D view header",
-        description="Show BlenderKit search in 3D view header",
+        name="Show 3D view header",
+        description="Show 3D view header",
         default=True
     )
 
@@ -1634,10 +1634,10 @@ class BlenderKitAddonPreferences(AddonPreferences):
             else:
                 op = layout.operator("wm.url_open", text="Register online and get your API Key",
                                      icon='QUESTION')
-                op.url = paths.BLENDERKIT_SIGNUP_URL
+                op.url = paths.asset_manager_real2u_SIGNUP_URL
         else:
             if self.enable_oauth:
-                layout.operator("wm.blenderkit_logout", text="Logout",
+                layout.operator("wm.asset_manager_real2u_logout", text="Logout",
                                 icon='URL')
 
         # if not self.enable_oauth:
@@ -1661,24 +1661,24 @@ class BlenderKitAddonPreferences(AddonPreferences):
 # registration
 classes = (
 
-    BlenderKitAddonPreferences,
-    BlenderKitUIProps,
+    asset_manager_real2uAddonPreferences,
+    asset_manager_real2uUIProps,
 
-    BlenderKitModelSearchProps,
-    BlenderKitModelUploadProps,
+    asset_manager_real2uModelSearchProps,
+    asset_manager_real2uModelUploadProps,
 
-    BlenderKitSceneSearchProps,
-    BlenderKitSceneUploadProps,
+    asset_manager_real2uSceneSearchProps,
+    asset_manager_real2uSceneUploadProps,
 
-    BlenderKitMaterialUploadProps,
-    BlenderKitMaterialSearchProps,
+    asset_manager_real2uMaterialUploadProps,
+    asset_manager_real2uMaterialSearchProps,
 
-    BlenderKitTextureUploadProps,
+    asset_manager_real2uTextureUploadProps,
 
-    BlenderKitBrushSearchProps,
-    BlenderKitBrushUploadProps,
+    asset_manager_real2uBrushSearchProps,
+    asset_manager_real2uBrushUploadProps,
 
-    BlenderKitRatingProps,
+    asset_manager_real2uRatingProps,
 )
 
 
@@ -1690,40 +1690,40 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.Scene.blenderkitUI = PointerProperty(
-        type=BlenderKitUIProps)
+    bpy.types.Scene.asset_manager_real2uUI = PointerProperty(
+        type=asset_manager_real2uUIProps)
 
     # MODELS
-    bpy.types.Scene.blenderkit_models = PointerProperty(
-        type=BlenderKitModelSearchProps)
-    bpy.types.Object.blenderkit = PointerProperty(  # for uploads, not now...
-        type=BlenderKitModelUploadProps)
+    bpy.types.Scene.asset_manager_real2u_models = PointerProperty(
+        type=asset_manager_real2uModelSearchProps)
+    bpy.types.Object.asset_manager_real2u = PointerProperty(  # for uploads, not now...
+        type=asset_manager_real2uModelUploadProps)
     bpy.types.Object.bkit_ratings = PointerProperty(  # for uploads, not now...
-        type=BlenderKitRatingProps)
+        type=asset_manager_real2uRatingProps)
 
     # SCENES
-    bpy.types.Scene.blenderkit_scene = PointerProperty(
-        type=BlenderKitSceneSearchProps)
-    bpy.types.Scene.blenderkit = PointerProperty(  # for uploads, not now...
-        type=BlenderKitSceneUploadProps)
+    bpy.types.Scene.asset_manager_real2u_scene = PointerProperty(
+        type=asset_manager_real2uSceneSearchProps)
+    bpy.types.Scene.asset_manager_real2u = PointerProperty(  # for uploads, not now...
+        type=asset_manager_real2uSceneUploadProps)
     bpy.types.Scene.bkit_ratings = PointerProperty(  # for uploads, not now...
-        type=BlenderKitRatingProps)
+        type=asset_manager_real2uRatingProps)
 
     # MATERIALS
-    bpy.types.Scene.blenderkit_mat = PointerProperty(
-        type=BlenderKitMaterialSearchProps)
-    bpy.types.Material.blenderkit = PointerProperty(  # for uploads, not now...
-        type=BlenderKitMaterialUploadProps)
+    bpy.types.Scene.asset_manager_real2u_mat = PointerProperty(
+        type=asset_manager_real2uMaterialSearchProps)
+    bpy.types.Material.asset_manager_real2u = PointerProperty(  # for uploads, not now...
+        type=asset_manager_real2uMaterialUploadProps)
     bpy.types.Material.bkit_ratings = PointerProperty(  # for uploads, not now...
-        type=BlenderKitRatingProps)
+        type=asset_manager_real2uRatingProps)
 
     # BRUSHES
-    bpy.types.Scene.blenderkit_brush = PointerProperty(
-        type=BlenderKitBrushSearchProps)
-    bpy.types.Brush.blenderkit = PointerProperty(  # for uploads, not now...
-        type=BlenderKitBrushUploadProps)
+    bpy.types.Scene.asset_manager_real2u_brush = PointerProperty(
+        type=asset_manager_real2uBrushSearchProps)
+    bpy.types.Brush.asset_manager_real2u = PointerProperty(  # for uploads, not now...
+        type=asset_manager_real2uBrushUploadProps)
     bpy.types.Brush.bkit_ratings = PointerProperty(  # for uploads, not now...
-        type=BlenderKitRatingProps)
+        type=asset_manager_real2uRatingProps)
 
     search.register_search()
     asset_inspector.register_asset_inspector()
@@ -1764,15 +1764,15 @@ def unregister():
     bkit_oauth.unregister()
     tasks_queue.unregister()
 
-    del bpy.types.Scene.blenderkit_models
-    del bpy.types.Scene.blenderkit_scene
-    del bpy.types.Scene.blenderkit_brush
-    del bpy.types.Scene.blenderkit_mat
+    del bpy.types.Scene.asset_manager_real2u_models
+    del bpy.types.Scene.asset_manager_real2u_scene
+    del bpy.types.Scene.asset_manager_real2u_brush
+    del bpy.types.Scene.asset_manager_real2u_mat
 
-    del bpy.types.Scene.blenderkit
-    del bpy.types.Object.blenderkit
-    del bpy.types.Material.blenderkit
-    del bpy.types.Brush.blenderkit
+    del bpy.types.Scene.asset_manager_real2u
+    del bpy.types.Object.asset_manager_real2u
+    del bpy.types.Material.asset_manager_real2u
+    del bpy.types.Brush.asset_manager_real2u
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

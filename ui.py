@@ -31,7 +31,7 @@ if "bpy" in locals():
     colors = importlib.reload(colors)
     tasks_queue = importlib.reload(tasks_queue)
 else:
-    from blenderkit import paths, ratings, utils, search, upload, ui_bgl, download, bg_blender, colors, tasks_queue
+    from asset_manager_real2u import paths, ratings, utils, search, upload, ui_bgl, download, bg_blender, colors, tasks_queue
 
 import bpy
 
@@ -144,7 +144,7 @@ class Report():
 
 def get_asset_under_mouse(mousex, mousey):
     s = bpy.context.scene
-    ui_props = bpy.context.scene.blenderkitUI
+    ui_props = bpy.context.scene.asset_manager_real2uUI
     r = bpy.context.region
 
     search_results = s.get('search results')
@@ -168,7 +168,7 @@ def get_asset_under_mouse(mousex, mousey):
 
 
 def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1, 0, 1)):
-    ui_props = bpy.context.scene.blenderkitUI
+    ui_props = bpy.context.scene.asset_manager_real2uUI
 
     rotation = mathutils.Euler(rotation)
 
@@ -230,7 +230,7 @@ def get_rating_scalevalues(asset_type):
 
 def draw_ratings_bgl():
     # return;
-    ui = bpy.context.scene.blenderkitUI
+    ui = bpy.context.scene.asset_manager_real2uUI
 
     rating_possible, rated, asset, asset_data = is_rating_possible()
 
@@ -623,7 +623,7 @@ def draw_callback_2d(self, context):
         go = False
     if go and a == a1 and w == w1:
 
-        props = context.scene.blenderkitUI
+        props = context.scene.asset_manager_real2uUI
         if props.down_up == 'SEARCH':
             draw_ratings_bgl()
             draw_callback_2d_search(self, context)
@@ -660,7 +660,7 @@ def draw_callback_2d_progress(self, context):
     offset = 0
     row_height = 35
 
-    ui = bpy.context.scene.blenderkitUI
+    ui = bpy.context.scene.asset_manager_real2uUI
 
     x = ui.reports_x
     y = ui.reports_y
@@ -703,7 +703,7 @@ def draw_callback_2d_progress(self, context):
 
 
 def draw_callback_2d_upload_preview(self, context):
-    ui_props = context.scene.blenderkitUI
+    ui_props = context.scene.asset_manager_real2uUI
 
     props = utils.get_upload_props()
     if props != None and ui_props.draw_tooltip:
@@ -721,8 +721,8 @@ def draw_callback_2d_upload_preview(self, context):
 
 def draw_callback_2d_search(self, context):
     s = bpy.context.scene
-    ui_props = context.scene.blenderkitUI
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    ui_props = context.scene.asset_manager_real2uUI
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
 
     r = self.region
     # hc = bpy.context.preferences.themes[0].view_3d.space.header
@@ -833,11 +833,11 @@ def draw_callback_2d_search(self, context):
                         ui_bgl.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
 
             # if user_preferences.api_key == '':
-            #     report = 'Register on BlenderKit website to upload your own assets.'
+            #     report = 'Register on asset_manager_real2u website to upload your own assets.'
             #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
             #                      ui_props.bar_y - 25 - ui_props.margin - ui_props.bar_height, 15)
             # elif len(search_results) == 0:
-            #     report = 'BlenderKit - No matching results found.'
+            #     report = 'asset_manager_real2u - No matching results found.'
             #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
             #                      ui_props.bar_y - 25 - ui_props.margin, 15)
         s = bpy.context.scene
@@ -846,7 +846,7 @@ def draw_callback_2d_search(self, context):
         #     ui_bgl.draw_text(props.report, ui_props.bar_x,
         #                      ui_props.bar_y - 15 - ui_props.margin - ui_props.bar_height, 15)
 
-        props = s.blenderkitUI
+        props = s.asset_manager_real2uUI
         if props.draw_tooltip:
             # TODO move this lazy loading into a function and don't duplicate through the code
             iname = utils.previmg_name(ui_props.active_index, fullsize=True)
@@ -902,11 +902,11 @@ def draw_callback_2d_search(self, context):
 
 
 def draw_callback_3d(self, context):
-    ''' Draw snapped bbox while dragging and in the future other blenderkit related stuff. '''
+    ''' Draw snapped bbox while dragging and in the future other asset_manager_real2u related stuff. '''
     if not utils.guard_from_crash():
         return;
 
-    ui = context.scene.blenderkitUI
+    ui = context.scene.asset_manager_real2uUI
 
     if ui.dragging and ui.asset_type == 'MODEL':
         if ui.draw_snapped_bounds:
@@ -933,7 +933,7 @@ def mouse_raycast(context, mx, my):
     if has_hit:
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
         up = Vector((0, 0, 1))
-        props = bpy.context.scene.blenderkit_models
+        props = bpy.context.scene.asset_manager_real2u_models
         if props.randomize_rotation and snapped_normal.angle(up) < math.radians(10.0):
             randoffset = props.offset_rotation_amount + math.pi + (
                     random.random() - 0.5) * props.randomize_rotation_amount
@@ -976,7 +976,7 @@ def floor_raycast(context, mx, my):
         object = None
         matrix = None
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
-        props = bpy.context.scene.blenderkit_models
+        props = bpy.context.scene.asset_manager_real2u_models
         if props.randomize_rotation:
             randoffset = props.offset_rotation_amount + math.pi + (
                     random.random() - 0.5) * props.randomize_rotation_amount
@@ -989,8 +989,8 @@ def floor_raycast(context, mx, my):
 
 def is_rating_possible():
     ao = bpy.context.active_object
-    ui = bpy.context.scene.blenderkitUI
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    ui = bpy.context.scene.asset_manager_real2uUI
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     #first test if user is logged in.
     if preferences.api_key == '':
         return False, False, None, None
@@ -1031,7 +1031,7 @@ def is_rating_possible():
 
 
 def interact_rating(r, mx, my, event):
-    ui = bpy.context.scene.blenderkitUI
+    ui = bpy.context.scene.asset_manager_real2uUI
     rating_possible, rated, asset, asset_data = is_rating_possible()
     if rating_possible:
         bkit_ratings = asset.bkit_ratings
@@ -1118,7 +1118,7 @@ def mouse_in_area(mx, my, x, y, w, h):
 def mouse_in_asset_bar(mx, my):
     s = bpy.context.scene
 
-    ui_props = bpy.context.scene.blenderkitUI
+    ui_props = bpy.context.scene.asset_manager_real2uUI
     # search_results = s.get('search results')
     # if search_results == None:
     #     return False
@@ -1142,8 +1142,8 @@ def mouse_in_region(r, mx, my):
 
 
 def update_ui_size(area, region):
-    ui = bpy.context.scene.blenderkitUI
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    ui = bpy.context.scene.asset_manager_real2uUI
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     ui_scale = bpy.context.preferences.view.ui_scale
 
     ui.margin = ui.bl_rna.properties['margin'].default * ui_scale
@@ -1208,8 +1208,8 @@ def get_largest_3dview():
 
 class AssetBarOperator(bpy.types.Operator):
     '''runs search and displays the asset bar at the same time'''
-    bl_idname = "view3d.blenderkit_asset_bar"
-    bl_label = "BlenderKit Asset Bar UI"
+    bl_idname = "view3d.asset_manager_real2u_asset_bar"
+    bl_label = "asset_manager_real2u Asset Bar UI"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     do_search: BoolProperty(name="Run Search", description='', default=True, options={'SKIP_SAVE'})
@@ -1238,7 +1238,7 @@ class AssetBarOperator(bpy.types.Operator):
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d, 'WINDOW')
         except:
             pass;
-        ui_props = bpy.context.scene.blenderkitUI
+        ui_props = bpy.context.scene.asset_manager_real2uUI
 
         ui_props.dragging = False
         ui_props.tooltip = ''
@@ -1250,8 +1250,8 @@ class AssetBarOperator(bpy.types.Operator):
 
     def modal(self, context, event):
         # This is for case of closing the area or changing type:
-        ui_props = context.scene.blenderkitUI
-        user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        ui_props = context.scene.asset_manager_real2uUI
+        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
 
         areas = []
 
@@ -1357,7 +1357,7 @@ class AssetBarOperator(bpy.types.Operator):
 
             if ui_props.dragging and not mouse_in_asset_bar(mx, my):  # and my < r.height - ui_props.bar_height \
                 # and mx > 0 and mx < r.width and my > 0:
-                sprops = bpy.context.scene.blenderkit_models
+                sprops = bpy.context.scene.asset_manager_real2u_models
                 if event.type == 'WHEELUPMOUSE':
                     sprops.offset_rotation_amount += sprops.offset_rotation_step
                 elif event.type == 'WHEELDOWNMOUSE':
@@ -1447,7 +1447,7 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.draw_tooltip = True
 
                     ui_props.tooltip = asset_data['tooltip']
-                    # bpy.ops.wm.call_menu(name='OBJECT_MT_blenderkit_asset_menu')
+                    # bpy.ops.wm.call_menu(name='OBJECT_MT_asset_manager_real2u_asset_menu')
 
                 else:
                     ui_props.draw_tooltip = False
@@ -1490,7 +1490,7 @@ class AssetBarOperator(bpy.types.Operator):
             my = event.mouse_y - r.y
 
             if event.value == 'PRESS' and mouse_in_asset_bar(mx, my):
-                bpy.ops.wm.call_menu(name='OBJECT_MT_blenderkit_asset_menu')
+                bpy.ops.wm.call_menu(name='OBJECT_MT_asset_manager_real2u_asset_menu')
                 return {'RUNNING_MODAL'}
 
         if event.type == 'LEFTMOUSE':
@@ -1499,7 +1499,7 @@ class AssetBarOperator(bpy.types.Operator):
             mx = event.mouse_x - r.x
             my = event.mouse_y - r.y
 
-            ui_props = context.scene.blenderkitUI
+            ui_props = context.scene.asset_manager_real2uUI
             if event.value == 'PRESS' and ui_props.active_index > -1:
                 if ui_props.asset_type == 'MODEL' or ui_props.asset_type == 'MATERIAL':
                     # check if asset is locked and let the user know in that case
@@ -1508,8 +1508,8 @@ class AssetBarOperator(bpy.types.Operator):
                     if not asset_data['can_download']:
                         message = "Let's support asset creators and Blender development."
                         link_text = 'Unlock the asset.'
-                        url = paths.get_bkit_url() + '/get-blenderkit/' + asset_data['id'] + '/?from_addon'
-                        bpy.ops.wm.blenderkit_url_dialog('INVOKE_REGION_WIN', url=url, message=message,
+                        url = paths.get_bkit_url() + '/get-asset_manager_real2u/' + asset_data['id'] + '/?from_addon'
+                        bpy.ops.wm.asset_manager_real2u_url_dialog('INVOKE_REGION_WIN', url=url, message=message,
                                                          link_text=link_text)
                         return {'RUNNING_MODAL'}
                     # go on with drag init
@@ -1518,10 +1518,10 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.draw_tooltip = False
                     ui_props.drag_length = 0
                 elif ui_props.asset_type == 'SCENE':
-                    context.scene.blenderkitUI.drag_init = True
+                    context.scene.asset_manager_real2uUI.drag_init = True
                     bpy.context.window.cursor_set("NONE")
-                    context.scene.blenderkitUI.draw_tooltip = False
-                    context.scene.blenderkitUI.drag_length = 0
+                    context.scene.asset_manager_real2uUI.draw_tooltip = False
+                    context.scene.asset_manager_real2uUI.drag_length = 0
 
             if ui_props.rating_on:
                 res = interact_rating(r, mx, my, event)
@@ -1636,7 +1636,7 @@ class AssetBarOperator(bpy.types.Operator):
                             asset_data = sr[asset_search_index]
                             utils.automap(target_object, target_slot=target_slot,
                                           tex_size=asset_data.get('texture_size_meters', 1.0))
-                            bpy.ops.scene.blenderkit_download(True,
+                            bpy.ops.scene.asset_manager_real2u_download(True,
                                                               asset_type=ui_props.asset_type,
                                                               asset_index=asset_search_index,
                                                               model_location=loc,
@@ -1653,7 +1653,7 @@ class AssetBarOperator(bpy.types.Operator):
                             loc = s.cursor.location
                             rotation = s.cursor.rotation_euler
 
-                        bpy.ops.scene.blenderkit_download(True,
+                        bpy.ops.scene.asset_manager_real2u_download(True,
                                                           asset_type=ui_props.asset_type,
                                                           asset_index=asset_search_index,
                                                           model_location=loc,
@@ -1661,7 +1661,7 @@ class AssetBarOperator(bpy.types.Operator):
                                                           target_object=target_object)
 
                     else:
-                        bpy.ops.scene.blenderkit_download(asset_type=ui_props.asset_type,
+                        bpy.ops.scene.asset_manager_real2u_download(asset_type=ui_props.asset_type,
                                                           asset_index=asset_search_index)
 
                     ui_props.dragging = False
@@ -1700,7 +1700,7 @@ class AssetBarOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         # FIRST START SEARCH
-        ui_props = context.scene.blenderkitUI
+        ui_props = context.scene.asset_manager_real2uUI
 
         if self.do_search:
             # we erase search keywords for cateogry search now, since these combinations usually return nothing now.
@@ -1769,21 +1769,21 @@ class AssetBarOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class TransferBlenderkitData(bpy.types.Operator):
+class Transferasset_manager_real2uData(bpy.types.Operator):
     """Regenerate cobweb"""
-    bl_idname = "object.blenderkit_data_trasnfer"
-    bl_label = "Transfer BlenderKit data"
-    bl_description = "Transfer blenderKit metadata from one object to another when fixing uploads with wrong parenting."
+    bl_idname = "object.asset_manager_real2u_data_trasnfer"
+    bl_label = "Transfer asset_manager_real2u data"
+    bl_description = "Transfer asset_manager_real2u metadata from one object to another when fixing uploads with wrong parenting."
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         source_ob = bpy.context.active_object
         for target_ob in bpy.context.selected_objects:
             if target_ob != source_ob:
-                target_ob.property_unset('blenderkit')
+                target_ob.property_unset('asset_manager_real2u')
                 for k in source_ob.keys():
                     target_ob[k] = source_ob[k]
-        source_ob.property_unset('blenderkit')
+        source_ob.property_unset('asset_manager_real2u')
         return {'FINISHED'}
 
 
@@ -1791,13 +1791,13 @@ class UndoWithContext(bpy.types.Operator):
     """Regenerate cobweb"""
     bl_idname = "wm.undo_push_context"
     bl_label = "BlnenderKit undo push"
-    bl_description = "BlenderKit undo push with fixed context"
+    bl_description = "asset_manager_real2u undo push with fixed context"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     # def modal(self, context, event):
     #     return {'RUNNING_MODAL'}
 
-    message: StringProperty('Undo Message', default='BlenderKit operation')
+    message: StringProperty('Undo Message', default='asset_manager_real2u operation')
 
     def execute(self, context):
         C_dict = bpy.context.copy()
@@ -1827,14 +1827,14 @@ class RunAssetBarWithContext(bpy.types.Operator):
             w, a, r = get_largest_3dview()
             override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
             C_dict.update(override)
-        bpy.ops.view3d.blenderkit_asset_bar(C_dict, 'INVOKE_REGION_WIN', keep_running=True, do_search=False)
+        bpy.ops.view3d.asset_manager_real2u_asset_bar(C_dict, 'INVOKE_REGION_WIN', keep_running=True, do_search=False)
         return {'FINISHED'}
 
 
 classess = (
     AssetBarOperator,
     RunAssetBarWithContext,
-    TransferBlenderkitData,
+    Transferasset_manager_real2uData,
     UndoWithContext
 )
 
@@ -1844,10 +1844,10 @@ addon_keymapitems = []
 
 # @persistent
 def pre_load(context):
-    ui_props = bpy.context.scene.blenderkitUI
+    ui_props = bpy.context.scene.asset_manager_real2uUI
     ui_props.assetbar_on = False
     ui_props.turn_off = True
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     preferences.login_attempt = False
 
 

@@ -22,7 +22,7 @@ if "bpy" in locals():
 
     paths = reload(paths)
 else:
-    from blenderkit import paths
+    from asset_manager_real2u import paths
 
 import bpy
 from mathutils import Vector
@@ -80,16 +80,16 @@ def get_selected_models():
     parents = []
     for ob in obs:
         if ob not in done:
-            while ob.parent is not None and ob not in done and ob.blenderkit.asset_base_id != '' and ob.instance_collection is not None:
+            while ob.parent is not None and ob not in done and ob.asset_manager_real2u.asset_base_id != '' and ob.instance_collection is not None:
                 done[ob] = True
                 ob = ob.parent
 
             if ob not in parents and ob not in done:
-                if ob.blenderkit.name != '' or ob.instance_collection is not None:
+                if ob.asset_manager_real2u.name != '' or ob.instance_collection is not None:
                     parents.append(ob)
             done[ob] = True
 
-    #if no blenderkit - like objects were found, use the original selection.
+    #if no asset_manager_real2u - like objects were found, use the original selection.
     if len(parents) == 0:
         parents = obs
     return parents
@@ -99,36 +99,36 @@ def get_search_props():
     scene = bpy.context.scene
     if scene is None:
         return;
-    uiprops = scene.blenderkitUI
+    uiprops = scene.asset_manager_real2uUI
     props = None
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'blenderkit_models'):
+        if not hasattr(scene, 'asset_manager_real2u_models'):
             return;
-        props = scene.blenderkit_models
+        props = scene.asset_manager_real2u_models
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'blenderkit_scene'):
+        if not hasattr(scene, 'asset_manager_real2u_scene'):
             return;
-        props = scene.blenderkit_scene
+        props = scene.asset_manager_real2u_scene
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'blenderkit_mat'):
+        if not hasattr(scene, 'asset_manager_real2u_mat'):
             return;
-        props = scene.blenderkit_mat
+        props = scene.asset_manager_real2u_mat
 
     if uiprops.asset_type == 'TEXTURE':
-        if not hasattr(scene, 'blenderkit_tex'):
+        if not hasattr(scene, 'asset_manager_real2u_tex'):
             return;
-        # props = scene.blenderkit_tex
+        # props = scene.asset_manager_real2u_tex
 
     if uiprops.asset_type == 'BRUSH':
-        if not hasattr(scene, 'blenderkit_brush'):
+        if not hasattr(scene, 'asset_manager_real2u_brush'):
             return;
-        props = scene.blenderkit_brush
+        props = scene.asset_manager_real2u_brush
     return props
 
 
 def get_active_asset():
     scene = bpy.context.scene
-    ui_props = scene.blenderkitUI
+    ui_props = scene.asset_manager_real2uUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model()
@@ -150,24 +150,24 @@ def get_active_asset():
 
 def get_upload_props():
     scene = bpy.context.scene
-    ui_props = scene.blenderkitUI
+    ui_props = scene.asset_manager_real2uUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model()
-            return ob.blenderkit
+            return ob.asset_manager_real2u
     if ui_props.asset_type == 'SCENE':
         s = bpy.context.scene
-        return s.blenderkit
+        return s.asset_manager_real2u
     elif ui_props.asset_type == 'MATERIAL':
         if hasattr(bpy.context, 'active_object'):
             if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
-                return bpy.context.active_object.active_material.blenderkit
+                return bpy.context.active_object.active_material.asset_manager_real2u
     elif ui_props.asset_type == 'TEXTURE':
         return None
     elif ui_props.asset_type == 'BRUSH':
         b = get_active_brush()
         if b is not None:
-            return b.blenderkit
+            return b.asset_manager_real2u
     return None
 
 
@@ -189,9 +189,9 @@ def get_active_brush():
 
 
 def load_prefs():
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     # if user_preferences.api_key == '':
-    fpath = paths.BLENDERKIT_SETTINGS_FILENAME
+    fpath = paths.asset_manager_real2u_SETTINGS_FILENAME
     if os.path.exists(fpath):
         with open(fpath, 'r') as s:
             prefs = json.load(s)
@@ -203,7 +203,7 @@ def load_prefs():
 def save_prefs(self, context):
     # first check context, so we don't do this on registration or blender startup
     if not bpy.app.background: #(hasattr kills blender)
-        user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         # we test the api key for length, so not a random accidentally typed sequence gets saved.
         lk = len(user_preferences.api_key)
         if 0 < lk < 25:
@@ -218,7 +218,7 @@ def save_prefs(self, context):
             'global_dir': user_preferences.global_dir,
         }
         try:
-            fpath = paths.BLENDERKIT_SETTINGS_FILENAME
+            fpath = paths.asset_manager_real2u_SETTINGS_FILENAME
             if not os.path.exists(paths._presets):
                 os.makedirs(paths._presets)
             f = open(fpath, 'w')
@@ -278,7 +278,7 @@ def get_thumbnail(name):
 def get_brush_props(context):
     brush = get_active_brush()
     if brush is not None:
-        return brush.blenderkit
+        return brush.asset_manager_real2u
     return None
 
 
@@ -444,9 +444,9 @@ def scale_uvs(ob, scale  = 1.0, pivot = Vector((.5,.5))):
 
 # map uv cubic and switch of auto tex space and set it to 1,1,1
 def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale = False):
-    from blenderkit import bg_blender as bg
+    from asset_manager_real2u import bg_blender as bg
     s = bpy.context.scene
-    mat_props = s.blenderkit_mat
+    mat_props = s.asset_manager_real2u_mat
     if mat_props.automap:
         tob = bpy.data.objects[target_object]
         # only automap mesh models
@@ -562,8 +562,8 @@ def profile_is_validator():
 
 def guard_from_crash():
     '''Blender tends to crash when trying to run some functions with the addon going through unregistration process.'''
-    if bpy.context.preferences.addons.get('blenderkit') is None:
+    if bpy.context.preferences.addons.get('asset_manager_real2u') is None:
         return False;
-    if bpy.context.preferences.addons['blenderkit'].preferences is None:
+    if bpy.context.preferences.addons['asset_manager_real2u'].preferences is None:
         return False;
     return True

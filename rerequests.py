@@ -25,7 +25,7 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     bkit_oauth = reload(bkit_oauth)
 else:
-    from blenderkit import ui, utils, paths, tasks_queue, bkit_oauth
+    from asset_manager_real2u import ui, utils, paths, tasks_queue, bkit_oauth
 
 import requests
 import bpy
@@ -52,11 +52,11 @@ def rerequest(method, url, **kwargs):
         tasks_queue.add_task((ui.add_report, (method + ' request Failed.' + str(rdata.get('detail')),)))
 
         if rdata.get('detail') == 'Invalid token.':
-            user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+            user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
             if user_preferences.api_key != '':
                 if user_preferences.enable_oauth and user_preferences.api_key_refresh != '':
                     tasks_queue.add_task((ui.add_report, (
-                    'refreshing token. If this fails, please login in BlenderKit Login panel.', 10)))
+                    'refreshing token. If this fails, please login in asset_manager_real2u Login panel.', 10)))
                     refresh_url = paths.get_bkit_url()
                     auth_token, refresh_token, oauth_response = bkit_oauth.refresh_token(
                         user_preferences.api_key_refresh, refresh_url)
@@ -66,8 +66,8 @@ def rerequest(method, url, **kwargs):
                         if immediate == True:
                             # this can write tokens occasionally into prefs. used e.g. in upload. Only possible
                             #  in non-threaded tasks
-                            bpy.context.preferences.addons['blenderkit'].preferences.api_key = auth_token
-                            bpy.context.preferences.addons['blenderkit'].preferences.api_key_refresh = refresh_token
+                            bpy.context.preferences.addons['asset_manager_real2u'].preferences.api_key = auth_token
+                            bpy.context.preferences.addons['asset_manager_real2u'].preferences.api_key_refresh = refresh_token
 
                         kwargs['headers'] = utils.get_headers(auth_token)
                         response = requests.request(method, url, **kwargs)

@@ -21,7 +21,7 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from blenderkit import utils
+    from asset_manager_real2u import utils
 
 import bpy
 from bpy.app.handlers import persistent

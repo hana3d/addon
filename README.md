@@ -1,3 +1,3 @@
 # Asset Manager
 
-BlenderKit Fork
+asset_manager_real2u Fork

@@ -30,9 +30,9 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from blenderkit import paths, utils, categories, ui, colors, bkit_oauth, version_checker, tasks_queue, rerequests
+    from asset_manager_real2u import paths, utils, categories, ui, colors, bkit_oauth, version_checker, tasks_queue, rerequests
 
-import blenderkit
+import asset_manager_real2u
 from bpy.app.handlers import persistent
 
 from bpy.props import (  # TODO only keep the ones actually used when cleaning
@@ -67,7 +67,7 @@ def check_errors(rdata):
     if rdata.get('statusCode') == 401:
         utils.p(rdata)
         if rdata.get('detail') == 'Invalid token.':
-            user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+            user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
             if user_preferences.api_key != '':
                 if user_preferences.enable_oauth:
                     bkit_oauth.refresh_token_thread()
@@ -95,7 +95,7 @@ rtips = ['Click or drag model or material in scene to link/append ',
 def refresh_token_timer():
     ''' this timer gets run every time the token needs refresh. It refreshes tokens and also categories.'''
     utils.p('refresh timer')
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     fetch_server_data()
     categories.load_categories()
 
@@ -114,7 +114,7 @@ def scene_load(context):
 def fetch_server_data():
     ''' download categories and addon version'''
     if not bpy.app.background:
-        user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if user_preferences.enable_oauth and \
@@ -152,7 +152,7 @@ def check_clipboard():
 # @bpy.app.handlers.persistent
 def timer_update():
     global first_time
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     if first_time:
         first_time = False
         if preferences.show_on_start:
@@ -161,7 +161,7 @@ def timer_update():
         if preferences.tips_on_start:
             ui.get_largest_3dview()
             ui.update_ui_size(ui.active_area, ui.active_region)
-            ui.add_report(text='BlenderKit Tip: ' + random.choice(rtips), timeout=12, color=colors.GREEN)
+            ui.add_report(text='asset_manager_real2u Tip: ' + random.choice(rtips), timeout=12, color=colors.GREEN)
         return 3.0
 
     if preferences.first_run:
@@ -171,7 +171,7 @@ def timer_update():
     global search_threads
     if len(search_threads) == 0:
         return 1.0
-    if bpy.context.scene.blenderkitUI.dragging:
+    if bpy.context.scene.asset_manager_real2uUI.dragging:
         return 0.5
     for thread in search_threads:
         if not thread[0].is_alive():
@@ -181,19 +181,19 @@ def timer_update():
             s = bpy.context.scene
             asset_type = thread[2]
             if asset_type == 'model':
-                props = scene.blenderkit_models
+                props = scene.asset_manager_real2u_models
                 json_filepath = os.path.join(icons_dir, 'model_searchresult.json')
                 search_name = 'bkit model search'
             if asset_type == 'scene':
-                props = scene.blenderkit_scene
+                props = scene.asset_manager_real2u_scene
                 json_filepath = os.path.join(icons_dir, 'scene_searchresult.json')
                 search_name = 'bkit scene search'
             if asset_type == 'material':
-                props = scene.blenderkit_mat
+                props = scene.asset_manager_real2u_mat
                 json_filepath = os.path.join(icons_dir, 'material_searchresult.json')
                 search_name = 'bkit material search'
             if asset_type == 'brush':
-                props = scene.blenderkit_brush
+                props = scene.asset_manager_real2u_brush
                 json_filepath = os.path.join(icons_dir, 'brush_searchresult.json')
                 search_name = 'bkit brush search'
 
@@ -293,7 +293,7 @@ def timer_update():
                 s[search_name + ' orig'] = rdata
                 s['search results orig'] = rdata
                 load_previews()
-                ui_props = bpy.context.scene.blenderkitUI
+                ui_props = bpy.context.scene.asset_manager_real2uUI
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
@@ -321,7 +321,7 @@ def load_previews():
     }
     scene = bpy.context.scene
     # FIRST START SEARCH
-    props = scene.blenderkitUI
+    props = scene.asset_manager_real2uUI
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
     s = bpy.context.scene
@@ -647,7 +647,7 @@ def get_author(r):
     global fetching_gravatars
 
     a_id = str(r['author']['id'])
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     authors = bpy.context.window_manager.get('bkit authors', {})
     if authors == {}:
         bpy.context.window_manager['bkit authors'] = authors
@@ -708,7 +708,7 @@ def fetch_profile(api_key):
 
 
 def get_profile():
-    preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     a = bpy.context.window_manager.get('bkit profile')
     thread = threading.Thread(target=fetch_profile, args=(preferences.api_key,), daemon=True)
     thread.start()
@@ -747,7 +747,7 @@ class Searcher(threading.Thread):
                 requeststring += '+'
                 requeststring += q + ':' + str(query[q]).lower()
 
-        # result ordering: _score - relevance, score - BlenderKit score
+        # result ordering: _score - relevance, score - asset_manager_real2u score
 
         if query.get('query') is None and query.get('category_subtree') == None:
             # assumes no keywords and no category, thus an empty search that is triggered on start.
@@ -984,7 +984,7 @@ def build_query_common(query, props):
 def build_query_model():
     '''use all search input to request results from server'''
 
-    props = bpy.context.scene.blenderkit_models
+    props = bpy.context.scene.asset_manager_real2u_models
     query = {
         "asset_type": 'model',
         # "engine": props.search_engine,
@@ -1017,7 +1017,7 @@ def build_query_model():
 def build_query_scene():
     '''use all search input to request results from server'''
 
-    props = bpy.context.scene.blenderkit_scene
+    props = bpy.context.scene.asset_manager_real2u_scene
     query = {
         "asset_type": 'scene',
         # "engine": props.search_engine,
@@ -1028,7 +1028,7 @@ def build_query_scene():
 
 
 def build_query_material():
-    props = bpy.context.scene.blenderkit_mat
+    props = bpy.context.scene.asset_manager_real2u_mat
     query = {
         "asset_type": 'material',
 
@@ -1051,7 +1051,7 @@ def build_query_material():
 
 
 def build_query_texture():
-    props = bpy.context.scene.blenderkit_tex
+    props = bpy.context.scene.asset_manager_real2u_tex
     query = {
         "asset_type": 'texture',
 
@@ -1069,7 +1069,7 @@ def build_query_texture():
 
 
 def build_query_brush():
-    props = bpy.context.scene.blenderkit_brush
+    props = bpy.context.scene.asset_manager_real2u_brush
 
     brush_type = ''
     if bpy.context.sculpt_object is not None:
@@ -1117,41 +1117,41 @@ def add_search_process(query, params):
 def search(category='', get_next=False, author_id=''):
     ''' initialize searching'''
     global search_start_time
-    user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
 
     search_start_time = time.time()
     # mt('start')
     scene = bpy.context.scene
-    uiprops = scene.blenderkitUI
+    uiprops = scene.asset_manager_real2uUI
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'blenderkit'):
+        if not hasattr(scene, 'asset_manager_real2u'):
             return;
-        props = scene.blenderkit_models
+        props = scene.asset_manager_real2u_models
         query = build_query_model()
 
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'blenderkit_scene'):
+        if not hasattr(scene, 'asset_manager_real2u_scene'):
             return;
-        props = scene.blenderkit_scene
+        props = scene.asset_manager_real2u_scene
         query = build_query_scene()
 
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'blenderkit_mat'):
+        if not hasattr(scene, 'asset_manager_real2u_mat'):
             return;
-        props = scene.blenderkit_mat
+        props = scene.asset_manager_real2u_mat
         query = build_query_material()
 
     if uiprops.asset_type == 'TEXTURE':
-        if not hasattr(scene, 'blenderkit_tex'):
+        if not hasattr(scene, 'asset_manager_real2u_tex'):
             return;
-        # props = scene.blenderkit_tex
+        # props = scene.asset_manager_real2u_tex
         # query = build_query_texture()
 
     if uiprops.asset_type == 'BRUSH':
-        if not hasattr(scene, 'blenderkit_brush'):
+        if not hasattr(scene, 'asset_manager_real2u_brush'):
             return;
-        props = scene.blenderkit_brush
+        props = scene.asset_manager_real2u_brush
         query = build_query_brush()
 
     if props.is_searching and get_next == True:
@@ -1183,15 +1183,15 @@ def search(category='', get_next=False, author_id=''):
     #     query['keywords'] += '+is_free:true'
 
     add_search_process(query, params)
-    tasks_queue.add_task((ui.add_report, ('BlenderKit searching....', 2)))
+    tasks_queue.add_task((ui.add_report, ('asset_manager_real2u searching....', 2)))
 
-    props.report = 'BlenderKit searching....'
+    props.report = 'asset_manager_real2u searching....'
 
 
 def search_update(self, context):
     utils.p('search updater')
     # if self.search_keywords != '':
-    ui_props = bpy.context.scene.blenderkitUI
+    ui_props = bpy.context.scene.asset_manager_real2uUI
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
 
@@ -1226,8 +1226,8 @@ def search_update(self, context):
 
 class SearchOperator(Operator):
     """Tooltip"""
-    bl_idname = "view3d.blenderkit_search"
-    bl_label = "BlenderKit asset search"
+    bl_idname = "view3d.asset_manager_real2u_search"
+    bl_label = "asset_manager_real2u asset search"
     bl_description = "Search online for assets"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     own: BoolProperty(name="own assets only",
@@ -1274,7 +1274,7 @@ class SearchOperator(Operator):
             sprops.search_keywords = self.keywords
 
         search(category=self.category, get_next=self.get_next, author_id=self.author_id)
-        # bpy.ops.view3d.blenderkit_asset_bar()
+        # bpy.ops.view3d.asset_manager_real2u_asset_bar()
 
         return {'FINISHED'}
 
