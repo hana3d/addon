@@ -1517,6 +1517,11 @@ class AssetBarOperator(bpy.types.Operator):
                     bpy.context.window.cursor_set("NONE")
                     ui_props.draw_tooltip = False
                     ui_props.drag_length = 0
+                elif ui_props.asset_type == 'SCENE':
+                    context.scene.blenderkitUI.drag_init = True
+                    bpy.context.window.cursor_set("NONE")
+                    context.scene.blenderkitUI.draw_tooltip = False
+                    context.scene.blenderkitUI.drag_length = 0
 
             if ui_props.rating_on:
                 res = interact_rating(r, mx, my, event)

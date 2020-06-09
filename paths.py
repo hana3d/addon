@@ -35,18 +35,20 @@ BLENDERKIT_OAUTH_LANDING_URL = "/oauth-landing/"
 BLENDERKIT_SIGNUP_URL = "https://www.blenderkit.com/accounts/register"
 BLENDERKIT_SETTINGS_FILENAME = os.path.join(_presets, "bkit.json")
 
+URL_3D_KIT_MAIN = 'http://3.211.165.243:8080'
+URL_3D_KIT_LOCAL = 'http://localhost:8080'
+URL_3D_KIT_DEV = os.getenv('URL_3D_KIT_DEV')
+
 
 def get_bkit_url():
-    # bpy.app.debug_value = 2
-    d = bpy.app.debug_value
-    # d = 2
-    if d == 1:
-        url = BLENDERKIT_LOCAL
-    elif d == 2:
-        url = BLENDERKIT_DEVEL
-    else:
-        url = BLENDERKIT_MAIN
-    return url
+    if bpy.app.debug_value == 1:
+        return URL_3D_KIT_LOCAL
+
+    if bpy.app.debug_value == 2:
+        assert URL_3D_KIT_DEV is not None, f'Environment variable URL_3D_KIT_DEV not found'
+        return URL_3D_KIT_DEV
+
+    return URL_3D_KIT_MAIN
 
 
 def find_in_local(text=''):

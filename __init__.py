@@ -709,7 +709,7 @@ class BlenderKitMaterialSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
     automap: BoolProperty(name="Auto-Map",
                           description="reset object texture space and also add automatically a cube mapped UV "
                                       "to the object. \n this allows most materials to apply instantly to any mesh",
-                          default=True)
+                          default=False)
 
 
 class BlenderKitMaterialUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
@@ -807,6 +807,10 @@ class BlenderKitMaterialUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
     is_generating_thumbnail: BoolProperty(name="Generating Thumbnail",
                                           description="True when background process is running", default=False,
                                           update=autothumb.update_upload_material_preview)
+
+    client: StringProperty(name="Client")
+    sku: StringProperty(name="SKU")
+    custom_props: PointerProperty(type=custom_props.CustomPropsPropertyGroup)
 
 
 class BlenderKitTextureUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
@@ -1062,6 +1066,10 @@ class BlenderKitModelUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
 
     has_autotags: BoolProperty(name="Has Autotagging Done", description="True when autotagging done", default=False)
 
+    client: StringProperty(name="Client")
+    sku: StringProperty(name="SKU")
+    custom_props: PointerProperty(type=custom_props.CustomPropsPropertyGroup)
+
 
 class BlenderKitSceneUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
     style: EnumProperty(
@@ -1176,9 +1184,9 @@ class BlenderKitSceneUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
         default=(.25, .25, .5),
     )
 
-    texture_resolution_min: IntProperty(name="Texture Eesolution Min",
+    texture_resolution_min: IntProperty(name="Texture Resolution Min",
                                         description="texture resolution min, autofilled", default=0)
-    texture_resolution_max: IntProperty(name="Texture Eesolution Max",
+    texture_resolution_max: IntProperty(name="Texture Resolution Max",
                                         description="texture resolution max, autofilled", default=0)
 
     pbr: BoolProperty(name="PBR Compatible", description="Is compatible with PBR standard", default=False)
@@ -1204,9 +1212,36 @@ class BlenderKitSceneUploadProps(PropertyGroup, BlenderKitCommonUploadProps):
     # THUMBNAIL STATES
     is_generating_thumbnail: BoolProperty(name="Generating Thumbnail",
                                           description="True when background process is running", default=False,
-                                          update=autothumb.update_upload_model_preview)
+                                          update=autothumb.update_upload_scene_preview)
 
     has_autotags: BoolProperty(name="Has Autotagging Done", description="True when autotagging done", default=False)
+
+    thumbnail_denoising: BoolProperty(
+        name="Use Denoising",
+        description="Use denoising",
+        default=True
+    )
+    thumbnail_resolution: EnumProperty(
+        name="Resolution",
+        items=thumbnail_resolutions,
+        description="Thumbnail resolution.",
+        default="512",
+    )
+    thumbnail_samples: IntProperty(
+        name="Cycles Samples",
+        description="cycles samples setting",
+        default=200,
+        min=5,
+        max=5000
+    )
+    category: StringProperty(
+        name="Category",
+        default='',
+    )
+    subcategory: StringProperty(
+        name="Subcategory",
+        default='',
+    )
 
 
 class BlenderKitModelSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
@@ -1310,7 +1345,7 @@ class BlenderKitModelSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
         ),
         description="Appended objects are editable in your scene. Linked assets are saved in original files, "
                     "aren't editable but also don't increase your file size",
-        default="LINK_COLLECTION"
+        default="APPEND_OBJECTS"
     )
     append_link: EnumProperty(
         name="How to Attach",
@@ -1319,7 +1354,7 @@ class BlenderKitModelSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
             ('APPEND', 'Append', ''),
         ),
         description="choose if the assets will be linked or appended",
-        default="LINK"
+        default="APPEND"
     )
     import_as: EnumProperty(
         name="Import as",
@@ -1385,6 +1420,25 @@ class BlenderKitSceneSearchProps(PropertyGroup, BlenderKitCommonSearchProps):
         description="engine not specified by addon",
         default="",
         update=search.search_update
+    )
+    merge_add: EnumProperty(
+        name="How to Attach Scene",
+        items=(
+            ('MERGE', 'Merge Scenes', ''),
+            ('ADD', 'Add New Scene', ''),
+        ),
+        description="choose if the scene will be merged or appended",
+        default="MERGE"
+    )
+    import_world: BoolProperty(
+        name='Import World',
+        description="import world data to current scene",
+        default=True
+    )
+    import_render: BoolProperty(
+        name='Import Render Settings',
+        description="import render settings to current scene",
+        default=True
     )
 
 

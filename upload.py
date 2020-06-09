@@ -107,15 +107,12 @@ def get_missing_data_model(props):
 
 def get_missing_data_scene(props):
     props.report = ''
-    autothumb.update_upload_model_preview(None, None)
+    autothumb.update_upload_scene_preview(None, None)
 
     if props.name == '':
         write_to_report(props, 'Set scene name')
-    # if props.tags == '':
-    #     write_to_report(props, 'Write at least 3 tags')
     if not props.has_thumbnail:
         write_to_report(props, 'Add thumbnail:')
-
         props.report += props.thumbnail_generating_state + '\n'
     if props.engine == 'NONE':
         write_to_report(props, 'Set at least one rendering/output engine')
@@ -446,6 +443,15 @@ def get_upload_data(self, context, asset_type):
 
     upload_data['parameters'] = upload_params
 
+    if hasattr(props, 'client'):
+        upload_data['client'] = props.client
+    if hasattr(props, 'sku'):
+        upload_data['sku'] = props.sku
+    if hasattr(props, 'custom_props'):
+        upload_data['metadata'] = {}
+        for key in props.custom_props.keys():
+            upload_data['metadata'][key] = props.custom_props[key]
+
     return export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props
 
 
@@ -769,21 +775,21 @@ class UploadOperator(Operator):
         if props.is_private == 'PUBLIC':
             ui_panels.label_multiline(layout, text='public assets are validated several hours'
                                                    ' or days after upload. Remember always to '
-                                                    'test download your asset to a clean file'
-                                                   ' to see if it uploaded correctly.'
-                                      , width=300)
+                                                   'test download your asset to a clean file'
+                                                   ' to see if it uploaded correctly.', width=300)
 
     def invoke(self, context, event):
-        props = utils.get_upload_props()
+        # props = utils.get_upload_props()
 
-        if not utils.user_logged_in():
-            ui_panels.draw_not_logged_in(self)
-            return {'CANCELLED'}
+        # if not utils.user_logged_in():
+        #     ui_panels.draw_not_logged_in(self)
+        #     return {'CANCELLED'}
 
-        if props.is_private == 'PUBLIC':
-            return context.window_manager.invoke_props_dialog(self)
-        else:
-            return self.execute(context)
+        # if props.is_private == 'PUBLIC':
+        #     return context.window_manager.invoke_props_dialog(self)
+        # else:
+        #     return self.execute(context)
+        return self.execute(context)
 
 
 class AssetVerificationStatusChange(Operator):

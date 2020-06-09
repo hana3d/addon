@@ -713,6 +713,10 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
             kwargs['name'] = asset_data['name']
             try:
                 append_asset(asset_data, **kwargs)
+                if asset_data['asset_type'] == 'scene':
+                    if bpy.context.scene.blenderkit_scene.merge_add == 'ADD':
+                        for window in bpy.context.window_manager.windows:
+                            window.scene = bpy.data.scenes[asset_data['name']]
                 done = True
             except Exception as e:
                 print(e)
@@ -722,7 +726,7 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
                     except:
                         e = sys.exc_info()[0]
                         print(e)
-                        pass;
+                        pass
                 done = False
     return done
 

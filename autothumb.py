@@ -46,7 +46,7 @@ def check_thumbnail(props, imgpath):
     if img is None or img.size[0] == 0 or img.filepath.find('thumbnail_notready.jpg') > -1:
         output += 'No thumbnail or wrong file path\n'
     else:
-        pass;
+        pass
         # this is causing problems on some platforms, don't know why..
         # if img.size[0] != img.size[1]:
         #     output += 'image not a square\n'
@@ -140,8 +140,6 @@ def start_thumbnailer(self, context):
                 "thumbnail_denoising": bkit.thumbnail_denoising,
             }, s)
 
-
-
         proc = subprocess.Popen([
             binary_path,
             "--background",
@@ -215,7 +213,6 @@ def start_material_thumbnailer(self, context):
                 "texture_size_meters": bkit.texture_size_meters,
             }, s)
 
-
         proc = subprocess.Popen([
             binary_path,
             "--background",
@@ -236,6 +233,61 @@ def start_material_thumbnailer(self, context):
         mat.blenderkit.thumbnail_generating_state = 'Saving .blend file'
     except Exception as e:
         self.report({'WARNING'}, "Error while packing file: %s" % str(e))
+        return {'FINISHED'}
+
+
+def start_scene_thumbnailer(self, context):
+    # Prepare to save the file
+    s = bpy.context.scene
+    props = s.blenderkit
+    props.is_generating_thumbnail = True
+    props.thumbnail_generating_state = 'starting blender instance'
+
+    basename, ext = os.path.splitext(bpy.data.filepath)
+    if not basename:
+        basename = os.path.join(basename, "temp")
+    if not ext:
+        ext = ".blend"
+
+    asset_name = os.path.basename(basename)
+    file_dir = os.path.dirname(bpy.data.filepath)
+    thumb_path = os.path.join(file_dir, asset_name)
+    rel_thumb_path = os.path.join('//', asset_name)
+
+    i = 0
+    while os.path.isfile(thumb_path + '.png'):
+        thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
+        rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
+        i += 1
+
+    try:
+        user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+
+        bpy.context.scene.render.filepath = thumb_path + '.png'
+        if user_preferences.thumbnail_use_gpu:
+            bpy.context.scene.cycles.device = 'GPU'
+
+        bpy.context.scene.cycles.samples = props.thumbnail_samples
+        bpy.context.view_layer.cycles.use_denoising = props.thumbnail_denoising
+
+        x = bpy.context.scene.render.resolution_x
+        y = bpy.context.scene.render.resolution_y
+
+        bpy.context.scene.render.resolution_x = int(props.thumbnail_resolution)
+        bpy.context.scene.render.resolution_y = int(props.thumbnail_resolution)
+
+        bpy.ops.render.render(write_still=True, animation=False)
+
+        bpy.context.scene.render.resolution_x = x
+        bpy.context.scene.render.resolution_y = y
+
+        props.thumbnail = rel_thumb_path + '.png'
+        props.thumbnail_generating_state = 'Finished'
+        props.is_generating_thumbnail = False
+
+    except Exception as e:
+        props.is_generating_thumbnail = False
+        self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
         return {'FINISHED'}
 
 
@@ -276,7 +328,7 @@ class GenerateThumbnailOperator(bpy.types.Operator):
             message = "please save your file first"
 
             def draw_message(self, context):
-                self.layout.label(text = message)
+                self.layout.label(text=message)
 
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
@@ -322,11 +374,51 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
 
+class GenerateSceneThumbnailOperator(bpy.types.Operator):
+    """Generate Cycles thumbnail for scene"""
+    bl_idname = "object.blenderkit_scene_thumbnail"
+    bl_label = "BlenderKit Thumbnail Generator"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        ob = bpy.context.active_object
+        while ob.parent is not None:
+            ob = ob.parent
+        props = ob.blenderkit
+        layout = self.layout
+        layout.label(text='thumbnailer settings')
+        layout.prop(props, 'thumbnail_samples')
+        layout.prop(props, 'thumbnail_resolution')
+        layout.prop(props, 'thumbnail_denoising')
+        preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        layout.prop(preferences, "thumbnail_use_gpu")
+
+    def execute(self, context):
+        start_scene_thumbnailer(self, context)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        if bpy.data.filepath == '':
+            title = "Can't render thumbnail"
+            message = "please save your file first"
+
+            def draw_message(self, context):
+                self.layout.label(text=message)
+
+            bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
+            return {'FINISHED'}
+
+        return wm.invoke_props_dialog(self)
+
+
 def register_thumbnailer():
     bpy.utils.register_class(GenerateThumbnailOperator)
     bpy.utils.register_class(GenerateMaterialThumbnailOperator)
+    bpy.utils.register_class(GenerateSceneThumbnailOperator)
 
 
 def unregister_thumbnailer():
     bpy.utils.unregister_class(GenerateThumbnailOperator)
     bpy.utils.unregister_class(GenerateMaterialThumbnailOperator)
+    bpy.utils.unregister_class(GenerateSceneThumbnailOperator)

@@ -356,19 +356,13 @@ def draw_panel_scene_search(self, context):
     s = context.scene
     props = s.blenderkit_scene
     layout = self.layout
-    # layout.label(text = "common search properties:")
-    row = layout.row()
-    row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
-    draw_assetbar_show_hide(row, props)
-    layout.prop(props, "own_only")
-    label_multiline(layout, text=props.report)
 
-    # layout.prop(props, "search_style")
-    # if props.search_style == 'OTHER':
-    #     layout.prop(props, "search_style_other")
-    # layout.prop(props, "search_engine")
-    layout.separator()
-    draw_panel_categories(self, context)
+    layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
+    layout.prop(props, 'merge_add', expand=True, icon_only=False)
+
+    if props.merge_add == 'MERGE':
+        layout.prop(props, 'import_world')
+        layout.prop(props, 'import_render')
 
 
 class VIEW3D_PT_blenderkit_model_properties(Panel):

@@ -22,8 +22,9 @@ if "bpy" in locals():
 
     utils = reload(utils)
     ui = reload(ui)
+    render_settings = reload(render_settings)
 else:
-    from blenderkit import utils, ui
+    from blenderkit import utils, ui, render_settings
 
 import bpy
 import uuid
@@ -70,8 +71,64 @@ def append_material(file_name, matname=None, link=False, fake_user=True):
     return mat
 
 
+def copy_scene_render_attributes(from_scene, to_scene, settings):
+    for attribute in settings:
+        from_attribute = getattr(from_scene, attribute)
+        to_attribute = getattr(to_scene, attribute)
+        for setting in settings[attribute]:
+            value = getattr(from_attribute, setting)
+            setattr(to_attribute, setting, value)
+
+
+def copy_curves(from_scene: bpy.types.Scene, to_scene: bpy.types.Scene):
+    for curve in to_scene.view_settings.curve_mapping.curves:
+        while len(curve.points) > 2:
+            curve.points.remove(curve.points[-1])
+        curve.points[0].location = (0, 0)
+        curve.points[1].location = (1, 1)
+
+    for i, curve in enumerate(from_scene.view_settings.curve_mapping.curves):
+        points = to_scene.view_settings.curve_mapping.curves[i].points
+        while len(points) < len(curve.points):
+            points.new(0, 0)
+        for j, point in enumerate(curve.points):
+            points[j].location = point.location
+
+    to_scene.view_settings.curve_mapping.black_level = from_scene.view_settings.curve_mapping.black_level
+    to_scene.view_settings.curve_mapping.white_level = from_scene.view_settings.curve_mapping.white_level
+    to_scene.view_settings.curve_mapping.update()
+
+
 def append_scene(file_name, scenename=None, link=False, fake_user=False):
     '''append a scene type asset'''
+    scene = bpy.context.scene
+    props = scene.blenderkit_scene
+
+    if props.merge_add == 'MERGE' and scenename is None:
+        with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
+            data_to.collections = [name for name in data_from.collections]
+            scene_name = data_from.scenes[0]
+            data_to.scenes = [scene_name]
+
+        imported_scene = data_to.scenes[0]
+        scene_collection = bpy.data.collections.new(scene_name)
+        scene.collection.children.link(scene_collection)
+        for col in data_to.collections:
+            scene_collection.children.link(col)
+        scene.camera = imported_scene.camera
+        if props.import_world:
+            scene.world = imported_scene.world
+
+        if props.import_render:
+            copy_scene_render_attributes(imported_scene, scene, render_settings.SETTINGS)
+            if scene.view_settings.use_curve_mapping:
+                copy_curves(imported_scene, scene)
+
+        imported_scene.user_clear()
+        bpy.data.scenes.remove(imported_scene, do_unlink=False)
+
+        return scene
+
     with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
         for s in data_from.scenes:
             if s == scenename or scenename is None:
@@ -113,7 +170,7 @@ def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, paren
             fp1 = bpy.path.abspath(file_name)
             if fp == fp1:
                 main_object.instance_collection = col
-                break;
+                break
 
     main_object.name = main_object.instance_collection.name
 
