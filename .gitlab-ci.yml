@@ -26,7 +26,7 @@ tests:
     - PATH="/opt/blender28/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
   script:
-    - /opt/blender28/blender -b -P tests/install.py
+    - /opt/blender28/blender -b -P tests/install.py -noaudio
 
 
 release:
