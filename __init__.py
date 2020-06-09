@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Asset Manager Real2U - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 1, 5),
+    "version": (0, 1, 6),
     "blender": (2, 82, 0),
     "location": "View3D > Properties > asset_manager_real2u",
     "description": "Online asset_manager_real2u library (materials, models, brushes and more). Connects to the internet.",

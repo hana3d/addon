@@ -285,9 +285,9 @@ def draw_panel_model_search(self, context):
     if props.report == 'You need Full plan to get this item.':
         layout.operator("wm.url_open", text="Get Full plan", icon='URL').url = paths.asset_manager_real2u_PLANS
 
-    layout.prop(props, "search_style")
-    layout.prop(props, "own_only")
-    layout.prop(props, "free_only")
+    # layout.prop(props, "search_style")
+    # layout.prop(props, "own_only")
+    # layout.prop(props, "free_only")
 
     # if props.search_style == 'OTHER':
     #     layout.prop(props, "search_style_other")
@@ -306,15 +306,15 @@ def draw_panel_model_search(self, context):
         # if props.search_engine == 'OTHER':
         #     layout.prop(props, "search_engine_keyword")
 
-        # AGE
-        layout.prop(props, "search_condition", text='Condition')  # , text ='condition of object new/old e.t.c.')
+        # # AGE
+        # layout.prop(props, "search_condition", text='Condition')  # , text ='condition of object new/old e.t.c.')
 
-        # DESIGN YEAR
-        layout.prop(props, "search_design_year", text='designed in ( min - max )')
-        if props.search_design_year:
-            row = layout.row(align=True)
-            row.prop(props, "search_design_year_min", text='min')
-            row.prop(props, "search_design_year_max", text='max')
+        # # DESIGN YEAR
+        # layout.prop(props, "search_design_year", text='designed in ( min - max )')
+        # if props.search_design_year:
+        #     row = layout.row(align=True)
+        #     row.prop(props, "search_design_year_min", text='min')
+        #     row.prop(props, "search_design_year_max", text='max')
 
         # POLYCOUNT
         layout.prop(props, "search_polycount", text='Poly count in ( min - max )')
@@ -341,7 +341,7 @@ def draw_panel_model_search(self, context):
         # ADULT
         # layout.prop(props, "search_adult")  # , text ='condition of object new/old e.t.c.')
 
-    draw_panel_categories(self, context)
+    # draw_panel_categories(self, context)
 
     layout.separator()
     layout.label(text='Import method:')
@@ -553,7 +553,7 @@ def draw_panel_material_search(self, context):
     row = layout.row()
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
-    layout.prop(props, "own_only")
+    # layout.prop(props, "own_only")
     label_multiline(layout, text=props.report)
 
     # layout.prop(props, 'search_style')
@@ -586,7 +586,7 @@ def draw_panel_material_search(self, context):
             row.prop(props, "search_file_size_min", text='min')
             row.prop(props, "search_file_size_max", text='max')
 
-    draw_panel_categories(self, context)
+    # draw_panel_categories(self, context)
 
     layout.prop(props, 'automap')
 
