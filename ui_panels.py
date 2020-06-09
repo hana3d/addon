@@ -1120,7 +1120,7 @@ def header_search_draw(self, context):
 
 class VIEW3D_PT_UpdaterPanel(Panel):
     """Panel to demo popup notice and ignoring functionality"""
-    bl_label = "Update"
+    bl_label = "Preferences"
     bl_idname = "OBJECT_PT_hello"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -1138,16 +1138,6 @@ class VIEW3D_PT_UpdaterPanel(Panel):
 
         addon_updater_ops.update_notice_box_ui(self, context)
 
-
-class VIEW3D_PT_blenderkit_header(Panel):
-    bl_category = "BlenderKit"
-    bl_idname = "VIEW3D_PT_blenderkit_downloads"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_label = "Header"
-
-    def draw(self, context):
-        layout = self.layout
         layout.prop(context.preferences.addons['blenderkit'].preferences, 'search_in_header')
 
 
@@ -1156,6 +1146,7 @@ class VIEW3D_PT_blenderkit_header(Panel):
 preview_collections = {}
 classess = (
     SetCategoryOperator,
+    VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_blenderkit_profile,
     VIEW3D_PT_blenderkit_login,
     VIEW3D_PT_blenderkit_unified,
@@ -1163,9 +1154,7 @@ classess = (
     VIEW3D_PT_blenderkit_model_properties,
     VIEW3D_PT_blenderkit_downloads,
     OBJECT_MT_blenderkit_asset_menu,
-    UrlPopupDialog,
-    VIEW3D_PT_UpdaterPanel,
-    VIEW3D_PT_blenderkit_header
+    UrlPopupDialog
 )
 
 

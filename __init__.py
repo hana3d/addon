@@ -19,7 +19,7 @@
 bl_info = {
     "name": "BlenderKit Online Asset Library - Real2U Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 1, 3),
+    "version": (0, 1, 4),
     "blender": (2, 82, 0),
     "location": "View3D > Properties > BlenderKit",
     "description": "Online BlenderKit library (materials, models, brushes and more). Connects to the internet.",
@@ -1685,6 +1685,8 @@ classes = (
 def register():
     addon_updater_ops.register(bl_info)
 
+    custom_props.register_custom_props()
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
@@ -1737,7 +1739,6 @@ def register():
     overrides.register_overrides()
     bkit_oauth.register()
     tasks_queue.register()
-    custom_props.register_custom_props()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
 
@@ -1762,7 +1763,6 @@ def unregister():
     overrides.unregister_overrides()
     bkit_oauth.unregister()
     tasks_queue.unregister()
-    custom_props.unregister_custom_props()
 
     del bpy.types.Scene.blenderkit_models
     del bpy.types.Scene.blenderkit_scene
@@ -1776,5 +1776,7 @@ def unregister():
 
     for cls in classes:
         bpy.utils.unregister_class(cls)
+
+    custom_props.unregister_custom_props()
 
     bpy.app.handlers.load_post.remove(scene_load)
