@@ -19,7 +19,7 @@
 bl_info = {
     "name": "BlenderKit Online Asset Library - Real2U Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 1, 4),
+    "version": (0, 1, 5),
     "blender": (2, 82, 0),
     "location": "View3D > Properties > BlenderKit",
     "description": "Online BlenderKit library (materials, models, brushes and more). Connects to the internet.",

@@ -159,8 +159,9 @@ def get_upload_props():
         s = bpy.context.scene
         return s.blenderkit
     elif ui_props.asset_type == 'MATERIAL':
-        if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
-            return bpy.context.active_object.active_material.blenderkit
+        if hasattr(bpy.context, 'active_object'):
+            if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
+                return bpy.context.active_object.active_material.blenderkit
     elif ui_props.asset_type == 'TEXTURE':
         return None
     elif ui_props.asset_type == 'BRUSH':

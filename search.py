@@ -249,13 +249,13 @@ def timer_update():
                                               }
                                 asset_data['downloaded'] = 0
 
-                                if 'description' in r:
+                                if 'description' in r and r['description'] is not None:
                                     asset_data['description'] = r['description']
-                                if 'metadata' in r:
+                                if 'metadata' in r and r['metadata'] is not None:
                                     asset_data['metadata'] = r['metadata']
-                                if 'sku' in r:
+                                if 'sku' in r and r['client'] is not None:
                                     asset_data['sku'] = r['sku']
-                                if 'client' in r:
+                                if 'client' in r and r['sku'] is not None:
                                     asset_data['client'] = r['client']
 
                                 params = utils.params_to_dict(r['parameters'])
