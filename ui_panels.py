@@ -1126,7 +1126,6 @@ class VIEW3D_PT_UpdaterPanel(Panel):
     bl_region_type = 'UI'
     bl_context = "objectmode"
     bl_category = "Asset Manager"
-    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
