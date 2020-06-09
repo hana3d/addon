@@ -1,5 +1,5 @@
 #!/bin/bash
-input="/builds/real2u/asset-manager/__init__.py"
+input="/builds/real2u/asset_manager_real2u/__init__.py"
 line=`sed "22q;d" $input`
 
 tmp="${line%%(*}"
