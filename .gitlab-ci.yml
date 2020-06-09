@@ -12,16 +12,16 @@ tests:
     - export DEBIAN_FRONTEND=noninteractive
     - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
     # - BLENDER28_URL="$(curl -s https://www.blender.org/download/ | grep -oe '[^\"]*blender-2\.82[^\"]*linux64[^\"]*' | tail -n1)"
-    - BLENDER28_URL=https://download.blender.org/release/Blender2.82/blender-2.82a-linux64.tar.xz
+    - BLENDER28_URL=https://download.blender.org/release/Blender2.83/blender-2.83.0-linux64.tar.xz
     - BLENDER28_VERSION=$(echo $BLENDER28_URL | grep -Po 'blender-2\.\K[0-9]+')
     - echo "Installing Blender 2.${BLENDER28_VERSION}"
     - mkdir /opt/blender28
     - echo "Downloading from $BLENDER28_URL"
     - curl -SL "$BLENDER28_URL" | tar -Jx -C /opt/blender28 --strip-components=1
     - ln -s /opt/blender28/blender /usr/local/bin/blender28
-    - rm -r /opt/blender28/2.8*/scripts/addons/blenderkit
-    - mkdir /opt/blender28/2.8*/scripts/addons/blenderkit
-    - cp -r /builds/real2u/asset-manager/ /opt/blender28/2.8*/scripts/addons/blenderkit
+    - rm -r /opt/blender28/2.83/scripts/addons/blenderkit
+    - mkdir /opt/blender28/2.83/scripts/addons/blenderkit
+    - cp -r /builds/real2u/asset-manager/ /opt/blender28/2.83/scripts/addons/blenderkit
     # - mv -r /builds/real2u/asset-manager /opt/blender28/2.8*/scripts/addons/blenderkit
     - PATH="/opt/blender28/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
