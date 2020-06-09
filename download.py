@@ -275,13 +275,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     '''Link asset to the scene'''
 
     file_names = paths.get_download_filenames(asset_data)
-    props = None
-    #####
-    # how to do particle  drop:
-    # link the group we are interested in( there are more groups in File!!!! , have to get the correct one!)
-    #
     scene = bpy.context.scene
-
 
     user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
 
@@ -290,7 +284,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
     if asset_data['asset_type'] == 'scene':
         scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
-        props = scene.blenderkit
         parent = scene
 
     if asset_data['asset_type'] == 'model':
@@ -298,7 +291,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
         downloaders = kwargs.get('downloaders')
         s = bpy.context.scene
         sprops = s.blenderkit_models
-        # TODO this is here because combinations of linking objects or appending groups are rather not-usefull
         if sprops.append_method == 'LINK_COLLECTION':
             sprops.append_link = 'LINK'
             sprops.import_as = 'GROUP'
@@ -306,51 +298,34 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
             sprops.append_link = 'APPEND'
             sprops.import_as = 'INDIVIDUAL'
 
-        #copy for override
         al = sprops.append_link
-        import_as = sprops.import_as
-        # set consistency for objects already in scene, otherwise this literally breaks blender :)
         ain = asset_in_scene(asset_data)
-        #override based on history
         if ain is not False:
             if ain == 'LINKED':
                 al = 'LINK'
-                import_as = 'GROUP'
             else:
                 al = 'APPEND'
-                import_as = 'INDIVIDUAL'
 
-
-        # first get conditions for append link
         link = al == 'LINK'
-        # then append link
         if downloaders:
             for downloader in downloaders:
-                # this cares for adding particle systems directly to target mesh, but I had to block it now,
-                # because of the sluggishnes of it. Possibly re-enable when it's possible to do this faster?
-                if 0:  # 'particle_plants' in asset_data['tags']:
-                    append_link.append_particle_system(file_names[-1],
-                                                       target_object=kwargs['target_object'],
-                                                       rotation=downloader['rotation'],
-                                                       link=False,
-                                                       name=asset_data['name'])
-                    return
-
-                if sprops.import_as == 'GROUP':
-                    parent, newobs = append_link.link_collection(file_names[-1],
-                                                            location=downloader['location'],
-                                                            rotation=downloader['rotation'],
-                                                            link=link,
-                                                            name=asset_data['name'],
-                                                            parent=kwargs.get('parent'))
-
+                if link is True:
+                    parent, newobs = append_link.link_collection(
+                        file_names[-1],
+                        location=downloader['location'],
+                        rotation=downloader['rotation'],
+                        link=link,
+                        name=asset_data['name'],
+                        parent=kwargs.get('parent'))
                 else:
-                    parent, newobs = append_link.append_objects(file_names[-1],
-                                                                location=downloader['location'],
-                                                                rotation=downloader['rotation'],
-                                                                link=link,
-                                                                name=asset_data['name'],
-                                                                parent=kwargs.get('parent'))
+                    parent, newobs = append_link.append_objects(
+                        file_names[-1],
+                        location=downloader['location'],
+                        rotation=downloader['rotation'],
+                        link=link,
+                        name=asset_data['name'],
+                        parent=kwargs.get('parent'))
+
                 if parent.type == 'EMPTY' and link:
                     bmin = asset_data['bbox_min']
                     bmax = asset_data['bbox_max']
@@ -358,19 +333,21 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                     parent.empty_display_size = size_min
 
         elif kwargs.get('model_location') is not None:
-            if sprops.import_as == 'GROUP':
-                parent, newobs = append_link.link_collection(file_names[-1],
-                                                        location=kwargs['model_location'],
-                                                        rotation=kwargs['model_rotation'],
-                                                        link=link,
-                                                        name=asset_data['name'],
-                                                        parent=kwargs.get('parent'))
+            if link is True:
+                parent, newobs = append_link.link_collection(
+                    file_names[-1],
+                    location=kwargs['model_location'],
+                    rotation=kwargs['model_rotation'],
+                    link=link,
+                    name=asset_data['name'],
+                    parent=kwargs.get('parent'))
             else:
-                parent, newobs = append_link.append_objects(file_names[-1],
-                                                            location=kwargs['model_location'],
-                                                            rotation=kwargs['model_rotation'],
-                                                            link=link,
-                                                            parent=kwargs.get('parent'))
+                parent, newobs = append_link.append_objects(
+                    file_names[-1],
+                    location=kwargs['model_location'],
+                    rotation=kwargs['model_rotation'],
+                    link=link,
+                    parent=kwargs.get('parent'))
             if parent.type == 'EMPTY' and link:
                 bmin = asset_data['bbox_min']
                 bmax = asset_data['bbox_max']
@@ -385,14 +362,12 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
     elif asset_data['asset_type'] == 'brush':
 
-        # TODO if already in scene, should avoid reappending.
         inscene = False
         for b in bpy.data.brushes:
-
             if b.blenderkit.id == asset_data['id']:
                 inscene = True
                 brush = b
-                break;
+                break
         if not inscene:
             brush = append_link.append_brush(file_names[-1], link=False, fake_user=False)
 
@@ -406,12 +381,9 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
         if bpy.context.view_layer.objects.active.mode == 'SCULPT':
             bpy.context.tool_settings.sculpt.brush = brush
-        elif bpy.context.view_layer.objects.active.mode == 'TEXTURE_PAINT':  # could be just else, but for future possible more types...
+        elif bpy.context.view_layer.objects.active.mode == 'TEXTURE_PAINT':
             bpy.context.tool_settings.image_paint.brush = brush
-        # TODO set brush by by asset data(user can be downloading while switching modes.)
 
-        # bpy.context.tool_settings.image_paint.brush = brush
-        props = brush.blenderkit
         parent = brush
 
     elif asset_data['asset_type'] == 'material':
@@ -420,7 +392,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
             if m.blenderkit.id == asset_data['id']:
                 inscene = True
                 material = m
-                break;
+                break
         if not inscene:
             material = append_link.append_material(file_names[-1], link=False, fake_user=False)
         target_object = bpy.data.objects[kwargs['target_object']]
@@ -440,10 +412,33 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     id = asset_data['asset_base_id']
     scene['assets rated'][id] = scene['assets rated'].get(id, False)
 
-    parent['asset_data'] = asset_data  # TODO remove this??? should write to blenderkit Props?
-    bpy.ops.wm.undo_push_context(message = 'add %s to scene'% asset_data['name'])
-    # moving reporting to on save.
-    # report_use_success(asset_data['id'])
+    parent['asset_data'] = asset_data
+
+    if hasattr(parent.blenderkit, 'tags') and 'tags' in asset_data:
+        asset_data['tags'].remove('non-manifold')
+        parent.blenderkit.tags = ','.join(asset_data['tags'])
+    if hasattr(parent.blenderkit, 'description') and 'description' in asset_data:
+        if asset_data['description'] is not None:
+            parent.blenderkit.description = asset_data['description']
+    if hasattr(parent.blenderkit, 'custom_props') and 'metadata' in asset_data:
+        if 'product_info' in asset_data['metadata']:
+            product_info = asset_data['metadata'].pop('product_info')
+            clients = []
+            skus = []
+            for client_sku in product_info:
+                clients.append(client_sku['client'])
+                skus.append(client_sku['sku'])
+            if hasattr(parent.blenderkit, 'client') and hasattr(parent.blenderkit, 'sku'):
+                parent.blenderkit.client = ','.join(clients)
+                parent.blenderkit.sku = ','.join(skus)
+            else:
+                parent.blenderkit.custom_props['client'] = ','.join(clients)
+                parent.blenderkit.custom_props['sku'] = ','.join(skus)
+
+        for key, value in asset_data['metadata'].items():
+            parent.blenderkit.custom_props[key] = value
+
+    bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 
 
 # @bpy.app.handlers.persistent

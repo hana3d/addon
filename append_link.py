@@ -188,33 +188,27 @@ def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwar
             if ob in obnames or obnames == []:
                 sobs.append(ob)
         data_to.objects = sobs
-        # data_to.objects = data_from.objects#[name for name in data_from.objects if name.startswith("house")]
 
-    # link them to scene
-    scene = bpy.context.scene
     sel = utils.selection_get()
     bpy.ops.object.select_all(action='DESELECT')
 
-    return_obs = []  # this might not be needed, but better be sure to rewrite the list.
+    return_obs = []
     main_object = None
     hidden_objects = []
-    #
+
     for obj in data_to.objects:
         if obj is not None:
-            # if obj.name not in scene.objects:
-            scene.collection.objects.link(obj)
+            bpy.context.view_layer.active_layer_collection.collection.objects.link(obj)
             if obj.parent is None:
                 obj.location = location
                 main_object = obj
             obj.select_set(True)
-            # we need to unhide object so make_local op can use those too.
-            if link == True:
+            if link is True:
                 if obj.hide_viewport:
                     hidden_objects.append(obj)
                     obj.hide_viewport = False
             return_obs.append(obj)
-    # Only after all objects are in scene! Otherwise gets broken relationships
-    if link == True:
+    if link is True:
         bpy.ops.object.make_local(type='SELECT_OBJECT')
         for ob in hidden_objects:
             ob.hide_viewport = True
@@ -229,6 +223,5 @@ def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwar
     bpy.ops.object.select_all(action='DESELECT')
 
     utils.selection_set(sel)
-
 
     return main_object, return_obs

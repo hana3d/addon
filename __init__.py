@@ -47,10 +47,11 @@ if "bpy" in locals():
     categories = reload(categories)
     bkit_oauth = reload(bkit_oauth)
     tasks_queue = reload(tasks_queue)
+    custom_props = reload(custom_props)
 else:
     from blenderkit import asset_inspector, search, download, upload, ratings, autothumb, ui, icons, bg_blender, paths, \
         utils, \
-        overrides, ui_panels, categories, bkit_oauth, tasks_queue
+        overrides, ui_panels, categories, bkit_oauth, tasks_queue, custom_props
 
 import os
 import math
@@ -242,33 +243,26 @@ def switch_search_results(self, context):
     elif props.asset_type == 'MATERIAL':
         s['search results'] = s.get('bkit material search')
         s['search results orig'] = s.get('bkit material search orig')
-    elif props.asset_type == 'TEXTURE':
-        s['search results'] = s.get('bkit texture search')
-        s['search results orig'] = s.get('bkit texture search orig')
-    elif props.asset_type == 'BRUSH':
-        s['search results'] = s.get('bkit brush search')
-        s['search results orig'] = s.get('bkit brush search orig')
+    elif props.asset_type == 'HDR':
+        s['search results'] = s.get('bkit hdr search')
+        s['search results orig'] = s.get('bkit hdr search orig')
     search.load_previews()
 
 
 def asset_type_callback(self, context):
-    # s = bpy.context.scene
-    # ui_props = s.blenderkitUI
     if self.down_up == 'SEARCH':
         items = (
-            ('MODEL', 'Find Models', 'Find models in the BlenderKit online database', 'OBJECT_DATAMODE', 0),
-            # ('SCENE', 'SCENE', 'Browse scenes', 'SCENE_DATA', 1),
-            ('MATERIAL', 'Find Materials', 'Find models in the BlenderKit online database', 'MATERIAL', 2),
-            # ('TEXTURE', 'Texture', 'Browse textures', 'TEXTURE', 3),
-            ('BRUSH', 'Find Brushes', 'Find models in the BlenderKit online database', 'BRUSH_DATA', 3)
+            ('MODEL', 'Find Models', 'Find models in the 3DKit online database', 'OBJECT_DATAMODE', 0),
+            ('SCENE', 'Find Scenes', 'Find scenes in the 3DKit online database', 'SCENE_DATA', 1),
+            ('MATERIAL', 'Find Materials', 'Find materials in the 3DKit online database', 'MATERIAL', 2),
+            # ('HDR', 'Find HDRs', 'Find HDRs in the 3DKit online database', 'WORLD_DATA', 3),
         )
     else:
         items = (
-            ('MODEL', 'Upload Model', 'Upload a model to BlenderKit', 'OBJECT_DATAMODE', 0),
-            # ('SCENE', 'SCENE', 'Browse scenes', 'SCENE_DATA', 1),
-            ('MATERIAL', 'Upload Material', 'Upload a material to BlenderKit', 'MATERIAL', 2),
-            # ('TEXTURE', 'Texture', 'Browse textures', 'TEXTURE', 3),
-            ('BRUSH', 'Upload Brush', 'Upload a brush to BlenderKit', 'BRUSH_DATA', 3)
+            ('MODEL', 'Upload Model', 'Upload a model to 3DKit', 'OBJECT_DATAMODE', 0),
+            ('SCENE', 'Upload Scene', 'Upload a scene to 3DKit', 'SCENE_DATA', 1),
+            ('MATERIAL', 'Upload Material', 'Upload a material to 3DKit', 'MATERIAL', 2),
+            # ('HDR', 'Upload HDR', 'Upload a HDR to 3DKit', 'WORLD_DATA', 3),
         )
     return items
 
@@ -1689,6 +1683,7 @@ def register():
     overrides.register_overrides()
     bkit_oauth.register()
     tasks_queue.register()
+    custom_props.register_custom_props()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
 
@@ -1713,6 +1708,7 @@ def unregister():
     overrides.unregister_overrides()
     bkit_oauth.unregister()
     tasks_queue.unregister()
+    custom_props.unregister_custom_props()
 
     del bpy.types.Scene.blenderkit_models
     del bpy.types.Scene.blenderkit_scene

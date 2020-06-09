@@ -59,9 +59,9 @@ def label_multiline(layout, text='', icon='NONE', width=-1):
             l = l[i:].lstrip()
             li += 1
             if li > maxlines:
-                break;
+                break
         if li > maxlines:
-            break;
+            break
         layout.label(text=l, icon=icon)
         icon = 'NONE'
 
@@ -73,8 +73,8 @@ def draw_ratings(layout, context):
     asset = utils.get_active_asset()
     # the following shouldn't happen at all in an optimal case,
     # this function should run only when asset was already checked to be existing
-    if asset == None:
-        return;
+    if asset is None:
+        return
 
     if not utils.user_logged_in():
         label_multiline(layout, text='Please login or sign up '
@@ -96,14 +96,17 @@ def draw_ratings(layout, context):
     # op = row.operator("object.blenderkit_rating_upload", text="Send rating", icon='URL')
     # return op
 
+
 def draw_not_logged_in(source):
     title = "User not logged in"
+
     def draw_message(source, context):
         layout = source.layout
         label_multiline(layout, text='Please login or sign up '
-                                               'to upload files.')
+                        'to upload files.')
         draw_login_buttons(layout)
     bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
+
 
 def draw_upload_common(layout, props, asset_type, context):
     op = layout.operator("wm.url_open", text="Read upload instructions",
@@ -180,6 +183,7 @@ def prop_needed(layout, props, name, value, is_not_filled=''):
 
 
 def draw_panel_model_upload(self, context):
+    scene = context.scene
     ob = bpy.context.active_object
     while ob.parent is not None:
         ob = ob.parent
@@ -196,9 +200,8 @@ def draw_panel_model_upload(self, context):
         col.enabled = False
     prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        col.operator("object.blenderkit_generate_thumbnail", text='Generate thumbnail', icon='IMAGE')
+        col.operator("object.blenderkit_generate_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
 
-    # row = layout.row(align=True)
     if props.is_generating_thumbnail:
         row = layout.row(align=True)
         row.label(text=props.thumbnail_generating_state)
@@ -210,79 +213,42 @@ def draw_panel_model_upload(self, context):
 
     layout.prop(props, 'description')
     layout.prop(props, 'tags')
-    # prop_needed(layout, props, 'style', props.style)
-    # prop_needed(layout, props, 'production_level', props.production_level)
-    layout.prop(props, 'style')
-    layout.prop(props, 'production_level')
+    layout.prop(props, 'client')
+    layout.prop(props, 'sku')
 
-    layout.prop(props, 'condition')
-    layout.prop(props, 'is_free')
-    layout.prop(props, 'pbr')
-    layout.label(text='design props:')
-    layout.prop(props, 'manufacturer')
-    layout.prop(props, 'designer')
-    layout.prop(props, 'design_collection')
-    layout.prop(props, 'design_variant')
-    layout.prop(props, 'use_design_year')
-    if props.use_design_year:
-        layout.prop(props, 'design_year')
+    for key in props.custom_props.keys():
+        layout.prop(props.custom_props, f'["{key}"]')
 
     row = layout.row()
-    row.prop(props, 'work_hours')
-
-    layout.prop(props, 'adult')
+    row.operator('blenderkit.model_custom_props', text='Create Custom Prop')
+    layout.prop(scene.blenderkit_custom_props, "key")
+    layout.prop(scene.blenderkit_custom_props, "value")
 
 
 def draw_panel_scene_upload(self, context):
     s = bpy.context.scene
     props = s.blenderkit
-
     layout = self.layout
-    if bpy.app.debug_value != -1:
-        layout.label(text='Scene upload not Implemented')
-        return
+
     draw_upload_common(layout, props, 'SCENE', context)
-
-    #    layout = layout.column()
-
-    # row = layout.row()
-
-    # if props.dimensions[0] + props.dimensions[1] == 0 and props.face_count == 0:
-    #     icon = 'ERROR'
-    #     layout.operator("object.blenderkit_auto_tags", text='Auto fill tags', icon=icon)
-    # else:
-    #     layout.operator("object.blenderkit_auto_tags", text='Auto fill tags')
-
     prop_needed(layout, props, 'name', props.name)
-
-    col = layout.column()
-    # if props.is_generating_thumbnail:
-    #     col.enabled = False
-    prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
-    # if bpy.context.scene.render.engine == 'CYCLES':
-    #     col.operator("object.blenderkit_generate_thumbnail", text='Generate thumbnail', icon='IMAGE_COL')
-
-    # row = layout.row(align=True)
-    # if props.is_generating_thumbnail:
-    #     row = layout.row(align=True)
-    #     row.label(text = props.thumbnail_generating_state)
-    #     op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-    #     op.process_source = 'MODEL'
-    #     op.process_type = 'THUMBNAILER'
-    # elif props.thumbnail_generating_state != '':
-    #     label_multiline(layout, text = props.thumbnail_generating_state)
-
     layout.prop(props, 'description')
     layout.prop(props, 'tags')
-    layout.prop(props, 'style')
-    layout.prop(props, 'production_level')
-    layout.prop(props, 'use_design_year')
-    if props.use_design_year:
-        layout.prop(props, 'design_year')
-    layout.prop(props, 'condition')
-    row = layout.row()
-    row.prop(props, 'work_hours')
-    layout.prop(props, 'adult')
+
+    col = layout.column()
+    if props.is_generating_thumbnail:
+        col.enabled = False
+    prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
+    if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
+        col.operator("object.blenderkit_scene_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
+    if props.is_generating_thumbnail:
+        row = layout.row(align=True)
+        row.label(text=props.thumbnail_generating_state, icon='RENDER_STILL')
+        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
+        op.process_source = 'SCENE'
+        op.process_type = 'THUMBNAILER'
+    elif props.thumbnail_generating_state != '':
+        label_multiline(layout, text=props.thumbnail_generating_state)
 
 
 def draw_assetbar_show_hide(layout, props):
@@ -498,9 +464,9 @@ class VIEW3D_PT_blenderkit_profile(Panel):
                     row = layout.row()
                     row.label(text='My plan:')
                     row.label(text='%s plan' % pn, icon_value=my_icon.icon_id)
-                    if pn =='Free':
+                    if pn == 'Free':
                         layout.operator("wm.url_open", text="Change plan",
-                            icon='URL').url = paths.get_bkit_url() + paths.BLENDERKIT_PLANS
+                                        icon='URL').url = paths.get_bkit_url() + paths.BLENDERKIT_PLANS
 
                 # storage statistics
                 # if me.get('sumAssetFilesSize') is not None:  # TODO remove this when production server has these too.
@@ -545,7 +511,7 @@ def draw_panel_model_rating(self, context):
 
 
 def draw_panel_material_upload(self, context):
-    o = bpy.context.active_object
+    scene = context.scene
     mat = bpy.context.active_object.active_material
 
     props = mat.blenderkit
@@ -555,23 +521,18 @@ def draw_panel_material_upload(self, context):
 
     prop_needed(layout, props, 'name', props.name)
     layout.prop(props, 'description')
-    layout.prop(props, 'style')
-    # if props.style == 'OTHER':
-    #     layout.prop(props, 'style_other')
-    # layout.prop(props, 'engine')
-    # if props.engine == 'OTHER':
-    #     layout.prop(props, 'engine_other')
     layout.prop(props, 'tags')
-    # layout.prop(props,'shaders')#TODO autofill on upload
-    # row = layout.row()
-    layout.prop(props, 'is_free')
+    layout.prop(props, 'client')
+    layout.prop(props, 'sku')
 
-    layout.prop(props, 'pbr')
-    layout.prop(props, 'uv')
-    layout.prop(props, 'animated')
-    layout.prop(props, 'texture_size_meters')
+    for key in props.custom_props.keys():
+        layout.prop(props.custom_props, f'["{key}"]')
 
-    # THUMBNAIL
+    row = layout.row()
+    row.operator('blenderkit.material_custom_props', text='Create Custom Prop')
+    layout.prop(scene.blenderkit_custom_props, "key")
+    layout.prop(scene.blenderkit_custom_props, "value")
+
     row = layout.row()
     if props.is_generating_thumbnail:
         row.enabled = False
@@ -587,13 +548,7 @@ def draw_panel_material_upload(self, context):
         label_multiline(layout, text=props.thumbnail_generating_state)
 
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        layout.operator("object.blenderkit_material_thumbnail", text='Render thumbnail with Cycles', icon='EXPORT')
-
-    # tname = "." + bpy.context.active_object.active_material.name + "_thumbnail"
-    # if props.has_thumbnail and bpy.data.textures.get(tname) is not None:
-    #     row = layout.row()
-    #     # row.scale_y = 1.5
-    #     row.template_preview(bpy.data.textures[tname], preview_id='test')
+        layout.operator("object.blenderkit_material_thumbnail", text='Render thumbnail with Cycles', icon='IMAGE_DATA')
 
 
 def draw_panel_material_search(self, context):
@@ -840,7 +795,6 @@ class VIEW3D_PT_blenderkit_unified(Panel):
                     label_multiline(layout, text='switch to paint or sculpt mode.', width=context.region.width)
                     return
 
-
         elif ui_props.down_up == 'UPLOAD':
             if not ui_props.assetbar_on:
                 text = 'Show asset preview - ;'
@@ -856,7 +810,7 @@ class VIEW3D_PT_blenderkit_unified(Panel):
                 rtext = 'Only Cycles and EEVEE render engines are currently supported. ' \
                         'Please use Cycles for all assets you upload to BlenderKit.'
                 label_multiline(layout, rtext, icon='ERROR', width=w)
-                return;
+                return
 
             if ui_props.asset_type == 'MODEL':
                 # label_multiline(layout, "Uploaded models won't be available in b2.79", icon='ERROR')
@@ -886,7 +840,7 @@ class VIEW3D_PT_blenderkit_unified(Panel):
             if ui_props.asset_type == 'MODEL':
                 # TODO improve poll here to parenting structures
                 if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.get(
-                        'asset_data') != None:
+                        'asset_data') is not None:
                     ad = bpy.context.active_object.get('asset_data')
                     layout.label(text=ad['name'])
                     draw_panel_model_rating(self, context)
@@ -937,7 +891,7 @@ class OBJECT_MT_blenderkit_asset_menu(bpy.types.Menu):
         op = layout.operator('view3d.blenderkit_search', text='Search Similar')
         op.keywords = asset_data['name'] + ' ' + asset_data['description'] + ' ' + ' '.join(asset_data['tags'])
         if asset_data.get('canDownload') != 0:
-            if len(bpy.context.selected_objects)>0 and ui_props.asset_type == 'MODEL':
+            if len(bpy.context.selected_objects) > 0 and ui_props.asset_type == 'MODEL':
                 aob = bpy.context.active_object
                 if aob is None:
                     aob = bpy.context.selected_objects[0]
@@ -1071,7 +1025,7 @@ def draw_panel_categories(self, context):
 
     layout.label(text='Categories')
     wm = bpy.context.window_manager
-    if wm.get('bkit_categories') == None:
+    if wm.get('bkit_categories') is None:
         return
     col = layout.column(align=True)
     if wm.get('active_category') is not None:
@@ -1144,10 +1098,10 @@ class VIEW3D_PT_blenderkit_downloads(Panel):
 
 
 def header_search_draw(self, context):
-    '''Top bar menu in 3D view'''
+    '''Top bar menu in 3d view'''
 
     if not utils.guard_from_crash():
-        return;
+        return
 
     preferences = bpy.context.preferences.addons['blenderkit'].preferences
     if preferences.search_in_header:
@@ -1158,11 +1112,12 @@ def header_search_draw(self, context):
             props = s.blenderkit_models
         if ui_props.asset_type == 'MATERIAL':
             props = s.blenderkit_mat
-        if ui_props.asset_type == 'BRUSH':
-            props = s.blenderkit_brush
+        if ui_props.asset_type == 'SCENE':
+            props = s.blenderkit_scene
+        # if ui_props.asset_type == 'HDR':
+        #     props = s.blenderkit_hdr
 
-        # the center snap menu is in edit and object mode if tool settings are off.
-        if context.space_data.show_region_tool_header == True or context.mode[:4] not in ('EDIT', 'OBJE'):
+        if context.space_data.show_region_tool_header is True or context.mode[:4] not in ('EDIT', 'OBJE'):
             layout.separator_spacer()
         layout.prop(ui_props, "asset_type", text='', icon='URL')
         layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
@@ -1190,6 +1145,18 @@ class VIEW3D_PT_UpdaterPanel(Panel):
         addon_updater_ops.update_notice_box_ui(self, context)
 
 
+class VIEW3D_PT_blenderkit_header(Panel):
+    bl_category = "BlenderKit"
+    bl_idname = "VIEW3D_PT_blenderkit_downloads"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = "Header"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(context.preferences.addons['blenderkit'].preferences, 'search_in_header')
+
+
 # We can store multiple preview collections here,
 # however in this example we only store "main"
 preview_collections = {}
@@ -1203,7 +1170,8 @@ classess = (
     VIEW3D_PT_blenderkit_downloads,
     OBJECT_MT_blenderkit_asset_menu,
     UrlPopupDialog,
-    VIEW3D_PT_UpdaterPanel
+    VIEW3D_PT_UpdaterPanel,
+    VIEW3D_PT_blenderkit_header
 )
 
 

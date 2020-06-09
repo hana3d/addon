@@ -151,14 +151,11 @@ def check_clipboard():
 
 # @bpy.app.handlers.persistent
 def timer_update():
-    # this makes a first search after opening blender. showing latest assets.
     global first_time
     preferences = bpy.context.preferences.addons['blenderkit'].preferences
-    if first_time:  # first time
+    if first_time:
         first_time = False
         if preferences.show_on_start:
-            # TODO here it should check if there are some results, and only open assetbar if this is the case, not search.
-            # if bpy.context.scene.get('search results') is None:
             search()
             preferences.first_run = False
         if preferences.tips_on_start:
@@ -171,23 +168,16 @@ def timer_update():
         search()
         preferences.first_run = False
 
-    #check_clipboard()
-
     global search_threads
     if len(search_threads) == 0:
         return 1.0
-    # don't do anything while dragging - this could switch asset during drag, and make results list length different,
-    # causing a lot of throuble.
     if bpy.context.scene.blenderkitUI.dragging:
         return 0.5
     for thread in search_threads:
-        # TODO this doesn't check all processes when one gets removed,
-        # but most of the time only one is running anyway
         if not thread[0].is_alive():
             search_threads.remove(thread)  #
             icons_dir = thread[1]
             scene = bpy.context.scene
-            # these 2 lines should update the previews enum and set the first result as active.
             s = bpy.context.scene
             asset_type = thread[2]
             if asset_type == 'model':
@@ -221,15 +211,12 @@ def timer_update():
             if ok:
                 bpy.ops.object.run_assetbar_fix_context()
                 for r in rdata['results']:
-                    # TODO remove this fix when filesSize is fixed.
-                    # this is a temporary fix for too big numbers from the server.
                     try:
                         r['filesSize'] = int(r['filesSize'] / 1024)
                     except:
                         utils.p('asset with no files-size')
                     if r['assetType'] == asset_type:
                         if len(r['files']) > 0:
-                            furl = None
                             tname = None
                             allthumbs = []
                             durl, tname = None, None
@@ -237,23 +224,18 @@ def timer_update():
                                 if f['fileType'] == 'thumbnail':
                                     tname = paths.extract_filename_from_url(f['fileThumbnailLarge'])
                                     small_tname = paths.extract_filename_from_url(f['fileThumbnail'])
-                                    allthumbs.append(tname)  # TODO just first thumb is used now.
+                                    allthumbs.append(tname)
 
                                 tdict = {}
                                 for i, t in enumerate(allthumbs):
                                     tdict['thumbnail_%i'] = t
                                 if f['fileType'] == 'blend':
                                     durl = f['downloadUrl'].split('?')[0]
-                                    # fname = paths.extract_filename_from_url(f['filePath'])
                             if durl and tname:
 
                                 tooltip = generate_tooltip(r)
-                                # for some reason, the id was still int on some occurances. investigate this.
-                                r['author']['id'] = str(r['author']['id'])
-
                                 asset_data = {'thumbnail': tname,
                                               'thumbnail_small': small_tname,
-                                              # 'thumbnails':allthumbs,
                                               'download_url': durl,
                                               'id': r['id'],
                                               'asset_base_id': r['assetBaseId'],
@@ -263,17 +245,23 @@ def timer_update():
                                               'tags': r['tags'],
                                               'can_download': r.get('canDownload', True),
                                               'verification_status': r['verificationStatus'],
-                                              'author_id': r['author']['id'],
-                                              # 'author': r['author']['firstName'] + ' ' + r['author']['lastName']
-                                              # 'description': r['description'],
+                                              'author_id': str(r['author']['id'])
                                               }
                                 asset_data['downloaded'] = 0
 
-                                # parse extra params needed for blender here
+                                if 'description' in r:
+                                    asset_data['description'] = r['description']
+                                if 'metadata' in r:
+                                    asset_data['metadata'] = r['metadata']
+                                if 'sku' in r:
+                                    asset_data['sku'] = r['sku']
+                                if 'client' in r:
+                                    asset_data['client'] = r['client']
+
                                 params = utils.params_to_dict(r['parameters'])
 
                                 if asset_type == 'model':
-                                    if params.get('boundBoxMinX') != None:
+                                    if params.get('boundBoxMinX') is not None:
                                         bbox = {
                                             'bbox_min': (
                                                 float(params['boundBoxMinX']),
@@ -300,7 +288,6 @@ def timer_update():
 
                                 result_field.append(asset_data)
 
-                                # results = rdata['results']
                 s[search_name] = result_field
                 s['search results'] = result_field
                 s[search_name + ' orig'] = rdata
@@ -315,15 +302,11 @@ def timer_update():
                 if len(s['search results']) == 0:
                     tasks_queue.add_task((ui.add_report, ('No matching results found.',)))
 
-            # (rdata['next'])
-            # if rdata['next'] != None:
-            # search(False, get_next = True)
             else:
                 print('error', error)
                 props.report = error
                 props.search_error = True
 
-            # print('finished search thread')
             mt('preview loading finished')
     return .3
 
