@@ -638,11 +638,21 @@ def copy_object(obj):
     return new_object
 
 
+def clear_parents(objects):
+    # Remove parents from objects using operator to avoid errors with transformations
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = objects[0]
+    for obj in objects:
+        obj.select_set(True)
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+
+
 def centralize(objects):
     """Centralize a group of objects so that their median position in X and Y axis is zero and
     it "touches" the Z plane from above. Ignores position of hidden objects and cameras/empties"""
     copied_objects = [copy_object(obj) for obj in objects]
     apply_modifiers(copied_objects)
+    clear_parents(copied_objects)
     apply_rotations(copied_objects)
     translation = get_translation_to_center(copied_objects)
 
