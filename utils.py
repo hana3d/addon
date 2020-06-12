@@ -24,13 +24,13 @@ if "bpy" in locals():
 else:
     from asset_manager_real2u import paths
 
-import bpy
-from mathutils import Vector
 import json
 import os
 import sys
+from typing import List, Tuple
 
-
+import bpy
+from mathutils import Vector
 
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
@@ -567,3 +567,86 @@ def guard_from_crash():
     if bpy.context.preferences.addons['asset_manager_real2u'].preferences is None:
         return False;
     return True
+
+
+def _check_for_position(obj):
+    return obj.visible_get() and obj.type not in ('EMPTY', 'CAMERA')
+
+
+def apply_modifiers(objects):
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in objects:
+        if isinstance(obj.data, bpy.types.Mesh) and obj.modifiers:
+            bpy.context.view_layer.objects.active = obj
+            obj.select_set(True)
+    if bpy.context.selected_objects:
+        bpy.ops.object.convert()
+
+
+def apply_rotations(objects):
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in objects:
+        bpy.context.view_layer.objects.active = obj
+        obj.select_set(True)
+        # Apply only one object at a time because some object types can't have rotation applied
+        try:
+            bpy.ops.object.transform_apply(
+                location=False, rotation=True, scale=False, properties=False)
+        except RuntimeError:
+            pass
+        obj.select_set(False)
+
+
+def get_loc_dim(list_objects: List[bpy.types.Object]) -> Tuple[Vector, Vector]:
+    vertices = []
+    for obj in list_objects:
+        for corner in obj.bound_box:
+            vertices.append(obj.matrix_world @ Vector(corner))
+    min_x = min(vertex.x for vertex in vertices)
+    min_y = min(vertex.y for vertex in vertices)
+    min_z = min(vertex.z for vertex in vertices)
+    max_x = max(vertex.x for vertex in vertices)
+    max_y = max(vertex.y for vertex in vertices)
+    max_z = max(vertex.z for vertex in vertices)
+
+    location = Vector([(max_x + min_x) / 2, (max_y + min_y) / 2, (max_z + min_z) / 2])
+    dimensions = Vector([max_x - min_x, max_y - min_y, max_z - min_z])
+
+    return location, dimensions
+
+
+def get_translation_to_center(objects):
+    valid_objects = [obj for obj in objects if _check_for_position(obj)]
+    location, dimensions = get_loc_dim(valid_objects)
+    final_location = Vector([0, 0, dimensions.z / 2])
+
+    return final_location - location
+
+
+def apply_translation(objects, translation):
+    for obj in objects:
+        if obj.parent is None:
+            obj.location += translation
+
+
+def copy_object(obj):
+    new_object = obj.copy()
+    if obj.data is not None:
+        new_object.data = obj.data.copy()
+    bpy.context.collection.objects.link(new_object)
+
+    return new_object
+
+
+def centralize(objects):
+    """Centralize a group of objects so that their median position in X and Y axis is zero and
+    it "touches" the Z plane from above. Ignores position of hidden objects and cameras/empties"""
+    copied_objects = [copy_object(obj) for obj in objects]
+    apply_modifiers(copied_objects)
+    apply_rotations(copied_objects)
+    translation = get_translation_to_center(copied_objects)
+
+    for obj in copied_objects:
+        bpy.data.objects.remove(obj)
+
+    apply_translation(objects, translation)
