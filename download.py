@@ -414,6 +414,9 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
     parent['asset_data'] = asset_data
 
+    if hasattr(parent.asset_manager_real2u, 'name') and 'name' in asset_data:
+        if asset_data['name'] is not None:
+            parent.asset_manager_real2u.name = asset_data['name']
     if hasattr(parent.asset_manager_real2u, 'tags') and 'tags' in asset_data:
         asset_data['tags'].remove('non-manifold')
         parent.asset_manager_real2u.tags = ','.join(asset_data['tags'])
@@ -698,7 +701,10 @@ def check_existing(asset_data):
             shutil.copy(file_names[1], file_names[0])
 
     if len(file_names) > 0 and os.path.isfile(file_names[0]):
-        fexists = True
+        if float(asset_data['created']) > float(os.path.getctime(file_names[0])):
+            os.remove(file_names[0])
+        else:
+            fexists = True
     return fexists
 
 

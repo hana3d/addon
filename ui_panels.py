@@ -154,13 +154,13 @@ def draw_upload_common(layout, props, asset_type, context):
         # row.enabled = False
         # row.prop(props, 'id', icon='FILE_TICK')
 
-    layout.prop(props, 'category')
-    if asset_type == 'MODEL' and props.subcategory != '':  # by now block this for other asset types.
-        layout.prop(props, 'subcategory')
+    # layout.prop(props, 'category')
+    # if asset_type == 'MODEL' and props.subcategory != '':  # by now block this for other asset types.
+    #     layout.prop(props, 'subcategory')
 
-    layout.prop(props, 'is_private', expand=True)
-    if props.is_private == 'PUBLIC':
-        layout.prop(props, 'license')
+    # layout.prop(props, 'is_private', expand=True)
+    # if props.is_private == 'PUBLIC':
+    #     layout.prop(props, 'license')
 
 
 def poll_local_panels():
