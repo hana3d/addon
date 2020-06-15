@@ -94,6 +94,8 @@ def scene_load(context):
     ui_props.turn_off = False
     preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     preferences.login_attempt = False
+    preferences.refresh_in_progress = False
+
 
 @bpy.app.handlers.persistent
 def check_timers_timer():
@@ -347,7 +349,7 @@ class asset_manager_real2uUIProps(PropertyGroup):
         description="",
         default=paths.get_addon_thumbnail_path('thumbnail_notready.jpg'))
 
-    #### rating UI props
+    # rating UI props
     rating_ui_scale = ui_scale
 
     rating_button_on: BoolProperty(name="Rating Button On", default=True)
@@ -464,8 +466,7 @@ class asset_manager_real2uCommonSearchProps(object):
     search_verification_status: EnumProperty(
         name="Verification status",
         description="Search by verification status",
-        items=
-        (
+        items=(
             ('ALL', 'All', 'All'),
             ('UPLOADING', 'Uploading', 'Uploading'),
             ('UPLOADED', 'Uploaded', 'Uploaded'),
@@ -1631,10 +1632,6 @@ class asset_manager_real2uAddonPreferences(AddonPreferences):
         if self.api_key.strip() == '':
             if self.enable_oauth:
                 ui_panels.draw_login_buttons(layout)
-            else:
-                op = layout.operator("wm.url_open", text="Register online and get your API Key",
-                                     icon='QUESTION')
-                op.url = paths.asset_manager_real2u_SIGNUP_URL
         else:
             if self.enable_oauth:
                 layout.operator("wm.asset_manager_real2u_logout", text="Logout",
