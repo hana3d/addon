@@ -638,14 +638,9 @@ def draw_login_buttons(layout):
         draw_login_progress(layout)
     else:
         if user_preferences.api_key == '':
-            layout.operator("wm.asset_manager_real2u_login", text="Login",
-                            icon='URL').signup = False
-            layout.operator("wm.asset_manager_real2u_login", text="Sign up",
-                            icon='URL').signup = True
-
+            layout.operator("wm.asset_manager_real2u_login", text="Login / Sign up",
+                            icon='URL')
         else:
-            layout.operator("wm.asset_manager_real2u_login", text="Login as someone else",
-                            icon='URL').signup = False
             layout.operator("wm.asset_manager_real2u_logout", text="Logout",
                             icon='URL')
 

@@ -26,42 +26,44 @@ import requests
 
 
 class SimpleOAuthAuthenticator(object):
-    def __init__(self, server_url, client_id, ports):
+    def __init__(self, server_url, client_id, ports, audience):
         self.server_url = server_url
         self.client_id = client_id
         self.ports = ports
+        self.audience = audience
 
-    def _get_tokens(self, authorization_code=None, refresh_token=None, grant_type="authorization_code"):
+    def _get_tokens(self, authorization_code=None, refresh_token=None, grant_type='authorization_code'):
         data = {
-            "grant_type": grant_type,
-            "state": "random_state_string",
-            "client_id": self.client_id,
-            "scopes": "read write",
+            'grant_type': grant_type,
+            'state': 'random_state_string',
+            'client_id': self.client_id,
+            'scopes': 'read write'
         }
         if hasattr(self, 'redirect_uri'):
-            data["redirect_uri"] = self.redirect_uri
+            data['redirect_uri'] = self.redirect_uri
         if authorization_code:
             data['code'] = authorization_code
         if refresh_token:
             data['refresh_token'] = refresh_token
 
         response = requests.post(
-            '%s/o/token/' % self.server_url,
+            f'{self.server_url}/oauth/token/',
             data=data
         )
         if response.status_code != 200:
-            print("error retrieving refresh tokens %s" % response.status_code)
+            print(f'error retrieving refresh tokens {response.status_code}')
             print(response.content)
             return None, None, None
 
         response_json = json.loads(response.content)
-        refresh_token = response_json ['refresh_token']
-        access_token = response_json ['access_token']
+        refresh_token = response_json['refresh_token']
+        access_token = response_json['access_token']
         return access_token, refresh_token, response_json
 
-    def get_new_token(self, register=True, redirect_url=None):
+    def get_new_token(self, redirect_url=None):
         class HTTPServerHandler(BaseHTTPRequestHandler):
             html_template = '<html>%(head)s<h1>%(message)s</h1></html>'
+
             def do_GET(self):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
@@ -75,7 +77,7 @@ class SimpleOAuthAuthenticator(object):
                             '<script> window.location.href="%(redirect_url)s"; </script>' % {'redirect_url': redirect_url}
                         )
                     else:
-                        redirect_string = ""
+                        redirect_string = ''
                     self.wfile.write(bytes(self.html_template % {'head': redirect_string, 'message': 'You may now close this window.'}, 'utf-8'))
                     qs = parse_qs(urlparse(self.path).query)
                     self.server.authorization_code = qs['code'][0]
@@ -88,15 +90,16 @@ class SimpleOAuthAuthenticator(object):
             except OSError:
                 continue
             break
-        self.redirect_uri = "http://localhost:%s/consumer/exchange/" % port
+        self.redirect_uri = f'http://localhost:{port}'
         authorize_url = (
-            "/o/authorize?client_id=%s&state=random_state_string&response_type=code&"
-            "redirect_uri=%s" % (self.client_id, self.redirect_uri)
+            f'{self.server_url}/authorize'
+            + f'?client_id={self.client_id}'
+            + '&state=random_state_string'
+            + '&scope=offline_access'
+            + '&response_type=code'
+            + f'&redirect_uri={self.redirect_uri}'
+            + f'&audience={self.audience}'
         )
-        if register:
-            authorize_url = "%s/accounts/register/?next=%s" % (self.server_url, urlquote(authorize_url))
-        else:
-            authorize_url = "%s%s" % (self.server_url, authorize_url)
         webbrowser.open_new(authorize_url)
 
         httpServer.handle_request()
@@ -104,4 +107,4 @@ class SimpleOAuthAuthenticator(object):
         return self._get_tokens(authorization_code=authorization_code)
 
     def get_refreshed_token(self, refresh_token):
-        return self._get_tokens(refresh_token=refresh_token, grant_type="refresh_token")
+        return self._get_tokens(refresh_token=refresh_token, grant_type='refresh_token')

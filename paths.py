@@ -16,7 +16,9 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy, os, sys
+import bpy
+import os
+import sys
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
 asset_manager_real2u_LOCAL = "http://localhost:8001"
@@ -30,9 +32,8 @@ asset_manager_real2u_MANUAL = "https://youtu.be/1hVgcQhIAo8"
 asset_manager_real2u_MODEL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/upload/"
 asset_manager_real2u_MATERIAL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-material/"
 asset_manager_real2u_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-brush/"
-asset_manager_real2u_LOGIN_URL = "https://www.asset_manager_real2u.com/accounts/login"
-asset_manager_real2u_OAUTH_LANDING_URL = "/oauth-landing/"
-asset_manager_real2u_SIGNUP_URL = "https://www.asset_manager_real2u.com/accounts/register"
+asset_manager_real2u_OAUTH_LANDING_URL = "/oauth-landing"
+asset_manager_real2u_OAUTH_URL = "https://cornucopia-teste.us.auth0.com"
 asset_manager_real2u_SETTINGS_FILENAME = os.path.join(_presets, "bkit.json")
 
 URL_3D_KIT_MAIN = 'http://3.211.165.243:8080'
@@ -62,6 +63,10 @@ def find_in_local(text=''):
 
 def get_api_url():
     return get_bkit_url() + asset_manager_real2u_API
+
+
+def get_oauth_url():
+    return asset_manager_real2u_OAUTH_URL
 
 
 def get_oauth_landing_url():
@@ -100,7 +105,7 @@ def get_temp_dir(subdir=None):
             print('Global dir was already default, plese set a global directory in addon preferences to a dir where you have write permissions.')
             return None
         user_preferences.global_dir = p
-        tempdir = get_temp_dir(subdir = subdir)
+        tempdir = get_temp_dir(subdir=subdir)
     return tempdir
 
 
@@ -133,7 +138,8 @@ def get_download_dirs(asset_type):
             if not os.path.exists(ddir):
                 os.makedirs(ddir)
 
-        subdirs = ['textures', 'models', 'scenes', 'materials']  # brushes get stored only globally.
+        # brushes get stored only globally.
+        subdirs = ['textures', 'models', 'scenes', 'materials']
         for subd in subdirs:
             subdir = os.path.join(ddir, subd)
             if not os.path.exists(subdir):
@@ -149,7 +155,8 @@ def slugify(slug):
     Normalizes string, converts to lowercase, removes non-alpha characters,
     and converts spaces to hyphens.
     """
-    import unicodedata, re
+    import unicodedata
+    import re
     slug = slug.lower()
     slug = slug.replace('.', '_')
     slug = slug.replace('"', '')
@@ -205,7 +212,7 @@ def delete_asset_debug(asset_data):
             except:
                 e = sys.exc_info()[0]
                 print(e)
-                pass;
+                pass
 
 
 def get_clean_filepath():

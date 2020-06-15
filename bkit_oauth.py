@@ -34,30 +34,33 @@ import bpy
 import threading
 import requests
 import time
+import webbrowser
 
 from bpy.props import (
     BoolProperty,
 )
 
-CLIENT_ID = "IdFRwa3SGA8eMpzhRVFMg5Ts8sPK93xBjif93x0F"
+CLIENT_ID = "Z7lv8A8Ly13rpxRK6JKJ92UxdWJsVTgy"
+AUDIENCE = "http://localhost:8080"
+
 PORTS = [62485, 65425, 55428, 49452]
 
 active_authenticator = None
 
 
-def login_thread(signup=False):
+def login_thread():
     global active_authenticator
     r_url = paths.get_oauth_landing_url()
-    url = paths.get_bkit_url()
-    authenticator = oauth.SimpleOAuthAuthenticator(server_url=url, client_id=CLIENT_ID, ports=PORTS)
+    url = paths.get_oauth_url()
+    authenticator = oauth.SimpleOAuthAuthenticator(server_url=url, client_id=CLIENT_ID, ports=PORTS, audience=AUDIENCE)
     # we store authenticator globally to be able to ping the server if connection fails.
     active_authenticator = authenticator
-    thread = threading.Thread(target=login, args=([signup, url, r_url, authenticator]), daemon=True)
+    thread = threading.Thread(target=login, args=([url, r_url, authenticator]), daemon=True)
     thread.start()
 
 
-def login(signup, url, r_url, authenticator):
-    auth_token, refresh_token, oauth_response = authenticator.get_new_token(register=signup, redirect_url=r_url)
+def login(url, r_url, authenticator):
+    auth_token, refresh_token, oauth_response = authenticator.get_new_token(redirect_url=r_url)
     utils.p('tokens retrieved')
     tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
 
@@ -66,7 +69,7 @@ def refresh_token_thread():
     preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     if len(preferences.api_key_refresh) > 0 and preferences.refresh_in_progress == False:
         preferences.refresh_in_progress = True
-        url = paths.get_bkit_url()
+        url = paths.get_oauth_url()
         thread = threading.Thread(target=refresh_token, args=([preferences.api_key_refresh, url]), daemon=True)
         thread.start()
     else:
@@ -74,7 +77,7 @@ def refresh_token_thread():
 
 
 def refresh_token(api_key_refresh, url):
-    authenticator = oauth.SimpleOAuthAuthenticator(server_url=url, client_id=CLIENT_ID, ports=PORTS)
+    authenticator = oauth.SimpleOAuthAuthenticator(server_url=url, client_id=CLIENT_ID, ports=PORTS, audience=AUDIENCE)
     auth_token, refresh_token, oauth_response = authenticator.get_refreshed_token(api_key_refresh)
     if auth_token is not None and refresh_token is not None:
         tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
@@ -105,13 +108,6 @@ class RegisterLoginOnline(bpy.types.Operator):
     bl_label = "asset_manager_real2u login or signup"
     bl_options = {'REGISTER', 'UNDO'}
 
-    signup: BoolProperty(
-        name="create a new account",
-        description="True for register, otherwise login",
-        default=False,
-        options={'SKIP_SAVE'}
-    )
-
     @classmethod
     def poll(cls, context):
         return True
@@ -119,7 +115,7 @@ class RegisterLoginOnline(bpy.types.Operator):
     def execute(self, context):
         preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         preferences.login_attempt = True
-        login_thread(self.signup)
+        login_thread()
         return {'FINISHED'}
 
 
@@ -139,7 +135,9 @@ class Logout(bpy.types.Operator):
         preferences.login_attempt = False
         preferences.api_key_refresh = ''
         preferences.api_key = ''
-        del (bpy.context.window_manager['bkit profile'])
+        if 'bkit profile' in bpy.context.window_manager.keys():
+            del (bpy.context.window_manager['bkit profile'])
+        webbrowser.open_new(f'{paths.get_oauth_url()}/logout')
         return {'FINISHED'}
 
 

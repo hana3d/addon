@@ -78,7 +78,7 @@ SETTINGS = {
         "volume_bounces",
         "volume_max_steps",
         "volume_samples",
-        "volume_step_size"
+        "volume_step_rate"
     ],
     "eevee": [
         "bloom_clamp",

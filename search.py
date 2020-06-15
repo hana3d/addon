@@ -52,7 +52,9 @@ from bpy.types import (
     UIList
 )
 
-import requests, os, random
+import requests
+import os
+import random
 import time
 import threading
 import platform
@@ -64,14 +66,14 @@ prev_time = 0
 
 
 def check_errors(rdata):
-    if rdata.get('statusCode') == 401:
+    if rdata.get('status_code') == 401:
         utils.p(rdata)
-        if rdata.get('detail') == 'Invalid token.':
+        if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
             if user_preferences.api_key != '':
                 if user_preferences.enable_oauth:
                     bkit_oauth.refresh_token_thread()
-                return False, rdata.get('detail')
+                return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     return True, ''
 
@@ -118,7 +120,7 @@ def fetch_server_data():
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if user_preferences.enable_oauth and \
-                len(user_preferences.api_key) < 38 and \
+                len(user_preferences.api_key) > 0 and \
                 user_preferences.api_key_timeout < time.time() + 3600:
             bkit_oauth.refresh_token_thread()
         if api_key != '' and bpy.context.window_manager.get('bkit profile') == None:
@@ -624,7 +626,7 @@ def fetch_gravatar(adata):
 
         if os.path.exists(gravatar_path):
             tasks_queue.add_task((write_gravatar, (adata['id'], gravatar_path)))
-            return;
+            return
 
         url = "https://www.gravatar.com/avatar/" + adata['gravatarHash'] + '?d=404'
         r = rerequests.get(url, stream=False)
@@ -751,7 +753,7 @@ class Searcher(threading.Thread):
             # assumes no keywords and no category, thus an empty search that is triggered on start.
             # orders by last core file upload
             if query.get('verification_status') == 'uploaded':
-                #for validators, sort uploaded from oldest
+                # for validators, sort uploaded from oldest
                 requeststring += '+order:created'
             else:
                 requeststring += '+order:-last_upload'
@@ -794,7 +796,7 @@ class Searcher(threading.Thread):
                     urlquery = origdata['next']
                     # rparameters = {}
                     if urlquery == None:
-                        return;
+                        return
                 except:
                     # in case no search results found on drive we don't do next page loading.
                     params['get_next'] = False
@@ -819,6 +821,7 @@ class Searcher(threading.Thread):
         mt('response is back ')
         try:
             rdata = r.json()
+            rdata['status_code'] = r.status_code
         except Exception as inst:
             reports = r.text
             print(inst)
@@ -1124,36 +1127,36 @@ def search(category='', get_next=False, author_id=''):
 
     if uiprops.asset_type == 'MODEL':
         if not hasattr(scene, 'asset_manager_real2u'):
-            return;
+            return
         props = scene.asset_manager_real2u_models
         query = build_query_model()
 
     if uiprops.asset_type == 'SCENE':
         if not hasattr(scene, 'asset_manager_real2u_scene'):
-            return;
+            return
         props = scene.asset_manager_real2u_scene
         query = build_query_scene()
 
     if uiprops.asset_type == 'MATERIAL':
         if not hasattr(scene, 'asset_manager_real2u_mat'):
-            return;
+            return
         props = scene.asset_manager_real2u_mat
         query = build_query_material()
 
     if uiprops.asset_type == 'TEXTURE':
         if not hasattr(scene, 'asset_manager_real2u_tex'):
-            return;
+            return
         # props = scene.asset_manager_real2u_tex
         # query = build_query_texture()
 
     if uiprops.asset_type == 'BRUSH':
         if not hasattr(scene, 'asset_manager_real2u_brush'):
-            return;
+            return
         props = scene.asset_manager_real2u_brush
         query = build_query_brush()
 
     if props.is_searching and get_next == True:
-        return;
+        return
 
     if category != '':
         query['category_subtree'] = category
@@ -1203,7 +1206,7 @@ def search_update(self, context):
     # if the asset type already isn't there it means this update function
     # was triggered by it's last iteration and needs to cancel
     if idi > -1 and ati == -1:
-        return;
+        return
     if ati > -1:
         at = kwds[ati:].lower()
         # uncertain length of the remaining string -  find as better method to check the presence of asset type
