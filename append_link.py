@@ -24,7 +24,7 @@ if "bpy" in locals():
     ui = reload(ui)
     render_settings = reload(render_settings)
 else:
-    from hana3d import utils, ui, render_settings
+    from asset_manager_real2u import utils, ui, render_settings
 
 import bpy
 import uuid
@@ -57,7 +57,7 @@ def append_material(file_name, matname=None, link=False, fake_user=True):
                 data_to.materials = [m]
                 # print(m, type(m))
                 matname = m
-                break
+                break;
 
     # we have to find the new material :(
     for mname in bpy.data.materials.keys():
@@ -102,7 +102,7 @@ def copy_curves(from_scene: bpy.types.Scene, to_scene: bpy.types.Scene):
 def append_scene(file_name, scenename=None, link=False, fake_user=False):
     '''append a scene type asset'''
     scene = bpy.context.scene
-    props = scene.hana3d_scene
+    props = scene.asset_manager_real2u_scene
 
     if props.merge_add == 'MERGE' and scenename is None:
         with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
@@ -142,7 +142,7 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
     return scene
 
 
-def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, parent=None, **kwargs):
+def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, parent = None, **kwargs):
     '''link an instanced group - model type asset'''
     sel = utils.selection_get()
 

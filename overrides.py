@@ -22,10 +22,9 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from hana3d import utils
+    from asset_manager_real2u import utils
 
-import bpy
-import mathutils
+import bpy, mathutils
 from bpy.types import (
     Operator)
 
@@ -179,8 +178,8 @@ def ensure_eevee_transparency(m):
 class BringToScene(Operator):
     """Bring linked object hierarchy to scene and make it editable."""
 
-    bl_idname = "object.hana3d_bring_to_scene"
-    bl_label = "hana3d bring objects to scene"
+    bl_idname = "object.asset_manager_real2u_bring_to_scene"
+    bl_label = "asset_manager_real2u bring objects to scene"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -252,8 +251,8 @@ class BringToScene(Operator):
 
 class ModelProxy(Operator):
     """Attempt to create proxy armature from the asset"""
-    bl_idname = "object.hana3d_make_proxy"
-    bl_label = "hana3d Make Proxy"
+    bl_idname = "object.asset_manager_real2u_make_proxy"
+    bl_label = "asset_manager_real2u Make Proxy"
 
     @classmethod
     def poll(cls, context):
@@ -268,7 +267,7 @@ class ModelProxy(Operator):
 
 class ColorCorrector(Operator):
     """Add color corector to the asset. """
-    bl_idname = "object.hana3d_color_corrector"
+    bl_idname = "object.asset_manager_real2u_color_corrector"
     bl_label = "Add color corrector"
 
     @classmethod

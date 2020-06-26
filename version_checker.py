@@ -22,17 +22,14 @@ if "requests" in locals():
 
     paths = reload(paths)
 else:
-    from hana3d import paths
+    from asset_manager_real2u import paths
 
-import requests
-import os
-import json
-import threading
+import requests, os, json, threading
 
 
 def get_addon_version():
-    import hana3d
-    ver = hana3d.bl_info['version']
+    import asset_manager_real2u
+    ver = asset_manager_real2u.bl_info['version']
     return '%i.%i.%i' % (ver[0], ver[1], ver[2])
 
 
