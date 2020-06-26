@@ -24,7 +24,7 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from asset_manager_real2u import paths, utils, tasks_queue, rerequests
+    from hana3d import paths, utils, tasks_queue, rerequests
 
 import requests
 import json
@@ -72,7 +72,7 @@ def get_category(categories, cat_path=()):
                 categories = c['children']
                 if category == cat_path[-1]:
                     return (c)
-                break;
+                break
 
 
 def copy_categories():
@@ -107,11 +107,12 @@ def load_categories():
     except:
         print('categories failed to read')
 
+
 #
 catfetch_counter = 0
 
 
-def fetch_categories(API_key, force = False):
+def fetch_categories(API_key, force=False):
     url = paths.get_api_url() + 'categories/'
 
     headers = utils.get_headers(API_key)
@@ -144,6 +145,6 @@ def fetch_categories(API_key, force = False):
             shutil.copy(source_path, categories_filepath)
 
 
-def fetch_categories_thread(API_key, force = False):
+def fetch_categories_thread(API_key, force=False):
     cat_thread = threading.Thread(target=fetch_categories, args=([API_key, force]), daemon=True)
     cat_thread.start()

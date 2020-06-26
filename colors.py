@@ -16,7 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-# this module defines color palette for asset_manager_real2u UI
+# this module defines color palette for hana3d UI
 
 TEXT = (.9, .9, .9, .6)
 GREEN = (.9, 1, .9, .6)
