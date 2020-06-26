@@ -700,7 +700,7 @@ def check_existing(asset_data):
                 file_names[1]):  # only in case of changed settings or deleted/moved global dict.
             shutil.copy(file_names[1], file_names[0])
 
-    if len(file_names) > 0 and os.path.isfile(file_names[0]):
+    if len(file_names) > 0 and os.path.isfile(file_names[0]) and 'created' in asset_data:
         if float(asset_data['created']) > float(os.path.getctime(file_names[0])):
             os.remove(file_names[0])
         else:
@@ -914,10 +914,8 @@ class asset_manager_real2uDownloadOperator(bpy.types.Operator):
 
         asset_data = sr[self.asset_index].to_dict()  # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
         au = s.get('assets used')
-        if au == None:
+        if au is None:
             s['assets used'] = {}
-        if asset_data['asset_base_id'] in s.get('assets used'):
-            asset_data = s['assets used'][asset_data['asset_base_id']].to_dict()
 
         atype = asset_data['asset_type']
         if bpy.context.mode != 'OBJECT' and (
