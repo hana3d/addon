@@ -27,12 +27,14 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from asset_manager_real2u import paths, append_link, utils, ui, colors, tasks_queue, rerequests
+    from hana3d import paths, append_link, utils, ui, colors, tasks_queue, rerequests
 
 import threading
 import time
 import requests
-import shutil, sys, os
+import shutil
+import sys
+import os
 import uuid
 import copy
 
@@ -107,7 +109,7 @@ def check_unused():
 
 @persistent
 def scene_save(context):
-    ''' does cleanup of asset_manager_real2u props and sends a message to the server about assets used.'''
+    ''' does cleanup of hana3d props and sends a message to the server about assets used.'''
     # TODO this can be optimized by merging these 2 functions, since both iterate over all objects.
     if not bpy.app.background:
         check_unused()
@@ -173,11 +175,11 @@ def get_scene_id():
 def report_usages():
     '''report the usage of assets to the server.'''
     mt = time.time()
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = user_preferences.api_key
     sid = get_scene_id()
     headers = utils.get_headers(api_key)
-    url = paths.get_api_url() + paths.asset_manager_real2u_REPORT_URL
+    url = paths.get_api_url() + paths.hana3d_REPORT_URL
 
     assets = {}
     asset_obs = []
@@ -239,7 +241,7 @@ def report_usages():
 
     if new_assets_count == 0:
         utils.p('no new assets were added')
-        return;
+        return
     usage_report = {
         'scene': sid,
         'reportType': 'save',
@@ -261,7 +263,7 @@ def report_usages():
     for k in ak:  # rewrite assets used.
         scene['assets used'][k] = assets[k]
 
-    ###########check ratings herer too:
+    # check ratings herer too:
     scene['assets rated'] = scene.get('assets rated', {})
     for k in assets.keys():
         scene['assets rated'][k] = scene['assets rated'].get(k, False)
@@ -277,7 +279,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     file_names = paths.get_download_filenames(asset_data)
     scene = bpy.context.scene
 
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
     if user_preferences.api_key == '':
         user_preferences.asset_counter += 1
@@ -290,7 +292,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
         s = bpy.context.scene
         downloaders = kwargs.get('downloaders')
         s = bpy.context.scene
-        sprops = s.asset_manager_real2u_models
+        sprops = s.hana3d_models
         if sprops.append_method == 'LINK_COLLECTION':
             sprops.append_link = 'LINK'
             sprops.import_as = 'GROUP'
@@ -364,7 +366,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
         inscene = False
         for b in bpy.data.brushes:
-            if b.asset_manager_real2u.id == asset_data['id']:
+            if b.hana3d.id == asset_data['id']:
                 inscene = True
                 brush = b
                 break
@@ -389,7 +391,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     elif asset_data['asset_type'] == 'material':
         inscene = False
         for m in bpy.data.materials:
-            if m.asset_manager_real2u.id == asset_data['id']:
+            if m.hana3d.id == asset_data['id']:
                 inscene = True
                 material = m
                 break
@@ -414,16 +416,16 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
     parent['asset_data'] = asset_data
 
-    if hasattr(parent.asset_manager_real2u, 'name') and 'name' in asset_data:
+    if hasattr(parent.hana3d, 'name') and 'name' in asset_data:
         if asset_data['name'] is not None:
-            parent.asset_manager_real2u.name = asset_data['name']
-    if hasattr(parent.asset_manager_real2u, 'tags') and 'tags' in asset_data:
+            parent.hana3d.name = asset_data['name']
+    if hasattr(parent.hana3d, 'tags') and 'tags' in asset_data:
         asset_data['tags'].remove('non-manifold')
-        parent.asset_manager_real2u.tags = ','.join(asset_data['tags'])
-    if hasattr(parent.asset_manager_real2u, 'description') and 'description' in asset_data:
+        parent.hana3d.tags = ','.join(asset_data['tags'])
+    if hasattr(parent.hana3d, 'description') and 'description' in asset_data:
         if asset_data['description'] is not None:
-            parent.asset_manager_real2u.description = asset_data['description']
-    if hasattr(parent.asset_manager_real2u, 'custom_props') and 'metadata' in asset_data:
+            parent.hana3d.description = asset_data['description']
+    if hasattr(parent.hana3d, 'custom_props') and 'metadata' in asset_data:
         if 'product_info' in asset_data['metadata']:
             product_info = asset_data['metadata'].pop('product_info')
             clients = []
@@ -431,21 +433,21 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
             for client_sku in product_info:
                 clients.append(client_sku['client'])
                 skus.append(client_sku['sku'])
-            if hasattr(parent.asset_manager_real2u, 'client') and hasattr(parent.asset_manager_real2u, 'sku'):
-                parent.asset_manager_real2u.client = ','.join(clients)
-                parent.asset_manager_real2u.sku = ','.join(skus)
+            if hasattr(parent.hana3d, 'client') and hasattr(parent.hana3d, 'sku'):
+                parent.hana3d.client = ','.join(clients)
+                parent.hana3d.sku = ','.join(skus)
             else:
-                parent.asset_manager_real2u.custom_props['client'] = ','.join(clients)
-                parent.asset_manager_real2u.custom_props['sku'] = ','.join(skus)
+                parent.hana3d.custom_props['client'] = ','.join(clients)
+                parent.hana3d.custom_props['sku'] = ','.join(skus)
 
         for key, value in asset_data['metadata'].items():
-            parent.asset_manager_real2u.custom_props[key] = value
+            parent.hana3d.custom_props[key] = value
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 
 
 # @bpy.app.handlers.persistent
-def timer_update():  # TODO might get moved to handle all asset_manager_real2u stuff, not to slow down.
+def timer_update():  # TODO might get moved to handle all hana3d stuff, not to slow down.
     '''check for running and finished downloads and react. write progressbars too.'''
     global download_threads
     if len(download_threads) == 0:
@@ -476,9 +478,9 @@ def timer_update():  # TODO might get moved to handle all asset_manager_real2u s
             wm = bpy.context.window_manager
 
             at = asset_data['asset_type']
-            if ((bpy.context.mode == 'OBJECT' and (at == 'model' \
+            if ((bpy.context.mode == 'OBJECT' and (at == 'model'
                                                    or at == 'material'))) \
-                    or ((at == 'brush') \
+                    or ((at == 'brush')
                         and wm.get(
                         'appendable') == True) or at == 'scene':  # don't do this stuff in editmode and other modes, just wait...
                 download_threads.remove(threaddata)
@@ -523,14 +525,14 @@ def timer_update():  # TODO might get moved to handle all asset_manager_real2u s
 
 
 def download_file(asset_data):
-    #this is a simple non-threaded way to download files for background resolution genenration tool
+    # this is a simple non-threaded way to download files for background resolution genenration tool
     file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
 
     if check_existing(asset_data):
         # this sends the thread for processing, where another check should occur, since the file might be corrupted.
         utils.p('not downloading, already in db')
         return file_name
-    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = preferences.api_key
 
     with open(file_name, "wb") as f:
@@ -550,6 +552,7 @@ def download_file(asset_data):
                 f.write(data)
     return file_name
 
+
 class Downloader(threading.Thread):
     def __init__(self, asset_data, tcom, scene_id, api_key):
         super(Downloader, self).__init__()
@@ -567,7 +570,7 @@ class Downloader(threading.Thread):
 
     # def main_download_thread(asset_data, tcom, scene_id, api_key):
     def run(self):
-        '''try to download file from asset_manager_real2u'''
+        '''try to download file from hana3d'''
         asset_data = self.asset_data
         tcom = self.tcom
         scene_id = self.scene_id
@@ -579,7 +582,7 @@ class Downloader(threading.Thread):
         if not has_url:
             tasks_queue.add_task(
                 (ui.add_report, ('Failed to obtain download URL for %s.' % asset_data['name'], 5, colors.RED)))
-            return;
+            return
         if tcom.error:
             return
         # only now we can check if the file already exists. This should have 2 levels, for materials and for brushes
@@ -588,14 +591,14 @@ class Downloader(threading.Thread):
             # this sends the thread for processing, where another check should occur, since the file might be corrupted.
             tcom.downloaded = 100
             utils.p('not downloading, trying to append again')
-            return;
+            return
 
         file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
         # for k in asset_data:
         #    print(asset_data[k])
         if self.stopped():
             utils.p('stopping download: ' + asset_data['name'])
-            return;
+            return
 
         with open(file_name, "wb") as f:
             print("Downloading %s" % file_name)
@@ -618,7 +621,7 @@ class Downloader(threading.Thread):
                         utils.p('stopping download: ' + asset_data['name'])
                         f.close()
                         os.remove(file_name)
-                        return;
+                        return
 
 
 class ThreadCom:  # object passed to threads to read background process stdout info
@@ -634,7 +637,7 @@ class ThreadCom:  # object passed to threads to read background process stdout i
 
 def download(asset_data, **kwargs):
     '''start the download thread'''
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = user_preferences.api_key
     scene_id = get_scene_id()
 
@@ -720,7 +723,7 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
             try:
                 append_asset(asset_data, **kwargs)
                 if asset_data['asset_type'] == 'scene':
-                    if bpy.context.scene.asset_manager_real2u_scene.merge_add == 'ADD':
+                    if bpy.context.scene.hana3d_scene.merge_add == 'ADD':
                         for window in bpy.context.window_manager.windows:
                             window.scene = bpy.data.scenes[asset_data['name']]
                 done = True
@@ -858,10 +861,10 @@ asset_types = (
 )
 
 
-class asset_manager_real2uKillDownloadOperator(bpy.types.Operator):
+class hana3dKillDownloadOperator(bpy.types.Operator):
     """Kill a download"""
-    bl_idname = "scene.asset_manager_real2u_download_kill"
-    bl_label = "asset_manager_real2u Kill Asset Download"
+    bl_idname = "scene.hana3d_download_kill"
+    bl_label = "hana3d Kill Asset Download"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     thread_index: IntProperty(name="Thread index", description='index of the thread to kill', default=-1)
@@ -874,10 +877,10 @@ class asset_manager_real2uKillDownloadOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class asset_manager_real2uDownloadOperator(bpy.types.Operator):
+class hana3dDownloadOperator(bpy.types.Operator):
     """Download and link asset to scene. Only link if asset already available locally."""
-    bl_idname = "scene.asset_manager_real2u_download"
-    bl_label = "asset_manager_real2u Asset Download"
+    bl_idname = "scene.hana3d_download"
+    bl_label = "hana3d Asset Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     asset_type: EnumProperty(
@@ -906,7 +909,7 @@ class asset_manager_real2uDownloadOperator(bpy.types.Operator):
 
     # @classmethod
     # def poll(cls, context):
-    #     return bpy.context.window_manager.asset_manager_real2uModelThumbnails is not ''
+    #     return bpy.context.window_manager.hana3dModelThumbnails is not ''
 
     def execute(self, context):
         s = bpy.context.scene
@@ -952,16 +955,16 @@ class asset_manager_real2uDownloadOperator(bpy.types.Operator):
 
 
 def register_download():
-    bpy.utils.register_class(asset_manager_real2uDownloadOperator)
-    bpy.utils.register_class(asset_manager_real2uKillDownloadOperator)
+    bpy.utils.register_class(hana3dDownloadOperator)
+    bpy.utils.register_class(hana3dKillDownloadOperator)
     bpy.app.handlers.load_post.append(scene_load)
     bpy.app.handlers.save_pre.append(scene_save)
     bpy.app.timers.register(timer_update)
 
 
 def unregister_download():
-    bpy.utils.unregister_class(asset_manager_real2uDownloadOperator)
-    bpy.utils.unregister_class(asset_manager_real2uKillDownloadOperator)
+    bpy.utils.unregister_class(hana3dDownloadOperator)
+    bpy.utils.unregister_class(hana3dKillDownloadOperator)
     bpy.app.handlers.load_post.remove(scene_load)
     bpy.app.handlers.save_pre.remove(scene_save)
     if bpy.app.timers.is_registered(timer_update):

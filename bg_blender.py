@@ -21,10 +21,12 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from asset_manager_real2u import utils
+    from hana3d import utils
 
 import bpy
-import sys, threading, os
+import sys
+import threading
+import os
 import re
 
 from bpy.props import (
@@ -184,7 +186,7 @@ class KillBgProcess(bpy.types.Operator):
             props.uploading = False
         if self.process_type == 'THUMBNAILER':
             props.is_generating_thumbnail = False
-        global asset_manager_real2u_bg_process
+        global hana3d_bg_process
         # print('killing', self.process_source, self.process_type)
         # then go kill the process. this wasn't working for unsetting props and that was the reason for changing to the method above.
 

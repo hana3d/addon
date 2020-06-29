@@ -6,3 +6,4 @@ local/
 env/
 __pycache__
 *.pyc
+hana3d_updater_status.json

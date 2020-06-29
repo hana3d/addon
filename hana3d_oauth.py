@@ -27,7 +27,7 @@ if "bpy" in locals():
     oauth = reload(oauth)
     ui = reload(ui)
 else:
-    from asset_manager_real2u import tasks_queue, utils, paths, search, categories, oauth, ui
+    from hana3d import tasks_queue, utils, paths, search, categories, oauth, ui
 
 import bpy
 
@@ -66,7 +66,7 @@ def login(url, r_url, authenticator):
 
 
 def refresh_token_thread():
-    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    preferences = bpy.context.preferences.addons['hana3d'].preferences
     if len(preferences.api_key_refresh) > 0 and preferences.refresh_in_progress == False:
         preferences.refresh_in_progress = True
         url = paths.get_oauth_url()
@@ -86,7 +86,7 @@ def refresh_token(api_key_refresh, url):
 
 def write_tokens(auth_token, refresh_token, oauth_response):
     utils.p('writing tokens')
-    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    preferences = bpy.context.preferences.addons['hana3d'].preferences
     preferences.api_key_refresh = refresh_token
     preferences.api_key = auth_token
     preferences.api_key_timeout = time.time() + oauth_response['expires_in']
@@ -96,16 +96,16 @@ def write_tokens(auth_token, refresh_token, oauth_response):
     props = utils.get_search_props()
     if props is not None:
         props.report = ''
-    ui.add_report('asset_manager_real2u Re-Login success')
+    ui.add_report('hana3d Re-Login success')
     search.get_profile()
     categories.fetch_categories_thread(auth_token)
 
 
 class RegisterLoginOnline(bpy.types.Operator):
-    """Login online on asset_manager_real2u webpage"""
+    """Login online on hana3d webpage"""
 
-    bl_idname = "wm.asset_manager_real2u_login"
-    bl_label = "asset_manager_real2u login or signup"
+    bl_idname = "wm.hana3d_login"
+    bl_label = "hana3d login or signup"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -113,17 +113,17 @@ class RegisterLoginOnline(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        preferences = bpy.context.preferences.addons['hana3d'].preferences
         preferences.login_attempt = True
         login_thread()
         return {'FINISHED'}
 
 
 class Logout(bpy.types.Operator):
-    """Logout from asset_manager_real2u immediately"""
+    """Logout from hana3d immediately"""
 
-    bl_idname = "wm.asset_manager_real2u_logout"
-    bl_label = "asset_manager_real2u logout"
+    bl_idname = "wm.hana3d_logout"
+    bl_label = "hana3d logout"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -131,12 +131,12 @@ class Logout(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        preferences = bpy.context.preferences.addons['hana3d'].preferences
         preferences.login_attempt = False
         preferences.api_key_refresh = ''
         preferences.api_key = ''
-        if 'bkit profile' in bpy.context.window_manager.keys():
-            del (bpy.context.window_manager['bkit profile'])
+        if 'hana3d profile' in bpy.context.window_manager.keys():
+            del (bpy.context.window_manager['hana3d profile'])
         webbrowser.open_new(f'{paths.get_oauth_url()}/logout')
         return {'FINISHED'}
 
@@ -144,8 +144,8 @@ class Logout(bpy.types.Operator):
 class CancelLoginOnline(bpy.types.Operator):
     """Cancel login attempt."""
 
-    bl_idname = "wm.asset_manager_real2u_login_cancel"
-    bl_label = "asset_manager_real2u login cancel"
+    bl_idname = "wm.hana3d_login_cancel"
+    bl_label = "hana3d login cancel"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -154,7 +154,7 @@ class CancelLoginOnline(bpy.types.Operator):
 
     def execute(self, context):
         global active_authenticator
-        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        preferences = bpy.context.preferences.addons['hana3d'].preferences
         preferences.login_attempt = False
         try:
             if active_authenticator is not None:
