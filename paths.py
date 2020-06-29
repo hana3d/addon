@@ -21,27 +21,27 @@ import os
 import sys
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-hana3d_LOCAL = "http://localhost:8001"
-hana3d_MAIN = "https://www.hana3d.com"
-hana3d_DEVEL = "https://devel.hana3d.com"
-hana3d_API = "/api/v1/"
-hana3d_REPORT_URL = "usage_report/"
-hana3d_USER_ASSETS = "/my-assets"
-hana3d_PLANS = "https://www.hana3d.com/plans/pricing/"
-hana3d_MANUAL = "https://youtu.be/1hVgcQhIAo8"
-hana3d_MODEL_UPLOAD_INSTRUCTIONS_URL = "https://www.hana3d.com/docs/upload/"
-hana3d_MATERIAL_UPLOAD_INSTRUCTIONS_URL = "https://www.hana3d.com/docs/uploading-material/"
-hana3d_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.hana3d.com/docs/uploading-brush/"
-hana3d_OAUTH_LANDING_URL = "/oauth-landing"
-hana3d_OAUTH_URL = "https://cornucopia-teste.us.auth0.com"
-hana3d_SETTINGS_FILENAME = os.path.join(_presets, "hana3d.json")
+asset_manager_real2u_LOCAL = "http://localhost:8001"
+asset_manager_real2u_MAIN = "https://www.asset_manager_real2u.com"
+asset_manager_real2u_DEVEL = "https://devel.asset_manager_real2u.com"
+asset_manager_real2u_API = "/api/v1/"
+asset_manager_real2u_REPORT_URL = "usage_report/"
+asset_manager_real2u_USER_ASSETS = "/my-assets"
+asset_manager_real2u_PLANS = "https://www.asset_manager_real2u.com/plans/pricing/"
+asset_manager_real2u_MANUAL = "https://youtu.be/1hVgcQhIAo8"
+asset_manager_real2u_MODEL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/upload/"
+asset_manager_real2u_MATERIAL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-material/"
+asset_manager_real2u_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-brush/"
+asset_manager_real2u_OAUTH_LANDING_URL = "/oauth-landing"
+asset_manager_real2u_OAUTH_URL = "https://cornucopia-teste.us.auth0.com"
+asset_manager_real2u_SETTINGS_FILENAME = os.path.join(_presets, "bkit.json")
 
 URL_3D_KIT_MAIN = 'http://3.211.165.243:8080'
 URL_3D_KIT_LOCAL = 'http://localhost:8080'
 URL_3D_KIT_DEV = os.getenv('URL_3D_KIT_DEV')
 
 
-def get_hana3d_url():
+def get_bkit_url():
     if bpy.app.debug_value == 1:
         return URL_3D_KIT_LOCAL
 
@@ -62,21 +62,21 @@ def find_in_local(text=''):
 
 
 def get_api_url():
-    return get_hana3d_url() + hana3d_API
+    return get_bkit_url() + asset_manager_real2u_API
 
 
 def get_oauth_url():
-    return hana3d_OAUTH_URL
+    return asset_manager_real2u_OAUTH_URL
 
 
 def get_oauth_landing_url():
-    return get_hana3d_url() + hana3d_OAUTH_LANDING_URL
+    return get_bkit_url() + asset_manager_real2u_OAUTH_LANDING_URL
 
 
 def default_global_dict():
     from os.path import expanduser
     home = expanduser("~")
-    return home + os.sep + 'hana3d_data'
+    return home + os.sep + 'asset_manager_real2u_data'
 
 
 def get_categories_filepath():
@@ -85,7 +85,7 @@ def get_categories_filepath():
 
 
 def get_temp_dir(subdir=None):
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
 
     # tempdir = user_preferences.temp_dir
     tempdir = os.path.join(user_preferences.global_dir, 'temp')
@@ -114,7 +114,7 @@ def get_download_dirs(asset_type):
     subdmapping = {'brush': 'brushes', 'texture': 'textures', 'model': 'models', 'scene': 'scenes',
                    'material': 'materials'}
 
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     dirs = []
     if user_preferences.directory_behaviour == 'BOTH' or 'GLOBAL':
         ddir = user_preferences.global_dir
@@ -197,8 +197,8 @@ def get_download_filenames(asset_data):
 
 
 def delete_asset_debug(asset_data):
-    from hana3d import download
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    from asset_manager_real2u import download
+    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     api_key = user_preferences.api_key
 
     download.get_download_url(asset_data, download.get_scene_id(), api_key)
