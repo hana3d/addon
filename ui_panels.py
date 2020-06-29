@@ -26,7 +26,7 @@ if "bpy" in locals():
     categories = importlib.reload(categories)
     icons = importlib.reload(icons)
 else:
-    from asset_manager_real2u import paths, ratings, utils, download, categories, icons
+    from hana3d import paths, ratings, utils, download, categories, icons
 
 from bpy.types import (
     Panel
@@ -80,20 +80,20 @@ def draw_ratings(layout, context):
         label_multiline(layout, text='Please login or sign up '
                                      'to rate assets.')
         return
-    bkit_ratings = asset.bkit_ratings
+    hana3d_ratings = asset.hana3d_ratings
 
-    ratings.draw_rating(layout, bkit_ratings, 'rating_quality', 'Quality')
+    ratings.draw_rating(layout, hana3d_ratings, 'rating_quality', 'Quality')
     layout.separator()
-    layout.prop(bkit_ratings, 'rating_work_hours')
+    layout.prop(hana3d_ratings, 'rating_work_hours')
     w = context.region.width
 
     # layout.label(text='problems')
-    # layout.prop(bkit_ratings, 'rating_problems', text='')
+    # layout.prop(hana3d_ratings, 'rating_problems', text='')
     # layout.label(text='compliments')
-    # layout.prop(bkit_ratings, 'rating_compliments', text='')
+    # layout.prop(hana3d_ratings, 'rating_compliments', text='')
 
     # row = layout.row()
-    # op = row.operator("object.asset_manager_real2u_rating_upload", text="Send rating", icon='URL')
+    # op = row.operator("object.hana3d_rating_upload", text="Send rating", icon='URL')
     # return op
 
 
@@ -112,11 +112,11 @@ def draw_upload_common(layout, props, asset_type, context):
     op = layout.operator("wm.url_open", text="Read upload instructions",
                          icon='QUESTION')
     if asset_type == 'MODEL':
-        op.url = paths.asset_manager_real2u_MODEL_UPLOAD_INSTRUCTIONS_URL
+        op.url = paths.hana3d_MODEL_UPLOAD_INSTRUCTIONS_URL
     if asset_type == 'MATERIAL':
-        op.url = paths.asset_manager_real2u_MATERIAL_UPLOAD_INSTRUCTIONS_URL
+        op.url = paths.hana3d_MATERIAL_UPLOAD_INSTRUCTIONS_URL
     if asset_type == 'BRUSH':
-        op.url = paths.asset_manager_real2u_BRUSH_UPLOAD_INSTRUCTIONS_URL
+        op.url = paths.hana3d_BRUSH_UPLOAD_INSTRUCTIONS_URL
 
     row = layout.row(align=True)
     if props.upload_state != '':
@@ -133,15 +133,15 @@ def draw_upload_common(layout, props, asset_type, context):
 
     if props.asset_base_id == '':
         optext = 'Upload %s' % asset_type.lower()
-        op = layout.operator("object.asset_manager_real2u_upload", text=optext, icon='EXPORT')
+        op = layout.operator("object.hana3d_upload", text=optext, icon='EXPORT')
         op.asset_type = asset_type
 
     if props.asset_base_id != '':
-        op = layout.operator("object.asset_manager_real2u_upload", text='Reupload asset', icon='EXPORT')
+        op = layout.operator("object.hana3d_upload", text='Reupload asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = True
 
-        op = layout.operator("object.asset_manager_real2u_upload", text='Upload as new asset', icon='EXPORT')
+        op = layout.operator("object.hana3d_upload", text='Upload as new asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = False
 
@@ -164,7 +164,7 @@ def draw_upload_common(layout, props, asset_type, context):
 
 
 def poll_local_panels():
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     return user_preferences.panel_behaviour == 'BOTH' or user_preferences.panel_behaviour == 'LOCAL'
 
 
@@ -187,7 +187,7 @@ def draw_panel_model_upload(self, context):
     ob = bpy.context.active_object
     while ob.parent is not None:
         ob = ob.parent
-    props = ob.asset_manager_real2u
+    props = ob.hana3d
 
     layout = self.layout
 
@@ -200,7 +200,7 @@ def draw_panel_model_upload(self, context):
         col.enabled = False
     prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        col.operator("object.asset_manager_real2u_generate_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
+        col.operator("object.hana3d_generate_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
 
     if props.is_generating_thumbnail:
         row = layout.row(align=True)
@@ -220,14 +220,14 @@ def draw_panel_model_upload(self, context):
         layout.prop(props.custom_props, f'["{key}"]')
 
     row = layout.row()
-    row.operator('asset_manager_real2u.model_custom_props', text='Create Custom Prop')
-    layout.prop(scene.asset_manager_real2u_custom_props, "key")
-    layout.prop(scene.asset_manager_real2u_custom_props, "value")
+    row.operator('hana3d.model_custom_props', text='Create Custom Prop')
+    layout.prop(scene.hana3d_custom_props, "key")
+    layout.prop(scene.hana3d_custom_props, "value")
 
 
 def draw_panel_scene_upload(self, context):
     s = bpy.context.scene
-    props = s.asset_manager_real2u
+    props = s.hana3d
     layout = self.layout
 
     draw_upload_common(layout, props, 'SCENE', context)
@@ -240,7 +240,7 @@ def draw_panel_scene_upload(self, context):
         col.enabled = False
     prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        col.operator("object.asset_manager_real2u_scene_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
+        col.operator("object.hana3d_scene_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
     if props.is_generating_thumbnail:
         row = layout.row(align=True)
         row.label(text=props.thumbnail_generating_state, icon='RENDER_STILL')
@@ -253,7 +253,7 @@ def draw_panel_scene_upload(self, context):
 
 def draw_assetbar_show_hide(layout, props):
     s = bpy.context.scene
-    ui_props = s.asset_manager_real2uUI
+    ui_props = s.hana3dUI
 
     if ui_props.assetbar_on:
         icon = 'HIDE_OFF'
@@ -261,7 +261,7 @@ def draw_assetbar_show_hide(layout, props):
     else:
         icon = 'HIDE_ON'
         ttip = 'Click to Show Asset Bar'
-    op = layout.operator('view3d.asset_manager_real2u_asset_bar', text='', icon=icon)
+    op = layout.operator('view3d.hana3d_asset_bar', text='', icon=icon)
     op.keep_running = False
     op.do_search = False
 
@@ -271,7 +271,7 @@ def draw_assetbar_show_hide(layout, props):
 def draw_panel_model_search(self, context):
     s = context.scene
 
-    props = s.asset_manager_real2u_models
+    props = s.hana3d_models
     layout = self.layout
 
     row = layout.row()
@@ -283,7 +283,7 @@ def draw_panel_model_search(self, context):
         icon = 'ERROR'
     label_multiline(layout, text=props.report, icon=icon)
     if props.report == 'You need Full plan to get this item.':
-        layout.operator("wm.url_open", text="Get Full plan", icon='URL').url = paths.asset_manager_real2u_PLANS
+        layout.operator("wm.url_open", text="Get Full plan", icon='URL').url = paths.hana3d_PLANS
 
     # layout.prop(props, "search_style")
     # layout.prop(props, "own_only")
@@ -354,7 +354,7 @@ def draw_panel_model_search(self, context):
 
 def draw_panel_scene_search(self, context):
     s = context.scene
-    props = s.asset_manager_real2u_scene
+    props = s.hana3d_scene
     layout = self.layout
 
     layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
@@ -365,9 +365,9 @@ def draw_panel_scene_search(self, context):
         layout.prop(props, 'import_render')
 
 
-class VIEW3D_PT_asset_manager_real2u_model_properties(Panel):
-    bl_category = "Asset Manager"
-    bl_idname = "VIEW3D_PT_asset_manager_real2u_model_properties"
+class VIEW3D_PT_hana3d_model_properties(Panel):
+    bl_category = "Hana3D"
+    bl_idname = "VIEW3D_PT_hana3d_model_properties"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "Selected Model"
@@ -386,41 +386,41 @@ class VIEW3D_PT_asset_manager_real2u_model_properties(Panel):
         o = utils.get_active_model()
         # o = bpy.context.active_object
         if o.get('asset_data') is None:
-            label_multiline(layout, text='To upload this asset to asset_manager_real2u, go to the Find and Upload Assets panel.')
+            label_multiline(layout, text='To upload this asset to hana3d, go to the Find and Upload Assets panel.')
             layout.prop(o, 'name')
 
         if o.get('asset_data') is not None:
             ad = o['asset_data']
             layout.label(text=str(ad['name']))
             if o.instance_type == 'COLLECTION' and o.instance_collection is not None:
-                layout.operator('object.asset_manager_real2u_bring_to_scene', text='Bring to scene')
+                layout.operator('object.hana3d_bring_to_scene', text='Bring to scene')
 
             draw_panel_model_rating(self, context)
 
             # if 'rig' in ad['tags']:
             #     # layout.label(text = 'can make proxy')
-            #     layout.operator('object.asset_manager_real2u_make_proxy', text = 'Make Armature proxy')
+            #     layout.operator('object.hana3d_make_proxy', text = 'Make Armature proxy')
         # fast upload, blocked by now
         # else:
-        #     op = layout.operator("object.asset_manager_real2u_upload", text='Store as private', icon='EXPORT')
+        #     op = layout.operator("object.hana3d_upload", text='Store as private', icon='EXPORT')
         #     op.asset_type = 'MODEL'
         #     op.fast = True
         # fun override project, not finished
-        # layout.operator('object.asset_manager_real2u_color_corrector')
+        # layout.operator('object.hana3d_color_corrector')
 
 
 def draw_login_progress(layout):
     layout.label(text='Login through browser')
     layout.label(text='in progress.')
-    layout.operator("wm.asset_manager_real2u_login_cancel", text="Cancel", icon='CANCEL')
+    layout.operator("wm.hana3d_login_cancel", text="Cancel", icon='CANCEL')
 
 
-class VIEW3D_PT_asset_manager_real2u_profile(Panel):
-    bl_category = "Asset Manager"
-    bl_idname = "VIEW3D_PT_asset_manager_real2u_profile"
+class VIEW3D_PT_hana3d_profile(Panel):
+    bl_category = "Hana3D"
+    bl_idname = "VIEW3D_PT_hana3d_profile"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = "Asset Manager Profile"
+    bl_label = "Hana3D Profile"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -431,14 +431,14 @@ class VIEW3D_PT_asset_manager_real2u_profile(Panel):
     def draw(self, context):
         # draw asset properties here
         layout = self.layout
-        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
         if user_preferences.login_attempt:
             draw_login_progress(layout)
             return
 
         if user_preferences.api_key != '':
-            me = bpy.context.window_manager.get('bkit profile')
+            me = bpy.context.window_manager.get('hana3d profile')
             if me is not None:
                 me = me['user']
                 # user name
@@ -460,7 +460,7 @@ class VIEW3D_PT_asset_manager_real2u_profile(Panel):
                     row.label(text='%s plan' % pn, icon_value=my_icon.icon_id)
                     if pn == 'Free':
                         layout.operator("wm.url_open", text="Change plan",
-                                        icon='URL').url = paths.get_bkit_url() + paths.asset_manager_real2u_PLANS
+                                        icon='URL').url = paths.get_hana3d_url() + paths.hana3d_PLANS
 
                 # storage statistics
                 # if me.get('sumAssetFilesSize') is not None:  # TODO remove this when production server has these too.
@@ -471,15 +471,15 @@ class VIEW3D_PT_asset_manager_real2u_profile(Panel):
                     layout.label(text='My free storage: %i MiB' % (me['remainingPrivateQuota']))
 
             layout.operator("wm.url_open", text="See my uploads",
-                            icon='URL').url = paths.get_bkit_url() + paths.asset_manager_real2u_USER_ASSETS
+                            icon='URL').url = paths.get_hana3d_url() + paths.hana3d_USER_ASSETS
 
 
-class VIEW3D_PT_asset_manager_real2u_login(Panel):
-    bl_category = "Asset Manager"
-    bl_idname = "VIEW3D_PT_asset_manager_real2u_login"
+class VIEW3D_PT_hana3d_login(Panel):
+    bl_category = "Hana3D"
+    bl_idname = "VIEW3D_PT_hana3d_login"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = "Asset Manager Login"
+    bl_label = "Hana3D Login"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -488,7 +488,7 @@ class VIEW3D_PT_asset_manager_real2u_login(Panel):
 
     def draw(self, context):
         layout = self.layout
-        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
         if user_preferences.login_attempt:
             draw_login_progress(layout)
@@ -508,7 +508,7 @@ def draw_panel_material_upload(self, context):
     scene = context.scene
     mat = bpy.context.active_object.active_material
 
-    props = mat.asset_manager_real2u
+    props = mat.hana3d
     layout = self.layout
 
     draw_upload_common(layout, props, 'MATERIAL', context)
@@ -523,9 +523,9 @@ def draw_panel_material_upload(self, context):
         layout.prop(props.custom_props, f'["{key}"]')
 
     row = layout.row()
-    row.operator('asset_manager_real2u.material_custom_props', text='Create Custom Prop')
-    layout.prop(scene.asset_manager_real2u_custom_props, "key")
-    layout.prop(scene.asset_manager_real2u_custom_props, "value")
+    row.operator('hana3d.material_custom_props', text='Create Custom Prop')
+    layout.prop(scene.hana3d_custom_props, "key")
+    layout.prop(scene.hana3d_custom_props, "value")
 
     row = layout.row()
     if props.is_generating_thumbnail:
@@ -542,12 +542,12 @@ def draw_panel_material_upload(self, context):
         label_multiline(layout, text=props.thumbnail_generating_state)
 
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        layout.operator("object.asset_manager_real2u_material_thumbnail", text='Render thumbnail with Cycles', icon='IMAGE_DATA')
+        layout.operator("object.hana3d_material_thumbnail", text='Render thumbnail with Cycles', icon='IMAGE_DATA')
 
 
 def draw_panel_material_search(self, context):
     wm = context.scene
-    props = wm.asset_manager_real2u_mat
+    props = wm.hana3d_mat
 
     layout = self.layout
     row = layout.row()
@@ -599,7 +599,7 @@ def draw_panel_material_ratings(self, context):
 def draw_panel_brush_upload(self, context):
     brush = utils.get_active_brush()
     if brush is not None:
-        props = brush.asset_manager_real2u
+        props = brush.hana3d
 
         layout = self.layout
 
@@ -612,7 +612,7 @@ def draw_panel_brush_upload(self, context):
 
 def draw_panel_brush_search(self, context):
     wm = context.scene
-    props = wm.asset_manager_real2u_brush
+    props = wm.hana3d_brush
 
     layout = self.layout
     row = layout.row()
@@ -632,23 +632,23 @@ def draw_panel_brush_ratings(self, context):
 
 
 def draw_login_buttons(layout):
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
     if user_preferences.login_attempt:
         draw_login_progress(layout)
     else:
         if user_preferences.api_key == '':
-            layout.operator("wm.asset_manager_real2u_login", text="Login / Sign up",
+            layout.operator("wm.hana3d_login", text="Login / Sign up",
                             icon='URL')
         else:
-            layout.operator("wm.asset_manager_real2u_logout", text="Logout",
+            layout.operator("wm.hana3d_logout", text="Logout",
                             icon='URL')
 
 
-class VIEW3D_PT_asset_manager_real2u_advanced_model_search(Panel):
-    bl_category = "Asset Manager"
-    bl_idname = "VIEW3D_PT_asset_manager_real2u_advanced_model_search"
-    # bl_parent_id = "VIEW3D_PT_asset_manager_real2u_unified"
+class VIEW3D_PT_hana3d_advanced_model_search(Panel):
+    bl_category = "Hana3D"
+    bl_idname = "VIEW3D_PT_hana3d_advanced_model_search"
+    # bl_parent_id = "VIEW3D_PT_hana3d_unified"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "Advanced search options"
@@ -660,7 +660,7 @@ class VIEW3D_PT_asset_manager_real2u_advanced_model_search(Panel):
     def draw(self, context):
         s = context.scene
 
-        props = s.asset_manager_real2u_models
+        props = s.hana3d_models
         layout = self.layout
         layout.separator()
 
@@ -706,22 +706,22 @@ class VIEW3D_PT_asset_manager_real2u_advanced_model_search(Panel):
         # layout.prop(props, "search_adult")  # , text ='condition of object new/old e.t.c.')
 
 
-class VIEW3D_PT_asset_manager_real2u_unified(Panel):
-    bl_category = "Asset Manager"
-    bl_idname = "VIEW3D_PT_asset_manager_real2u_unified"
+class VIEW3D_PT_hana3d_unified(Panel):
+    bl_category = "Hana3D"
+    bl_idname = "VIEW3D_PT_hana3d_unified"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "Find and Upload Assets"
 
     @classmethod
     def poll(cls, context):
-        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
         return user_preferences.panel_behaviour == 'BOTH' or user_preferences.panel_behaviour == 'UNIFIED'
 
     def draw(self, context):
         s = context.scene
-        ui_props = s.asset_manager_real2uUI
-        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        ui_props = s.hana3dUI
+        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
         wm = bpy.context.window_manager
         layout = self.layout
 
@@ -753,7 +753,7 @@ class VIEW3D_PT_asset_manager_real2u_unified(Panel):
             else:
                 op = layout.operator("wm.url_open", text="Get your API Key",
                                      icon='QUESTION')
-                op.url = paths.asset_manager_real2u_SIGNUP_URL
+                op.url = paths.hana3d_SIGNUP_URL
                 layout.label(text='Paste your API Key:')
                 layout.prop(user_preferences, 'api_key', text='')
             layout.separator()
@@ -789,7 +789,7 @@ class VIEW3D_PT_asset_manager_real2u_unified(Panel):
                 text = 'Show asset preview - ;'
             else:
                 text = 'Hide asset preview - ;'
-            op = layout.operator('view3d.asset_manager_real2u_asset_bar', text=text, icon='EXPORT')
+            op = layout.operator('view3d.hana3d_asset_bar', text=text, icon='EXPORT')
             op.keep_running = False
             op.do_search = False
             op.tooltip = 'Show/Hide asset preview'
@@ -797,7 +797,7 @@ class VIEW3D_PT_asset_manager_real2u_unified(Panel):
             e = s.render.engine
             if e not in ('CYCLES', 'BLENDER_EEVEE'):
                 rtext = 'Only Cycles and EEVEE render engines are currently supported. ' \
-                        'Please use Cycles for all assets you upload to asset_manager_real2u.'
+                        'Please use Cycles for all assets you upload to hana3d.'
                 label_multiline(layout, rtext, icon='ERROR', width=w)
                 return
 
@@ -836,8 +836,8 @@ class VIEW3D_PT_asset_manager_real2u_unified(Panel):
             if ui_props.asset_type == 'MATERIAL':
                 if bpy.context.view_layer.objects.active is not None and \
                         bpy.context.active_object.active_material is not None and \
-                        bpy.context.active_object.active_material.asset_manager_real2u.asset_base_id != '':
-                    layout.label(text=bpy.context.active_object.active_material.asset_manager_real2u.name + ' :')
+                        bpy.context.active_object.active_material.hana3d.asset_base_id != '':
+                    layout.label(text=bpy.context.active_object.active_material.hana3d.name + ' :')
                     # noinspection PyCallByClass
                     draw_panel_material_ratings(self, context)
             if ui_props.asset_type == 'BRUSH':
@@ -851,13 +851,13 @@ class VIEW3D_PT_asset_manager_real2u_unified(Panel):
                 layout.label(text='not yet implemented')
 
 
-class OBJECT_MT_asset_manager_real2u_asset_menu(bpy.types.Menu):
+class OBJECT_MT_hana3d_asset_menu(bpy.types.Menu):
     bl_label = "Asset options:"
-    bl_idname = "OBJECT_MT_asset_manager_real2u_asset_menu"
+    bl_idname = "OBJECT_MT_hana3d_asset_menu"
 
     def draw(self, context):
         layout = self.layout
-        ui_props = context.scene.asset_manager_real2uUI
+        ui_props = context.scene.hana3dUI
 
         sr = bpy.context.scene['search results']
         sr = bpy.context.scene['search results orig']['results']
@@ -865,26 +865,26 @@ class OBJECT_MT_asset_manager_real2u_asset_menu(bpy.types.Menu):
         author_id = str(asset_data['author']['id'])
 
         wm = bpy.context.window_manager
-        if wm.get('bkit authors') is not None:
-            a = bpy.context.window_manager['bkit authors'].get(author_id)
+        if wm.get('hana3d authors') is not None:
+            a = bpy.context.window_manager['hana3d authors'].get(author_id)
             if a is not None:
                 # utils.p('author:', a)
                 if a.get('aboutMeUrl') is not None:
                     op = layout.operator('wm.url_open', text="Open Author's Website")
                     op.url = a['aboutMeUrl']
 
-                op = layout.operator('view3d.asset_manager_real2u_search', text="Show Assets By Author")
+                op = layout.operator('view3d.hana3d_search', text="Show Assets By Author")
                 op.keywords = ''
                 op.author_id = author_id
 
-        op = layout.operator('view3d.asset_manager_real2u_search', text='Search Similar')
+        op = layout.operator('view3d.hana3d_search', text='Search Similar')
         op.keywords = asset_data['name'] + ' ' + asset_data['description'] + ' ' + ' '.join(asset_data['tags'])
         if asset_data.get('canDownload') != 0:
             if len(bpy.context.selected_objects) > 0 and ui_props.asset_type == 'MODEL':
                 aob = bpy.context.active_object
                 if aob is None:
                     aob = bpy.context.selected_objects[0]
-                op = layout.operator('scene.asset_manager_real2u_download', text='Replace Active Models')
+                op = layout.operator('scene.hana3d_download', text='Replace Active Models')
                 op.asset_type = ui_props.asset_type
                 op.asset_index = ui_props.active_index
                 op.model_location = aob.location
@@ -894,25 +894,25 @@ class OBJECT_MT_asset_manager_real2u_asset_menu(bpy.types.Menu):
                 op.replace = True
 
         wm = bpy.context.window_manager
-        profile = wm.get('bkit profile')
+        profile = wm.get('hana3d profile')
         if profile is not None:
             # validation
             if utils.profile_is_validator():
                 layout.label(text='Validation tools:')
                 if asset_data['verificationStatus'] != 'uploaded':
-                    op = layout.operator('object.asset_manager_real2u_change_status', text='set Uploaded')
+                    op = layout.operator('object.hana3d_change_status', text='set Uploaded')
                     op.asset_id = asset_data['id']
                     op.state = 'uploaded'
                 if asset_data['verificationStatus'] != 'validated':
-                    op = layout.operator('object.asset_manager_real2u_change_status', text='Validate')
+                    op = layout.operator('object.hana3d_change_status', text='Validate')
                     op.asset_id = asset_data['id']
                     op.state = 'validated'
                 if asset_data['verificationStatus'] != 'on_hold':
-                    op = layout.operator('object.asset_manager_real2u_change_status', text='Put on Hold')
+                    op = layout.operator('object.hana3d_change_status', text='Put on Hold')
                     op.asset_id = asset_data['id']
                     op.state = 'on_hold'
                 if asset_data['verificationStatus'] != 'rejected':
-                    op = layout.operator('object.asset_manager_real2u_change_status', text='Reject')
+                    op = layout.operator('object.hana3d_change_status', text='Reject')
                     op.asset_id = asset_data['id']
                     op.state = 'rejected'
 
@@ -920,7 +920,7 @@ class OBJECT_MT_asset_manager_real2u_asset_menu(bpy.types.Menu):
                 layout.label(text='Management tools:')
                 row = layout.row()
                 row.operator_context = 'INVOKE_DEFAULT'
-                op = row.operator('object.asset_manager_real2u_change_status', text='Delete')
+                op = row.operator('object.hana3d_change_status', text='Delete')
                 op.asset_id = asset_data['id']
                 op.state = 'deleted'
             # else:
@@ -930,8 +930,8 @@ class OBJECT_MT_asset_manager_real2u_asset_menu(bpy.types.Menu):
 
 class SetCategoryOperator(bpy.types.Operator):
     """Visit subcategory"""
-    bl_idname = "view3d.asset_manager_real2u_set_category"
-    bl_label = "asset_manager_real2u Set Active Category"
+    bl_idname = "view3d.hana3d_set_category"
+    bl_label = "hana3d Set Active Category"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     category: bpy.props.StringProperty(
@@ -961,8 +961,8 @@ class SetCategoryOperator(bpy.types.Operator):
 
 class UrlPopupDialog(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
-    bl_idname = "wm.asset_manager_real2u_url_dialog"
-    bl_label = "asset_manager_real2u message:"
+    bl_idname = "wm.hana3d_url_dialog"
+    bl_label = "hana3d message:"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     url: bpy.props.StringProperty(
@@ -1005,8 +1005,8 @@ class UrlPopupDialog(bpy.types.Operator):
 
 def draw_panel_categories(self, context):
     s = context.scene
-    ui_props = s.asset_manager_real2uUI
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    ui_props = s.hana3dUI
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     layout = self.layout
     # row = layout.row()
     # row.prop(ui_props, 'asset_type', expand=True, icon_only=True)
@@ -1014,20 +1014,20 @@ def draw_panel_categories(self, context):
 
     layout.label(text='Categories')
     wm = bpy.context.window_manager
-    if wm.get('bkit_categories') is None:
+    if wm.get('hana3d_categories') is None:
         return
     col = layout.column(align=True)
     if wm.get('active_category') is not None:
         acat = wm['active_category'][ui_props.asset_type]
         if len(acat) > 1:
             # we are in subcategory, so draw the parent button
-            op = col.operator('view3d.asset_manager_real2u_set_category', text='...', icon='FILE_PARENT')
+            op = col.operator('view3d.hana3d_set_category', text='...', icon='FILE_PARENT')
             op.asset_type = ui_props.asset_type
             op.category = ''
-    cats = categories.get_category(wm['bkit_categories'], cat_path=acat)
+    cats = categories.get_category(wm['hana3d_categories'], cat_path=acat)
     # draw freebies only in models parent category
     # if ui_props.asset_type == 'MODEL' and len(acat) == 1:
-    #     op = col.operator('view3d.asset_manager_real2u_asset_bar', text='freebies')
+    #     op = col.operator('view3d.hana3d_asset_bar', text='freebies')
     #     op.free_only = True
 
     for c in cats['children']:
@@ -1037,14 +1037,14 @@ def draw_panel_categories(self, context):
                 row = row.split(factor=.8, align=True)
             # row = split.split()
             ctext = '%s (%i)' % (c['name'], c['assetCount'])
-            op = row.operator('view3d.asset_manager_real2u_asset_bar', text=ctext)
+            op = row.operator('view3d.hana3d_asset_bar', text=ctext)
             op.do_search = True
             op.keep_running = True
             op.category = c['slug']
             # TODO enable subcategories, now not working due to some bug on server probably
             if len(c['children']) > 0 and c['assetCount'] > 15:
                 # row = row.split()
-                op = row.operator('view3d.asset_manager_real2u_set_category', text='>>')
+                op = row.operator('view3d.hana3d_set_category', text='>>')
                 op.asset_type = ui_props.asset_type
                 op.category = c['slug']
                 # for c1 in c['children']:
@@ -1054,13 +1054,13 @@ def draw_panel_categories(self, context):
                 #         row = split.split()
                 #         row = split.split()
                 #         ctext = '%s (%i)' % (c1['name'], c1['assetCount'])
-                #         op = row.operator('view3d.asset_manager_real2u_search', text=ctext)
+                #         op = row.operator('view3d.hana3d_search', text=ctext)
                 #         op.category = c1['slug']
 
 
-class VIEW3D_PT_asset_manager_real2u_downloads(Panel):
-    bl_category = "Asset Manager"
-    bl_idname = "VIEW3D_PT_asset_manager_real2u_downloads"
+class VIEW3D_PT_hana3d_downloads(Panel):
+    bl_category = "Hana3D"
+    bl_idname = "VIEW3D_PT_hana3d_downloads"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "Downloads"
@@ -1077,7 +1077,7 @@ class VIEW3D_PT_asset_manager_real2u_downloads(Panel):
             row = layout.row()
             row.label(text=asset_data['name'])
             row.label(text=str(int(tcom.progress)) + ' %')
-            row.operator('scene.asset_manager_real2u_download_kill', text='', icon='CANCEL')
+            row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
             if tcom.passargs.get('retry_counter', 0) > 0:
                 row = layout.row()
                 row.label(text='failed. retrying ... ', icon='ERROR')
@@ -1092,19 +1092,19 @@ def header_search_draw(self, context):
     if not utils.guard_from_crash():
         return
 
-    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    preferences = bpy.context.preferences.addons['hana3d'].preferences
     if preferences.search_in_header:
         layout = self.layout
         s = bpy.context.scene
-        ui_props = s.asset_manager_real2uUI
+        ui_props = s.hana3dUI
         if ui_props.asset_type == 'MODEL':
-            props = s.asset_manager_real2u_models
+            props = s.hana3d_models
         if ui_props.asset_type == 'MATERIAL':
-            props = s.asset_manager_real2u_mat
+            props = s.hana3d_mat
         if ui_props.asset_type == 'SCENE':
-            props = s.asset_manager_real2u_scene
+            props = s.hana3d_scene
         # if ui_props.asset_type == 'HDR':
-        #     props = s.asset_manager_real2u_hdr
+        #     props = s.hana3d_hdr
 
         if context.space_data.show_region_tool_header is True or context.mode[:4] not in ('EDIT', 'OBJE'):
             layout.separator_spacer()
@@ -1120,7 +1120,7 @@ class VIEW3D_PT_UpdaterPanel(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = "objectmode"
-    bl_category = "Asset Manager"
+    bl_category = "Hana3D"
 
     def draw(self, context):
         layout = self.layout
@@ -1133,7 +1133,7 @@ class VIEW3D_PT_UpdaterPanel(Panel):
 
         addon_updater_ops.update_notice_box_ui(self, context)
 
-        layout.prop(context.preferences.addons['asset_manager_real2u'].preferences, 'search_in_header')
+        layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
 
 
 # We can store multiple preview collections here,
@@ -1142,13 +1142,13 @@ preview_collections = {}
 classess = (
     SetCategoryOperator,
     VIEW3D_PT_UpdaterPanel,
-    VIEW3D_PT_asset_manager_real2u_profile,
-    VIEW3D_PT_asset_manager_real2u_login,
-    VIEW3D_PT_asset_manager_real2u_unified,
-    # VIEW3D_PT_asset_manager_real2u_advanced_model_search,
-    VIEW3D_PT_asset_manager_real2u_model_properties,
-    VIEW3D_PT_asset_manager_real2u_downloads,
-    OBJECT_MT_asset_manager_real2u_asset_menu,
+    VIEW3D_PT_hana3d_profile,
+    VIEW3D_PT_hana3d_login,
+    VIEW3D_PT_hana3d_unified,
+    # VIEW3D_PT_hana3d_advanced_model_search,
+    VIEW3D_PT_hana3d_model_properties,
+    VIEW3D_PT_hana3d_downloads,
+    OBJECT_MT_hana3d_asset_menu,
     UrlPopupDialog
 )
 
