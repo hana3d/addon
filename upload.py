@@ -733,24 +733,9 @@ class UploadOperator(Operator):
         bpy.ops.object.asset_manager_real2u_auto_tags()
         props = utils.get_upload_props()
 
-        # in case of name change, we have to reupload everything, since the name is stored in blender file,
-        # and is used for linking to scene
-        if props.name_changed:
-            # TODO: this needs to be replaced with new double naming scheme (metadata vs blend data)
-            # print('has to reupload whole data, name has changed.')
-            self.main_file = True
-            props.name_changed = False
-
-        upload_set = []
-        if not self.reupload:
-            upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
-        else:
-            if self.metadata:
-                upload_set.append('METADATA')
-            if self.thumbnail:
-                upload_set.append('THUMBNAIL')
-            if self.main_file:
-                upload_set.append('MAINFILE')
+        # TODO: separate asset properties in postgres from properties in .blend and
+        # check if object was modified
+        upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
 
         result = start_upload(self, context, self.asset_type, self.reupload, upload_set)
 
