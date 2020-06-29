@@ -21,13 +21,12 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from hana3d import utils
+    from asset_manager_real2u import utils
 
 import bpy
 from bpy.app.handlers import persistent
 
 import queue
-
 
 @persistent
 def scene_load(context):
@@ -43,18 +42,16 @@ def get_queue():
         t.task_queue = queue.Queue()
     return t.task_queue
 
-
 class task_object:
-    def __init__(self, command='', arguments=(), wait=0, only_last=False):
+    def __init__(self, command = '', arguments = (), wait = 0, only_last = False):
         self.command = command
         self.arguments = arguments
         self.wait = wait
         self.only_last = only_last
 
-
-def add_task(task, wait=0, only_last=False):
+def add_task(task, wait = 0, only_last = False):
     q = get_queue()
-    taskob = task_object(task[0], task[1], wait=wait, only_last=only_last)
+    taskob = task_object(task[0],task[1], wait = wait, only_last = only_last)
     q.put(taskob)
 
 
@@ -62,7 +59,7 @@ def queue_worker():
     time_step = 2.0
     q = get_queue()
 
-    back_to_queue = []  # delayed events
+    back_to_queue = [] #delayed events
     stashed = {}
     # first round we get all tasks that are supposed to be stashed and run only once (only_last option)
     # stashing finds tasks with the property only_last and same command and executes only the last one.
@@ -72,20 +69,20 @@ def queue_worker():
             stashed[task.command] = task
         else:
             back_to_queue.append(task)
-    # return tasks to que except for stashed
+    #return tasks to que except for stashed
     for task in back_to_queue:
         q.put(task)
-    # return stashed tasks to queue
+    #return stashed tasks to queue
     for k in stashed.keys():
         q.put(stashed[k])
-    # second round, execute or put back waiting tasks.
+    #second round, execute or put back waiting tasks.
     back_to_queue = []
     while not q.empty():
         # print('window manager', bpy.context.window_manager)
         task = q.get()
 
-        if task.wait > 0:
-            task.wait -= time_step
+        if task.wait>0:
+            task.wait-=time_step
             back_to_queue.append(task)
         else:
             utils.p('as a task:   ')
