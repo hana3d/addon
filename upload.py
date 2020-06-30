@@ -553,8 +553,8 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         self.report({'ERROR_INVALID_INPUT'}, props.report)
         return {'CANCELLED'}
 
+    props.asset_base_id = ''  # Always reset assetBaseId to avoid overwriting file in S3 and cache errors
     if not reupload:
-        props.asset_base_id = ''
         props.id = ''
     export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props = get_upload_data(self, context,
                                                                                                        asset_type)
