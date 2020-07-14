@@ -232,7 +232,7 @@ def timer_update():
                                 for i, t in enumerate(allthumbs):
                                     tdict['thumbnail_%i'] = t
                                 if f['fileType'] == 'blend':
-                                    durl = f['downloadUrl'].split('?')[0]
+                                    durl = f['downloadUrl']
                             if durl and tname:
 
                                 tooltip = generate_tooltip(r)
