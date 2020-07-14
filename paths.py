@@ -21,10 +21,7 @@ import os
 import sys
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-asset_manager_real2u_LOCAL = "http://localhost:8001"
-asset_manager_real2u_MAIN = "https://www.asset_manager_real2u.com"
-asset_manager_real2u_DEVEL = "https://devel.asset_manager_real2u.com"
-asset_manager_real2u_API = "/api/v1/"
+asset_manager_real2u_API = "/v1/"
 asset_manager_real2u_REPORT_URL = "usage_report/"
 asset_manager_real2u_USER_ASSETS = "/my-assets"
 asset_manager_real2u_PLANS = "https://www.asset_manager_real2u.com/plans/pricing/"
@@ -32,13 +29,19 @@ asset_manager_real2u_MANUAL = "https://youtu.be/1hVgcQhIAo8"
 asset_manager_real2u_MODEL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/upload/"
 asset_manager_real2u_MATERIAL_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-material/"
 asset_manager_real2u_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_real2u.com/docs/uploading-brush/"
-asset_manager_real2u_OAUTH_LANDING_URL = "/oauth-landing"
-asset_manager_real2u_OAUTH_URL = "https://cornucopia-teste.us.auth0.com"
+asset_manager_real2u_AUTH_URL = "https://hana3d.us.auth0.com"
+asset_manager_real2u_AUTH_CLIENT_ID_DEV = "K3Tp6c6bbvF8gT6nwK1buVZjpTeDeXfu"
+asset_manager_real2u_AUTH_CLIENT_ID_PROD = "DDfs3mFwivtSoUOqwCZnJODaOhmwZvor"
+asset_manager_real2u_AUTH_AUDIENCE = "https://hana3d.com"
+asset_manager_real2u_PLATFORM_URL_LOCAL = "http://localhost:3000"
+asset_manager_real2u_PLATFORM_URL_DEV = "https://staging.hana3d.com"
+asset_manager_real2u_PLATFORM_URL_PROD = "https://hana3d.com"
+asset_manager_real2u_AUTH_LANDING = "/landing"
 asset_manager_real2u_SETTINGS_FILENAME = os.path.join(_presets, "bkit.json")
 
-URL_3D_KIT_MAIN = 'http://3.211.165.243:8080'
-URL_3D_KIT_LOCAL = 'http://localhost:8080'
-URL_3D_KIT_DEV = os.getenv('URL_3D_KIT_DEV')
+URL_3D_KIT_MAIN = 'https://api.hana3d.com'
+URL_3D_KIT_LOCAL = 'http://localhost:5000'
+URL_3D_KIT_DEV = os.getenv('URL_3D_KIT_DEV', 'https://staging-api.hana3d.com')
 
 
 def get_bkit_url():
@@ -65,12 +68,36 @@ def get_api_url():
     return get_bkit_url() + asset_manager_real2u_API
 
 
-def get_oauth_url():
-    return asset_manager_real2u_OAUTH_URL
+def get_auth_url():
+    return asset_manager_real2u_AUTH_URL
 
 
-def get_oauth_landing_url():
-    return get_bkit_url() + asset_manager_real2u_OAUTH_LANDING_URL
+def get_platform_url():
+    if bpy.app.debug_value == 1:
+        return asset_manager_real2u_PLATFORM_URL_LOCAL
+
+    if bpy.app.debug_value == 2:
+        return asset_manager_real2u_PLATFORM_URL_DEV
+
+    return asset_manager_real2u_PLATFORM_URL_PROD
+
+
+def get_auth_landing_url():
+    return get_platform_url() + asset_manager_real2u_AUTH_LANDING
+
+
+def get_auth_client_id():
+    if bpy.app.debug_value == 1:
+        return asset_manager_real2u_AUTH_CLIENT_ID_DEV
+
+    if bpy.app.debug_value == 2:
+        return asset_manager_real2u_AUTH_CLIENT_ID_DEV
+
+    return asset_manager_real2u_AUTH_CLIENT_ID_PROD
+
+
+def get_auth_audience():
+    return asset_manager_real2u_AUTH_AUDIENCE
 
 
 def default_global_dict():
@@ -182,11 +209,10 @@ def get_download_filenames(asset_data):
     dirs = get_download_dirs(asset_data['asset_type'])
     file_names = []
     # fn = asset_data['file_name'].replace('blend_', '')
-    if asset_data.get('url') is not None:
+    if asset_data.get('download_url') is not None:
         # this means asset is already in scene and we don't need to check
 
-        fn = extract_filename_from_url(asset_data['url'])
-        fn.replace('_blend', '')
+        fn = extract_filename_from_url(asset_data['download_url'])
         n = slugify(asset_data['name']) + '_' + fn
         # n = 'x.blend'
         # strs = (n, asset_data['name'], asset_data['file_name'])

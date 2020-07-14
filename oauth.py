@@ -20,22 +20,46 @@
 import json
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs, quote as urlquote, urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
 
+# TODO: Uncomment when using PKCE
+# import base64
+# import hashlib
+# import secrets
+# from urllib.parse import quote as urlquote
+# def base64_URL_encode(bytes_URL: bytes) -> str:
+#     URL = base64.urlsafe_b64encode(bytes_URL)
+#     return (
+#         str(URL, 'utf-8')
+#         .replace('=', '')
+#     )
+# def sha256(buffer: str) -> bytes:
+#     buffer_bytes = buffer.encode('utf-8')
+#     m = hashlib.sha256()
+#     m.update(buffer_bytes)
+#     return m.digest()
+
+
 class SimpleOAuthAuthenticator(object):
-    def __init__(self, server_url, client_id, ports, audience):
-        self.server_url = server_url
+    def __init__(self, auth0_url, platform_url, client_id, ports, audience):
+        self.auth0_url = auth0_url
+        self.platform_url = platform_url
         self.client_id = client_id
         self.ports = ports
         self.audience = audience
 
-    def _get_tokens(self, authorization_code=None, refresh_token=None, grant_type='authorization_code'):
+    def _get_tokens(
+            self,
+            authorization_code=None,
+            refresh_token=None,
+            grant_type='authorization_code'
+            # code_verifier=None, # TODO: Uncomment when using PKCE
+            ):
         data = {
             'grant_type': grant_type,
-            'state': 'random_state_string',
             'client_id': self.client_id,
             'scopes': 'read write'
         }
@@ -46,8 +70,12 @@ class SimpleOAuthAuthenticator(object):
         if refresh_token:
             data['refresh_token'] = refresh_token
 
+        # TODO: Uncomment when using PKCE
+        # if code_verifier:
+        #     data['code_verifier'] = code_verifier
+
         response = requests.post(
-            f'{self.server_url}/oauth/token/',
+            f'{self.auth0_url}/oauth/token/',
             data=data
         )
         if response.status_code != 200:
@@ -90,21 +118,28 @@ class SimpleOAuthAuthenticator(object):
             except OSError:
                 continue
             break
+
+        # Extra layer of security recommended by auth0 in open source projects
+        # TODO: Uncomment when using PKCE
+        # key = secrets.token_bytes(32)
+        # verifier = base64_URL_encode(key)
+        # challenge = base64_URL_encode(sha256(verifier))
+
         self.redirect_uri = f'http://localhost:{port}'
         authorize_url = (
-            f'{self.server_url}/authorize'
-            + f'?client_id={self.client_id}'
-            + '&state=random_state_string'
-            + '&scope=offline_access'
-            + '&response_type=code'
+            f'{self.platform_url}/login'
+            + '?response_type=code'
+            + '&scope=offline_access openid profile email'
+            + f'&client_id={self.client_id}'
             + f'&redirect_uri={self.redirect_uri}'
-            + f'&audience={self.audience}'
+            # + f'&code_challenge={challenge}' # TODO: Uncomment when using PKCE
+            # + f'&code_challenge_method=S256'
         )
         webbrowser.open_new(authorize_url)
 
         httpServer.handle_request()
         authorization_code = httpServer.authorization_code
-        return self._get_tokens(authorization_code=authorization_code)
+        return self._get_tokens(authorization_code=authorization_code)  # TODO: add code_verifier=verifier
 
     def get_refreshed_token(self, refresh_token):
         return self._get_tokens(refresh_token=refresh_token, grant_type='refresh_token')

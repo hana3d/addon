@@ -6,3 +6,4 @@ local/
 env/
 __pycache__
 *.pyc
+asset_manager_real2u_updater_status.json

@@ -111,6 +111,10 @@ def draw_not_logged_in(source):
 def draw_upload_common(layout, props, asset_type, context):
     op = layout.operator("wm.url_open", text="Read upload instructions",
                          icon='QUESTION')
+
+    layout.prop(props, 'workspace', expand=False, text='Workspace')
+    layout.prop(props, 'is_public')
+
     if asset_type == 'MODEL':
         op.url = paths.asset_manager_real2u_MODEL_UPLOAD_INSTRUCTIONS_URL
     if asset_type == 'MATERIAL':
@@ -158,8 +162,6 @@ def draw_upload_common(layout, props, asset_type, context):
     # if asset_type == 'MODEL' and props.subcategory != '':  # by now block this for other asset types.
     #     layout.prop(props, 'subcategory')
 
-    # layout.prop(props, 'is_private', expand=True)
-    # if props.is_private == 'PUBLIC':
     #     layout.prop(props, 'license')
 
 
@@ -278,6 +280,9 @@ def draw_panel_model_search(self, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
 
+    # Choose best layout:
+    layout.prop(props, 'workspace', expand=False, text='Workspace')
+
     icon = 'NONE'
     if props.report == 'You need Full plan to get this item.':
         icon = 'ERROR'
@@ -285,8 +290,9 @@ def draw_panel_model_search(self, context):
     if props.report == 'You need Full plan to get this item.':
         layout.operator("wm.url_open", text="Get Full plan", icon='URL').url = paths.asset_manager_real2u_PLANS
 
+    layout.prop(props, "public_only")
+
     # layout.prop(props, "search_style")
-    # layout.prop(props, "own_only")
     # layout.prop(props, "free_only")
 
     # if props.search_style == 'OTHER':
@@ -357,6 +363,8 @@ def draw_panel_scene_search(self, context):
     props = s.asset_manager_real2u_scene
     layout = self.layout
 
+    layout.prop(props, 'workspace', expand=False, text='Workspace')
+    layout.prop(props, "public_only")
     layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     layout.prop(props, 'merge_add', expand=True, icon_only=False)
 
@@ -553,7 +561,8 @@ def draw_panel_material_search(self, context):
     row = layout.row()
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
-    # layout.prop(props, "own_only")
+    layout.prop(props, 'workspace', expand=False, text='Workspace')
+    layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
 
     # layout.prop(props, 'search_style')

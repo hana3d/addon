@@ -36,7 +36,11 @@ else:
     from asset_manager_real2u import asset_inspector, paths, utils, bg_blender, autothumb, version_checker, search, ui_panels, ui, \
         overrides, colors, rerequests
 
-import tempfile, os, subprocess, json, re
+import tempfile
+import os
+import subprocess
+import json
+import re
 
 import bpy
 import requests
@@ -79,8 +83,6 @@ def add_version(data):
     data["sourceAppName"] = "blender"
     data["sourceAppVersion"] = app_version
     data["addonVersion"] = addon_version
-
-
 
 
 def write_to_report(props, text):
@@ -232,7 +234,7 @@ def get_upload_data(self, context, asset_type):
             "procedural": props.is_procedural,
             "nodeCount": props.node_count,
             "textureCount": props.texture_count,
-            "megapixels": round(props.total_megapixels/ 1000000),
+            "megapixels": round(props.total_megapixels / 1000000),
             # "scene": props.is_scene,
         }
         if props.use_design_year:
@@ -360,7 +362,7 @@ def get_upload_data(self, context, asset_type):
             "procedural": props.is_procedural,
             "nodeCount": props.node_count,
             "textureCount": props.texture_count,
-            "megapixels": round(props.total_megapixels/ 1000000),
+            "megapixels": round(props.total_megapixels / 1000000),
 
         }
 
@@ -433,8 +435,6 @@ def get_upload_data(self, context, asset_type):
     if props.subcategory != '':
         upload_data["category"] = props.subcategory
     upload_data["license"] = props.license
-    upload_data["isFree"] = props.is_free
-    upload_data["isPrivate"] = props.is_private == 'PRIVATE'
     upload_data["token"] = user_preferences.api_key
 
     if props.asset_base_id != '':
@@ -442,6 +442,10 @@ def get_upload_data(self, context, asset_type):
         upload_data['id'] = props.id
 
     upload_data['parameters'] = upload_params
+
+    upload_data["is_public"] = props.is_public
+    if props.workspace != '' and not props.is_public:
+        upload_data['workspace'] = props.workspace
 
     if hasattr(props, 'client'):
         upload_data['client'] = props.client
@@ -489,7 +493,7 @@ def get_upload_location(props):
 
 
 def check_storage_quota(props):
-    if props.is_private == 'PUBLIC':
+    if props.is_public:
         return True
 
     profile = bpy.context.window_manager.get('bkit profile')
@@ -740,8 +744,6 @@ class UploadOperator(Operator):
 
         return result
 
-
-
     def draw(self, context):
         props = utils.get_upload_props()
         layout = self.layout
@@ -756,12 +758,6 @@ class UploadOperator(Operator):
             layout.label(text="Do this only when you create a new asset from an old one.")
             layout.label(text="For updates of thumbnail or model use reupload.")
 
-        if props.is_private == 'PUBLIC':
-            ui_panels.label_multiline(layout, text='public assets are validated several hours'
-                                                   ' or days after upload. Remember always to '
-                                                   'test download your asset to a clean file'
-                                                   ' to see if it uploaded correctly.', width=300)
-
     def invoke(self, context, event):
         # props = utils.get_upload_props()
 
@@ -769,10 +765,6 @@ class UploadOperator(Operator):
         #     ui_panels.draw_not_logged_in(self)
         #     return {'CANCELLED'}
 
-        # if props.is_private == 'PUBLIC':
-        #     return context.window_manager.invoke_props_dialog(self)
-        # else:
-        #     return self.execute(context)
         return self.execute(context)
 
 

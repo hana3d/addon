@@ -622,14 +622,16 @@ def write_gravatar(a_id, gravatar_path):
 def fetch_gravatar(adata):
     utils.p('fetch gravatar')
     if adata.get('gravatarHash') is not None:
-        gravatar_path = paths.get_temp_dir(subdir='g/') + adata['gravatarHash'] + '.jpg'
+        gravatar_url = adata['gravatarHash']
+        gravatar_hash = gravatar_url.split('/')[-1].split('.')[0]
+        gravatar_path = paths.get_temp_dir(subdir='g/') + gravatar_hash + '.jpg'
 
         if os.path.exists(gravatar_path):
             tasks_queue.add_task((write_gravatar, (adata['id'], gravatar_path)))
             return
 
         url = "https://www.gravatar.com/avatar/" + adata['gravatarHash'] + '?d=404'
-        r = rerequests.get(url, stream=False)
+        r = rerequests.get(gravatar_url, stream=False)
         if r.status_code == 200:
             with open(gravatar_path, 'wb') as f:
                 f.write(r.content)
@@ -732,44 +734,33 @@ class Searcher(threading.Thread):
 
     def query_to_url(self):
         query = self.query
-        params = self.params
         # build a new request
         url = paths.get_api_url() + 'search/'
 
-        # build request manually
-        # TODO use real queries
-        requeststring = '?query='
-        #
-        if query.get('query') not in ('', None):
-            requeststring += query['query'].lower()
-        for i, q in enumerate(query):
-            if q != 'query':
-                requeststring += '+'
-                requeststring += q + ':' + str(query[q]).lower()
+        requeststring = f'?search_term={query.get("search_term", "").lower()}'
+        for key, value in query.items():
+            if key != 'search_term':
+                requeststring += f'&{key}={str(value).lower()}'
 
         # result ordering: _score - relevance, score - asset_manager_real2u score
 
-        if query.get('query') is None and query.get('category_subtree') == None:
+        if query.get('search_term') is None and query.get('category_subtree') is None:
             # assumes no keywords and no category, thus an empty search that is triggered on start.
             # orders by last core file upload
             if query.get('verification_status') == 'uploaded':
                 # for validators, sort uploaded from oldest
-                requeststring += '+order:created'
+                requeststring += '&order=created'
             else:
-                requeststring += '+order:-last_upload'
+                requeststring += '&order=-last_upload'
         elif query.get('author_id') is not None and utils.profile_is_validator():
 
-            requeststring += '+order:-created'
+            requeststring += '&order=-created'
         else:
             if query.get('category_subtree') is not None:
-                requeststring += '+order:-score,_score'
+                requeststring += '&order=-score,_score'
             else:
-                requeststring += '+order:_score'
+                requeststring += '&order=_score'
 
-        requeststring += '&addon_version=%s' % params['addon_version']
-        if params.get('scene_uuid') is not None:
-            requeststring += '&scene_uuid=%s' % params['scene_uuid']
-        # print('params', params)
         urlquery = url + requeststring
         return urlquery
 
@@ -801,15 +792,10 @@ class Searcher(threading.Thread):
                     # in case no search results found on drive we don't do next page loading.
                     params['get_next'] = False
         if not params['get_next']:
-            url = paths.get_api_url() + 'search/'
-
-            urlquery = url
-
-            # rparameters = query
             urlquery = self.query_to_url()
         try:
             utils.p(urlquery)
-            r = rerequests.get(urlquery, headers=headers)  # , params = rparameters)
+            r = rerequests.get(urlquery, headers=headers)
             # print(r.url)
             reports = ''
             # utils.p(r.text)
@@ -956,10 +942,13 @@ def build_query_common(query, props):
     '''add shared parameters to query'''
     query_common = {}
     if props.search_keywords != '':
-        query_common["query"] = props.search_keywords
+        query_common['search_term'] = props.search_keywords
 
     if props.search_verification_status != 'ALL':
         query_common['verification_status'] = props.search_verification_status.lower()
+
+    if props.public_only:
+        query['public'] = True
 
     if props.search_advanced:
         if props.search_texture_resolution:
@@ -996,9 +985,6 @@ def build_query_model():
             query["model_style"] = props.search_style
         else:
             query["model_style"] = props.search_style_other
-
-    if props.free_only:
-        query["is_free"] = True
 
     if props.search_advanced:
         if props.search_condition != 'UNSPECIFIED':
@@ -1155,7 +1141,7 @@ def search(category='', get_next=False, author_id=''):
         props = scene.asset_manager_real2u_brush
         query = build_query_brush()
 
-    if props.is_searching and get_next == True:
+    if props.is_searching and get_next:
         return
 
     if category != '':
@@ -1164,24 +1150,24 @@ def search(category='', get_next=False, author_id=''):
     if author_id != '':
         query['author_id'] = author_id
 
-    elif props.own_only:
-        # if user searches for [another] author, 'only my assets' is invalid. that's why in elif.
-        profile = bpy.context.window_manager.get('bkit profile')
-        if profile is not None:
-            query['author_id'] = str(profile['user']['id'])
+    if props.workspace != '' and not props.public_only:
+        query['workspace'] = props.workspace
 
-    # utils.p('searching')
+    # elif not props.public_only:
+    #     # if user searches for [another] author, 'only my assets' is invalid. that's why in elif.
+    #     profile = bpy.context.window_manager.get('bkit profile')
+    #     if profile is not None:
+    #         query['author_id'] = str(profile['user']['id'])
+
     props.is_searching = True
 
+    # extra params
+    query['scene_uuid'] = bpy.context.scene.get('uuid')
+    query['addon_version'] = version_checker.get_addon_version()
     params = {
-        'scene_uuid': bpy.context.scene.get('uuid', None),
-        'addon_version': version_checker.get_addon_version(),
         'api_key': user_preferences.api_key,
         'get_next': get_next
     }
-
-    # if free_only:
-    #     query['keywords'] += '+is_free:true'
 
     add_search_process(query, params)
     tasks_queue.add_task((ui.add_report, ('asset_manager_real2u searching....', 2)))

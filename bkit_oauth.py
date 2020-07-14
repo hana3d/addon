@@ -40,9 +40,11 @@ from bpy.props import (
     BoolProperty,
 )
 
-CLIENT_ID = "Z7lv8A8Ly13rpxRK6JKJ92UxdWJsVTgy"
-AUDIENCE = "http://localhost:8080"
-
+AUTH_URL = paths.get_auth_url()
+PLATFORM_URL = paths.get_platform_url()
+REDIRECT_URL = paths.get_auth_landing_url()
+CLIENT_ID = paths.get_auth_client_id()
+AUDIENCE = paths.get_auth_audience()
 PORTS = [62485, 65425, 55428, 49452]
 
 active_authenticator = None
@@ -50,17 +52,21 @@ active_authenticator = None
 
 def login_thread():
     global active_authenticator
-    r_url = paths.get_oauth_landing_url()
-    url = paths.get_oauth_url()
-    authenticator = oauth.SimpleOAuthAuthenticator(server_url=url, client_id=CLIENT_ID, ports=PORTS, audience=AUDIENCE)
+    authenticator = oauth.SimpleOAuthAuthenticator(
+        auth0_url=AUTH_URL,
+        platform_url=PLATFORM_URL,
+        client_id=CLIENT_ID,
+        ports=PORTS,
+        audience=AUDIENCE
+    )
     # we store authenticator globally to be able to ping the server if connection fails.
     active_authenticator = authenticator
-    thread = threading.Thread(target=login, args=([url, r_url, authenticator]), daemon=True)
+    thread = threading.Thread(target=login, args=([authenticator]), daemon=True)
     thread.start()
 
 
-def login(url, r_url, authenticator):
-    auth_token, refresh_token, oauth_response = authenticator.get_new_token(redirect_url=r_url)
+def login(authenticator):
+    auth_token, refresh_token, oauth_response = authenticator.get_new_token(redirect_url=REDIRECT_URL)
     utils.p('tokens retrieved')
     tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
 
@@ -69,15 +75,20 @@ def refresh_token_thread():
     preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
     if len(preferences.api_key_refresh) > 0 and preferences.refresh_in_progress == False:
         preferences.refresh_in_progress = True
-        url = paths.get_oauth_url()
-        thread = threading.Thread(target=refresh_token, args=([preferences.api_key_refresh, url]), daemon=True)
+        thread = threading.Thread(target=refresh_token, args=([preferences.api_key_refresh]), daemon=True)
         thread.start()
     else:
         ui.add_report('Already Refreshing token, will be ready soon.')
 
 
-def refresh_token(api_key_refresh, url):
-    authenticator = oauth.SimpleOAuthAuthenticator(server_url=url, client_id=CLIENT_ID, ports=PORTS, audience=AUDIENCE)
+def refresh_token(api_key_refresh):
+    authenticator = oauth.SimpleOAuthAuthenticator(
+        auth0_url=AUTH_URL,
+        platform_url=PLATFORM_URL,
+        client_id=CLIENT_ID,
+        ports=PORTS,
+        audience=AUDIENCE
+    )
     auth_token, refresh_token, oauth_response = authenticator.get_refreshed_token(api_key_refresh)
     if auth_token is not None and refresh_token is not None:
         tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
@@ -137,7 +148,6 @@ class Logout(bpy.types.Operator):
         preferences.api_key = ''
         if 'bkit profile' in bpy.context.window_manager.keys():
             del (bpy.context.window_manager['bkit profile'])
-        webbrowser.open_new(f'{paths.get_oauth_url()}/logout')
         return {'FINISHED'}
 
 

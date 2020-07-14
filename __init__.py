@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Asset Manager Real2U - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 1, 12),
+    "version": (0, 1, 13),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > asset_manager_real2u",
     "description": "Online asset_manager_real2u library (materials, models, brushes and more). Connects to the internet.",
@@ -389,6 +389,19 @@ def search_procedural_update(self, context):
     search.search_update(self, context)
 
 
+def workspace_items(self, context):
+    profile = bpy.context.window_manager.get('bkit profile')
+    if profile is not None:
+        user = profile.get('user')
+        if user is not None:
+            workspaces = tuple(
+                (workspace['id'], workspace['name'], '',)
+                for workspace in user['workspaces']
+            )
+            return workspaces
+    return ()
+
+
 class asset_manager_real2uCommonSearchProps(object):
     # STATES
     is_searching: BoolProperty(name="Searching", description="search is currently running (internal)", default=False)
@@ -396,8 +409,8 @@ class asset_manager_real2uCommonSearchProps(object):
                                  default=False)
     search_done: BoolProperty(name="Search Completed", description="at least one search did run (internal)",
                               default=False)
-    own_only: BoolProperty(name="My Assets", description="Search only for your assets",
-                           default=False, update=search.search_update)
+    public_only: BoolProperty(name="Public assets", description="Search only for public assets",
+                              default=False, update=search.search_update)
     search_advanced: BoolProperty(name="Advanced Search Options", description="use advanced search properties",
                                   default=False, update=search.search_update)
 
@@ -477,6 +490,14 @@ class asset_manager_real2uCommonSearchProps(object):
             ('DELETED', 'Deleted', 'Deleted'),
         ),
         default='ALL',
+    )
+
+    workspace: EnumProperty(
+        items=workspace_items,
+        name='User workspaces',
+        description='User option to choose between workspaces',
+        default=None,
+        options={'ANIMATABLE'},
     )
 
 
@@ -580,16 +601,7 @@ class asset_manager_real2uCommonUploadProps(object):
         description='License. Please read our help for choosing the right licenses',
     )
 
-    is_private: EnumProperty(
-        name="Thumbnail Style",
-        items=(
-            ('PRIVATE', 'Private', "You asset will be hidden to public. The private assets are limited by a quota."),
-            ('PUBLIC', 'Public', '"Your asset will go into the validation process automatically')
-        ),
-        description="If not marked private, your asset will go into the validation process automatically\n"
-                    "Private assets are limited by quota.",
-        default="PUBLIC",
-    )
+    is_public: BoolProperty(name="Public asset", description="Upload asset as public", default=False)
 
     is_procedural: BoolProperty(name="Procedural",
                                 description="Asset is procedural - has no texture.",
@@ -639,6 +651,14 @@ class asset_manager_real2uCommonUploadProps(object):
         name="Subcategory",
         description="main category to put into",
         items=get_subcategory_enums
+    )
+
+    workspace: EnumProperty(
+        items=workspace_items,
+        name='User workspaces',
+        description='User option to choose between workspaces',
+        default=None,
+        options={'ANIMATABLE'},
     )
 
 
