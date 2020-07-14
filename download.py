@@ -32,7 +32,9 @@ else:
 import threading
 import time
 import requests
-import shutil, sys, os
+import shutil
+import sys
+import os
 import uuid
 import copy
 
@@ -239,7 +241,7 @@ def report_usages():
 
     if new_assets_count == 0:
         utils.p('no new assets were added')
-        return;
+        return
     usage_report = {
         'scene': sid,
         'reportType': 'save',
@@ -261,7 +263,7 @@ def report_usages():
     for k in ak:  # rewrite assets used.
         scene['assets used'][k] = assets[k]
 
-    ###########check ratings herer too:
+    # check ratings herer too:
     scene['assets rated'] = scene.get('assets rated', {})
     for k in assets.keys():
         scene['assets rated'][k] = scene['assets rated'].get(k, False)
@@ -476,9 +478,9 @@ def timer_update():  # TODO might get moved to handle all asset_manager_real2u s
             wm = bpy.context.window_manager
 
             at = asset_data['asset_type']
-            if ((bpy.context.mode == 'OBJECT' and (at == 'model' \
+            if ((bpy.context.mode == 'OBJECT' and (at == 'model'
                                                    or at == 'material'))) \
-                    or ((at == 'brush') \
+                    or ((at == 'brush')
                         and wm.get(
                         'appendable') == True) or at == 'scene':  # don't do this stuff in editmode and other modes, just wait...
                 download_threads.remove(threaddata)
@@ -523,7 +525,7 @@ def timer_update():  # TODO might get moved to handle all asset_manager_real2u s
 
 
 def download_file(asset_data):
-    #this is a simple non-threaded way to download files for background resolution genenration tool
+    # this is a simple non-threaded way to download files for background resolution genenration tool
     file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
 
     if check_existing(asset_data):
@@ -537,7 +539,7 @@ def download_file(asset_data):
         print("Downloading %s" % file_name)
         headers = utils.get_headers(api_key)
 
-        response = requests.get(asset_data['url'], stream=True)
+        response = requests.get(asset_data['download_url'], stream=True)
         total_length = response.headers.get('Content-Length')
 
         if total_length is None:  # no content length header
@@ -549,6 +551,7 @@ def download_file(asset_data):
                 print(dl)
                 f.write(data)
     return file_name
+
 
 class Downloader(threading.Thread):
     def __init__(self, asset_data, tcom, scene_id, api_key):
@@ -573,13 +576,6 @@ class Downloader(threading.Thread):
         scene_id = self.scene_id
         api_key = self.api_key
 
-        # TODO get real link here...
-        has_url = get_download_url(asset_data, scene_id, api_key, tcom=tcom)
-
-        if not has_url:
-            tasks_queue.add_task(
-                (ui.add_report, ('Failed to obtain download URL for %s.' % asset_data['name'], 5, colors.RED)))
-            return;
         if tcom.error:
             return
         # only now we can check if the file already exists. This should have 2 levels, for materials and for brushes
@@ -588,20 +584,20 @@ class Downloader(threading.Thread):
             # this sends the thread for processing, where another check should occur, since the file might be corrupted.
             tcom.downloaded = 100
             utils.p('not downloading, trying to append again')
-            return;
+            return
 
         file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
         # for k in asset_data:
         #    print(asset_data[k])
         if self.stopped():
             utils.p('stopping download: ' + asset_data['name'])
-            return;
+            return
 
         with open(file_name, "wb") as f:
             print("Downloading %s" % file_name)
             headers = utils.get_headers(api_key)
 
-            response = requests.get(asset_data['url'], stream=True)
+            response = requests.get(asset_data['download_url'], stream=True)
             total_length = response.headers.get('Content-Length')
 
             if total_length is None:  # no content length header
@@ -618,7 +614,7 @@ class Downloader(threading.Thread):
                         utils.p('stopping download: ' + asset_data['name'])
                         f.close()
                         os.remove(file_name)
-                        return;
+                        return
 
 
 class ThreadCom:  # object passed to threads to read background process stdout info
@@ -748,7 +744,7 @@ def asset_in_scene(asset_data):
         if ad.get('file_name') != None:
 
             asset_data['file_name'] = ad['file_name']
-            asset_data['url'] = ad['url']
+            asset_data['download_url'] = ad['download_url']
 
             c = bpy.data.collections.get(ad['name'])
             if c is not None:
@@ -792,7 +788,7 @@ def get_download_url(asset_data, scene_id, api_key, tcom=None):
     if r.status_code < 400:
         data = r.json()
         url = data['filePath']
-        asset_data['url'] = url
+        asset_data['download_url'] = url
         asset_data['file_name'] = paths.extract_filename_from_url(url)
         return True
 
@@ -817,7 +813,7 @@ def start_download(asset_data, **kwargs):
     check if file isn't downloading or doesn't exist, then start new download
     '''
     # first check if the asset is already in scene. We can use that asset without checking with server
-    quota_ok = asset_in_scene(asset_data) is not False
+    quota_ok = asset_in_scene(asset_data)
 
     # otherwise, check on server
 
