@@ -23,22 +23,18 @@ if "bpy" in locals():
     utils = reload(utils)
     paths = reload(paths)
     search = reload(search)
+    colors = reload(colors)
     categories = reload(categories)
     oauth = reload(oauth)
     ui = reload(ui)
 else:
-    from asset_manager_real2u import tasks_queue, utils, paths, search, categories, oauth, ui
+    from asset_manager_real2u import tasks_queue, utils, paths, search, colors, categories, oauth, ui
 
 import bpy
 
 import threading
 import requests
 import time
-import webbrowser
-
-from bpy.props import (
-    BoolProperty,
-)
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -73,7 +69,7 @@ def login(authenticator):
 
 def refresh_token_thread():
     preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
-    if len(preferences.api_key_refresh) > 0 and preferences.refresh_in_progress == False:
+    if len(preferences.api_key_refresh) > 0 and not preferences.refresh_in_progress:
         preferences.refresh_in_progress = True
         thread = threading.Thread(target=refresh_token, args=([preferences.api_key_refresh]), daemon=True)
         thread.start()
@@ -92,6 +88,8 @@ def refresh_token(api_key_refresh):
     auth_token, refresh_token, oauth_response = authenticator.get_refreshed_token(api_key_refresh)
     if auth_token is not None and refresh_token is not None:
         tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
+    else:
+        tasks_queue.add_task((fail_refresh, ()))
     return auth_token, refresh_token, oauth_response
 
 
@@ -110,6 +108,19 @@ def write_tokens(auth_token, refresh_token, oauth_response):
     ui.add_report('asset_manager_real2u Re-Login success')
     search.get_profile()
     categories.fetch_categories_thread(auth_token)
+
+
+def fail_refresh():
+    ui.add_report('Auto-Login failed, please login manually', color=colors.RED)
+    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    preferences.api_key_refresh = ''
+    preferences.api_key = ''
+    preferences.api_key_timeout = 0
+    preferences.api_key_life = 0
+    preferences.login_attempt = False
+    preferences.refresh_in_progress = False
+    if 'bkit profile' in bpy.context.window_manager.keys():
+        del (bpy.context.window_manager['bkit profile'])
 
 
 class RegisterLoginOnline(bpy.types.Operator):
@@ -143,9 +154,12 @@ class Logout(bpy.types.Operator):
 
     def execute(self, context):
         preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
-        preferences.login_attempt = False
         preferences.api_key_refresh = ''
         preferences.api_key = ''
+        preferences.api_key_timeout = 0
+        preferences.api_key_life = 0
+        preferences.login_attempt = False
+        preferences.refresh_in_progress = False
         if 'bkit profile' in bpy.context.window_manager.keys():
             del (bpy.context.window_manager['bkit profile'])
         return {'FINISHED'}

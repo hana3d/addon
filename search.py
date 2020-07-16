@@ -101,16 +101,14 @@ def refresh_token_timer():
     fetch_server_data()
     categories.load_categories()
 
-    return max(3600, user_preferences.api_key_life - 3600)
+    return user_preferences.api_key_life
 
 
 @persistent
 def scene_load(context):
     wm = bpy.context.window_manager
-    fetch_server_data()
-    categories.load_categories()
     if not bpy.app.timers.is_registered(refresh_token_timer):
-        bpy.app.timers.register(refresh_token_timer, persistent=True, first_interval=36000)
+        bpy.app.timers.register(refresh_token_timer, persistent=True)
 
 
 def fetch_server_data():
@@ -121,7 +119,7 @@ def fetch_server_data():
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if user_preferences.enable_oauth and \
                 len(user_preferences.api_key) > 0 and \
-                user_preferences.api_key_timeout < time.time() + 3600:
+                user_preferences.api_key_timeout < time.time():
             bkit_oauth.refresh_token_thread()
         if api_key != '' and bpy.context.window_manager.get('bkit profile') == None:
             get_profile()

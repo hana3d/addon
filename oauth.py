@@ -132,6 +132,7 @@ class SimpleOAuthAuthenticator(object):
             + '&scope=offline_access openid profile email'
             + f'&client_id={self.client_id}'
             + f'&redirect_uri={self.redirect_uri}'
+            + f'&audience={self.audience}'
             # + f'&code_challenge={challenge}' # TODO: Uncomment when using PKCE
             # + f'&code_challenge_method=S256'
         )

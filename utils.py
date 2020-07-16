@@ -40,11 +40,13 @@ IDLE_PRIORITY_CLASS = 0x00000040
 NORMAL_PRIORITY_CLASS = 0x00000020
 REALTIME_PRIORITY_CLASS = 0x00000100
 
+
 def get_process_flags():
     flags = BELOW_NORMAL_PRIORITY_CLASS
     if sys.platform != 'win32':  # TODO test this on windows
         flags = 0
     return flags
+
 
 def activate(ob):
     bpy.ops.object.select_all(action='DESELECT')
@@ -89,7 +91,7 @@ def get_selected_models():
                     parents.append(ob)
             done[ob] = True
 
-    #if no asset_manager_real2u - like objects were found, use the original selection.
+    # if no asset_manager_real2u - like objects were found, use the original selection.
     if len(parents) == 0:
         parents = obs
     return parents
@@ -98,30 +100,30 @@ def get_selected_models():
 def get_search_props():
     scene = bpy.context.scene
     if scene is None:
-        return;
+        return
     uiprops = scene.asset_manager_real2uUI
     props = None
     if uiprops.asset_type == 'MODEL':
         if not hasattr(scene, 'asset_manager_real2u_models'):
-            return;
+            return
         props = scene.asset_manager_real2u_models
     if uiprops.asset_type == 'SCENE':
         if not hasattr(scene, 'asset_manager_real2u_scene'):
-            return;
+            return
         props = scene.asset_manager_real2u_scene
     if uiprops.asset_type == 'MATERIAL':
         if not hasattr(scene, 'asset_manager_real2u_mat'):
-            return;
+            return
         props = scene.asset_manager_real2u_mat
 
     if uiprops.asset_type == 'TEXTURE':
         if not hasattr(scene, 'asset_manager_real2u_tex'):
-            return;
+            return
         # props = scene.asset_manager_real2u_tex
 
     if uiprops.asset_type == 'BRUSH':
         if not hasattr(scene, 'asset_manager_real2u_brush'):
-            return;
+            return
         props = scene.asset_manager_real2u_brush
     return props
 
@@ -198,11 +200,13 @@ def load_prefs():
             user_preferences.api_key = prefs.get('API_key', '')
             user_preferences.global_dir = prefs.get('global_dir', paths.default_global_dict())
             user_preferences.api_key_refresh = prefs.get('API_key_refresh', '')
+            user_preferences.api_key_life = prefs.get('API_key_life', 0)
+            user_preferences.api_key_timeout = prefs.get('API_key_timeout', 0)
 
 
 def save_prefs(self, context):
     # first check context, so we don't do this on registration or blender startup
-    if not bpy.app.background: #(hasattr kills blender)
+    if not bpy.app.background:  # (hasattr kills blender)
         user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
         # we test the api key for length, so not a random accidentally typed sequence gets saved.
         lk = len(user_preferences.api_key)
@@ -216,6 +220,8 @@ def save_prefs(self, context):
             'API_key': user_preferences.api_key,
             'API_key_refresh': user_preferences.api_key_refresh,
             'global_dir': user_preferences.global_dir,
+            'API_key_life': user_preferences.api_key_life,
+            'API_key_timeout': user_preferences.api_key_timeout
         }
         try:
             fpath = paths.asset_manager_real2u_SETTINGS_FILENAME
@@ -303,15 +309,18 @@ def get_hierarchy(ob):
         obs.append(o)
     return obs
 
-def select_hierarchy(ob, state = True):
+
+def select_hierarchy(ob, state=True):
     obs = get_hierarchy(ob)
     for ob in obs:
         ob.select_set(state)
     return obs
 
+
 def delete_hierarchy(ob):
     obs = get_hierarchy(ob)
     bpy.ops.object.delete({"selected_objects": obs})
+
 
 def get_bounds_snappable(obs, use_modifiers=False):
     # progress('getting bounds of object(s)')
@@ -428,13 +437,15 @@ def get_headers(api_key):
         headers["Authorization"] = "Bearer %s" % api_key
     return headers
 
+
 def scale_2d(v, s, p):
     '''scale a 2d vector with a pivot'''
     return (p[0] + s[0] * (v[0] - p[0]), p[1] + s[1] * (v[1] - p[1]))
 
-def scale_uvs(ob, scale  = 1.0, pivot = Vector((.5,.5))):
+
+def scale_uvs(ob, scale=1.0, pivot=Vector((.5, .5))):
     mesh = ob.data
-    if len(mesh.uv_layers)>0:
+    if len(mesh.uv_layers) > 0:
         uv = mesh.uv_layers[mesh.uv_layers.active_index]
 
         # Scale a UV map iterating over its coordinates to a given scale and with a pivot point
@@ -443,7 +454,7 @@ def scale_uvs(ob, scale  = 1.0, pivot = Vector((.5,.5))):
 
 
 # map uv cubic and switch of auto tex space and set it to 1,1,1
-def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale = False):
+def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale=False):
     from asset_manager_real2u import bg_blender as bg
     s = bpy.context.scene
     mat_props = s.asset_manager_real2u_mat
@@ -495,8 +506,9 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
             # by now, it takes the basic uv map = 1 meter. also, it now doeasn't respect more materials on one object,
             # it just scales whole UV.
             if just_scale:
-                scale_uvs(tob, scale=Vector((1/tex_size, 1/tex_size)))
+                scale_uvs(tob, scale=Vector((1 / tex_size, 1 / tex_size)))
             bpy.context.view_layer.objects.active = actob
+
 
 def name_update():
     props = get_upload_props()
@@ -517,11 +529,13 @@ def name_update():
     asset = get_active_asset()
     asset.name = fname
 
+
 def params_to_dict(params):
     params_dict = {}
     for p in params:
         params_dict[p['parameterType']] = p['value']
     return params_dict
+
 
 def dict_to_params(inputs, parameters=None):
     if parameters == None:
@@ -560,12 +574,13 @@ def profile_is_validator():
         return True
     return False
 
+
 def guard_from_crash():
     '''Blender tends to crash when trying to run some functions with the addon going through unregistration process.'''
     if bpy.context.preferences.addons.get('asset_manager_real2u') is None:
-        return False;
+        return False
     if bpy.context.preferences.addons['asset_manager_real2u'].preferences is None:
-        return False;
+        return False
     return True
 
 
