@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Asset Manager Real2U - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 1, 14),
+    "version": (0, 1, 15),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > asset_manager_real2u",
     "description": "Online asset_manager_real2u library (materials, models, brushes and more). Connects to the internet.",
@@ -1492,12 +1492,14 @@ class asset_manager_real2uAddonPreferences(AddonPreferences):
         name='api key timeout',
         description='time where the api key will need to be refreshed',
         default=0,
+        update=utils.save_prefs
     )
 
     api_key_life: IntProperty(
         name='api key life time',
         description='maximum lifetime of the api key, in seconds',
         default=0,
+        update=utils.save_prefs
     )
 
     refresh_in_progress: BoolProperty(

@@ -32,7 +32,8 @@ asset_manager_real2u_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.asset_manager_
 asset_manager_real2u_AUTH_URL = "https://hana3d.us.auth0.com"
 asset_manager_real2u_AUTH_CLIENT_ID_DEV = "K3Tp6c6bbvF8gT6nwK1buVZjpTeDeXfu"
 asset_manager_real2u_AUTH_CLIENT_ID_PROD = "DDfs3mFwivtSoUOqwCZnJODaOhmwZvor"
-asset_manager_real2u_AUTH_AUDIENCE = "https://hana3d.com"
+asset_manager_real2u_AUTH_AUDIENCE_DEV = "https://staging-hana3d.com"
+asset_manager_real2u_AUTH_AUDIENCE_PROD = "https://hana3d.com"
 asset_manager_real2u_PLATFORM_URL_LOCAL = "http://localhost:3000"
 asset_manager_real2u_PLATFORM_URL_DEV = "https://staging.hana3d.com"
 asset_manager_real2u_PLATFORM_URL_PROD = "https://hana3d.com"
@@ -49,7 +50,6 @@ def get_bkit_url():
         return URL_3D_KIT_LOCAL
 
     if bpy.app.debug_value == 2:
-        assert URL_3D_KIT_DEV is not None, f'Environment variable URL_3D_KIT_DEV not found'
         return URL_3D_KIT_DEV
 
     return URL_3D_KIT_MAIN
@@ -97,7 +97,13 @@ def get_auth_client_id():
 
 
 def get_auth_audience():
-    return asset_manager_real2u_AUTH_AUDIENCE
+    if bpy.app.debug_value == 1:
+        return asset_manager_real2u_AUTH_AUDIENCE_DEV
+
+    if bpy.app.debug_value == 2:
+        return asset_manager_real2u_AUTH_AUDIENCE_DEV
+
+    return asset_manager_real2u_AUTH_AUDIENCE_PROD
 
 
 def default_global_dict():
@@ -213,11 +219,8 @@ def get_download_filenames(asset_data):
         # this means asset is already in scene and we don't need to check
 
         fn = extract_filename_from_url(asset_data['download_url'])
-        n = slugify(asset_data['name']) + '_' + fn
-        # n = 'x.blend'
-        # strs = (n, asset_data['name'], asset_data['file_name'])
         for d in dirs:
-            file_name = os.path.join(d, n)
+            file_name = os.path.join(d, fn)
             file_names.append(file_name)
     return file_names
 
