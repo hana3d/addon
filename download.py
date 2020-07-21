@@ -373,14 +373,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
         if not inscene:
             brush = append_link.append_brush(file_names[-1], link=False, fake_user=False)
 
-            thumbnail_name = asset_data['thumbnail'].split(os.sep)[-1]
-            tempdir = paths.get_temp_dir('brush_search')
-            thumbpath = os.path.join(tempdir, thumbnail_name)
-            asset_thumbs_dir = paths.get_download_dirs('brush')[0]
-            asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
-            shutil.copy(thumbpath, asset_thumb_path)
-            brush.icon_filepath = asset_thumb_path
-
         if bpy.context.view_layer.objects.active.mode == 'SCULPT':
             bpy.context.tool_settings.sculpt.brush = brush
         elif bpy.context.view_layer.objects.active.mode == 'TEXTURE_PAINT':
@@ -416,15 +408,14 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
     parent['asset_data'] = asset_data
 
-    if hasattr(parent.asset_manager_real2u, 'name') and 'name' in asset_data:
-        if asset_data['name'] is not None:
-            parent.asset_manager_real2u.name = asset_data['name']
-    if hasattr(parent.asset_manager_real2u, 'tags') and 'tags' in asset_data:
-        asset_data['tags'].remove('non-manifold')
-        parent.asset_manager_real2u.tags = ','.join(asset_data['tags'])
-    if hasattr(parent.asset_manager_real2u, 'description') and 'description' in asset_data:
-        if asset_data['description'] is not None:
-            parent.asset_manager_real2u.description = asset_data['description']
+    set_thumbnail(asset_data, parent)
+
+    parent.asset_manager_real2u.id = asset_data['id']
+    parent.asset_manager_real2u.asset_base_id = asset_data['asset_base_id']
+    parent.asset_manager_real2u.name = asset_data['name']
+    asset_data['tags'].remove('non-manifold')
+    parent.asset_manager_real2u.tags = ','.join(asset_data['tags'])
+    parent.asset_manager_real2u.description = asset_data['description']
     if hasattr(parent.asset_manager_real2u, 'custom_props') and 'metadata' in asset_data:
         if 'product_info' in asset_data['metadata']:
             product_info = asset_data['metadata'].pop('product_info')
@@ -444,6 +435,16 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
             parent.asset_manager_real2u.custom_props[key] = value
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
+
+
+def set_thumbnail(asset_data, asset):
+    thumbnail_name = asset_data['thumbnail'].split(os.sep)[-1]
+    tempdir = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')
+    thumbpath = os.path.join(tempdir, thumbnail_name)
+    asset_thumbs_dir = paths.get_download_dirs(asset_data["asset_type"])[0]
+    asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
+    shutil.copy(thumbpath, asset_thumb_path)
+    asset.asset_manager_real2u.thumbnail = asset_thumb_path
 
 
 # @bpy.app.handlers.persistent

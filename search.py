@@ -234,23 +234,23 @@ def timer_update():
                             if durl and tname:
 
                                 tooltip = generate_tooltip(r)
-                                asset_data = {'thumbnail': tname,
-                                              'thumbnail_small': small_tname,
-                                              'download_url': durl,
-                                              'id': r['id'],
-                                              'asset_base_id': r['assetBaseId'],
-                                              'name': r['name'],
-                                              'asset_type': r['assetType'],
-                                              'tooltip': tooltip,
-                                              'tags': r['tags'],
-                                              'can_download': r.get('canDownload', True),
-                                              'verification_status': r['verificationStatus'],
-                                              'author_id': str(r['author']['id'])
-                                              }
+                                asset_data = {
+                                    'thumbnail': tname,
+                                    'thumbnail_small': small_tname,
+                                    'download_url': durl,
+                                    'id': r['id'],
+                                    'asset_base_id': r['assetBaseId'],
+                                    'name': r['name'],
+                                    'asset_type': r['assetType'],
+                                    'tooltip': tooltip,
+                                    'tags': r['tags'],
+                                    'can_download': r.get('canDownload', True),
+                                    'verification_status': r['verificationStatus'],
+                                    'author_id': str(r['author']['id']),
+                                    'description': r['description'] or '',
+                                }
                                 asset_data['downloaded'] = 0
 
-                                if 'description' in r and r['description'] is not None:
-                                    asset_data['description'] = r['description']
                                 if 'metadata' in r and r['metadata'] is not None:
                                     asset_data['metadata'] = r['metadata']
                                 if 'created' in r and r['created'] is not None:
