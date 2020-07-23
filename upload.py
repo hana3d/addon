@@ -46,13 +46,6 @@ import bpy
 import requests
 import threading
 
-asset_manager_real2u_EXPORT_DATA_FILE = "data.json"
-
-from bpy.props import (  # TODO only keep the ones actually used when cleaning
-    EnumProperty,
-    BoolProperty,
-    StringProperty,
-)
 from bpy.types import (
     Operator,
     Panel,
@@ -60,6 +53,13 @@ from bpy.types import (
     PropertyGroup,
     UIList
 )
+from bpy.props import (  # TODO only keep the ones actually used when cleaning
+    EnumProperty,
+    BoolProperty,
+    StringProperty,
+)
+
+asset_manager_real2u_EXPORT_DATA_FILE = "data.json"
 
 
 def comma2array(text):
@@ -104,7 +104,8 @@ def get_missing_data_model(props):
     if props.engine == 'NONE':
         write_to_report(props, 'Set at least one rendering/output engine')
     if not any(props.dimensions):
-        write_to_report(props, 'Run autotags operator or fill in dimensions manually')
+        write_to_report(
+            props, 'Run autotags operator or fill in dimensions manually')
 
 
 def get_missing_data_scene(props):
@@ -250,9 +251,11 @@ def get_upload_data(self, context, asset_type):
             upload_params["textureResolutionMax"] = props.texture_resolution_max
             upload_params["textureResolutionMin"] = props.texture_resolution_min
         if props.mesh_poly_type != 'OTHER':
-            upload_params["meshPolyType"] = props.mesh_poly_type.lower()  # .replace('_',' ')
+            # .replace('_',' ')
+            upload_params["meshPolyType"] = props.mesh_poly_type.lower()
 
-        optional_params = ['manufacturer', 'designer', 'design_collection', 'design_variant']
+        optional_params = ['manufacturer', 'designer',
+                           'design_collection', 'design_variant']
         for p in optional_params:
             if eval('props.%s' % p) != '':
                 upload_params[sub_to_camel(p)] = eval('props.%s' % p)
@@ -321,7 +324,8 @@ def get_upload_data(self, context, asset_type):
             upload_params["textureResolutionMax"] = props.texture_resolution_max
             upload_params["textureResolutionMin"] = props.texture_resolution_min
         if props.mesh_poly_type != 'OTHER':
-            upload_params["meshPolyType"] = props.mesh_poly_type.lower()  # .replace('_',' ')
+            # .replace('_',' ')
+            upload_params["meshPolyType"] = props.mesh_poly_type.lower()
 
     elif asset_type == 'MATERIAL':
         mat = bpy.context.active_object.active_material
@@ -466,7 +470,8 @@ def verification_status_change_thread(asset_id, state, api_key):
     url = paths.get_api_url() + 'assets/' + str(asset_id) + '/'
     headers = utils.get_headers(api_key)
     try:
-        r = rerequests.patch(url, json=upload_data, headers=headers, verify=True)  # files = files,
+        r = rerequests.patch(url, json=upload_data,
+                             headers=headers, verify=True)  # files = files,
     except requests.exceptions.RequestException as e:
         print(e)
         return {'CANCELLED'}
@@ -574,7 +579,8 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     if not ext:
         ext = ".blend"
     tempdir = tempfile.mkdtemp()
-    source_filepath = os.path.join(tempdir, "export_asset_manager_real2u" + ext)
+    source_filepath = os.path.join(
+        tempdir, "export_asset_manager_real2u" + ext)
     clean_file_path = paths.get_clean_filepath()
     data = {
         'clean_file_path': clean_file_path,
@@ -600,11 +606,13 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     headers = utils.get_headers(upload_data['token'])
 
     # upload_data['license'] = 'ovejajojo'
-    json_metadata = upload_data  # json.dumps(upload_data, ensure_ascii=False).encode('utf8')
+    # json.dumps(upload_data, ensure_ascii=False).encode('utf8')
+    json_metadata = upload_data
     global reports
     if props.asset_base_id == '':
         try:
-            r = rerequests.post(url, json=json_metadata, headers=headers, verify=True, immediate=True)  # files = files,
+            r = rerequests.post(url, json=json_metadata, headers=headers,
+                                verify=True, immediate=True)  # files = files,
             ui.add_report('uploaded metadata')
             utils.p(r.text)
         except requests.exceptions.RequestException as e:
@@ -618,7 +626,8 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         try:
             if 'MAINFILE' in upload_set:
                 json_metadata["verificationStatus"] = "uploading"
-            r = rerequests.put(url, json=json_metadata, headers=headers, verify=True, immediate=True)  # files = files,
+            r = rerequests.put(url, json=json_metadata, headers=headers,
+                               verify=True, immediate=True)  # files = files,
             ui.add_report('uploaded metadata')
             # parse the request
             # print('uploaded metadata')
@@ -651,7 +660,12 @@ def start_upload(self, context, asset_type, reupload, upload_set):
 
         props.uploading = True
         # save a copy of actual scene but don't interfere with the users models
-        bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
+        autopack = False
+        if bpy.data.use_autopack is True:
+            autopack = True
+            bpy.ops.file.autopack_toggle()
+        bpy.ops.wm.save_as_mainfile(
+            filepath=source_filepath, compress=False, copy=True)
 
         with open(datafile, 'w') as s:
             json.dump(data, s)
@@ -667,6 +681,9 @@ def start_upload(self, context, asset_type, reupload, upload_set):
 
         bg_blender.add_bg_process(eval_path_computing=eval_path_computing, eval_path_state=eval_path_state,
                                   eval_path=eval_path, process_type='UPLOAD', process=proc, location=location)
+
+        if autopack is True:
+            bpy.ops.file.autopack_toggle()
 
     except Exception as e:
         props.upload_state = str(e)
@@ -740,7 +757,8 @@ class UploadOperator(Operator):
         # check if object was modified
         upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
 
-        result = start_upload(self, context, self.asset_type, self.reupload, upload_set)
+        result = start_upload(
+            self, context, self.asset_type, self.reupload, upload_set)
 
         return result
 
@@ -755,8 +773,10 @@ class UploadOperator(Operator):
 
         if props.asset_base_id != '' and not self.reupload:
             layout.label(text="Really upload as new? ")
-            layout.label(text="Do this only when you create a new asset from an old one.")
-            layout.label(text="For updates of thumbnail or model use reupload.")
+            layout.label(
+                text="Do this only when you create a new asset from an old one.")
+            layout.label(
+                text="For updates of thumbnail or model use reupload.")
 
     def invoke(self, context, event):
         # props = utils.get_upload_props()
@@ -792,7 +812,8 @@ class AssetVerificationStatusChange(Operator):
     def draw(self, context):
         layout = self.layout
         # if self.state == 'deleted':
-        layout.label(text='Really delete asset from asset_manager_real2u online storage?')
+        layout.label(
+            text='Really delete asset from asset_manager_real2u online storage?')
         # layout.prop(self, 'state')
 
     def execute(self, context):
