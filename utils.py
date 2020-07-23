@@ -200,7 +200,7 @@ def load_prefs():
             user_preferences.api_key = prefs.get('API_key', '')
             user_preferences.global_dir = prefs.get('global_dir', paths.default_global_dict())
             user_preferences.api_key_refresh = prefs.get('API_key_refresh', '')
-            user_preferences.api_key_life = prefs.get('API_key_life', 0)
+            user_preferences.api_key_life = prefs.get('API_key_life', 3600)
             user_preferences.api_key_timeout = prefs.get('API_key_timeout', 0)
 
 

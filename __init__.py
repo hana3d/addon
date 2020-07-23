@@ -1498,7 +1498,7 @@ class asset_manager_real2uAddonPreferences(AddonPreferences):
     api_key_life: IntProperty(
         name='api key life time',
         description='maximum lifetime of the api key, in seconds',
-        default=0,
+        default=3600,
         update=utils.save_prefs
     )
 
