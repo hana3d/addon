@@ -26,7 +26,11 @@ if "bpy" in locals():
 else:
     from asset_manager_real2u import paths, utils, bg_blender
 
-import tempfile, os, subprocess, json, sys
+import tempfile
+import os
+import subprocess
+import json
+import sys
 
 import bpy
 
@@ -120,8 +124,13 @@ def start_thumbnailer(self, context):
     tfpath = paths.get_thumbnailer_filepath()
     datafile = os.path.join(tempdir, asset_manager_real2u_EXPORT_DATA_FILE)
     try:
+        autopack = False
+        if bpy.data.use_autopack is True:
+            autopack = True
+            bpy.ops.file.autopack_toggle()
         # save a copy of actual scene but don't interfere with the users models
-        bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
+        bpy.ops.wm.save_as_mainfile(
+            filepath=filepath, compress=False, copy=True)
 
         obs = utils.get_hierarchy(mainmodel)
         obnames = []
@@ -159,6 +168,9 @@ def start_thumbnailer(self, context):
         mainmodel.asset_manager_real2u.thumbnail = rel_thumb_path + '.jpg'
         mainmodel.asset_manager_real2u.thumbnail_generating_state = 'Saving .blend file'
 
+        if autopack is True:
+            bpy.ops.file.autopack_toggle()
+
     except Exception as e:
         self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
         return {'FINISHED'}
@@ -195,7 +207,8 @@ def start_material_thumbnailer(self, context):
     datafile = os.path.join(tempdir, asset_manager_real2u_EXPORT_DATA_FILE)
     try:
         # save a copy of actual scene but don't interfere with the users models
-        bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
+        bpy.ops.wm.save_as_mainfile(
+            filepath=filepath, compress=False, copy=True)
 
         with open(datafile, 'w') as s:
             bkit = mat.asset_manager_real2u
@@ -330,7 +343,8 @@ class GenerateThumbnailOperator(bpy.types.Operator):
             def draw_message(self, context):
                 self.layout.label(text=message)
 
-            bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
+            bpy.context.window_manager.popup_menu(
+                draw_message, title=title, icon='INFO')
             return {'FINISHED'}
 
         return wm.invoke_props_dialog(self)
@@ -406,7 +420,8 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
             def draw_message(self, context):
                 self.layout.label(text=message)
 
-            bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
+            bpy.context.window_manager.popup_menu(
+                draw_message, title=title, icon='INFO')
             return {'FINISHED'}
 
         return wm.invoke_props_dialog(self)
