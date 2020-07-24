@@ -24,7 +24,7 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from asset_manager_real2u import paths, utils, tasks_queue, rerequests
+    from hana3d import paths, utils, tasks_queue, rerequests
 
 import requests
 import json
@@ -96,7 +96,7 @@ def load_categories():
     wm = bpy.context.window_manager
     try:
         with open(categories_filepath, 'r') as catfile:
-            wm['bkit_categories'] = json.load(catfile)
+            wm['hana3d_categories'] = json.load(catfile)
 
         wm['active_category'] = {
             'MODEL': ['model'],

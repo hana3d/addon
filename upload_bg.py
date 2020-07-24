@@ -26,7 +26,7 @@ if "bpy" in locals():
     utils = reload(utils)
     rerequests = reload(rerequests)
 else:
-    from asset_manager_real2u import paths, append_link, bg_blender, utils, rerequests
+    from hana3d import paths, append_link, bg_blender, utils, rerequests
 
 import sys, json, os, time
 import requests
@@ -34,7 +34,7 @@ import logging
 
 import bpy
 
-asset_manager_real2u_EXPORT_DATA = sys.argv[-1]
+HANA3D_EXPORT_DATA = sys.argv[-1]
 
 
 def start_logging():
@@ -110,7 +110,7 @@ def upload_file(upload_data, f):
                 bg_blender.progress('Upload %s failed, retrying' % f['type'])
                 time.sleep(1)
 
-            # confirm single file upload to bkit server
+            # confirm single file upload to hana3d server
             upload_done_url = paths.get_api_url() + 'uploads_s3/' + upload['id'] + '/upload-file/'
             upload_response = rerequests.post(upload_done_url, headers=headers, verify=True)
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     try:
         bg_blender.progress('preparing scene - append data')
-        with open(asset_manager_real2u_EXPORT_DATA, 'r') as s:
+        with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
         bpy.app.debug_value = data.get('debug_value', 0)
@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
             bpy.ops.file.pack_all()
 
-            main_source.asset_manager_real2u.uploading = False
+            main_source.hana3d.uploading = False
             fpath = os.path.join(data['temp_dir'], upload_data['assetBaseId'] + '.blend')
 
             bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)

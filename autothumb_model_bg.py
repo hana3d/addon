@@ -24,21 +24,21 @@ if "bpy" in locals():
     append_link = reload(append_link)
     bg_blender = reload(bg_blender)
 else:
-    from asset_manager_real2u import utils, append_link, bg_blender
+    from hana3d import utils, append_link, bg_blender
 
 import sys, json, math
 from pathlib import Path
 import bpy
 import mathutils
 
-asset_manager_real2u_EXPORT_TEMP_DIR = sys.argv[-1]
-asset_manager_real2u_THUMBNAIL_PATH = sys.argv[-2]
-asset_manager_real2u_EXPORT_FILE_INPUT = sys.argv[-3]
-asset_manager_real2u_EXPORT_DATA = sys.argv[-4]
+HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
+HANA3D_THUMBNAIL_PATH = sys.argv[-2]
+HANA3D_EXPORT_FILE_INPUT = sys.argv[-3]
+HANA3D_EXPORT_DATA = sys.argv[-4]
 
 
 def get_obnames():
-    with open(asset_manager_real2u_EXPORT_DATA, 'r') as s:
+    with open(HANA3D_EXPORT_DATA, 'r') as s:
         data = json.load(s)
     obnames = eval(data['models'])
     return obnames
@@ -85,14 +85,14 @@ def render_thumbnails():
 
 if __name__ == "__main__":
     try:
-        with open(asset_manager_real2u_EXPORT_DATA, 'r') as s:
+        with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
-        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
         bg_blender.progress('preparing thumbnail scene')
         obnames = get_obnames()
-        main_object, allobs = append_link.append_objects(file_name=asset_manager_real2u_EXPORT_FILE_INPUT,
+        main_object, allobs = append_link.append_objects(file_name=HANA3D_EXPORT_FILE_INPUT,
                                                          obnames=obnames,
                                                          link=True)
         bpy.context.view_layer.update()
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
         bpy.context.scene.camera = bpy.data.objects[camdict[data['thumbnail_snap_to']]]
         center_obs_for_thumbnail(allobs)
-        bpy.context.scene.render.filepath = asset_manager_real2u_THUMBNAIL_PATH
+        bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
         if user_preferences.thumbnail_use_gpu:
             bpy.context.scene.cycles.device = 'GPU'
 
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         collection.hide_select = False
 
         main_object.rotation_euler = (0, 0, 0)
-        bpy.data.materials['bkit background'].node_tree.nodes['Value'].outputs['Value'].default_value \
+        bpy.data.materials['hana3d background'].node_tree.nodes['Value'].outputs['Value'].default_value \
             = data['thumbnail_background_lightness']
         s.cycles.samples = data['thumbnail_samples']
         bpy.context.view_layer.cycles.use_denoising = data['thumbnail_denoising']
@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
         bg_blender.progress('rendering thumbnail')
         render_thumbnails()
-        fpath = asset_manager_real2u_THUMBNAIL_PATH + '0001.jpg'
+        fpath = HANA3D_THUMBNAIL_PATH + '0001.jpg'
         bg_blender.progress('background autothumbnailer finished successfully')
 
 

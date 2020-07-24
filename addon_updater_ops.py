@@ -52,7 +52,7 @@ except Exception as e:
 # Must declare this before classes are loaded
 # otherwise the bl_idname's will not match and have errors.
 # Must be all lowercase and no spaces
-updater.addon = "asset_manager_real2u"
+updater.addon = "hana3d"
 
 
 # -----------------------------------------------------------------------------
@@ -1276,7 +1276,7 @@ def register(bl_info):
 	#updater.addon = # define at top of module, MUST be done first
 
 	# Website for manual addon download, optional but recommended to set
-	updater.website = "https://gitlab.com/real2u/asset-manager/-/releases"
+	updater.website = "https://gitlab.com/real2u/hana3d/-/releases"
 
 	# Addon subfolder path
 	# "sample/path/to/addon"

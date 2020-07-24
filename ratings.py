@@ -24,7 +24,7 @@ if "bpy" in locals():
     rerequests = reload(rerequests)
     tasks_queue = reload(tasks_queue)
 else:
-    from asset_manager_real2u import paths, utils, rerequests, tasks_queue
+    from hana3d import paths, utils, rerequests, tasks_queue
 
 import bpy
 import requests, threading
@@ -62,7 +62,7 @@ def upload_rating_thread(url, ratings, headers):
         if (score != -1 and score != 0):
             rating_url = url + rating_name + '/'
             data = {
-                "score": score,  # todo this kind of mixing is too much. Should have 2 bkit structures, upload, use
+                "score": score,  # todo this kind of mixing is too much. Should have 2 hana3d structures, upload, use
             }
 
             try:
@@ -93,7 +93,7 @@ def upload_review_thread(url, reviews, headers):
 
 
 def get_rating(asset_id):
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = user_preferences.api_key
     headers = utils.get_headers(api_key)
     rl = paths.get_api_url() + 'assets/' + asset['asset_data']['id'] + '/rating/'
@@ -107,38 +107,38 @@ def get_rating(asset_id):
 
 
 def update_ratings_quality(self, context):
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = user_preferences.api_key
 
     headers = utils.get_headers(api_key)
     asset = self.id_data
-    bkit_ratings = asset.bkit_ratings
+    hana3d_ratings = asset.hana3d_ratings
     url = paths.get_api_url() + 'assets/' + asset['asset_data']['id'] + '/rating/'
 
-    if bkit_ratings.rating_quality > 0.1:
-        ratings = [('quality', bkit_ratings.rating_quality)]
+    if hana3d_ratings.rating_quality > 0.1:
+        ratings = [('quality', hana3d_ratings.rating_quality)]
         tasks_queue.add_task((send_rating_to_thread_quality, (url, ratings, headers)), wait=1, only_last=True)
 
 
 def update_ratings_work_hours(self, context):
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = user_preferences.api_key
     headers = utils.get_headers(api_key)
     asset = self.id_data
-    bkit_ratings = asset.bkit_ratings
+    hana3d_ratings = asset.hana3d_ratings
     url = paths.get_api_url() + 'assets/' + asset['asset_data']['id'] + '/rating/'
 
-    if bkit_ratings.rating_quality > 0.1:
-        ratings = [('working_hours', round(bkit_ratings.rating_work_hours, 1))]
+    if hana3d_ratings.rating_quality > 0.1:
+        ratings = [('working_hours', round(hana3d_ratings.rating_work_hours, 1))]
         tasks_queue.add_task((send_rating_to_thread_work_hours, (url, ratings, headers)), wait=1, only_last=True)
 
 
 def upload_rating(asset):
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = user_preferences.api_key
     headers = utils.get_headers(api_key)
 
-    bkit_ratings = asset.bkit_ratings
+    hana3d_ratings = asset.hana3d_ratings
     # print('rating asset', asset_data['name'], asset_data['asset_base_id'])
     url = paths.get_api_url() + 'assets/' + asset['asset_data']['id'] + '/rating/'
 
@@ -146,10 +146,10 @@ def upload_rating(asset):
 
     ]
 
-    if bkit_ratings.rating_quality > 0.1:
-        ratings.append(('quality', bkit_ratings.rating_quality))
-    if bkit_ratings.rating_work_hours > 0.1:
-        ratings.append(('working_hours', round(bkit_ratings.rating_work_hours, 1)))
+    if hana3d_ratings.rating_quality > 0.1:
+        ratings.append(('quality', hana3d_ratings.rating_quality))
+    if hana3d_ratings.rating_work_hours > 0.1:
+        ratings.append(('working_hours', round(hana3d_ratings.rating_work_hours, 1)))
 
     thread = threading.Thread(target=upload_rating_thread, args=(url, ratings, headers))
     thread.start()
@@ -157,23 +157,23 @@ def upload_rating(asset):
     url = paths.get_api_url() + 'assets/' + asset['asset_data']['id'] + '/review'
 
     reviews = {
-        'reviewText': bkit_ratings.rating_compliments,
-        'reviewTextProblems': bkit_ratings.rating_problems,
+        'reviewText': hana3d_ratings.rating_compliments,
+        'reviewTextProblems': hana3d_ratings.rating_problems,
     }
-    if not (bkit_ratings.rating_compliments == '' and bkit_ratings.rating_compliments == ''):
+    if not (hana3d_ratings.rating_compliments == '' and hana3d_ratings.rating_compliments == ''):
         thread = threading.Thread(target=upload_review_thread, args=(url, reviews, headers))
         thread.start()
 
     # the info that the user rated an item is stored in the scene
     s = bpy.context.scene
     s['assets rated'] = s.get('assets rated', {})
-    if bkit_ratings.rating_quality > 0.1 and bkit_ratings.rating_work_hours > 0.1:
+    if hana3d_ratings.rating_quality > 0.1 and hana3d_ratings.rating_work_hours > 0.1:
         s['assets rated'][asset['asset_data']['asset_base_id']] = True
 
 
 class StarRatingOperator(bpy.types.Operator):
     """Tooltip"""
-    bl_idname = "object.asset_manager_real2u_rating"
+    bl_idname = "object.hana3d_rating"
     bl_label = "Rate the Asset Quality"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -187,7 +187,7 @@ class StarRatingOperator(bpy.types.Operator):
 
     def execute(self, context):
         asset = utils.get_active_asset()
-        props = asset.bkit_ratings
+        props = asset.hana3d_ratings
         props.rating_quality = self.rating
         return {'FINISHED'}
 
@@ -205,7 +205,7 @@ asset_types = (
 # TODO drop this operator, not needed anymore.
 class UploadRatingOperator(bpy.types.Operator):
     """Upload rating to the web db"""
-    bl_idname = "object.asset_manager_real2u_rating_upload"
+    bl_idname = "object.hana3d_rating_upload"
     bl_label = "Send Rating"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -245,7 +245,7 @@ def draw_rating(layout, props, prop_name, name):
         else:
             icon = 'SOLO_ON'
 
-        op = row.operator('object.asset_manager_real2u_rating', icon=icon, emboss=False, text='')
+        op = row.operator('object.hana3d_rating', icon=icon, emboss=False, text='')
         op.property_name = prop_name
         op.rating = a + 1
 

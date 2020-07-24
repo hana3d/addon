@@ -22,7 +22,7 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from asset_manager_real2u import utils
+    from hana3d import utils
 
 import bpy, mathutils
 from bpy.types import (
@@ -86,12 +86,12 @@ def addColorCorrectors(material):
                 if i.type == 'RGBA':
                     if len(i.links) > 0:
                         l = i.links[0]
-                        if not (l.from_node.type == 'GROUP' and l.from_node.node_tree.name == 'bkit_asset_tweaker'):
+                        if not (l.from_node.type == 'GROUP' and l.from_node.node_tree.name == 'hana3d_asset_tweaker'):
                             from_socket = l.from_socket
                             to_socket = l.to_socket
 
                             g = nt.nodes.new(type='ShaderNodeGroup')
-                            g.node_tree = bpy.data.node_groups['bkit_asset_tweaker']
+                            g.node_tree = bpy.data.node_groups['hana3d_asset_tweaker']
                             g.location = shader.location
                             g.location.x -= 100
 
@@ -102,7 +102,7 @@ def addColorCorrectors(material):
                         tweakers.append(g)
                     else:
                         g = nt.nodes.new(type='ShaderNodeGroup')
-                        g.node_tree = bpy.data.node_groups['bkit_asset_tweaker']
+                        g.node_tree = bpy.data.node_groups['hana3d_asset_tweaker']
                         g.location = shader.location
                         g.location.x -= 100
 
@@ -178,8 +178,8 @@ def ensure_eevee_transparency(m):
 class BringToScene(Operator):
     """Bring linked object hierarchy to scene and make it editable."""
 
-    bl_idname = "object.asset_manager_real2u_bring_to_scene"
-    bl_label = "asset_manager_real2u bring objects to scene"
+    bl_idname = "object.hana3d_bring_to_scene"
+    bl_label = "hana3d bring objects to scene"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -251,8 +251,8 @@ class BringToScene(Operator):
 
 class ModelProxy(Operator):
     """Attempt to create proxy armature from the asset"""
-    bl_idname = "object.asset_manager_real2u_make_proxy"
-    bl_label = "asset_manager_real2u Make Proxy"
+    bl_idname = "object.hana3d_make_proxy"
+    bl_label = "Hana3D Make Proxy"
 
     @classmethod
     def poll(cls, context):
@@ -267,7 +267,7 @@ class ModelProxy(Operator):
 
 class ColorCorrector(Operator):
     """Add color corector to the asset. """
-    bl_idname = "object.asset_manager_real2u_color_corrector"
+    bl_idname = "object.hana3d_color_corrector"
     bl_label = "Add color corrector"
 
     @classmethod
