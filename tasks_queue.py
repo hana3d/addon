@@ -21,7 +21,7 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from asset_manager_real2u import utils
+    from hana3d import utils
 
 import bpy
 from bpy.app.handlers import persistent

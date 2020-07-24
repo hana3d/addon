@@ -1,3 +1,3 @@
-# Asset Manager
+# Hana3D
 
 BlenderKit Fork

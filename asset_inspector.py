@@ -22,7 +22,7 @@ if "bpy" in locals():
 
     utils = reload(utils)
 else:
-    from asset_manager_real2u import utils
+    from hana3d import utils
 
 import bpy
 from object_print3d_utils import operators as ops
@@ -330,11 +330,11 @@ def check_modifiers(props, obs):
 
 def get_autotags():
     """ call all analysis functions """
-    ui = bpy.context.scene.asset_manager_real2uUI
+    ui = bpy.context.scene.Hana3DUI
     if ui.asset_type == 'MODEL':
         ob = utils.get_active_model()
         obs = utils.get_hierarchy(ob)
-        props = ob.asset_manager_real2u
+        props = ob.hana3d
         if props.name == "":
             props.name = ob.name
 
@@ -359,7 +359,7 @@ def get_autotags():
         # reset some properties here, because they might not get re-filled at all when they aren't needed anymore.
 
         mat = utils.get_active_asset()
-        props = mat.asset_manager_real2u
+        props = mat.hana3d
         props.texture_resolution_max = 0
         props.texture_resolution_min = 0
         check_material(props, mat)
@@ -367,8 +367,8 @@ def get_autotags():
 
 class AutoFillTags(bpy.types.Operator):
     """Fill tags for asset. Now run before upload, no need to interact from user side."""
-    bl_idname = "object.asset_manager_real2u_auto_tags"
-    bl_label = "Generate Auto Tags for asset_manager_real2u"
+    bl_idname = "object.hana3d_auto_tags"
+    bl_label = "Generate Auto Tags for hana3d"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod

@@ -33,7 +33,7 @@ if "bpy" in locals():
     colors = reload(colors)
     rerequests = reload(rerequests)
 else:
-    from asset_manager_real2u import asset_inspector, paths, utils, bg_blender, autothumb, version_checker, search, ui_panels, ui, \
+    from hana3d import asset_inspector, paths, utils, bg_blender, autothumb, version_checker, search, ui_panels, ui, \
         overrides, colors, rerequests
 
 import tempfile
@@ -59,7 +59,7 @@ from bpy.props import (  # TODO only keep the ones actually used when cleaning
     StringProperty,
 )
 
-asset_manager_real2u_EXPORT_DATA_FILE = "data.json"
+HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
 def comma2array(text):
@@ -104,8 +104,7 @@ def get_missing_data_model(props):
     if props.engine == 'NONE':
         write_to_report(props, 'Set at least one rendering/output engine')
     if not any(props.dimensions):
-        write_to_report(
-            props, 'Run autotags operator or fill in dimensions manually')
+        write_to_report(props, 'Run autotags operator or fill in dimensions manually')
 
 
 def get_missing_data_scene(props):
@@ -159,7 +158,7 @@ def camel_to_sub(content):
 
 
 def get_upload_data(self, context, asset_type):
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     api_key = user_preferences.api_key
 
     export_data = {
@@ -170,7 +169,7 @@ def get_upload_data(self, context, asset_type):
         # Prepare to save the file
         mainmodel = utils.get_active_model()
 
-        props = mainmodel.asset_manager_real2u
+        props = mainmodel.hana3d
 
         obs = utils.get_hierarchy(mainmodel)
         obnames = []
@@ -179,8 +178,8 @@ def get_upload_data(self, context, asset_type):
         export_data["models"] = obnames
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
-        eval_path_computing = "bpy.data.objects['%s'].asset_manager_real2u.uploading" % mainmodel.name
-        eval_path_state = "bpy.data.objects['%s'].asset_manager_real2u.upload_state" % mainmodel.name
+        eval_path_computing = "bpy.data.objects['%s'].hana3d.uploading" % mainmodel.name
+        eval_path_state = "bpy.data.objects['%s'].hana3d.upload_state" % mainmodel.name
         eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
         engines = [props.engine.lower()]
@@ -251,11 +250,9 @@ def get_upload_data(self, context, asset_type):
             upload_params["textureResolutionMax"] = props.texture_resolution_max
             upload_params["textureResolutionMin"] = props.texture_resolution_min
         if props.mesh_poly_type != 'OTHER':
-            # .replace('_',' ')
-            upload_params["meshPolyType"] = props.mesh_poly_type.lower()
+            upload_params["meshPolyType"] = props.mesh_poly_type.lower()  # .replace('_',' ')
 
-        optional_params = ['manufacturer', 'designer',
-                           'design_collection', 'design_variant']
+        optional_params = ['manufacturer', 'designer', 'design_collection', 'design_variant']
         for p in optional_params:
             if eval('props.%s' % p) != '':
                 upload_params[sub_to_camel(p)] = eval('props.%s' % p)
@@ -264,13 +261,13 @@ def get_upload_data(self, context, asset_type):
         # Prepare to save the file
         s = bpy.context.scene
 
-        props = s.asset_manager_real2u
+        props = s.hana3d
 
         export_data["scene"] = s.name
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
-        eval_path_computing = "bpy.data.scenes['%s'].asset_manager_real2u.uploading" % s.name
-        eval_path_state = "bpy.data.scenes['%s'].asset_manager_real2u.upload_state" % s.name
+        eval_path_computing = "bpy.data.scenes['%s'].hana3d.uploading" % s.name
+        eval_path_state = "bpy.data.scenes['%s'].hana3d.upload_state" % s.name
         eval_path = "bpy.data.scenes['%s']" % s.name
 
         engines = [props.engine.lower()]
@@ -324,12 +321,11 @@ def get_upload_data(self, context, asset_type):
             upload_params["textureResolutionMax"] = props.texture_resolution_max
             upload_params["textureResolutionMin"] = props.texture_resolution_min
         if props.mesh_poly_type != 'OTHER':
-            # .replace('_',' ')
-            upload_params["meshPolyType"] = props.mesh_poly_type.lower()
+            upload_params["meshPolyType"] = props.mesh_poly_type.lower()  # .replace('_',' ')
 
     elif asset_type == 'MATERIAL':
         mat = bpy.context.active_object.active_material
-        props = mat.asset_manager_real2u
+        props = mat.hana3d
 
         # props.name = mat.name
 
@@ -338,8 +334,8 @@ def get_upload_data(self, context, asset_type):
         # mat analytics happen here, since they don't take up any time...
         asset_inspector.check_material(props, mat)
 
-        eval_path_computing = "bpy.data.materials['%s'].asset_manager_real2u.uploading" % mat.name
-        eval_path_state = "bpy.data.materials['%s'].asset_manager_real2u.upload_state" % mat.name
+        eval_path_computing = "bpy.data.materials['%s'].hana3d.uploading" % mat.name
+        eval_path_state = "bpy.data.materials['%s'].hana3d.upload_state" % mat.name
         eval_path = "bpy.data.materials['%s']" % mat.name
 
         engine = props.engine
@@ -380,14 +376,14 @@ def get_upload_data(self, context, asset_type):
     elif asset_type == 'BRUSH':
         brush = utils.get_active_brush()
 
-        props = brush.asset_manager_real2u
+        props = brush.hana3d
         # props.name = brush.name
 
         export_data["brush"] = str(brush.name)
         export_data["thumbnail_path"] = bpy.path.abspath(brush.icon_filepath)
 
-        eval_path_computing = "bpy.data.brushes['%s'].asset_manager_real2u.uploading" % brush.name
-        eval_path_state = "bpy.data.brushes['%s'].asset_manager_real2u.upload_state" % brush.name
+        eval_path_computing = "bpy.data.brushes['%s'].hana3d.uploading" % brush.name
+        eval_path_state = "bpy.data.brushes['%s'].hana3d.upload_state" % brush.name
         eval_path = "bpy.data.brushes['%s']" % brush.name
 
         # mat analytics happen here, since they don't take up any time...
@@ -470,8 +466,7 @@ def verification_status_change_thread(asset_id, state, api_key):
     url = paths.get_api_url() + 'assets/' + str(asset_id) + '/'
     headers = utils.get_headers(api_key)
     try:
-        r = rerequests.patch(url, json=upload_data,
-                             headers=headers, verify=True)  # files = files,
+        r = rerequests.patch(url, json=upload_data, headers=headers, verify=True)  # files = files,
     except requests.exceptions.RequestException as e:
         print(e)
         return {'CANCELLED'}
@@ -480,7 +475,7 @@ def verification_status_change_thread(asset_id, state, api_key):
 
 def get_upload_location(props):
     scene = bpy.context.scene
-    ui_props = scene.asset_manager_real2uUI
+    ui_props = scene.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = utils.get_active_model()
@@ -501,9 +496,9 @@ def check_storage_quota(props):
     if props.is_public:
         return True
 
-    profile = bpy.context.window_manager.get('bkit profile')
+    profile = bpy.context.window_manager.get('hana3d profile')
     if profile is None or profile.get('remainingPrivateQuota') is None:
-        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        preferences = bpy.context.preferences.addons['hana3d'].preferences
         adata = search.request_profile(preferences.api_key)
         if adata is None:
             props.report = 'Please log-in first.'
@@ -579,8 +574,7 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     if not ext:
         ext = ".blend"
     tempdir = tempfile.mkdtemp()
-    source_filepath = os.path.join(
-        tempdir, "export_asset_manager_real2u" + ext)
+    source_filepath = os.path.join(tempdir, "export_hana3d" + ext)
     clean_file_path = paths.get_clean_filepath()
     data = {
         'clean_file_path': clean_file_path,
@@ -591,7 +585,7 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         'debug_value': bpy.app.debug_value,
         'upload_set': upload_set,
     }
-    datafile = os.path.join(tempdir, asset_manager_real2u_EXPORT_DATA_FILE)
+    datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
     # check if thumbnail exists:
     if 'THUMBNAIL' in upload_set:
@@ -606,13 +600,11 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     headers = utils.get_headers(upload_data['token'])
 
     # upload_data['license'] = 'ovejajojo'
-    # json.dumps(upload_data, ensure_ascii=False).encode('utf8')
-    json_metadata = upload_data
+    json_metadata = upload_data  # json.dumps(upload_data, ensure_ascii=False).encode('utf8')
     global reports
     if props.asset_base_id == '':
         try:
-            r = rerequests.post(url, json=json_metadata, headers=headers,
-                                verify=True, immediate=True)  # files = files,
+            r = rerequests.post(url, json=json_metadata, headers=headers, verify=True, immediate=True)  # files = files,
             ui.add_report('uploaded metadata')
             utils.p(r.text)
         except requests.exceptions.RequestException as e:
@@ -626,8 +618,7 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         try:
             if 'MAINFILE' in upload_set:
                 json_metadata["verificationStatus"] = "uploading"
-            r = rerequests.put(url, json=json_metadata, headers=headers,
-                               verify=True, immediate=True)  # files = files,
+            r = rerequests.put(url, json=json_metadata, headers=headers, verify=True, immediate=True)  # files = files,
             ui.add_report('uploaded metadata')
             # parse the request
             # print('uploaded metadata')
@@ -664,8 +655,7 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         if bpy.data.use_autopack is True:
             autopack = True
             bpy.ops.file.autopack_toggle()
-        bpy.ops.wm.save_as_mainfile(
-            filepath=source_filepath, compress=False, copy=True)
+        bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
 
         with open(datafile, 'w') as s:
             json.dump(data, s)
@@ -706,10 +696,10 @@ asset_types = (
 
 class UploadOperator(Operator):
     """Tooltip"""
-    bl_idname = "object.asset_manager_real2u_upload"
+    bl_idname = "object.hana3d_upload"
     bl_description = "Upload or re-upload asset + thumbnail + metadata"
 
-    bl_label = "asset_manager_real2u asset upload"
+    bl_label = "hana3d asset upload"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     # type of upload - model, material, textures, e.t.c.
@@ -750,15 +740,14 @@ class UploadOperator(Operator):
         return bpy.context.view_layer.objects.active is not None
 
     def execute(self, context):
-        bpy.ops.object.asset_manager_real2u_auto_tags()
+        bpy.ops.object.hana3d_auto_tags()
         props = utils.get_upload_props()
 
         # TODO: separate asset properties in postgres from properties in .blend and
         # check if object was modified
         upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
 
-        result = start_upload(
-            self, context, self.asset_type, self.reupload, upload_set)
+        result = start_upload(self, context, self.asset_type, self.reupload, upload_set)
 
         return result
 
@@ -773,10 +762,8 @@ class UploadOperator(Operator):
 
         if props.asset_base_id != '' and not self.reupload:
             layout.label(text="Really upload as new? ")
-            layout.label(
-                text="Do this only when you create a new asset from an old one.")
-            layout.label(
-                text="For updates of thumbnail or model use reupload.")
+            layout.label(text="Do this only when you create a new asset from an old one.")
+            layout.label(text="For updates of thumbnail or model use reupload.")
 
     def invoke(self, context, event):
         # props = utils.get_upload_props()
@@ -790,7 +777,7 @@ class UploadOperator(Operator):
 
 class AssetVerificationStatusChange(Operator):
     """Change verification status"""
-    bl_idname = "object.asset_manager_real2u_change_status"
+    bl_idname = "object.hana3d_change_status"
     bl_description = "Change asset ststus"
     bl_label = "Change verification status"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
@@ -812,12 +799,11 @@ class AssetVerificationStatusChange(Operator):
     def draw(self, context):
         layout = self.layout
         # if self.state == 'deleted':
-        layout.label(
-            text='Really delete asset from asset_manager_real2u online storage?')
+        layout.label(text='Really delete asset from hana3d online storage?')
         # layout.prop(self, 'state')
 
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        preferences = bpy.context.preferences.addons['hana3d'].preferences
 
         # update status in search results for validator's clarity
         sr = bpy.context.scene['search results']

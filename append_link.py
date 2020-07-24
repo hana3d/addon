@@ -24,7 +24,7 @@ if "bpy" in locals():
     ui = reload(ui)
     render_settings = reload(render_settings)
 else:
-    from asset_manager_real2u import utils, ui, render_settings
+    from hana3d import utils, ui, render_settings
 
 import bpy
 import uuid
@@ -102,7 +102,7 @@ def copy_curves(from_scene: bpy.types.Scene, to_scene: bpy.types.Scene):
 def append_scene(file_name, scenename=None, link=False, fake_user=False):
     '''append a scene type asset'''
     scene = bpy.context.scene
-    props = scene.asset_manager_real2u_scene
+    props = scene.hana3d_scene
 
     if props.merge_add == 'MERGE' and scenename is None:
         with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):

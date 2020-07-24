@@ -25,14 +25,14 @@ if "bpy" in locals():
     categories = reload(categories)
     ui = reload(ui)
     colors = reload(colors)
-    bkit_oauth = reload(bkit_oauth)
+    hana3d_oauth = reload(hana3d_oauth)
     version_checker = reload(version_checker)
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from asset_manager_real2u import paths, utils, categories, ui, colors, bkit_oauth, version_checker, tasks_queue, rerequests
+    from hana3d import paths, utils, categories, ui, colors, hana3d_oauth, version_checker, tasks_queue, rerequests
 
-import asset_manager_real2u
+import hana3d
 from bpy.app.handlers import persistent
 
 from bpy.props import (  # TODO only keep the ones actually used when cleaning
@@ -69,10 +69,10 @@ def check_errors(rdata):
     if rdata.get('status_code') == 401:
         utils.p(rdata)
         if rdata.get('code') == 'token_expired':
-            user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+            user_preferences = bpy.context.preferences.addons['hana3d'].preferences
             if user_preferences.api_key != '':
                 if user_preferences.enable_oauth:
-                    bkit_oauth.refresh_token_thread()
+                    hana3d_oauth.refresh_token_thread()
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     return True, ''
@@ -97,7 +97,7 @@ rtips = ['Click or drag model or material in scene to link/append ',
 def refresh_token_timer():
     ''' this timer gets run every time the token needs refresh. It refreshes tokens and also categories.'''
     utils.p('refresh timer')
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     fetch_server_data()
     categories.load_categories()
 
@@ -114,16 +114,16 @@ def scene_load(context):
 def fetch_server_data():
     ''' download categories and addon version'''
     if not bpy.app.background:
-        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if user_preferences.enable_oauth and \
                 len(user_preferences.api_key) > 0 and \
                 user_preferences.api_key_timeout < time.time():
-            bkit_oauth.refresh_token_thread()
-        if api_key != '' and bpy.context.window_manager.get('bkit profile') == None:
+            hana3d_oauth.refresh_token_thread()
+        if api_key != '' and bpy.context.window_manager.get('hana3d profile') == None:
             get_profile()
-        if bpy.context.window_manager.get('bkit_categories') is None:
+        if bpy.context.window_manager.get('hana3d_categories') is None:
             categories.fetch_categories_thread(api_key)
 
 
@@ -152,7 +152,7 @@ def check_clipboard():
 # @bpy.app.handlers.persistent
 def timer_update():
     global first_time
-    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    preferences = bpy.context.preferences.addons['hana3d'].preferences
     if first_time:
         first_time = False
         if preferences.show_on_start:
@@ -161,7 +161,7 @@ def timer_update():
         if preferences.tips_on_start:
             ui.get_largest_3dview()
             ui.update_ui_size(ui.active_area, ui.active_region)
-            ui.add_report(text='asset_manager_real2u Tip: ' + random.choice(rtips), timeout=12, color=colors.GREEN)
+            ui.add_report(text='Hana3D Tip: ' + random.choice(rtips), timeout=12, color=colors.GREEN)
         return 3.0
 
     if preferences.first_run:
@@ -171,7 +171,7 @@ def timer_update():
     global search_threads
     if len(search_threads) == 0:
         return 1.0
-    if bpy.context.scene.asset_manager_real2uUI.dragging:
+    if bpy.context.scene.Hana3DUI.dragging:
         return 0.5
     for thread in search_threads:
         if not thread[0].is_alive():
@@ -181,21 +181,21 @@ def timer_update():
             s = bpy.context.scene
             asset_type = thread[2]
             if asset_type == 'model':
-                props = scene.asset_manager_real2u_models
+                props = scene.hana3d_models
                 json_filepath = os.path.join(icons_dir, 'model_searchresult.json')
-                search_name = 'bkit model search'
+                search_name = 'hana3d model search'
             if asset_type == 'scene':
-                props = scene.asset_manager_real2u_scene
+                props = scene.hana3d_scene
                 json_filepath = os.path.join(icons_dir, 'scene_searchresult.json')
-                search_name = 'bkit scene search'
+                search_name = 'hana3d scene search'
             if asset_type == 'material':
-                props = scene.asset_manager_real2u_mat
+                props = scene.hana3d_mat
                 json_filepath = os.path.join(icons_dir, 'material_searchresult.json')
-                search_name = 'bkit material search'
+                search_name = 'hana3d material search'
             if asset_type == 'brush':
-                props = scene.asset_manager_real2u_brush
+                props = scene.hana3d_brush
                 json_filepath = os.path.join(icons_dir, 'brush_searchresult.json')
-                search_name = 'bkit brush search'
+                search_name = 'hana3d brush search'
 
             s[search_name] = []
 
@@ -291,7 +291,7 @@ def timer_update():
                 s[search_name + ' orig'] = rdata
                 s['search results orig'] = rdata
                 load_previews()
-                ui_props = bpy.context.scene.asset_manager_real2uUI
+                ui_props = bpy.context.scene.Hana3DUI
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
@@ -319,7 +319,7 @@ def load_previews():
     }
     scene = bpy.context.scene
     # FIRST START SEARCH
-    props = scene.asset_manager_real2uUI
+    props = scene.Hana3DUI
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
     s = bpy.context.scene
@@ -510,7 +510,7 @@ def generate_tooltip(mdata):
     #     # t = writeblockm(t, mdata, key='versionNumber', pretext='version', width = col_w)
     #     a_id = mdata['author'].get('id')
     #     if a_id != None:
-    #         adata = bpy.context.window_manager['bkit authors'].get(str(a_id))
+    #         adata = bpy.context.window_manager['hana3d authors'].get(str(a_id))
     #         if adata != None:
     #             t += generate_author_textblock(adata)
 
@@ -611,7 +611,7 @@ def write_gravatar(a_id, gravatar_path):
     This should happen on timer in queue.
     '''
     # print('write author', a_id, type(a_id))
-    authors = bpy.context.window_manager['bkit authors']
+    authors = bpy.context.window_manager['hana3d authors']
     if authors.get(a_id) is not None:
         adata = authors.get(a_id)
         adata['gravatarImg'] = gravatar_path
@@ -647,10 +647,10 @@ def get_author(r):
     global fetching_gravatars
 
     a_id = str(r['author']['id'])
-    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
-    authors = bpy.context.window_manager.get('bkit authors', {})
+    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    authors = bpy.context.window_manager.get('hana3d authors', {})
     if authors == {}:
-        bpy.context.window_manager['bkit authors'] = authors
+        bpy.context.window_manager['hana3d authors'] = authors
     a = authors.get(a_id)
     if a is None:  # or a is '' or (a.get('gravatarHash') is not None and a.get('gravatarImg') is None):
         a = r['author']
@@ -682,7 +682,7 @@ def write_profile(adata):
     else:
         user['exmenu'] = False
 
-    bpy.context.window_manager['bkit profile'] = adata
+    bpy.context.window_manager['hana3d profile'] = adata
 
 
 def request_profile(api_key):
@@ -708,8 +708,8 @@ def fetch_profile(api_key):
 
 
 def get_profile():
-    preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
-    a = bpy.context.window_manager.get('bkit profile')
+    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    a = bpy.context.window_manager.get('hana3d profile')
     thread = threading.Thread(target=fetch_profile, args=(preferences.api_key,), daemon=True)
     thread.start()
     return a
@@ -740,7 +740,7 @@ class Searcher(threading.Thread):
             if key != 'search_term':
                 requeststring += f'&{key}={str(value).lower()}'
 
-        # result ordering: _score - relevance, score - asset_manager_real2u score
+        # result ordering: _score - relevance, score - hana3d score
 
         if query.get('search_term') is None and query.get('category_subtree') is None:
             # assumes no keywords and no category, thus an empty search that is triggered on start.
@@ -972,7 +972,7 @@ def build_query_common(query, props):
 def build_query_model():
     '''use all search input to request results from server'''
 
-    props = bpy.context.scene.asset_manager_real2u_models
+    props = bpy.context.scene.hana3d_models
     query = {
         "asset_type": 'model',
         # "engine": props.search_engine,
@@ -1002,7 +1002,7 @@ def build_query_model():
 def build_query_scene():
     '''use all search input to request results from server'''
 
-    props = bpy.context.scene.asset_manager_real2u_scene
+    props = bpy.context.scene.hana3d_scene
     query = {
         "asset_type": 'scene',
         # "engine": props.search_engine,
@@ -1013,7 +1013,7 @@ def build_query_scene():
 
 
 def build_query_material():
-    props = bpy.context.scene.asset_manager_real2u_mat
+    props = bpy.context.scene.hana3d_mat
     query = {
         "asset_type": 'material',
 
@@ -1036,7 +1036,7 @@ def build_query_material():
 
 
 def build_query_texture():
-    props = bpy.context.scene.asset_manager_real2u_tex
+    props = bpy.context.scene.hana3d_tex
     query = {
         "asset_type": 'texture',
 
@@ -1054,7 +1054,7 @@ def build_query_texture():
 
 
 def build_query_brush():
-    props = bpy.context.scene.asset_manager_real2u_brush
+    props = bpy.context.scene.hana3d_brush
 
     brush_type = ''
     if bpy.context.sculpt_object is not None:
@@ -1102,41 +1102,41 @@ def add_search_process(query, params):
 def search(category='', get_next=False, author_id=''):
     ''' initialize searching'''
     global search_start_time
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
     search_start_time = time.time()
     # mt('start')
     scene = bpy.context.scene
-    uiprops = scene.asset_manager_real2uUI
+    uiprops = scene.Hana3DUI
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'asset_manager_real2u'):
+        if not hasattr(scene, 'hana3d'):
             return
-        props = scene.asset_manager_real2u_models
+        props = scene.hana3d_models
         query = build_query_model()
 
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'asset_manager_real2u_scene'):
+        if not hasattr(scene, 'hana3d_scene'):
             return
-        props = scene.asset_manager_real2u_scene
+        props = scene.hana3d_scene
         query = build_query_scene()
 
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'asset_manager_real2u_mat'):
+        if not hasattr(scene, 'hana3d_mat'):
             return
-        props = scene.asset_manager_real2u_mat
+        props = scene.hana3d_mat
         query = build_query_material()
 
     if uiprops.asset_type == 'TEXTURE':
-        if not hasattr(scene, 'asset_manager_real2u_tex'):
+        if not hasattr(scene, 'hana3d_tex'):
             return
-        # props = scene.asset_manager_real2u_tex
+        # props = scene.hana3d_tex
         # query = build_query_texture()
 
     if uiprops.asset_type == 'BRUSH':
-        if not hasattr(scene, 'asset_manager_real2u_brush'):
+        if not hasattr(scene, 'hana3d_brush'):
             return
-        props = scene.asset_manager_real2u_brush
+        props = scene.hana3d_brush
         query = build_query_brush()
 
     if props.is_searching and get_next:
@@ -1153,7 +1153,7 @@ def search(category='', get_next=False, author_id=''):
 
     # elif not props.public_only:
     #     # if user searches for [another] author, 'only my assets' is invalid. that's why in elif.
-    #     profile = bpy.context.window_manager.get('bkit profile')
+    #     profile = bpy.context.window_manager.get('hana3d profile')
     #     if profile is not None:
     #         query['author_id'] = str(profile['user']['id'])
 
@@ -1168,15 +1168,15 @@ def search(category='', get_next=False, author_id=''):
     }
 
     add_search_process(query, params)
-    tasks_queue.add_task((ui.add_report, ('asset_manager_real2u searching....', 2)))
+    tasks_queue.add_task((ui.add_report, ('hana3d searching....', 2)))
 
-    props.report = 'asset_manager_real2u searching....'
+    props.report = 'hana3d searching....'
 
 
 def search_update(self, context):
     utils.p('search updater')
     # if self.search_keywords != '':
-    ui_props = bpy.context.scene.asset_manager_real2uUI
+    ui_props = bpy.context.scene.Hana3DUI
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
 
@@ -1211,8 +1211,8 @@ def search_update(self, context):
 
 class SearchOperator(Operator):
     """Tooltip"""
-    bl_idname = "view3d.asset_manager_real2u_search"
-    bl_label = "asset_manager_real2u asset search"
+    bl_idname = "view3d.hana3d_search"
+    bl_label = "hana3d asset search"
     bl_description = "Search online for assets"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     own: BoolProperty(name="own assets only",
@@ -1259,7 +1259,7 @@ class SearchOperator(Operator):
             sprops.search_keywords = self.keywords
 
         search(category=self.category, get_next=self.get_next, author_id=self.author_id)
-        # bpy.ops.view3d.asset_manager_real2u_asset_bar()
+        # bpy.ops.view3d.hana3d_asset_bar()
 
         return {'FINISHED'}
 

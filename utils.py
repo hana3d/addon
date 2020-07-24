@@ -22,7 +22,7 @@ if "bpy" in locals():
 
     paths = reload(paths)
 else:
-    from asset_manager_real2u import paths
+    from hana3d import paths
 
 import json
 import os
@@ -82,16 +82,16 @@ def get_selected_models():
     parents = []
     for ob in obs:
         if ob not in done:
-            while ob.parent is not None and ob not in done and ob.asset_manager_real2u.asset_base_id != '' and ob.instance_collection is not None:
+            while ob.parent is not None and ob not in done and ob.hana3d.asset_base_id != '' and ob.instance_collection is not None:
                 done[ob] = True
                 ob = ob.parent
 
             if ob not in parents and ob not in done:
-                if ob.asset_manager_real2u.name != '' or ob.instance_collection is not None:
+                if ob.hana3d.name != '' or ob.instance_collection is not None:
                     parents.append(ob)
             done[ob] = True
 
-    # if no asset_manager_real2u - like objects were found, use the original selection.
+    # if no hana3d - like objects were found, use the original selection.
     if len(parents) == 0:
         parents = obs
     return parents
@@ -101,36 +101,36 @@ def get_search_props():
     scene = bpy.context.scene
     if scene is None:
         return
-    uiprops = scene.asset_manager_real2uUI
+    uiprops = scene.Hana3DUI
     props = None
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'asset_manager_real2u_models'):
+        if not hasattr(scene, 'hana3d_models'):
             return
-        props = scene.asset_manager_real2u_models
+        props = scene.hana3d_models
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'asset_manager_real2u_scene'):
+        if not hasattr(scene, 'hana3d_scene'):
             return
-        props = scene.asset_manager_real2u_scene
+        props = scene.hana3d_scene
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'asset_manager_real2u_mat'):
+        if not hasattr(scene, 'hana3d_mat'):
             return
-        props = scene.asset_manager_real2u_mat
+        props = scene.hana3d_mat
 
     if uiprops.asset_type == 'TEXTURE':
-        if not hasattr(scene, 'asset_manager_real2u_tex'):
+        if not hasattr(scene, 'hana3d_tex'):
             return
-        # props = scene.asset_manager_real2u_tex
+        # props = scene.hana3d_tex
 
     if uiprops.asset_type == 'BRUSH':
-        if not hasattr(scene, 'asset_manager_real2u_brush'):
+        if not hasattr(scene, 'hana3d_brush'):
             return
-        props = scene.asset_manager_real2u_brush
+        props = scene.hana3d_brush
     return props
 
 
 def get_active_asset():
     scene = bpy.context.scene
-    ui_props = scene.asset_manager_real2uUI
+    ui_props = scene.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model()
@@ -152,32 +152,32 @@ def get_active_asset():
 
 def get_upload_props():
     scene = bpy.context.scene
-    ui_props = scene.asset_manager_real2uUI
+    ui_props = scene.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model()
-            return ob.asset_manager_real2u
+            return ob.hana3d
     if ui_props.asset_type == 'SCENE':
         s = bpy.context.scene
-        return s.asset_manager_real2u
+        return s.hana3d
     elif ui_props.asset_type == 'MATERIAL':
         if hasattr(bpy.context, 'active_object'):
             if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
-                return bpy.context.active_object.active_material.asset_manager_real2u
+                return bpy.context.active_object.active_material.hana3d
     elif ui_props.asset_type == 'TEXTURE':
         return None
     elif ui_props.asset_type == 'BRUSH':
         b = get_active_brush()
         if b is not None:
-            return b.asset_manager_real2u
+            return b.hana3d
     return None
 
 
 def previmg_name(index, fullsize=False):
     if not fullsize:
-        return '.bkit_preview_' + str(index).zfill(2)
+        return '.hana3d_preview_' + str(index).zfill(2)
     else:
-        return '.bkit_preview_full_' + str(index).zfill(2)
+        return '.hana3d_preview_full_' + str(index).zfill(2)
 
 
 def get_active_brush():
@@ -191,9 +191,9 @@ def get_active_brush():
 
 
 def load_prefs():
-    user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     # if user_preferences.api_key == '':
-    fpath = paths.asset_manager_real2u_SETTINGS_FILENAME
+    fpath = paths.HANA3D_SETTINGS_FILENAME
     if os.path.exists(fpath):
         with open(fpath, 'r') as s:
             prefs = json.load(s)
@@ -207,7 +207,7 @@ def load_prefs():
 def save_prefs(self, context):
     # first check context, so we don't do this on registration or blender startup
     if not bpy.app.background:  # (hasattr kills blender)
-        user_preferences = bpy.context.preferences.addons['asset_manager_real2u'].preferences
+        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
         # we test the api key for length, so not a random accidentally typed sequence gets saved.
         lk = len(user_preferences.api_key)
         if 0 < lk < 25:
@@ -224,7 +224,7 @@ def save_prefs(self, context):
             'API_key_timeout': user_preferences.api_key_timeout
         }
         try:
-            fpath = paths.asset_manager_real2u_SETTINGS_FILENAME
+            fpath = paths.HANA3D_SETTINGS_FILENAME
             if not os.path.exists(paths._presets):
                 os.makedirs(paths._presets)
             f = open(fpath, 'w')
@@ -284,7 +284,7 @@ def get_thumbnail(name):
 def get_brush_props(context):
     brush = get_active_brush()
     if brush is not None:
-        return brush.asset_manager_real2u
+        return brush.hana3d
     return None
 
 
@@ -455,9 +455,9 @@ def scale_uvs(ob, scale=1.0, pivot=Vector((.5, .5))):
 
 # map uv cubic and switch of auto tex space and set it to 1,1,1
 def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale=False):
-    from asset_manager_real2u import bg_blender as bg
+    from hana3d import bg_blender as bg
     s = bpy.context.scene
-    mat_props = s.asset_manager_real2u_mat
+    mat_props = s.hana3d_mat
     if mat_props.automap:
         tob = bpy.data.objects[target_object]
         # only automap mesh models
@@ -562,14 +562,14 @@ def dict_to_params(inputs, parameters=None):
 
 
 def user_logged_in():
-    a = bpy.context.window_manager.get('bkit profile')
+    a = bpy.context.window_manager.get('hana3d profile')
     if a is not None:
         return True
     return False
 
 
 def profile_is_validator():
-    a = bpy.context.window_manager.get('bkit profile')
+    a = bpy.context.window_manager.get('hana3d profile')
     if a is not None and a['user'].get('exmenu'):
         return True
     return False
@@ -577,9 +577,9 @@ def profile_is_validator():
 
 def guard_from_crash():
     '''Blender tends to crash when trying to run some functions with the addon going through unregistration process.'''
-    if bpy.context.preferences.addons.get('asset_manager_real2u') is None:
+    if bpy.context.preferences.addons.get('hana3d') is None:
         return False
-    if bpy.context.preferences.addons['asset_manager_real2u'].preferences is None:
+    if bpy.context.preferences.addons['hana3d'].preferences is None:
         return False
     return True
 
