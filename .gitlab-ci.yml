@@ -35,5 +35,4 @@ release:
     - master
   script:
     - ls .
-    - mv /builds/real2u/hana3d /builds/real2u/hana3d
     - bash tag.sh
