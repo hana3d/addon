@@ -57,7 +57,7 @@ def append_material(file_name, matname=None, link=False, fake_user=True):
                 data_to.materials = [m]
                 # print(m, type(m))
                 matname = m
-                break;
+                break
 
     # we have to find the new material :(
     for mname in bpy.data.materials.keys():
@@ -142,7 +142,7 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
     return scene
 
 
-def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, parent = None, **kwargs):
+def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, parent=None, **kwargs):
     '''link an instanced group - model type asset'''
     sel = utils.selection_get()
 
@@ -255,6 +255,8 @@ def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwar
 
     for obj in data_to.objects:
         if obj is not None:
+            if obj.name in bpy.context.view_layer.active_layer_collection.collection.objects:
+                bpy.context.view_layer.active_layer_collection.collection.objects.unlink(obj)
             bpy.context.view_layer.active_layer_collection.collection.objects.link(obj)
             if obj.parent is None:
                 obj.location = location
