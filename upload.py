@@ -134,18 +134,6 @@ def get_missing_data_material(props):
         write_to_report(props, 'Set rendering/output engine')
 
 
-def get_missing_data_brush(props):
-    autothumb.update_upload_brush_preview(None, None)
-    props.report = ''
-    if props.name == '':
-        write_to_report(props, 'Set brush name')
-    # if props.tags == '':
-    #     write_to_report(props, 'Write at least 3 tags')
-    if not props.has_thumbnail:
-        write_to_report(props, 'Add thumbnail:')
-        props.report += props.thumbnail_generating_state
-
-
 def sub_to_camel(content):
     replaced = re.sub(r"_.",
                       lambda m: m.group(0)[1].upper(), content)
@@ -373,56 +361,6 @@ def get_upload_data(self, context, asset_type):
             upload_params["textureResolutionMax"] = props.texture_resolution_max
             upload_params["textureResolutionMin"] = props.texture_resolution_min
 
-    elif asset_type == 'BRUSH':
-        brush = utils.get_active_brush()
-
-        props = brush.hana3d
-        # props.name = brush.name
-
-        export_data["brush"] = str(brush.name)
-        export_data["thumbnail_path"] = bpy.path.abspath(brush.icon_filepath)
-
-        eval_path_computing = "bpy.data.brushes['%s'].hana3d.uploading" % brush.name
-        eval_path_state = "bpy.data.brushes['%s'].hana3d.upload_state" % brush.name
-        eval_path = "bpy.data.brushes['%s']" % brush.name
-
-        # mat analytics happen here, since they don't take up any time...
-
-        brush_type = ''
-        if bpy.context.sculpt_object is not None:
-            brush_type = 'sculpt'
-
-        elif bpy.context.image_paint_object:  # could be just else, but for future p
-            brush_type = 'texture_paint'
-
-        upload_params = {
-            "mode": brush_type,
-        }
-
-        upload_data = {
-            "assetType": 'brush',
-        }
-
-    elif asset_type == 'TEXTURE':
-        style = props.style
-        # if style == 'OTHER':
-        #     style = props.style_other
-
-        upload_data = {
-            "assetType": 'texture',
-
-        }
-        upload_params = {
-            "style": style,
-            "animated": props.animated,
-            "purePbr": props.pbr,
-            "resolution": props.resolution,
-        }
-        if props.pbr:
-            pt = props.pbr_type
-            pt = pt.lower()
-            upload_data["pbrType"] = pt
-
     add_version(upload_data)
 
     upload_data["name"] = props.name
@@ -485,31 +423,7 @@ def get_upload_location(props):
     elif ui_props.asset_type == 'MATERIAL':
         if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
             return bpy.context.active_object.location
-    elif ui_props.asset_type == 'TEXTURE':
-        return None
-    elif ui_props.asset_type == 'BRUSH':
-        return None
     return None
-
-
-def check_storage_quota(props):
-    if props.is_public:
-        return True
-
-    profile = bpy.context.window_manager.get('hana3d profile')
-    if profile is None or profile.get('remainingPrivateQuota') is None:
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
-        adata = search.request_profile(preferences.api_key)
-        if adata is None:
-            props.report = 'Please log-in first.'
-            return False
-        search.write_profile(adata)
-        profile = adata
-    quota = profile['user'].get('remainingPrivateQuota')
-    if quota is None or quota > 0:
-        return True
-    props.report = 'Private storage quota exceeded.'
-    return False
 
 
 def auto_fix(asset_type=''):
@@ -528,10 +442,6 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     utils.name_update()
 
     props = utils.get_upload_props()
-    storage_quota_ok = check_storage_quota(props)
-    if not storage_quota_ok:
-        self.report({'ERROR_INVALID_INPUT'}, props.report)
-        return {'CANCELLED'}
 
     location = get_upload_location(props)
     props.upload_state = 'preparing upload'
@@ -550,8 +460,6 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         get_missing_data_scene(props)
     elif asset_type == 'MATERIAL':
         get_missing_data_material(props)
-    elif asset_type == 'BRUSH':
-        get_missing_data_brush(props)
 
     if props.report != '':
         self.report({'ERROR_INVALID_INPUT'}, props.report)
@@ -688,8 +596,6 @@ asset_types = (
     ('MODEL', 'Model', 'set of objects'),
     ('SCENE', 'Scene', 'scene'),
     ('MATERIAL', 'Material', 'any .blend Material'),
-    ('TEXTURE', 'Texture', 'a texture, or texture set'),
-    ('BRUSH', 'Brush', 'brush, can be any type of blender brush'),
     ('ADDON', 'Addon', 'addnon'),
 )
 

@@ -22,13 +22,6 @@ import sys
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
 HANA3D_API = "/v1/"
-HANA3D_REPORT_URL = "usage_report/"
-HANA3D_USER_ASSETS = "/my-assets"
-HANA3D_PLANS = "https://www.hana3d.com/plans/pricing/"
-HANA3D_MANUAL = "https://youtu.be/1hVgcQhIAo8"
-HANA3D_MODEL_UPLOAD_INSTRUCTIONS_URL = "https://www.hana3d.com/docs/upload/"
-HANA3D_MATERIAL_UPLOAD_INSTRUCTIONS_URL = "https://www.hana3d.com/docs/uploading-material/"
-HANA3D_BRUSH_UPLOAD_INSTRUCTIONS_URL = "https://www.hana3d.com/docs/uploading-brush/"
 HANA3D_AUTH_URL = "https://hana3d.us.auth0.com"
 HANA3D_AUTH_CLIENT_ID_DEV = "K3Tp6c6bbvF8gT6nwK1buVZjpTeDeXfu"
 HANA3D_AUTH_CLIENT_ID_PROD = "DDfs3mFwivtSoUOqwCZnJODaOhmwZvor"
@@ -144,8 +137,7 @@ def get_temp_dir(subdir=None):
 
 def get_download_dirs(asset_type):
     ''' get directories where assets will be downloaded'''
-    subdmapping = {'brush': 'brushes', 'texture': 'textures', 'model': 'models', 'scene': 'scenes',
-                   'material': 'materials'}
+    subdmapping = {'model': 'models', 'scene': 'scenes', 'material': 'materials'}
 
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     dirs = []
@@ -156,7 +148,7 @@ def get_download_dirs(asset_type):
         if not os.path.exists(ddir):
             os.makedirs(ddir)
 
-        subdirs = ['brushes', 'textures', 'models', 'scenes', 'materials']
+        subdirs = ['textures', 'models', 'scenes', 'materials']
         for subd in subdirs:
             subdir = os.path.join(ddir, subd)
             if not os.path.exists(subdir):
@@ -171,7 +163,6 @@ def get_download_dirs(asset_type):
             if not os.path.exists(ddir):
                 os.makedirs(ddir)
 
-        # brushes get stored only globally.
         subdirs = ['textures', 'models', 'scenes', 'materials']
         for subd in subdirs:
             subdir = os.path.join(ddir, subd)

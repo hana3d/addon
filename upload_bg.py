@@ -28,7 +28,10 @@ if "bpy" in locals():
 else:
     from hana3d import paths, append_link, bg_blender, utils, rerequests
 
-import sys, json, os, time
+import sys
+import json
+import os
+import time
 import requests
 import logging
 
@@ -165,7 +168,6 @@ def fix_objects_origin(objects, coll):
 
 if __name__ == "__main__":
 
-
     try:
         bg_blender.progress('preparing scene - append data')
         with open(HANA3D_EXPORT_DATA, 'r') as s:
@@ -201,10 +203,6 @@ if __name__ == "__main__":
             elif export_data['type'] == 'MATERIAL':
                 matname = export_data['material']
                 main_source = append_link.append_material(file_name=data['source_filepath'], matname=matname)
-
-            elif export_data['type'] == 'BRUSH':
-                brushname = export_data['brush']
-                main_source = append_link.append_brush(file_name=data['source_filepath'], brushname=brushname)
 
             bpy.ops.file.pack_all()
 

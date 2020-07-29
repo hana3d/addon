@@ -20,13 +20,12 @@ if "bpy" in locals():
     import importlib
 
     paths = importlib.reload(paths)
-    ratings = importlib.reload(ratings)
     utils = importlib.reload(utils)
     download = importlib.reload(download)
     categories = importlib.reload(categories)
     icons = importlib.reload(icons)
 else:
-    from hana3d import paths, ratings, utils, download, categories, icons
+    from hana3d import paths, utils, download, categories, icons
 
 from bpy.types import (
     Panel
@@ -66,37 +65,6 @@ def label_multiline(layout, text='', icon='NONE', width=-1):
         icon = 'NONE'
 
 
-#   this was moved to separate interface:
-
-def draw_ratings(layout, context):
-    # layout.operator("wm.url_open", text="Read rating instructions", icon='QUESTION').url = 'https://support.google.com/?hl=en'
-    asset = utils.get_active_asset()
-    # the following shouldn't happen at all in an optimal case,
-    # this function should run only when asset was already checked to be existing
-    if asset is None:
-        return
-
-    if not utils.user_logged_in():
-        label_multiline(layout, text='Please login or sign up '
-                                     'to rate assets.')
-        return
-    hana3d_ratings = asset.hana3d_ratings
-
-    ratings.draw_rating(layout, hana3d_ratings, 'rating_quality', 'Quality')
-    layout.separator()
-    layout.prop(hana3d_ratings, 'rating_work_hours')
-    w = context.region.width
-
-    # layout.label(text='problems')
-    # layout.prop(hana3d_ratings, 'rating_problems', text='')
-    # layout.label(text='compliments')
-    # layout.prop(hana3d_ratings, 'rating_compliments', text='')
-
-    # row = layout.row()
-    # op = row.operator("object.hana3d_rating_upload", text="Send rating", icon='URL')
-    # return op
-
-
 def draw_not_logged_in(source):
     title = "User not logged in"
 
@@ -114,13 +82,6 @@ def draw_upload_common(layout, props, asset_type, context):
 
     layout.prop(props, 'workspace', expand=False, text='Workspace')
     layout.prop(props, 'is_public')
-
-    if asset_type == 'MODEL':
-        op.url = paths.HANA3D_MODEL_UPLOAD_INSTRUCTIONS_URL
-    if asset_type == 'MATERIAL':
-        op.url = paths.HANA3D_MATERIAL_UPLOAD_INSTRUCTIONS_URL
-    if asset_type == 'BRUSH':
-        op.url = paths.HANA3D_BRUSH_UPLOAD_INSTRUCTIONS_URL
 
     row = layout.row(align=True)
     if props.upload_state != '':
@@ -284,11 +245,7 @@ def draw_panel_model_search(self, context):
     layout.prop(props, 'workspace', expand=False, text='Workspace')
 
     icon = 'NONE'
-    if props.report == 'You need Full plan to get this item.':
-        icon = 'ERROR'
     label_multiline(layout, text=props.report, icon=icon)
-    if props.report == 'You need Full plan to get this item.':
-        layout.operator("wm.url_open", text="Get Full plan", icon='URL').url = paths.HANA3D_PLANS
 
     layout.prop(props, "public_only")
 
@@ -301,51 +258,6 @@ def draw_panel_model_search(self, context):
     # col = layout.column()
     # layout.prop(props, 'append_link', expand=True, icon_only=False)
     # layout.prop(props, 'import_as', expand=True, icon_only=False)
-
-    layout.prop(props, "search_advanced")
-    if props.search_advanced:
-        layout.separator()
-
-        # layout.label(text = "common searches keywords:")
-        # layout.prop(props, "search_global_keywords", text = "")
-        # layout.prop(props, "search_modifier_keywords")
-        # if props.search_engine == 'OTHER':
-        #     layout.prop(props, "search_engine_keyword")
-
-        # # AGE
-        # layout.prop(props, "search_condition", text='Condition')  # , text ='condition of object new/old e.t.c.')
-
-        # # DESIGN YEAR
-        # layout.prop(props, "search_design_year", text='designed in ( min - max )')
-        # if props.search_design_year:
-        #     row = layout.row(align=True)
-        #     row.prop(props, "search_design_year_min", text='min')
-        #     row.prop(props, "search_design_year_max", text='max')
-
-        # POLYCOUNT
-        layout.prop(props, "search_polycount", text='Poly count in ( min - max )')
-        if props.search_polycount:
-            row = layout.row(align=True)
-            row.prop(props, "search_polycount_min", text='min')
-            row.prop(props, "search_polycount_max", text='max')
-
-        # TEXTURE RESOLUTION
-        layout.prop(props, "search_texture_resolution", text='texture resolution ( min - max )')
-        if props.search_texture_resolution:
-            row = layout.row(align=True)
-            row.prop(props, "search_texture_resolution_min", text='min')
-            row.prop(props, "search_texture_resolution_max", text='max')
-
-        # FILE SIZE
-        layout.prop(props, "search_file_size", text='File size ( min - max )')
-        if props.search_file_size:
-            row = layout.row(align=True)
-            row.prop(props, "search_file_size_min", text='min')
-            row.prop(props, "search_file_size_max", text='max')
-
-        # layout.prop(props, "search_procedural", expand=True)
-        # ADULT
-        # layout.prop(props, "search_adult")  # , text ='condition of object new/old e.t.c.')
 
     # draw_panel_categories(self, context)
 
@@ -403,19 +315,6 @@ class VIEW3D_PT_hana3d_model_properties(Panel):
             if o.instance_type == 'COLLECTION' and o.instance_collection is not None:
                 layout.operator('object.hana3d_bring_to_scene', text='Bring to scene')
 
-            draw_panel_model_rating(self, context)
-
-            # if 'rig' in ad['tags']:
-            #     # layout.label(text = 'can make proxy')
-            #     layout.operator('object.hana3d_make_proxy', text = 'Make Armature proxy')
-        # fast upload, blocked by now
-        # else:
-        #     op = layout.operator("object.hana3d_upload", text='Store as private', icon='EXPORT')
-        #     op.asset_type = 'MODEL'
-        #     op.fast = True
-        # fun override project, not finished
-        # layout.operator('object.hana3d_color_corrector')
-
 
 def draw_login_progress(layout):
     layout.label(text='Login through browser')
@@ -449,37 +348,7 @@ class VIEW3D_PT_hana3d_profile(Panel):
             me = bpy.context.window_manager.get('hana3d profile')
             if me is not None:
                 me = me['user']
-                # user name
                 layout.label(text='Me: %s %s' % (me['firstName'], me['lastName']))
-                # layout.label(text='Email: %s' % (me['email']))
-
-                # plan information
-
-                if me.get('currentPlanName') is not None:
-                    pn = me['currentPlanName']
-                    pcoll = icons.icon_collections["main"]
-                    if pn == 'Free':
-                        my_icon = pcoll['free']
-                    else:
-                        my_icon = pcoll['full']
-
-                    row = layout.row()
-                    row.label(text='My plan:')
-                    row.label(text='%s plan' % pn, icon_value=my_icon.icon_id)
-                    if pn == 'Free':
-                        layout.operator("wm.url_open", text="Change plan",
-                                        icon='URL').url = paths.get_hana3d_url() + paths.HANA3D_PLANS
-
-                # storage statistics
-                # if me.get('sumAssetFilesSize') is not None:  # TODO remove this when production server has these too.
-                #     layout.label(text='My public assets: %i MiB' % (me['sumAssetFilesSize']))
-                # if me.get('sumPrivateAssetFilesSize') is not None:
-                #     layout.label(text='My private assets: %i MiB' % (me['sumPrivateAssetFilesSize']))
-                if me.get('remainingPrivateQuota') is not None:
-                    layout.label(text='My free storage: %i MiB' % (me['remainingPrivateQuota']))
-
-            layout.operator("wm.url_open", text="See my uploads",
-                            icon='URL').url = paths.get_hana3d_url() + paths.HANA3D_USER_ASSETS
 
 
 class VIEW3D_PT_hana3d_login(Panel):
@@ -504,12 +373,6 @@ class VIEW3D_PT_hana3d_login(Panel):
 
         if user_preferences.enable_oauth:
             draw_login_buttons(layout)
-
-
-def draw_panel_model_rating(self, context):
-    o = bpy.context.active_object
-    draw_ratings(self.layout, context)  # , props)
-    # op.asset_type = 'MODEL'
 
 
 def draw_panel_material_upload(self, context):
@@ -572,72 +435,9 @@ def draw_panel_material_search(self, context):
     # if props.search_engine == 'OTHER':
     #     layout.prop(props, 'search_engine_other')
 
-    layout.prop(props, "search_advanced")
-    if props.search_advanced:
-        layout.separator()
-
-        layout.label(text='texture types')
-        col = layout.column()
-        col.prop(props, "search_procedural", expand=True)
-
-        if props.search_procedural == 'TEXTURE_BASED':
-            # TEXTURE RESOLUTION
-            layout.prop(props, "search_texture_resolution", text='texture resolution ( min - max )')
-            if props.search_texture_resolution:
-                row = layout.row(align=True)
-                row.prop(props, "search_texture_resolution_min", text='min')
-                row.prop(props, "search_texture_resolution_max", text='max')
-
-        # FILE SIZE
-        layout.prop(props, "search_file_size", text='File size ( min - max in mb)')
-        if props.search_file_size:
-            row = layout.row(align=True)
-            row.prop(props, "search_file_size_min", text='min')
-            row.prop(props, "search_file_size_max", text='max')
-
     # draw_panel_categories(self, context)
 
     layout.prop(props, 'automap')
-
-
-def draw_panel_material_ratings(self, context):
-    draw_ratings(self.layout, context)  # , props)
-    # op.asset_type = 'MATERIAL'
-
-
-def draw_panel_brush_upload(self, context):
-    brush = utils.get_active_brush()
-    if brush is not None:
-        props = brush.hana3d
-
-        layout = self.layout
-
-        draw_upload_common(layout, props, 'BRUSH', context)
-
-        layout.prop(props, 'name')
-        layout.prop(props, 'description')
-        layout.prop(props, 'tags')
-
-
-def draw_panel_brush_search(self, context):
-    wm = context.scene
-    props = wm.hana3d_brush
-
-    layout = self.layout
-    row = layout.row()
-    row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
-    draw_assetbar_show_hide(row, props)
-    layout.prop(props, "own_only")
-
-    label_multiline(layout, text=props.report)
-    draw_panel_categories(self, context)
-
-
-def draw_panel_brush_ratings(self, context):
-    # props = utils.get_brush_props(context)
-    draw_ratings(self.layout, context)  # , props)
-    #
-    # op.asset_type = 'BRUSH'
 
 
 def draw_login_buttons(layout):
@@ -652,67 +452,6 @@ def draw_login_buttons(layout):
         else:
             layout.operator("wm.hana3d_logout", text="Logout",
                             icon='URL')
-
-
-class VIEW3D_PT_hana3d_advanced_model_search(Panel):
-    bl_category = "Hana3D"
-    bl_idname = "VIEW3D_PT_hana3d_advanced_model_search"
-    # bl_parent_id = "VIEW3D_PT_hana3d_unified"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_label = "Advanced search options"
-
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def draw(self, context):
-        s = context.scene
-
-        props = s.hana3d_models
-        layout = self.layout
-        layout.separator()
-
-        # layout.label(text = "common searches keywords:")
-        # layout.prop(props, "search_global_keywords", text = "")
-        # layout.prop(props, "search_modifier_keywords")
-        # if props.search_engine == 'OTHER':
-        #     layout.prop(props, "search_engine_keyword")
-
-        # AGE
-        layout.prop(props, "search_condition", text='Condition')  # , text ='condition of object new/old e.t.c.')
-
-        # DESIGN YEAR
-        layout.prop(props, "search_design_year", text='designed in ( min - max )')
-        if props.search_design_year:
-            row = layout.row(align=True)
-            row.prop(props, "search_design_year_min", text='min')
-            row.prop(props, "search_design_year_max", text='max')
-
-        # POLYCOUNT
-        layout.prop(props, "search_polycount", text='Poly count in ( min - max )')
-        if props.search_polycount:
-            row = layout.row(align=True)
-            row.prop(props, "search_polycount_min", text='min')
-            row.prop(props, "search_polycount_max", text='max')
-
-        # TEXTURE RESOLUTION
-        layout.prop(props, "search_texture_resolution", text='texture resolution ( min - max )')
-        if props.search_texture_resolution:
-            row = layout.row(align=True)
-            row.prop(props, "search_texture_resolution_min", text='min')
-            row.prop(props, "search_texture_resolution_max", text='max')
-
-        # FILE SIZE
-        layout.prop(props, "search_file_size", text='File size ( min - max )')
-        if props.search_file_size:
-            row = layout.row(align=True)
-            row.prop(props, "search_file_size_min", text='min')
-            row.prop(props, "search_file_size_max", text='max')
-
-        # layout.prop(props, "search_procedural", expand=True)
-        # ADULT
-        # layout.prop(props, "search_adult")  # , text ='condition of object new/old e.t.c.')
 
 
 class VIEW3D_PT_hana3d_unified(Panel):
@@ -785,13 +524,6 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
             elif ui_props.asset_type == 'MATERIAL':
                 draw_panel_material_search(self, context)
-            elif ui_props.asset_type == 'BRUSH':
-                if context.sculpt_object or context.image_paint_object:
-                    # noinspection PyCallByClass
-                    draw_panel_brush_search(self, context)
-                else:
-                    label_multiline(layout, text='switch to paint or sculpt mode.', width=context.region.width)
-                    return
 
         elif ui_props.down_up == 'UPLOAD':
             if not ui_props.assetbar_on:
@@ -826,38 +558,6 @@ class VIEW3D_PT_hana3d_unified(Panel):
                     draw_panel_material_upload(self, context)
                 else:
                     label_multiline(layout, text='select object with material to upload materials', width=w)
-
-            elif ui_props.asset_type == 'BRUSH':
-                if context.sculpt_object or context.image_paint_object:
-                    draw_panel_brush_upload(self, context)
-                else:
-                    layout.label(text='switch to paint or sculpt mode.')
-
-        elif ui_props.down_up == 'RATING':  # the poll functions didn't work here, don't know why.
-
-            if ui_props.asset_type == 'MODEL':
-                # TODO improve poll here to parenting structures
-                if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.get(
-                        'asset_data') is not None:
-                    ad = bpy.context.active_object.get('asset_data')
-                    layout.label(text=ad['name'])
-                    draw_panel_model_rating(self, context)
-            if ui_props.asset_type == 'MATERIAL':
-                if bpy.context.view_layer.objects.active is not None and \
-                        bpy.context.active_object.active_material is not None and \
-                        bpy.context.active_object.active_material.hana3d.asset_base_id != '':
-                    layout.label(text=bpy.context.active_object.active_material.hana3d.name + ' :')
-                    # noinspection PyCallByClass
-                    draw_panel_material_ratings(self, context)
-            if ui_props.asset_type == 'BRUSH':
-                if context.sculpt_object or context.image_paint_object:
-                    props = utils.get_brush_props(context)
-                    if props.asset_base_id != '':
-                        layout.label(text=props.name + ' :')
-                        # noinspection PyCallByClass
-                        draw_panel_brush_ratings(self, context)
-            if ui_props.asset_type == 'TEXTURE':
-                layout.label(text='not yet implemented')
 
 
 class OBJECT_MT_hana3d_asset_menu(bpy.types.Menu):
@@ -932,9 +632,6 @@ class OBJECT_MT_hana3d_asset_menu(bpy.types.Menu):
                 op = row.operator('object.hana3d_change_status', text='Delete')
                 op.asset_id = asset_data['id']
                 op.state = 'deleted'
-            # else:
-            #     #not an author - can rate
-            #     draw_ratings(layout, context)
 
 
 class SetCategoryOperator(bpy.types.Operator):
@@ -1154,7 +851,6 @@ classess = (
     VIEW3D_PT_hana3d_profile,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
-    # VIEW3D_PT_hana3d_advanced_model_search,
     VIEW3D_PT_hana3d_model_properties,
     VIEW3D_PT_hana3d_downloads,
     OBJECT_MT_hana3d_asset_menu,

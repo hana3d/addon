@@ -30,19 +30,6 @@ import bpy
 import uuid
 
 
-def append_brush(file_name, brushname=None, link=False, fake_user=True):
-    '''append a brush'''
-    with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
-        for m in data_from.brushes:
-            if m == brushname or brushname is None:
-                data_to.brushes = [m]
-                brushname = m
-    brush = bpy.data.brushes[brushname]
-    if fake_user:
-        brush.use_fake_user = True
-    return brush
-
-
 def append_material(file_name, matname=None, link=False, fake_user=True):
     '''append a material type asset'''
     # first, we have to check if there is a material with same name
@@ -255,7 +242,7 @@ def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwar
 
     for obj in data_to.objects:
         if obj is not None:
-            if obj.name in bpy.context.view_layer.active_layer_collection.collection.objects:
+            if obj in bpy.context.view_layer.active_layer_collection.collection.objects.values():
                 bpy.context.view_layer.active_layer_collection.collection.objects.unlink(obj)
             bpy.context.view_layer.active_layer_collection.collection.objects.link(obj)
             if obj.parent is None:

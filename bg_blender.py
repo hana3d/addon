@@ -24,7 +24,9 @@ else:
     from hana3d import utils
 
 import bpy
-import sys, threading, os
+import sys
+import threading
+import os
 import re
 
 from bpy.props import (
@@ -149,8 +151,6 @@ process_sources = (
     ('MODEL', 'Model', 'set of objects'),
     ('SCENE', 'Scene', 'set of scenes'),
     ('MATERIAL', 'Material', 'any .blend Material'),
-    ('TEXTURE', 'Texture', 'a texture, or texture set'),
-    ('BRUSH', 'Brush', 'brush, can be any type of blender brush'),
 )
 
 
@@ -203,10 +203,6 @@ class KillBgProcess(bpy.types.Operator):
                         kill = True
                 if source.bl_rna.name == 'Material' and self.process_source == 'MATERIAL':
                     if source.name == bpy.context.active_object.active_material.name:
-                        kill = True
-                if source.bl_rna.name == 'Brush' and self.process_source == 'BRUSH':
-                    brush = utils.get_active_brush()
-                    if brush is not None and source.name == brush.name:
                         kill = True
                 if kill:
                     estring = tcom.eval_path_computing + ' = False'

@@ -83,16 +83,6 @@ thumb_sml_download_threads = {}
 thumb_full_download_threads = {}
 reports = ''
 
-rtips = ['Click or drag model or material in scene to link/append ',
-         "Please rate responsively and plentifully. This helps us distribute rewards to the authors.",
-         "Click on brushes to link them into scene.",
-         "All materials and brushes are free.",
-         "Storage for public assets is unlimited.",
-         "Locked models are available if you subscribe to Full plan.",
-         "Login to upload your own models, materials or brushes.",
-         "Use 'A' key over asset bar to search assets by same author.",
-         "Use 'W' key over asset bar to open Authors webpage.", ]
-
 
 def refresh_token_timer():
     ''' this timer gets run every time the token needs refresh. It refreshes tokens and also categories.'''
@@ -158,10 +148,6 @@ def timer_update():
         if preferences.show_on_start:
             search()
             preferences.first_run = False
-        if preferences.tips_on_start:
-            ui.get_largest_3dview()
-            ui.update_ui_size(ui.active_area, ui.active_region)
-            ui.add_report(text='Hana3D Tip: ' + random.choice(rtips), timeout=12, color=colors.GREEN)
         return 3.0
 
     if preferences.first_run:
@@ -192,10 +178,6 @@ def timer_update():
                 props = scene.hana3d_mat
                 json_filepath = os.path.join(icons_dir, 'material_searchresult.json')
                 search_name = 'hana3d material search'
-            if asset_type == 'brush':
-                props = scene.hana3d_brush
-                json_filepath = os.path.join(icons_dir, 'brush_searchresult.json')
-                search_name = 'hana3d brush search'
 
             s[search_name] = []
 
@@ -314,8 +296,6 @@ def load_previews():
         'MODEL': 'model',
         'SCENE': 'scene',
         'MATERIAL': 'material',
-        'TEXTURE': 'texture',
-        'BRUSH': 'brush'
     }
     scene = bpy.context.scene
     # FIRST START SEARCH
@@ -515,29 +495,6 @@ def generate_tooltip(mdata):
     #             t += generate_author_textblock(adata)
 
     # t += '\n'
-    if len(t.split('\n')) < 6:
-        t += '\n'
-        t += get_random_tip(mdata)
-        t += '\n'
-    return t
-
-
-def get_random_tip(mdata):
-    t = ''
-
-    tip = 'Tip: ' + random.choice(rtips)
-    t = writeblock(t, tip)
-    return t
-    # at = mdata['assetType']
-    # if at == 'brush' or at == 'texture':
-    #     t += 'click to link %s' % mdata['assetType']
-    # if at == 'model' or at == 'material':
-    #     tips = ['Click or drag in scene to link/append %s' % mdata['assetType'],
-    #             "'A' key to search assets by same author",
-    #             "'W' key to open Authors webpage",
-    #             ]
-    #     tip = 'Tip: ' + random.choice(tips)
-    #     t = writeblock(t, tip)
     return t
 
 
@@ -562,11 +519,6 @@ def generate_author_textblock(adata):
 def get_items_models(self, context):
     global search_items_models
     return search_items_models
-
-
-def get_items_brushes(self, context):
-    global search_items_brushes
-    return search_items_brushes
 
 
 def get_items_materials(self, context):
@@ -669,19 +621,6 @@ def get_author(r):
 def write_profile(adata):
     utils.p('writing profile')
     user = adata['user']
-    # we have to convert to MiB here, numbers too big for python int type
-    if user.get('sumAssetFilesSize') is not None:
-        user['sumAssetFilesSize'] /= (1024 * 1024)
-    if user.get('sumPrivateAssetFilesSize') is not None:
-        user['sumPrivateAssetFilesSize'] /= (1024 * 1024)
-    if user.get('remainingPrivateQuota') is not None:
-        user['remainingPrivateQuota'] /= (1024 * 1024)
-
-    if adata.get('canEditAllAssets') is True:
-        user['exmenu'] = True
-    else:
-        user['exmenu'] = False
-
     bpy.context.window_manager['hana3d profile'] = adata
 
 
@@ -812,21 +751,6 @@ class Searcher(threading.Thread):
 
         mt('data parsed ')
 
-        # filter results here:
-        # todo remove this in future
-        nresults = []
-        for d in rdata.get('results', []):
-            # TODO this code is for filtering brush types, should vanish after we implement filter in Elastic
-            mode = None
-            if query['asset_type'] == 'brush':
-                for p in d['parameters']:
-                    if p['parameterType'] == 'mode':
-                        mode = p['value']
-            if query['asset_type'] != 'brush' or (
-                    query.get('mode') != None and query['mode']) == mode:
-                nresults.append(d)
-        rdata['results'] = nresults
-
         # print('number of results: ', len(rdata.get('results', [])))
         if self.stopped():
             utils.p('stopping search : ' + str(query))
@@ -948,24 +872,6 @@ def build_query_common(query, props):
     if props.public_only:
         query['public'] = True
 
-    if props.search_advanced:
-        if props.search_texture_resolution:
-            query["textureResolutionMax_gte"] = props.search_texture_resolution_min
-            query["textureResolutionMax_lte"] = props.search_texture_resolution_max
-
-        elif props.search_procedural == 'TEXTURE_BASED':
-            # todo this procedural hack should be replaced with the parameter
-            query["textureResolutionMax_gte"] = 0
-            # query["procedural"] = False
-
-        if props.search_procedural == "PROCEDURAL":
-            # todo this procedural hack should be replaced with the parameter
-            query["files_size_lte"] = 1024 * 1024
-            # query["procedural"] = True
-        elif props.search_file_size:
-            query_common["files_size_gte"] = props.search_file_size_min * 1024 * 1024
-            query_common["files_size_lte"] = props.search_file_size_max * 1024 * 1024
-
     query.update(query_common)
 
 
@@ -976,23 +882,12 @@ def build_query_model():
     query = {
         "asset_type": 'model',
         # "engine": props.search_engine,
-        # "adult": props.search_adult,
     }
     if props.search_style != 'ANY':
         if props.search_style != 'OTHER':
             query["model_style"] = props.search_style
         else:
             query["model_style"] = props.search_style_other
-
-    if props.search_advanced:
-        if props.search_condition != 'UNSPECIFIED':
-            query["condition"] = props.search_condition
-        if props.search_design_year:
-            query["designYear_gte"] = props.search_design_year_min
-            query["designYear_lte"] = props.search_design_year_max
-        if props.search_polycount:
-            query["faceCount_gte"] = props.search_polycount_min
-            query["faceCount_lte"] = props.search_polycount_max
 
     build_query_common(query, props)
 
@@ -1006,7 +901,6 @@ def build_query_scene():
     query = {
         "asset_type": 'scene',
         # "engine": props.search_engine,
-        # "adult": props.search_adult,
     }
     build_query_common(query, props)
     return query
@@ -1029,45 +923,6 @@ def build_query_material():
             query["style"] = props.search_style
         else:
             query["style"] = props.search_style_other
-
-    build_query_common(query, props)
-
-    return query
-
-
-def build_query_texture():
-    props = bpy.context.scene.hana3d_tex
-    query = {
-        "asset_type": 'texture',
-
-    }
-
-    if props.search_style != 'ANY':
-        if props.search_style != 'OTHER':
-            query["search_style"] = props.search_style
-        else:
-            query["search_style"] = props.search_style_other
-
-    build_query_common(query, props)
-
-    return query
-
-
-def build_query_brush():
-    props = bpy.context.scene.hana3d_brush
-
-    brush_type = ''
-    if bpy.context.sculpt_object is not None:
-        brush_type = 'sculpt'
-
-    elif bpy.context.image_paint_object:  # could be just else, but for future p
-        brush_type = 'texture_paint'
-
-    query = {
-        "asset_type": 'brush',
-
-        "mode": brush_type
-    }
 
     build_query_common(query, props)
 
@@ -1126,18 +981,6 @@ def search(category='', get_next=False, author_id=''):
             return
         props = scene.hana3d_mat
         query = build_query_material()
-
-    if uiprops.asset_type == 'TEXTURE':
-        if not hasattr(scene, 'hana3d_tex'):
-            return
-        # props = scene.hana3d_tex
-        # query = build_query_texture()
-
-    if uiprops.asset_type == 'BRUSH':
-        if not hasattr(scene, 'hana3d_brush'):
-            return
-        props = scene.hana3d_brush
-        query = build_query_brush()
 
     if props.is_searching and get_next:
         return
@@ -1198,8 +1041,6 @@ def search_update(self, context):
             ui_props.asset_type = 'MODEL'
         elif at.find('material') > -1:
             ui_props.asset_type = 'MATERIAL'
-        elif at.find('brush') > -1:
-            ui_props.asset_type = 'BRUSH'
         # now we trim the input copypaste by anything extra that is there,
         # this is also a way for this function to recognize that it already has parsed the clipboard
         # the search props can have changed and this needs to transfer the data to the other field

@@ -115,16 +115,6 @@ def get_search_props():
         if not hasattr(scene, 'hana3d_mat'):
             return
         props = scene.hana3d_mat
-
-    if uiprops.asset_type == 'TEXTURE':
-        if not hasattr(scene, 'hana3d_tex'):
-            return
-        # props = scene.hana3d_tex
-
-    if uiprops.asset_type == 'BRUSH':
-        if not hasattr(scene, 'hana3d_brush'):
-            return
-        props = scene.hana3d_brush
     return props
 
 
@@ -141,12 +131,6 @@ def get_active_asset():
     elif ui_props.asset_type == 'MATERIAL':
         if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
             return bpy.context.active_object.active_material
-    elif ui_props.asset_type == 'TEXTURE':
-        return None
-    elif ui_props.asset_type == 'BRUSH':
-        b = get_active_brush()
-        if b is not None:
-            return b
     return None
 
 
@@ -164,12 +148,6 @@ def get_upload_props():
         if hasattr(bpy.context, 'active_object'):
             if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
                 return bpy.context.active_object.active_material.hana3d
-    elif ui_props.asset_type == 'TEXTURE':
-        return None
-    elif ui_props.asset_type == 'BRUSH':
-        b = get_active_brush()
-        if b is not None:
-            return b.hana3d
     return None
 
 
@@ -178,16 +156,6 @@ def previmg_name(index, fullsize=False):
         return '.hana3d_preview_' + str(index).zfill(2)
     else:
         return '.hana3d_preview_full_' + str(index).zfill(2)
-
-
-def get_active_brush():
-    context = bpy.context
-    brush = None
-    if context.sculpt_object:
-        brush = context.tool_settings.sculpt.brush
-    elif context.image_paint_object:  # could be just else, but for future possible more types...
-        brush = context.tool_settings.image_paint.brush
-    return brush
 
 
 def load_prefs():
@@ -279,13 +247,6 @@ def get_thumbnail(name):
         img.name = name
 
     return img
-
-
-def get_brush_props(context):
-    brush = get_active_brush()
-    if brush is not None:
-        return brush.hana3d
-    return None
 
 
 def p(text, text1='', text2='', text3='', text4='', text5=''):

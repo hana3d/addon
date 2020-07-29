@@ -113,7 +113,6 @@ def scene_save(context):
     # TODO this can be optimized by merging these 2 functions, since both iterate over all objects.
     if not bpy.app.background:
         check_unused()
-        report_usages()
 
 
 @persistent
@@ -172,107 +171,6 @@ def get_scene_id():
     return bpy.context.scene['uuid']
 
 
-def report_usages():
-    '''report the usage of assets to the server.'''
-    mt = time.time()
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-    api_key = user_preferences.api_key
-    sid = get_scene_id()
-    headers = utils.get_headers(api_key)
-    url = paths.get_api_url() + paths.HANA3D_REPORT_URL
-
-    assets = {}
-    asset_obs = []
-    scene = bpy.context.scene
-    asset_usages = {}
-
-    for ob in scene.collection.objects:
-        if ob.get('asset_data') != None:
-            asset_obs.append(ob)
-
-    for ob in asset_obs:
-        asset_data = ob['asset_data']
-        abid = asset_data['asset_base_id']
-
-        if assets.get(abid) is None:
-            asset_usages[abid] = {'count': 1}
-            assets[abid] = asset_data
-        else:
-            asset_usages[abid]['count'] += 1
-
-    # brushes
-    for b in bpy.data.brushes:
-        if b.get('asset_data') != None:
-            abid = b['asset_data']['asset_base_id']
-            asset_usages[abid] = {'count': 1}
-            assets[abid] = b['asset_data']
-    # materials
-    for ob in scene.collection.objects:
-        for ms in ob.material_slots:
-            m = ms.material
-
-            if m is not None and m.get('asset_data') is not None:
-
-                abid = m['asset_data']['asset_base_id']
-                if assets.get(abid) is None:
-                    asset_usages[abid] = {'count': 1}
-                    assets[abid] = m['asset_data']
-                else:
-                    asset_usages[abid]['count'] += 1
-
-    assets_list = []
-    assets_reported = scene.get('assets reported', {})
-
-    new_assets_count = 0
-    for k in asset_usages.keys():
-        if k not in assets_reported.keys():
-            data = asset_usages[k]
-            list_item = {
-                'asset': k,
-                'usageCount': data['count'],
-                'proximitySet': data.get('proximity', [])
-            }
-            assets_list.append(list_item)
-            new_assets_count += 1
-        if k not in assets_reported.keys():
-            assets_reported[k] = True
-
-    scene['assets reported'] = assets_reported
-
-    if new_assets_count == 0:
-        utils.p('no new assets were added')
-        return
-    usage_report = {
-        'scene': sid,
-        'reportType': 'save',
-        'assetusageSet': assets_list
-    }
-
-    au = scene.get('assets used', {})
-    ad = scene.get('assets deleted', {})
-
-    ak = assets.keys()
-    for k in au.keys():
-        if k not in ak:
-            ad[k] = au[k]
-        else:
-            if k in ad:
-                ad.pop(k)
-
-    # scene['assets used'] = {}
-    for k in ak:  # rewrite assets used.
-        scene['assets used'][k] = assets[k]
-
-    # check ratings herer too:
-    scene['assets rated'] = scene.get('assets rated', {})
-    for k in assets.keys():
-        scene['assets rated'][k] = scene['assets rated'].get(k, False)
-    thread = threading.Thread(target=utils.requests_post_thread, args=(url, usage_report, headers))
-    thread.start()
-    mt = time.time() - mt
-    print('report generation:                ', mt)
-
-
 def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     '''Link asset to the scene'''
 
@@ -300,15 +198,10 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
             sprops.append_link = 'APPEND'
             sprops.import_as = 'INDIVIDUAL'
 
-        al = sprops.append_link
-        ain = asset_in_scene(asset_data)
-        if ain is not False:
-            if ain == 'LINKED':
-                al = 'LINK'
-            else:
-                al = 'APPEND'
+        append_or_link = sprops.append_link
+        asset_in_scene = check_asset_in_scene(asset_data)
+        link = (asset_in_scene == 'LINK') or (append_or_link == 'LINK')
 
-        link = al == 'LINK'
         if downloaders:
             for downloader in downloaders:
                 if link is True:
@@ -362,24 +255,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
             lib = group.library
             lib['asset_data'] = asset_data
 
-    elif asset_data['asset_type'] == 'brush':
-
-        inscene = False
-        for b in bpy.data.brushes:
-            if b.hana3d.id == asset_data['id']:
-                inscene = True
-                brush = b
-                break
-        if not inscene:
-            brush = append_link.append_brush(file_names[-1], link=False, fake_user=False)
-
-        if bpy.context.view_layer.objects.active.mode == 'SCULPT':
-            bpy.context.tool_settings.sculpt.brush = brush
-        elif bpy.context.view_layer.objects.active.mode == 'TEXTURE_PAINT':
-            bpy.context.tool_settings.image_paint.brush = brush
-
-        parent = brush
-
     elif asset_data['asset_type'] == 'material':
         inscene = False
         for m in bpy.data.materials:
@@ -401,10 +276,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     scene['assets used'] = scene.get('assets used', {})
     scene['assets used'][asset_data['asset_base_id']] = asset_data.copy()
 
-    scene['assets rated'] = scene.get('assets rated', {})
-
     id = asset_data['asset_base_id']
-    scene['assets rated'][id] = scene['assets rated'].get(id, False)
 
     parent['asset_data'] = asset_data
 
@@ -479,11 +351,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             wm = bpy.context.window_manager
 
             at = asset_data['asset_type']
-            if ((bpy.context.mode == 'OBJECT' and (at == 'model'
-                                                   or at == 'material'))) \
-                    or ((at == 'brush')
-                        and wm.get(
-                        'appendable') == True) or at == 'scene':  # don't do this stuff in editmode and other modes, just wait...
+            if (bpy.context.mode == 'OBJECT' and (at == 'model' or at == 'material')) \
+                    or at == 'scene':  # don't do this stuff in editmode and other modes, just wait...
                 download_threads.remove(threaddata)
 
                 # duplicate file if the global and subdir are used in prefs
@@ -494,8 +363,6 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                 # progress bars:
 
                 # we need to check if mouse isn't down, which means an operator can be running.
-                # Especially for sculpt mode, where appending a brush during a sculpt stroke causes crasehes
-                #
 
                 if tcom.passargs.get('redownload'):
                     # handle lost libraries here:
@@ -513,8 +380,6 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                         elif asset_data['asset_type'] == 'material':
                             download(asset_data, **tcom.passargs)
                         elif asset_data['asset_type'] == 'scene':
-                            download(asset_data, **tcom.passargs)
-                        elif asset_data['asset_type'] == 'brush' or asset_data['asset_type'] == 'texture':
                             download(asset_data, **tcom.passargs)
                     if bpy.context.scene['search results'] is not None and done:
                         for sres in bpy.context.scene['search results']:
@@ -579,7 +444,7 @@ class Downloader(threading.Thread):
 
         if tcom.error:
             return
-        # only now we can check if the file already exists. This should have 2 levels, for materials and for brushes
+        # only now we can check if the file already exists. This should have 2 levels, for materials
         # different than for the non free content. delete is here when called after failed append tries.
         if check_existing(asset_data) and not tcom.passargs.get('delete'):
             # this sends the thread for processing, where another check should occur, since the file might be corrupted.
@@ -734,7 +599,7 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
     return done
 
 
-def asset_in_scene(asset_data):
+def check_asset_in_scene(asset_data):
     '''checks if the asset is already in scene. If yes, modifies asset data so the asset can be reached again.'''
     scene = bpy.context.scene
     au = scene.get('assets used', {})
@@ -750,9 +615,9 @@ def asset_in_scene(asset_data):
             c = bpy.data.collections.get(ad['name'])
             if c is not None:
                 if c.users > 0:
-                    return 'LINKED'
-            return 'APPENDED'
-    return False
+                    return 'LINK'
+            return 'APPEND'
+    return ''
 
 
 def fprint(text):
@@ -793,14 +658,6 @@ def get_download_url(asset_data, scene_id, api_key, tcom=None):
         asset_data['file_name'] = paths.extract_filename_from_url(url)
         return True
 
-    if r.status_code == 403:
-        r = 'You need Full plan to get this item.'
-        # r1 = 'All materials and brushes are available for free. Only users registered to Standard plan can use all models.'
-        # tasks_queue.add_task((ui.add_report, (r1, 5, colors.RED)))
-        if tcom is not None:
-            tcom.report = r
-            tcom.error = True
-
     elif r.status_code >= 500:
         utils.p(r.text)
         if tcom is not None:
@@ -814,7 +671,7 @@ def start_download(asset_data, **kwargs):
     check if file isn't downloading or doesn't exist, then start new download
     '''
     # first check if the asset is already in scene. We can use that asset without checking with server
-    quota_ok = asset_in_scene(asset_data)
+    asset_in_scene = check_asset_in_scene(asset_data)
 
     # otherwise, check on server
 
@@ -827,7 +684,7 @@ def start_download(asset_data, **kwargs):
         # once in thread(for non-free)
         fexists = check_existing(asset_data)
 
-        if fexists and quota_ok:
+        if fexists and asset_in_scene:
             done = try_finished_append(asset_data, **kwargs)
         # else:
         #     props = utils.get_search_props()
@@ -841,16 +698,12 @@ def start_download(asset_data, **kwargs):
 
             elif asset_data['asset_type'] == 'scene':
                 download(asset_data, **kwargs)
-            elif asset_data['asset_type'] == 'brush' or asset_data['asset_type'] == 'texture':
-                download(asset_data)
 
 
 asset_types = (
     ('MODEL', 'Model', 'set of objects'),
     ('SCENE', 'Scene', 'scene'),
     ('MATERIAL', 'Material', 'any .blend Material'),
-    ('TEXTURE', 'Texture', 'a texture, or texture set'),
-    ('BRUSH', 'Brush', 'brush, can be any type of blender brush'),
     ('ADDON', 'Addon', 'addnon'),
 )
 
