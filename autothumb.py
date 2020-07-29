@@ -86,14 +86,6 @@ def update_upload_material_preview(self, context):
         check_thumbnail(props, imgpath)
 
 
-def update_upload_brush_preview(self, context):
-    brush = utils.get_active_brush()
-    if brush is not None:
-        props = brush.hana3d
-        imgpath = bpy.path.abspath(brush.icon_filepath)
-        check_thumbnail(props, imgpath)
-
-
 def start_thumbnailer(self, context):
     # Prepare to save the file
     mainmodel = utils.get_active_model()

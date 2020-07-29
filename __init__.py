@@ -19,10 +19,10 @@
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 2, 1),
+    "version": (0, 2, 2),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
-    "description": "Online hana3d library (materials, models, brushes and more). Connects to the internet.",
+    "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",
     "warning": "",
     # "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/hana3d.html",
     "category": "3D View",
@@ -35,7 +35,6 @@ if "bpy" in locals():
     search = reload(search)
     download = reload(download)
     upload = reload(upload)
-    ratings = reload(ratings)
     autothumb = reload(autothumb)
     ui = reload(ui)
     icons = reload(icons)
@@ -49,7 +48,7 @@ if "bpy" in locals():
     tasks_queue = reload(tasks_queue)
     custom_props = reload(custom_props)
 else:
-    from hana3d import asset_inspector, search, download, upload, ratings, autothumb, ui, icons, bg_blender, paths, \
+    from hana3d import asset_inspector, search, download, upload, autothumb, ui, icons, bg_blender, paths, \
         utils, \
         overrides, ui_panels, categories, hana3d_oauth, tasks_queue, custom_props
 
@@ -205,7 +204,6 @@ def get_upload_asset_type(self):
         Hana3DModelUploadProps: 'model',
         Hana3DSceneUploadProps: 'scene',
         Hana3DMaterialUploadProps: 'material',
-        Hana3DBrushUploadProps: 'brush'
     }
     asset_type = typemapper[type(self)]
     return asset_type
@@ -275,7 +273,6 @@ class Hana3DUIProps(PropertyGroup):
         items=(
             ('SEARCH', 'Search', 'Sctivate searching', 'VIEWZOOM', 0),
             ('UPLOAD', 'Upload', 'Activate uploading', 'COPYDOWN', 1),
-            # ('RATING', 'Rating', 'Activate rating', 'SOLO_ON', 2)
         ),
         description="hana3d",
         default="SEARCH",
@@ -349,39 +346,6 @@ class Hana3DUIProps(PropertyGroup):
         description="",
         default=paths.get_addon_thumbnail_path('thumbnail_notready.jpg'))
 
-    # rating UI props
-    rating_ui_scale = ui_scale
-
-    rating_button_on: BoolProperty(name="Rating Button On", default=True)
-    rating_menu_on: BoolProperty(name="Rating Menu On", default=False)
-    rating_on: BoolProperty(name="Rating on", default=True)
-
-    rating_button_width: IntProperty(name="Rating Button Width", default=50 * ui_scale)
-    rating_button_height: IntProperty(name="Rating Button Height", default=50 * ui_scale)
-
-    rating_x: IntProperty(name="Rating UI X", default=10)
-    rating_y: IntProperty(name="Rating UI Y", default=10)
-
-    rating_ui_width: IntProperty(name="Rating UI Width", default=rating_ui_scale * 600)
-    rating_ui_height: IntProperty(name="Rating UI Heightt", default=rating_ui_scale * 256)
-
-    quality_stars_x: IntProperty(name="Rating UI Stars X", default=rating_ui_scale * 90)
-    quality_stars_y: IntProperty(name="Rating UI Stars Y", default=rating_ui_scale * 190)
-
-    star_size: IntProperty(name="Star Size", default=rating_ui_scale * 50)
-
-    workhours_bar_slider_size: IntProperty(name="Workhours Bar Slider Size", default=rating_ui_scale * 30)
-
-    workhours_bar_x: IntProperty(name="Workhours Bar X", default=rating_ui_scale * (100 - 15))
-    workhours_bar_y: IntProperty(name="Workhours Bar Y", default=rating_ui_scale * (45 - 15))
-
-    workhours_bar_x_max: IntProperty(name="Workhours Bar X Max", default=rating_ui_scale * (480 - 15))
-
-    dragging_rating: BoolProperty(name="Dragging Rating", default=False)
-    dragging_rating_quality: BoolProperty(name="Dragging Rating Quality", default=False)
-    dragging_rating_work_hours: BoolProperty(name="Dragging Rating Work Hours", default=False)
-    last_rating_time: FloatProperty(name="Last Rating Time", default=0.0)
-
 
 def search_procedural_update(self, context):
     if self.search_procedural in ('PROCEDURAL', 'BOTH'):
@@ -411,58 +375,11 @@ class Hana3DCommonSearchProps(object):
                               default=False)
     public_only: BoolProperty(name="Public assets", description="Search only for public assets",
                               default=False, update=search.search_update)
-    search_advanced: BoolProperty(name="Advanced Search Options", description="use advanced search properties",
-                                  default=False, update=search.search_update)
-
     search_error: BoolProperty(name="Search Error", description="last search had an error", default=False)
     report: StringProperty(
         name="Report",
         description="errors and messages",
         default="")
-
-    # TEXTURE RESOLUTION
-    search_texture_resolution: BoolProperty(name="Texture Resolution",
-                                            description="Span of the texture resolutions",
-                                            default=False,
-                                            update=search.search_update,
-                                            )
-    search_texture_resolution_min: IntProperty(name="Min Texture Resolution",
-                                               description="Minimum texture resolution",
-                                               default=256,
-                                               min=0,
-                                               max=32768,
-                                               update=search.search_update,
-                                               )
-
-    search_texture_resolution_max: IntProperty(name="Max Texture Resolution",
-                                               description="Maximum texture resolution",
-                                               default=4096,
-                                               min=0,
-                                               max=32768,
-                                               update=search.search_update,
-                                               )
-
-    # file_size
-    search_file_size: BoolProperty(name="File Size",
-                                   description="Span of the file sizes",
-                                   default=False,
-                                   update=search.search_update,
-                                   )
-    search_file_size_min: IntProperty(name="Min File Size",
-                                      description="Minimum file size",
-                                      default=0,
-                                      min=0,
-                                      max=2000,
-                                      update=search.search_update,
-                                      )
-
-    search_file_size_max: IntProperty(name="Max File Size",
-                                      description="Maximum file size",
-                                      default=500,
-                                      min=0,
-                                      max=2000,
-                                      update=search.search_update,
-                                      )
 
     search_procedural: EnumProperty(
         items=(
@@ -611,11 +528,6 @@ class Hana3DCommonUploadProps(object):
     texture_count: IntProperty(name="Texture count", description="Total texture count in asset", default=0)
     total_megapixels: IntProperty(name="Megapixels", description="Total megapixels of texture", default=0)
 
-    # is_private: BoolProperty(name="Asset is Private",
-    #                       description="If not marked private, your asset will go into the validation process automatically\n"
-    #                                   "Private assets are limited by quota.",
-    #                       default=False)
-
     is_free: BoolProperty(name="Free for Everyone",
                           description="You consent you want to release this asset as free for everyone",
                           default=False)
@@ -659,38 +571,6 @@ class Hana3DCommonUploadProps(object):
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
-    )
-
-
-class Hana3DRatingProps(PropertyGroup):
-    rating_quality: IntProperty(name="Quality",
-                                description="quality of the material",
-                                default=0,
-                                min=-1, max=10,
-                                update=ratings.update_ratings_quality)
-
-    rating_work_hours: FloatProperty(name="Work Hours",
-                                     description="How many hours did this work take?",
-                                     default=0.01,
-                                     min=0.0, max=1000, update=ratings.update_ratings_work_hours
-                                     )
-    rating_complexity: IntProperty(name="Complexity",
-                                   description="Complexity is a number estimating how much work was spent on the asset.aaa",
-                                   default=0, min=0, max=10)
-    rating_virtual_price: FloatProperty(name="Virtual Price",
-                                        description="How much would you pay for this object if buing it?",
-                                        default=0, min=0, max=10000)
-    rating_problems: StringProperty(
-        name="Problems",
-        description="Problems found/ why did you take points down - this will be available for the author"
-                    " As short as possible",
-        default="",
-    )
-    rating_compliments: StringProperty(
-        name="Compliments",
-        description="Comliments - let the author know you like his work! "
-                    " As short as possible",
-        default="",
     )
 
 
@@ -832,49 +712,6 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
     client: StringProperty(name="Client")
     sku: StringProperty(name="SKU")
     custom_props: PointerProperty(type=custom_props.CustomPropsPropertyGroup)
-
-
-class Hana3DTextureUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    style: EnumProperty(
-        name="Style",
-        items=material_styles,
-        description="Style of texture",
-        default="REALISTIC",
-    )
-    style_other: StringProperty(
-        name="Style Other",
-        description="Style not in the list",
-        default="",
-    )
-
-    pbr: BoolProperty(name="PBR Compatible", description="Is compatible with PBR standard", default=False)
-
-    # printable_3d : BoolProperty( name = "3d printable", description = "can be 3d printed", default = False)
-    animated: BoolProperty(name="Animated", description="is animated", default=False)
-    resolution: IntProperty(name="Texture Resolution", description="texture resolution", default=0)
-
-
-class Hana3DBrushSearchProps(PropertyGroup, Hana3DCommonSearchProps):
-    search_keywords: StringProperty(
-        name="Search",
-        description="Search for these keywords",
-        default="",
-        update=search.search_update
-    )
-
-
-class Hana3DBrushUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    mode: EnumProperty(
-        name="Mode",
-        items=(
-            ('IMAGE', 'Texture paint', "Texture brush"),
-            ('SCULPT', 'Sculpt', 'Sculpt brush'),
-            ('VERTEX', 'Vertex paint', 'Vertex paint brush'),
-            ('WEIGHT', 'Weight paint', 'Weight paint brush'),
-        ),
-        description="Mode where the brush works",
-        default="SCULPT",
-    )
 
 
 # upload properties
@@ -1301,63 +1138,6 @@ class Hana3DModelSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     free_only: BoolProperty(name="Free only", description="Show only free models",
                             default=False, update=search.search_update)
 
-    # CONDITION
-    search_condition: EnumProperty(
-        items=conditions,
-        default='UNSPECIFIED',
-        description='Condition of the object',
-        update=search.search_update
-    )
-
-    search_adult: BoolProperty(
-        name="Adult Content",
-        description="You're adult and agree with searching adult content",
-        default=False,
-        update=search.search_update
-    )
-
-    # DESIGN YEAR
-    search_design_year: BoolProperty(name="Sesigned in Year",
-                                     description="When the object was approximately designed",
-                                     default=False,
-                                     update=search.search_update,
-                                     )
-
-    search_design_year_min: IntProperty(name="Minimum Design Year",
-                                        description="Minimum design year",
-                                        default=1950, min=-100000000, max=1000000000,
-                                        update=search.search_update,
-                                        )
-
-    search_design_year_max: IntProperty(name="Maximum Design Year",
-                                        description="Maximum design year",
-                                        default=2017,
-                                        min=0,
-                                        max=10000000,
-                                        update=search.search_update,
-                                        )
-
-    # POLYCOUNT
-    search_polycount: BoolProperty(name="Use Polycount",
-                                   description="Use polycount of object search tag",
-                                   default=False,
-                                   update=search.search_update, )
-
-    search_polycount_min: IntProperty(name="Min Polycount",
-                                      description="Minimum poly count of the asset",
-                                      default=0,
-                                      min=0,
-                                      max=100000000,
-                                      update=search.search_update, )
-
-    search_polycount_max: IntProperty(name="Max Polycount",
-                                      description="Maximum poly count of the asset",
-                                      default=100000000,
-                                      min=0,
-                                      max=100000000,
-                                      update=search.search_update,
-                                      )
-
     append_method: EnumProperty(
         name="Import Method",
         items=(
@@ -1520,12 +1300,6 @@ class Hana3DAddonPreferences(AddonPreferences):
         default=False
     )
 
-    tips_on_start: BoolProperty(
-        name="Show tips when starting blender",
-        description="Show tips when starting blender",
-        default=False
-    )
-
     search_in_header: BoolProperty(
         name="Show 3D view header",
         description="Show 3D view header",
@@ -1671,7 +1445,6 @@ class Hana3DAddonPreferences(AddonPreferences):
         # layout.prop(self, "panel_behaviour")
         layout.prop(self, "thumb_size")
         layout.prop(self, "max_assetbar_rows")
-        layout.prop(self, "tips_on_start")
         layout.prop(self, "search_in_header")
 
         addon_updater_ops.update_settings_ui(self, context)
@@ -1691,13 +1464,6 @@ classes = (
 
     Hana3DMaterialUploadProps,
     Hana3DMaterialSearchProps,
-
-    Hana3DTextureUploadProps,
-
-    Hana3DBrushSearchProps,
-    Hana3DBrushUploadProps,
-
-    Hana3DRatingProps,
 )
 
 
@@ -1717,38 +1483,23 @@ def register():
         type=Hana3DModelSearchProps)
     bpy.types.Object.hana3d = PointerProperty(  # for uploads, not now...
         type=Hana3DModelUploadProps)
-    bpy.types.Object.hana3d_ratings = PointerProperty(  # for uploads, not now...
-        type=Hana3DRatingProps)
 
     # SCENES
     bpy.types.Scene.hana3d_scene = PointerProperty(
         type=Hana3DSceneSearchProps)
     bpy.types.Scene.hana3d = PointerProperty(  # for uploads, not now...
         type=Hana3DSceneUploadProps)
-    bpy.types.Scene.hana3d_ratings = PointerProperty(  # for uploads, not now...
-        type=Hana3DRatingProps)
 
     # MATERIALS
     bpy.types.Scene.hana3d_mat = PointerProperty(
         type=Hana3DMaterialSearchProps)
     bpy.types.Material.hana3d = PointerProperty(  # for uploads, not now...
         type=Hana3DMaterialUploadProps)
-    bpy.types.Material.hana3d_ratings = PointerProperty(  # for uploads, not now...
-        type=Hana3DRatingProps)
-
-    # BRUSHES
-    bpy.types.Scene.hana3d_brush = PointerProperty(
-        type=Hana3DBrushSearchProps)
-    bpy.types.Brush.hana3d = PointerProperty(  # for uploads, not now...
-        type=Hana3DBrushUploadProps)
-    bpy.types.Brush.hana3d_ratings = PointerProperty(  # for uploads, not now...
-        type=Hana3DRatingProps)
 
     search.register_search()
     asset_inspector.register_asset_inspector()
     download.register_download()
     upload.register_upload()
-    ratings.register_ratings()
     autothumb.register_thumbnailer()
     ui.register_ui()
     icons.register_icons()
@@ -1776,7 +1527,6 @@ def unregister():
     asset_inspector.unregister_asset_inspector()
     download.unregister_download()
     upload.unregister_upload()
-    ratings.unregister_ratings()
     autothumb.unregister_thumbnailer()
     bg_blender.unregister()
     overrides.unregister_overrides()
@@ -1785,13 +1535,11 @@ def unregister():
 
     del bpy.types.Scene.hana3d_models
     del bpy.types.Scene.hana3d_scene
-    del bpy.types.Scene.hana3d_brush
     del bpy.types.Scene.hana3d_mat
 
     del bpy.types.Scene.hana3d
     del bpy.types.Object.hana3d
     del bpy.types.Material.hana3d
-    del bpy.types.Brush.hana3d
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

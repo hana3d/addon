@@ -21,7 +21,6 @@ if "bpy" in locals():
     import importlib
 
     paths = importlib.reload(paths)
-    ratings = importlib.reload(ratings)
     utils = importlib.reload(utils)
     search = importlib.reload(search)
     upload = importlib.reload(upload)
@@ -31,11 +30,12 @@ if "bpy" in locals():
     colors = importlib.reload(colors)
     tasks_queue = importlib.reload(tasks_queue)
 else:
-    from hana3d import paths, ratings, utils, search, upload, ui_bgl, download, bg_blender, colors, tasks_queue
+    from hana3d import paths, utils, search, upload, ui_bgl, download, bg_blender, colors, tasks_queue
 
 import bpy
 
-import math, random
+import math
+import random
 
 from bpy.props import (
     BoolProperty,
@@ -61,8 +61,6 @@ mappingdict = {
     'MODEL': 'model',
     'SCENE': 'scene',
     'MATERIAL': 'material',
-    'TEXTURE': 'texture',
-    'BRUSH': 'brush'
 }
 
 verification_icons = {
@@ -135,7 +133,7 @@ class Report():
                 try:
                     reports.remove(self)
                 except Exception as e:
-                    pass;
+                    pass
 
     def draw(self, x, y):
         if bpy.context.area == active_area:
@@ -211,139 +209,6 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
             ui_bgl.draw_rect_3d(r, color)
 
 
-def get_rating_scalevalues(asset_type):
-    xs = []
-    if asset_type == 'model':
-        scalevalues = (0.5, 1, 2, 5, 10, 25, 50, 100, 250)
-        for v in scalevalues:
-            a = math.log2(v)
-            x = (a + 1) * (1. / 9.)
-            xs.append(x)
-    else:
-        scalevalues = (0.2, 1, 2, 3, 4, 5)
-        for v in scalevalues:
-            a = v
-            x = v / 5.
-            xs.append(x)
-    return scalevalues, xs
-
-
-def draw_ratings_bgl():
-    # return;
-    ui = bpy.context.scene.Hana3DUI
-
-    rating_possible, rated, asset, asset_data = is_rating_possible()
-
-    if rating_possible:  # (not rated or ui_props.rating_menu_on):
-        hana3d_ratings = asset.hana3d_ratings
-        bgcol = bpy.context.preferences.themes[0].user_interface.wcol_tooltip.inner
-        textcol = (1, 1, 1, 1)
-
-        r = bpy.context.region
-        font_size = int(ui.rating_ui_scale * 20)
-
-        if ui.rating_button_on:
-            img = utils.get_thumbnail('star_white.png')
-
-            ui_bgl.draw_image(ui.rating_x,
-                              ui.rating_y - ui.rating_button_width,
-                              ui.rating_button_width,
-                              ui.rating_button_width,
-                              img, 1)
-
-            # if ui_props.asset_type != 'BRUSH':
-            #     thumbnail_image = props.thumbnail
-            # else:
-            #     b = utils.get_active_brush()
-            #     thumbnail_image = b.icon_filepath
-
-            directory = paths.get_temp_dir('%s_search' % asset_data['asset_type'])
-            tpath = os.path.join(directory, asset_data['thumbnail_small'])
-
-            img = utils.get_hidden_image(tpath, 'rating_preview')
-            ui_bgl.draw_image(ui.rating_x + ui.rating_button_width,
-                              ui.rating_y - ui.rating_button_width,
-                              ui.rating_button_width,
-                              ui.rating_button_width,
-                              img, 1)
-            # ui_bgl.draw_text( 'rate asset %s' % asset_data['name'],r.width - rating_button_width + margin, margin, font_size)
-            return
-
-        ui_bgl.draw_rect(ui.rating_x,
-                         ui.rating_y - ui.rating_ui_height - 2 * ui.margin - font_size,
-                         ui.rating_ui_width + ui.margin,
-                         ui.rating_ui_height + 2 * ui.margin + font_size,
-                         bgcol)
-        if asset_data['asset_type'] == 'model':
-            ui_img_name = 'rating_ui.png'
-        else:
-            ui_img_name = 'rating_ui_empty.png'
-            text = 'Try to estimate how many hours it would take for a professional artist to create this asset:'
-            tx = ui.rating_x + ui.workhours_bar_x
-            # draw_text_block(x=tx, y=ui.rating_y, width=80, font_size=20, line_height=15, text=text, color=colors.TEXT)
-
-        img = utils.get_thumbnail(ui_img_name)
-        ui_bgl.draw_image(ui.rating_x,
-                          ui.rating_y - ui.rating_ui_height - 2 * ui.margin,
-                          ui.rating_ui_width,
-                          ui.rating_ui_height,
-                          img, 1)
-        img = utils.get_thumbnail('star_white.png')
-
-        quality = hana3d_ratings.rating_quality
-        work_hours = hana3d_ratings.rating_work_hours
-
-        for a in range(0, quality):
-            ui_bgl.draw_image(ui.rating_x + ui.quality_stars_x + a * ui.star_size,
-                              ui.rating_y - ui.rating_ui_height + ui.quality_stars_y,
-                              ui.star_size,
-                              ui.star_size,
-                              img, 1)
-
-        img = utils.get_thumbnail('bar_slider.png')
-        # for a in range(0,11):
-        if work_hours > 0.2:
-            if asset_data['asset_type'] == 'model':
-                complexity = math.log2(work_hours) + 2  # real complexity
-                complexity = (1. / 9.) * (complexity - 1) * ui.workhours_bar_x_max
-            else:
-                complexity = work_hours / 5 * ui.workhours_bar_x_max
-            ui_bgl.draw_image(
-                ui.rating_x + ui.workhours_bar_x + int(
-                    complexity),
-                ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y,
-                ui.workhours_bar_slider_size,
-                ui.workhours_bar_slider_size, img, 1)
-            ui_bgl.draw_text(
-                str(round(work_hours, 1)),
-                ui.rating_x + ui.workhours_bar_x - 50,
-                ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y + 10, font_size)
-        # (0.5,1,2,4,8,16,32,64,128,256)
-        # ratings have to be different for models and brushes+materials.
-
-        scalevalues, xs = get_rating_scalevalues(asset_data['asset_type'])
-        for v, x in zip(scalevalues, xs):
-            ui_bgl.draw_rect(ui.rating_x + ui.workhours_bar_x + int(
-                x * ui.workhours_bar_x_max) - 1 + ui.workhours_bar_slider_size / 2,
-                             ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y,
-                             2,
-                             5,
-                             textcol)
-            ui_bgl.draw_text(str(v),
-                             ui.rating_x + ui.workhours_bar_x + int(
-                                 x * ui.workhours_bar_x_max),
-                             ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y - 30,
-                             font_size)
-        if work_hours > 0.2 and quality > 0.2:
-            text = 'Thanks for rating asset %s' % asset_data['name']
-        else:
-            text = 'Rate asset %s.' % asset_data['name']
-        ui_bgl.draw_text(text,
-                         ui.rating_x,
-                         ui.rating_y - ui.margin - font_size,
-                         font_size)
-
-
 def draw_text_block(x=0, y=0, width=40, font_size=10, line_height=15, text='', color=colors.TEXT):
     lines = text.split('\n')
     nlines = []
@@ -378,7 +243,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     texth = line_height * nlines + nameline_height
 
     if max(img.size[0], img.size[1]) == 0:
-        return;
+        return
     isizex = int(512 * scale * img.size[0] / max(img.size[0], img.size[1]))
     isizey = int(512 * scale * img.size[1] / max(img.size[0], img.size[1]))
 
@@ -603,7 +468,7 @@ def draw_tooltip_old(x, y, text='', author='', img=None):
 
 def draw_callback_2d(self, context):
     if not utils.guard_from_crash():
-        return;
+        return
 
     a = context.area
     w = context.window
@@ -625,7 +490,6 @@ def draw_callback_2d(self, context):
 
         props = context.scene.Hana3DUI
         if props.down_up == 'SEARCH':
-            draw_ratings_bgl()
             draw_callback_2d_search(self, context)
         elif props.down_up == 'UPLOAD':
             draw_callback_2d_upload_preview(self, context)
@@ -685,7 +549,6 @@ def draw_callback_2d_progress(self, context):
                     else:
                         draw_downloader(loc[0], loc[1], percent=tcom.progress, img=img)
 
-
         else:
             draw_progress(x, y - index * 30, text='downloading %s' % asset_data['name'],
                           percent=tcom.progress)
@@ -708,11 +571,7 @@ def draw_callback_2d_upload_preview(self, context):
     props = utils.get_upload_props()
     if props != None and ui_props.draw_tooltip:
 
-        if ui_props.asset_type != 'BRUSH':
-            ui_props.thumbnail_image = props.thumbnail
-        else:
-            b = utils.get_active_brush()
-            ui_props.thumbnail_image = b.icon_filepath
+        ui_props.thumbnail_image = props.thumbnail
 
         img = utils.get_hidden_image(ui_props.thumbnail_image, 'upload_preview')
 
@@ -790,7 +649,7 @@ def draw_callback_2d_search(self, context):
                 y = ui_props.bar_y - (b + 1) * (row_height)
                 for a in range(0, w_draw):
                     x = ui_props.bar_x + a * (
-                            ui_props.margin + ui_props.thumb_size) + ui_props.margin + ui_props.drawoffset
+                        ui_props.margin + ui_props.thumb_size) + ui_props.margin + ui_props.drawoffset
 
                     #
                     index = a + ui_props.scrolloffset + b * ui_props.wcount
@@ -904,7 +763,7 @@ def draw_callback_2d_search(self, context):
 def draw_callback_3d(self, context):
     ''' Draw snapped bbox while dragging and in the future other hana3d related stuff. '''
     if not utils.guard_from_crash():
-        return;
+        return
 
     ui = context.scene.Hana3DUI
 
@@ -936,7 +795,7 @@ def mouse_raycast(context, mx, my):
         props = bpy.context.scene.hana3d_models
         if props.randomize_rotation and snapped_normal.angle(up) < math.radians(10.0):
             randoffset = props.offset_rotation_amount + math.pi + (
-                    random.random() - 0.5) * props.randomize_rotation_amount
+                random.random() - 0.5) * props.randomize_rotation_amount
         else:
             randoffset = props.offset_rotation_amount  # we don't rotate this way on walls and ceilings. + math.pi
         # snapped_rotation.z += math.pi + (random.random() - 0.5) * .2
@@ -979,133 +838,12 @@ def floor_raycast(context, mx, my):
         props = bpy.context.scene.hana3d_models
         if props.randomize_rotation:
             randoffset = props.offset_rotation_amount + math.pi + (
-                    random.random() - 0.5) * props.randomize_rotation_amount
+                random.random() - 0.5) * props.randomize_rotation_amount
         else:
             randoffset = props.offset_rotation_amount + math.pi
         snapped_rotation.rotate_axis('Z', randoffset)
 
     return has_hit, snapped_location, snapped_normal, snapped_rotation, face_index, object, matrix
-
-
-def is_rating_possible():
-    ao = bpy.context.active_object
-    ui = bpy.context.scene.Hana3DUI
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
-    #first test if user is logged in.
-    if preferences.api_key == '':
-        return False, False, None, None
-    if bpy.context.scene.get('assets rated') is not None and ui.down_up == 'SEARCH':
-        if bpy.context.mode in ('SCULPT', 'PAINT_TEXTURE'):
-            b = utils.get_active_brush()
-            ad = b.get('asset_data')
-            if ad is not None:
-                rated = bpy.context.scene['assets rated'].get(ad['asset_base_id'])
-                return True, rated, b, ad
-        if ao is not None:
-            ad = None
-            # crawl parents to reach active asset. there could have been parenting so we need to find the first onw
-            ao_check = ao
-            while ad is None or (ad is None and ao_check.parent is not None):
-                ad = ao_check.get('asset_data')
-                if ad is not None:
-                    rated = bpy.context.scene['assets rated'].get(ad['asset_base_id'])
-                    # originally hidden for already rated assets
-                    return True, rated, ao_check, ad
-                elif ao_check.parent is not None:
-                    ao_check = ao_check.parent
-                else:
-                    break;
-
-            # check also materials
-            m = ao.active_material
-            if m is not None:
-                ad = m.get('asset_data')
-                if ad is not None:
-                    rated = bpy.context.scene['assets rated'].get(ad['asset_base_id'])
-                    return True, rated, m, ad
-
-        # if t>2 and t<2.5:
-        #     ui_props.rating_on = False
-
-    return False, False, None, None
-
-
-def interact_rating(r, mx, my, event):
-    ui = bpy.context.scene.Hana3DUI
-    rating_possible, rated, asset, asset_data = is_rating_possible()
-    if rating_possible:
-        hana3d_ratings = asset.hana3d_ratings
-
-        t = time.time() - ui.last_rating_time
-        if bpy.context.mode in ('SCULPT', 'PAINT_TEXTURE'):
-            accept_value = 'PRESS'
-        else:
-            accept_value = 'RELEASE'
-
-        if ui.rating_button_on and event.type == 'LEFTMOUSE' and event.value == accept_value:
-            if mouse_in_area(mx, my,
-                             ui.rating_x,
-                             ui.rating_y - ui.rating_button_width,
-                             ui.rating_button_width * 2,
-                             ui.rating_button_width):
-                ui.rating_menu_on = True
-                ui.rating_button_on = False
-                return True
-        if ui.rating_menu_on:
-            if mouse_in_area(mx, my,
-                             ui.rating_x,
-                             ui.rating_y - ui.rating_ui_height,
-                             ui.rating_ui_width,
-                             ui.rating_ui_height + 25):
-                rmx = mx - (ui.rating_x)
-                rmy = my - (ui.rating_y - ui.rating_ui_height)
-
-                # quality
-                upload_rating = False
-                if (ui.quality_stars_x < rmx and rmx < ui.quality_stars_x + 10 * ui.star_size and \
-                    ui.quality_stars_y < rmy and rmy < ui.quality_stars_y + ui.star_size and event.type == 'LEFTMOUSE' and event.value == 'PRESS') or \
-                        ui.dragging_rating_quality:
-
-                    if event.type == 'LEFTMOUSE':
-                        if event.value == 'PRESS':
-                            ui.dragging_rating = True
-                            ui.dragging_rating_quality = True
-                        elif event.value == 'RELEASE':
-                            ui.dragging_rating = False
-                            ui.dragging_rating_quality = False
-
-                    if ui.dragging_rating_quality:
-                        q = math.ceil((rmx - ui.quality_stars_x) / (float(ui.star_size)))
-                        hana3d_ratings.rating_quality = q
-
-                # work hours
-                if (
-                        ui.workhours_bar_x < rmx and rmx < ui.workhours_bar_x + ui.workhours_bar_x_max + ui.workhours_bar_slider_size and \
-                        ui.workhours_bar_y < rmy and rmy < ui.workhours_bar_y + ui.workhours_bar_slider_size and event.type == 'LEFTMOUSE' and event.value == 'PRESS') \
-                        or (ui.dragging_rating_work_hours):
-                    if event.value == 'PRESS':
-                        ui.dragging_rating = True
-                        ui.dragging_rating_work_hours = True
-                    elif event.value == 'RELEASE':
-                        ui.dragging_rating = False
-                        ui.dragging_rating_work_hours = False
-                    if ui.dragging_rating_work_hours:
-                        xv = rmx - ui.workhours_bar_x - ui.workhours_bar_slider_size / 2
-                        ratio = xv / ui.workhours_bar_x_max
-                        if asset_data['asset_type'] == 'model':
-                            wh_log2 = ratio * 9 - 1
-                            wh = 2 ** wh_log2
-                        else:
-                            wh = 5 * ratio
-                        hana3d_ratings.rating_work_hours = wh
-
-                if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
-                    ui.last_rating_time = time.time() # this prop seems obsolete now?
-                return True
-            else:
-                ui.rating_button_on = True
-                ui.rating_menu_on = False
-    return False
 
 
 def mouse_in_area(mx, my, x, y, w, h):
@@ -1177,9 +915,6 @@ def update_ui_size(area, region):
         ui.reports_y = ui.bar_y - ui.bar_height - 100
         ui.reports_x = ui.bar_x
 
-    ui.rating_x = ui.bar_x
-    ui.rating_y = ui.bar_y - ui.bar_height
-
 
 def get_largest_3dview():
     maxsurf = 0
@@ -1237,7 +972,7 @@ class AssetBarOperator(bpy.types.Operator):
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d, 'WINDOW')
         except:
-            pass;
+            pass
         ui_props = bpy.context.scene.Hana3DUI
 
         ui_props.dragging = False
@@ -1279,7 +1014,7 @@ class AssetBarOperator(bpy.types.Operator):
                         if r.type == 'WINDOW':
                             self.region = r
                     newarea = a
-                    break;
+                    break
                     # context.area = a
 
             # we check again and quit if things weren't fixed this way.
@@ -1289,13 +1024,10 @@ class AssetBarOperator(bpy.types.Operator):
 
         update_ui_size(self.area, self.region)
 
-
-
         # this was here to check if sculpt stroke is running, but obviously that didn't help,
         #  since the RELEASE event is cought by operator and thus there is no way to detect a stroke has ended...
         if bpy.context.mode in ('SCULPT', 'PAINT_TEXTURE'):
             if event.type == 'MOUSEMOVE':  # ASSUME THAT SCULPT OPERATOR ACTUALLY STEALS THESE EVENTS,
-                # SO WHEN THERE ARE SOME WE CAN APPEND BRUSH...
                 bpy.context.window_manager['appendable'] = True
             if event.type == 'LEFTMOUSE':
                 if event.value == 'PRESS':
@@ -1330,8 +1062,7 @@ class AssetBarOperator(bpy.types.Operator):
                     event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE') and event.value == 'RELEASE' or event.type == 'ENTER' or ui_props.tooltip == '':
                 ao = bpy.context.active_object
                 if ui_props.asset_type == 'MODEL' and ao != None \
-                        or ui_props.asset_type == 'MATERIAL' and ao != None and ao.active_material != None \
-                        or ui_props.asset_type == 'BRUSH' and utils.get_active_brush() is not None:
+                        or ui_props.asset_type == 'MATERIAL' and ao != None and ao.active_material != None:
                     export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props = upload.get_upload_data(
                         self,
                         context,
@@ -1363,7 +1094,7 @@ class AssetBarOperator(bpy.types.Operator):
                 elif event.type == 'WHEELDOWNMOUSE':
                     sprops.offset_rotation_amount -= sprops.offset_rotation_step
 
-                #### TODO - this snapping code below is 3x in this file.... refactor it.
+                # TODO - this snapping code below is 3x in this file.... refactor it.
                 ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = mouse_raycast(
                     context, mx, my)
 
@@ -1408,11 +1139,6 @@ class AssetBarOperator(bpy.types.Operator):
 
             ui_props.mouse_x = mx
             ui_props.mouse_y = my
-
-            if ui_props.dragging_rating or ui_props.rating_menu_on:
-                res = interact_rating(r, mx, my, event)
-                if res == True:
-                    return {'RUNNING_MODAL'}
 
             if ui_props.drag_init:
                 ui_props.drag_length += 1
@@ -1510,7 +1236,7 @@ class AssetBarOperator(bpy.types.Operator):
                         link_text = 'Unlock the asset.'
                         url = paths.get_hana3d_url() + '/get-hana3d/' + asset_data['id'] + '/?from_addon'
                         bpy.ops.wm.hana3d_url_dialog('INVOKE_REGION_WIN', url=url, message=message,
-                                                         link_text=link_text)
+                                                     link_text=link_text)
                         return {'RUNNING_MODAL'}
                     # go on with drag init
                     ui_props.drag_init = True
@@ -1522,11 +1248,6 @@ class AssetBarOperator(bpy.types.Operator):
                     bpy.context.window.cursor_set("NONE")
                     context.scene.Hana3DUI.draw_tooltip = False
                     context.scene.Hana3DUI.drag_length = 0
-
-            if ui_props.rating_on:
-                res = interact_rating(r, mx, my, event)
-                if res:
-                    return {'RUNNING_MODAL'}
 
             if not ui_props.dragging and not mouse_in_asset_bar(mx, my):
                 return {'PASS_THROUGH'}
@@ -1637,13 +1358,12 @@ class AssetBarOperator(bpy.types.Operator):
                             utils.automap(target_object, target_slot=target_slot,
                                           tex_size=asset_data.get('texture_size_meters', 1.0))
                             bpy.ops.scene.hana3d_download(True,
-                                                              asset_type=ui_props.asset_type,
-                                                              asset_index=asset_search_index,
-                                                              model_location=loc,
-                                                              model_rotation=rotation,
-                                                              target_object=target_object,
-                                                              material_target_slot=target_slot)
-
+                                                          asset_type=ui_props.asset_type,
+                                                          asset_index=asset_search_index,
+                                                          model_location=loc,
+                                                          model_rotation=rotation,
+                                                          target_object=target_object,
+                                                          material_target_slot=target_slot)
 
                     elif ui_props.asset_type == 'MODEL':
                         if ui_props.has_hit and ui_props.dragging:
@@ -1654,15 +1374,15 @@ class AssetBarOperator(bpy.types.Operator):
                             rotation = s.cursor.rotation_euler
 
                         bpy.ops.scene.hana3d_download(True,
-                                                          asset_type=ui_props.asset_type,
-                                                          asset_index=asset_search_index,
-                                                          model_location=loc,
-                                                          model_rotation=rotation,
-                                                          target_object=target_object)
+                                                      asset_type=ui_props.asset_type,
+                                                      asset_index=asset_search_index,
+                                                      model_location=loc,
+                                                      model_rotation=rotation,
+                                                      target_object=target_object)
 
                     else:
                         bpy.ops.scene.hana3d_download(asset_type=ui_props.asset_type,
-                                                          asset_index=asset_search_index)
+                                                      asset_index=asset_search_index)
 
                     ui_props.dragging = False
                     return {'RUNNING_MODAL'}
@@ -1873,7 +1593,7 @@ def register_ui():
     kmi.properties.do_search = False
     addon_keymapitems.append(kmi)
     # auto open after searching:
-    kmi = km.keymap_items.new(RunAssetBarWithContext.bl_idname, 'SEMI_COLON', 'PRESS', \
+    kmi = km.keymap_items.new(RunAssetBarWithContext.bl_idname, 'SEMI_COLON', 'PRESS',
                               ctrl=True, shift=True, alt=True)
     addon_keymapitems.append(kmi)
 
