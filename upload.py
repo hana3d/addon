@@ -385,16 +385,28 @@ def get_upload_data(self, context, asset_type):
     if props.workspace != '' and not props.is_public:
         upload_data['workspace'] = props.workspace
 
-    if hasattr(props, 'client'):
-        upload_data['client'] = props.client
-    if hasattr(props, 'sku'):
-        upload_data['sku'] = props.sku
+    metadata = {}
+    list_clients = getattr(props, 'client', '').split(',')
+    list_skus = getattr(props, 'sku', '').split(',')
+    product_info = [
+        {'client': client, 'sku': sku}
+        for client, sku in zip(list_clients, list_skus)
+    ]
+    if len(product_info) > 0:
+        metadata['product_info'] = product_info
     if hasattr(props, 'custom_props'):
-        upload_data['metadata'] = {}
-        for key in props.custom_props.keys():
-            upload_data['metadata'][key] = props.custom_props[key]
+        metadata.update(props.custom_props)
+    if metadata:
+        upload_data['metadata'] = metadata
 
     return export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props
+
+
+def validate_upload_data(props):
+    list_clients = getattr(props, 'client', '').split(',')
+    list_skus = getattr(props, 'sku', '').split(',')
+
+    assert len(list_clients) == len(list_skus), 'Number of clients must be the same as number of SKUs'
 
 
 def verification_status_change_thread(asset_id, state, api_key):
@@ -470,6 +482,7 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         props.id = ''
     export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props = get_upload_data(self, context,
                                                                                                        asset_type)
+    validate_upload_data(props)  # We have to validate here as get_upload_data() is called in other parts of the code
     # utils.pprint(upload_data)
     upload_data['parameters'] = utils.dict_to_params(
         upload_data['parameters'])  # weird array conversion only for upload, not for tooltips.
