@@ -27,6 +27,7 @@ else:
 import json
 import os
 import sys
+import uuid
 from typing import List, Tuple
 
 import bpy
@@ -395,10 +396,13 @@ def requests_post_thread(url, json, headers):
     rerequests.post(url, json=json, verify=True, headers=headers)
 
 
-def get_headers():
+def get_headers(correlation_id: str = None) -> dict:
     headers = {
-        "accept": "application/json",
+        'accept': 'application/json',
+        'X-Request-Id': str(uuid.uuid4())
     }
+    if correlation_id:
+        headers['X-Correlation-Id'] = correlation_id
     api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
     if api_key != '':
         headers["Authorization"] = "Bearer %s" % api_key

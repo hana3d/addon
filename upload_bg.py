@@ -77,8 +77,8 @@ class upload_in_chunks(object):
         return self.totalsize
 
 
-def upload_file(upload_data, f):
-    headers = utils.get_headers()
+def upload_file(upload_data, f, correlation_id):
+    headers = utils.get_headers(correlation_id)
     version_id = upload_data['id']
     bg_blender.progress('uploading %s' % f['type'])
     upload_info = {
@@ -126,10 +126,10 @@ def upload_file(upload_data, f):
     return uploaded
 
 
-def upload_files(upload_data, files):
+def upload_files(upload_data, files, correlation_id):
     uploaded_all = True
     for f in files:
-        uploaded = upload_file(upload_data, f)
+        uploaded = upload_file(upload_data, f, correlation_id)
         if not uploaded:
             uploaded_all = False
         bg_blender.progress('finished uploading')
@@ -180,6 +180,7 @@ if __name__ == "__main__":
         bpy.app.debug_value = data.get('debug_value', 0)
         export_data = data['export_data']
         upload_data = data['upload_data']
+        correlation_id = data['correlation_id']
 
         upload_set = data['upload_set']
         if 'MAINFILE' in upload_set:
@@ -247,7 +248,7 @@ if __name__ == "__main__":
 
         bg_blender.progress('uploading')
 
-        uploaded = upload_files(upload_data, files)
+        uploaded = upload_files(upload_data, files, correlation_id)
 
         if uploaded:
             # mark on server as uploaded
@@ -256,7 +257,7 @@ if __name__ == "__main__":
 
                 url = paths.get_api_url() + 'assets/'
 
-                headers = utils.get_headers()
+                headers = utils.get_headers(correlation_id)
 
                 url += upload_data["id"] + '/'
 

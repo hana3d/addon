@@ -46,6 +46,7 @@ import re
 import subprocess
 import tempfile
 import threading
+import uuid
 
 import bpy
 import requests
@@ -297,7 +298,7 @@ def auto_fix(asset_type=''):
         asset.name = props.name
 
 
-def start_upload(self, context, asset_type, reupload, upload_set):
+def start_upload(self, context, asset_type, reupload, upload_set, correlation_id):
     '''start upload process, by processing data'''
 
     # fix the name first
@@ -362,6 +363,7 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         'upload_data': upload_data,
         'debug_value': bpy.app.debug_value,
         'upload_set': upload_set,
+        'correlation_id': correlation_id,
     }
     datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
@@ -375,7 +377,7 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     # first upload metadata to server, so it can be saved inside the current file
     url = paths.get_api_url() + 'assets/'
 
-    headers = utils.get_headers()
+    headers = utils.get_headers(correlation_id)
 
     json_metadata = upload_data  # json.dumps(upload_data, ensure_ascii=False).encode('utf8')
     global reports
@@ -533,7 +535,15 @@ class UploadOperator(Operator):
 
         upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
 
-        result = start_upload(self, context, self.asset_type, self.reupload, upload_set)
+        correlation_id = str(uuid.uuid4())
+        result = start_upload(
+            self,
+            context,
+            self.asset_type,
+            self.reupload,
+            upload_set,
+            correlation_id
+        )
 
         return result
 
