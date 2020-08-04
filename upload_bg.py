@@ -28,14 +28,14 @@ if "bpy" in locals():
 else:
     from hana3d import paths, append_link, bg_blender, utils, rerequests
 
-import sys
 import json
-import os
-import time
-import requests
 import logging
+import os
+import sys
+import time
 
 import bpy
+import requests
 
 HANA3D_EXPORT_DATA = sys.argv[-1]
 
@@ -78,14 +78,15 @@ class upload_in_chunks(object):
 
 
 def upload_file(upload_data, f):
-    headers = utils.get_headers(upload_data['token'])
+    headers = utils.get_headers()
     version_id = upload_data['id']
     bg_blender.progress('uploading %s' % f['type'])
     upload_info = {
         'assetId': version_id,
         'fileType': f['type'],
         'fileIndex': f['index'],
-        'originalFilename': os.path.basename(f['file_path'])
+        'originalFilename': os.path.basename(f['file_path']),
+        'comment': f['publish_message']
     }
     upload_create_url = paths.get_api_url() + 'uploads/'
     upload = rerequests.post(upload_create_url, json=upload_info, headers=headers, verify=True)
@@ -99,9 +100,12 @@ def upload_file(upload_data, f):
     for a in range(0, 5):
         if not uploaded:
             try:
-                upload_response = requests.put(upload['s3UploadUrl'],
-                                               data=upload_in_chunks(f['file_path'], chunk_size, f['type']),
-                                               stream=True, verify=True)
+                upload_response = requests.put(
+                    upload['s3UploadUrl'],
+                    data=upload_in_chunks(f['file_path'], chunk_size, f['type']),
+                    stream=True,
+                    verify=True,
+                )
 
                 if upload_response.status_code == 200:
                     uploaded = True
@@ -186,9 +190,11 @@ if __name__ == "__main__":
 
             if export_data['type'] == 'MODEL':
                 obnames = export_data['models']
-                main_source, allobs = append_link.append_objects(file_name=data['source_filepath'],
-                                                                 obnames=obnames,
-                                                                 rotation=(0, 0, 0))
+                main_source, allobs = append_link.append_objects(
+                    file_name=data['source_filepath'],
+                    obnames=obnames,
+                    rotation=(0, 0, 0)
+                )
                 g = bpy.data.collections.new(upload_data['name'])
                 for o in allobs:
                     g.objects.link(o)
@@ -196,13 +202,18 @@ if __name__ == "__main__":
                 fix_objects_origin(allobs, g)
             if export_data['type'] == 'SCENE':
                 sname = export_data['scene']
-                main_source = append_link.append_scene(file_name=data['source_filepath'],
-                                                       scenename=sname)
+                main_source = append_link.append_scene(
+                    file_name=data['source_filepath'],
+                    scenename=sname
+                )
                 bpy.data.scenes.remove(bpy.data.scenes['upload'])
                 main_source.name = sname
             elif export_data['type'] == 'MATERIAL':
                 matname = export_data['material']
-                main_source = append_link.append_material(file_name=data['source_filepath'], matname=matname)
+                main_source = append_link.append_material(
+                    file_name=data['source_filepath'],
+                    matname=matname
+                )
 
             bpy.ops.file.pack_all()
 
@@ -216,17 +227,23 @@ if __name__ == "__main__":
 
         files = []
         if 'THUMBNAIL' in upload_set:
-            files.append({
-                "type": "thumbnail",
-                "index": 0,
-                "file_path": export_data["thumbnail_path"]
-            })
+            files.append(
+                {
+                    "type": "thumbnail",
+                    "index": 0,
+                    "file_path": export_data["thumbnail_path"],
+                    "publish_message": None
+                }
+            )
         if 'MAINFILE' in upload_set:
-            files.append({
-                "type": "blend",
-                "index": 0,
-                "file_path": fpath
-            })
+            files.append(
+                {
+                    "type": "blend",
+                    "index": 0,
+                    "file_path": fpath,
+                    "publish_message": export_data['publish_message']
+                }
+            )
 
         bg_blender.progress('uploading')
 
@@ -235,17 +252,15 @@ if __name__ == "__main__":
         if uploaded:
             # mark on server as uploaded
             if 'MAINFILE' in upload_set:
-                confirm_data = {
-                    "verificationStatus": "uploaded"
-                }
+                confirm_data = {"verificationStatus": "uploaded"}
 
                 url = paths.get_api_url() + 'assets/'
 
-                headers = utils.get_headers(upload_data['token'])
+                headers = utils.get_headers()
 
                 url += upload_data["id"] + '/'
 
-                r = rerequests.patch(url, json=confirm_data, headers=headers, verify=True)  # files = files,
+                r = rerequests.patch(url, json=confirm_data, headers=headers, verify=True)
 
             bg_blender.progress('upload finished successfully')
         else:

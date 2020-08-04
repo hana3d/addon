@@ -32,7 +32,6 @@ from typing import List, Tuple
 import bpy
 from mathutils import Vector
 
-
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
 HIGH_PRIORITY_CLASS = 0x00000080
@@ -82,7 +81,12 @@ def get_selected_models():
     parents = []
     for ob in obs:
         if ob not in done:
-            while ob.parent is not None and ob not in done and ob.hana3d.asset_base_id != '' and ob.instance_collection is not None:
+            while (
+                ob.parent is not None
+                and ob not in done
+                and ob.hana3d.asset_base_id != ''
+                and ob.instance_collection is not None
+            ):
                 done[ob] = True
                 ob = ob.parent
 
@@ -129,7 +133,10 @@ def get_active_asset():
         return bpy.context.scene
 
     elif ui_props.asset_type == 'MATERIAL':
-        if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
+        if (
+            bpy.context.view_layer.objects.active is not None
+            and bpy.context.active_object.active_material is not None
+        ):
             return bpy.context.active_object.active_material
     return None
 
@@ -146,7 +153,10 @@ def get_upload_props():
         return s.hana3d
     elif ui_props.asset_type == 'MATERIAL':
         if hasattr(bpy.context, 'active_object'):
-            if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
+            if (
+                bpy.context.view_layer.objects.active is not None
+                and bpy.context.active_object.active_material is not None
+            ):
                 return bpy.context.active_object.active_material.hana3d
     return None
 
@@ -179,7 +189,8 @@ def save_prefs(self, context):
         # we test the api key for length, so not a random accidentally typed sequence gets saved.
         lk = len(user_preferences.api_key)
         if 0 < lk < 25:
-            # reset the api key in case the user writes some nonsense, e.g. a search string instead of the Key
+            # reset the api key in case the user writes some nonsense,
+            # e.g. a search string instead of the Key
             user_preferences.api_key = ''
             props = get_search_props()
             props.report = 'Login failed. Please paste a correct API Key.'
@@ -189,13 +200,12 @@ def save_prefs(self, context):
             'API_key_refresh': user_preferences.api_key_refresh,
             'global_dir': user_preferences.global_dir,
             'API_key_life': user_preferences.api_key_life,
-            'API_key_timeout': user_preferences.api_key_timeout
+            'API_key_timeout': user_preferences.api_key_timeout,
         }
         try:
             fpath = paths.HANA3D_SETTINGS_FILENAME
             if not os.path.exists(paths._presets):
                 os.makedirs(paths._presets)
-            f = open(fpath, 'w')
             with open(fpath, 'w') as s:
                 json.dump(prefs, s)
         except Exception as e:
@@ -209,9 +219,7 @@ def get_hidden_image(tpath, bdata_name, force_reload=False):
     if tpath.startswith('//'):
         tpath = bpy.path.abspath(tpath)
 
-    gap = '\n\n\n'
-    en = '\n'
-    if img == None or (img.filepath != tpath):
+    if img is None or (img.filepath != tpath):
         if tpath.startswith('//'):
             tpath = bpy.path.abspath(tpath)
         if not os.path.exists(tpath) or tpath == '':
@@ -240,7 +248,7 @@ def get_thumbnail(name):
     p = paths.get_addon_thumbnail_path(name)
     name = '.%s' % name
     img = bpy.data.images.get(name)
-    if img == None:
+    if img is None:
         img = bpy.data.images.load(p)
         img.colorspace_settings.name = 'Linear'
         img.name = name
@@ -291,14 +299,11 @@ def get_bounds_snappable(obs, use_modifiers=False):
     maxx = maxy = maxz = -10000000
     minx = miny = minz = 10000000
 
-    s = bpy.context.scene
-
     obcount = 0  # calculates the mesh obs. Good for non-mesh objects
     matrix_parent = parent.matrix_world
     for ob in obs:
         # bb=ob.bound_box
         mw = ob.matrix_world
-        subp = ob.parent
         # while parent.parent is not None:
         #     mw =
 
@@ -318,8 +323,9 @@ def get_bounds_snappable(obs, use_modifiers=False):
             if mesh is not None:
                 for c in mesh.vertices:
                     coord = c.co
-                    parent_coord = matrix_parent.inverted() @ mw @ Vector(
-                        (coord[0], coord[1], coord[2]))  # copy this when it works below.
+                    parent_coord = (
+                        matrix_parent.inverted() @ mw @ Vector((coord[0], coord[1], coord[2]))
+                    )  # copy this when it works below.
                     minx = min(minx, parent_coord.x)
                     miny = min(miny, parent_coord.y)
                     minz = min(minz, parent_coord.z)
@@ -345,7 +351,6 @@ def get_bounds_snappable(obs, use_modifiers=False):
 
 def get_bounds_worldspace(obs, use_modifiers=False):
     # progress('getting bounds of object(s)')
-    s = bpy.context.scene
     maxx = maxy = maxz = -10000000
     minx = miny = minz = 10000000
     obcount = 0  # calculates the mesh obs. Good for non-mesh objects
@@ -375,7 +380,7 @@ def get_bounds_worldspace(obs, use_modifiers=False):
 
 
 def is_linked_asset(ob):
-    return ob.get('asset_data') and ob.instance_collection != None
+    return ob.get('asset_data') and ob.instance_collection is not None
 
 
 def get_dimensions(obs):
@@ -387,13 +392,14 @@ def get_dimensions(obs):
 
 
 def requests_post_thread(url, json, headers):
-    r = rerequests.post(url, json=json, verify=True, headers=headers)
+    rerequests.post(url, json=json, verify=True, headers=headers)
 
 
-def get_headers(api_key):
+def get_headers():
     headers = {
         "accept": "application/json",
     }
+    api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
     if api_key != '':
         headers["Authorization"] = "Bearer %s" % api_key
     return headers
@@ -404,7 +410,7 @@ def scale_2d(v, s, p):
     return (p[0] + s[0] * (v[0] - p[0]), p[1] + s[1] * (v[1] - p[1]))
 
 
-def scale_uvs(ob, scale=1.0, pivot=Vector((.5, .5))):
+def scale_uvs(ob, scale=1.0, pivot=Vector((0.5, 0.5))):
     mesh = ob.data
     if len(mesh.uv_layers) > 0:
         uv = mesh.uv_layers[mesh.uv_layers.active_index]
@@ -416,7 +422,6 @@ def scale_uvs(ob, scale=1.0, pivot=Vector((.5, .5))):
 
 # map uv cubic and switch of auto tex space and set it to 1,1,1
 def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale=False):
-    from hana3d import bg_blender as bg
     s = bpy.context.scene
     mat_props = s.hana3d_mat
     if mat_props.automap:
@@ -448,7 +453,8 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.select_all(action='DESELECT')
 
-            # this exception is just for a 2.8 background thunmbnailer crash, can be removed when material slot select works...
+            # this exception is just for a 2.8 background thunmbnailer crash,
+            # can be removed when material slot select works...
             if bg_exception:
                 bpy.ops.mesh.select_all(action='SELECT')
             else:
@@ -456,15 +462,16 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
             scale = (scale.x + scale.y + scale.z) / 3.0
             if not just_scale:
-                bpy.ops.uv.cube_project(
-                    cube_size=scale * 2.0 / (tex_size),
-                    correct_aspect=False)  # it's * 2.0 because blender can't tell size of a unit cube :)
+                # it's * 2.0 because blender can't tell size of a unit cube :)
+                bpy.ops.uv.cube_project(cube_size=scale * 2.0 / (tex_size), correct_aspect=False)
 
             bpy.ops.object.editmode_toggle()
             tob.data.uv_layers.active = tob.data.uv_layers['automap']
             tob.data.uv_layers["automap"].active_render = True
-            # this by now works only for thumbnail preview, but should be extended to work on arbitrary objects.
-            # by now, it takes the basic uv map = 1 meter. also, it now doeasn't respect more materials on one object,
+            # this by now works only for thumbnail preview,
+            # but should be extended to work on arbitrary objects.
+            # by now, it takes the basic uv map = 1 meter. also,
+            # it now doeasn't respect more materials on one object,
             # it just scales whole UV.
             if just_scale:
                 scale_uvs(tob, scale=Vector((1 / tex_size, 1 / tex_size)))
@@ -483,7 +490,8 @@ def name_update():
             nname = nname.lower()
         nname = nname[0].upper() + nname[1:]
         props.name = nname
-        # here we need to fix the name for blender data = ' or " give problems in path evaluation down the road.
+        # here we need to fix the name for blender data = ' or "
+        # give problems in path evaluation down the road.
     fname = props.name
     fname = fname.replace('\'', '')
     fname = fname.replace('\"', '')
@@ -499,7 +507,7 @@ def params_to_dict(params):
 
 
 def dict_to_params(inputs, parameters=None):
-    if parameters == None:
+    if parameters is None:
         parameters = []
     for k in inputs.keys():
         if type(inputs[k]) == list:
@@ -514,11 +522,7 @@ def dict_to_params(inputs, parameters=None):
             value = inputs[k]
         else:
             value = str(inputs[k])
-        parameters.append(
-            {
-                "parameterType": k,
-                "value": value
-            })
+        parameters.append({"parameterType": k, "value": value})
     return parameters
 
 
@@ -537,7 +541,8 @@ def profile_is_validator():
 
 
 def guard_from_crash():
-    '''Blender tends to crash when trying to run some functions with the addon going through unregistration process.'''
+    '''Blender tends to crash when trying to run some functions
+    with the addon going through unregistration process.'''
     if bpy.context.preferences.addons.get('hana3d') is None:
         return False
     if bpy.context.preferences.addons['hana3d'].preferences is None:
@@ -567,7 +572,11 @@ def apply_rotations(objects):
         # Apply only one object at a time because some object types can't have rotation applied
         try:
             bpy.ops.object.transform_apply(
-                location=False, rotation=True, scale=False, properties=False)
+                location=False,
+                rotation=True,
+                scale=False,
+                properties=False
+            )
         except RuntimeError:
             pass
         obj.select_set(False)

@@ -16,6 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+# TODO check if this module is necessary
 
 if "bpy" in locals():
     from importlib import reload
@@ -24,9 +25,9 @@ if "bpy" in locals():
 else:
     from hana3d import utils
 
-import bpy, mathutils
-from bpy.types import (
-    Operator)
+import bpy
+import mathutils
+from bpy.types import Operator
 
 
 def getNodes(nt, node_type='OUTPUT_MATERIAL'):
@@ -55,8 +56,8 @@ def getShadersCrawl(nt, chnodes):
             if i.type == 'SHADER':
                 is_shader = False  # this is for mix nodes and group inputs..
                 if len(i.links) > 0:
-                    for l in i.links:
-                        fn = l.from_node
+                    for link in i.links:
+                        fn = link.from_node
                         if fn not in done_nodes:
                             done_nodes.append(fn)
                             chnodes.append(fn)
@@ -70,7 +71,7 @@ def getShadersCrawl(nt, chnodes):
         if is_shader:
             shaders.append((check_node, nt))
 
-    return (shaders)
+    return shaders
 
 
 def addColorCorrectors(material):
@@ -85,10 +86,13 @@ def addColorCorrectors(material):
             for i in shader.inputs:
                 if i.type == 'RGBA':
                     if len(i.links) > 0:
-                        l = i.links[0]
-                        if not (l.from_node.type == 'GROUP' and l.from_node.node_tree.name == 'hana3d_asset_tweaker'):
-                            from_socket = l.from_socket
-                            to_socket = l.to_socket
+                        link = i.links[0]
+                        if not (
+                            link.from_node.type == 'GROUP'
+                            and link.from_node.node_tree.name == 'hana3d_asset_tweaker'
+                        ):
+                            from_socket = link.from_socket
+                            to_socket = link.to_socket
 
                             g = nt.nodes.new(type='ShaderNodeGroup')
                             g.node_tree = bpy.data.node_groups['hana3d_asset_tweaker']
@@ -98,7 +102,7 @@ def addColorCorrectors(material):
                             nt.links.new(from_socket, g.inputs[0])
                             nt.links.new(g.outputs[0], to_socket)
                         else:
-                            g = l.from_node
+                            g = link.from_node
                         tweakers.append(g)
                     else:
                         g = nt.nodes.new(type='ShaderNodeGroup')
@@ -111,7 +115,6 @@ def addColorCorrectors(material):
 
 
 def modelProxy():
-    s = bpy.context.scene
     ao = bpy.context.active_object
     if utils.is_linked_asset(ao):
         utils.activate(ao)
@@ -134,7 +137,6 @@ def modelProxy():
             new_ao.empty_display_size *= 0.1
 
             bpy.ops.object.proxy_make(object=rigs[0].name)
-            proxy = bpy.context.active_object
             bpy.context.view_layer.objects.active = ao
             ao.select_set(True)
             new_ao.select_set(True)
@@ -153,7 +155,7 @@ eevee_transp_nodes = [
     'BSDF_TRANSPARENT',
     'PRINCIPLED_VOLUME',
     'VOLUME_ABSORPTION',
-    'VOLUME_SCATTER'
+    'VOLUME_SCATTER',
 ]
 
 
@@ -210,7 +212,7 @@ class BringToScene(Operator):
                 s.collection.objects.link(ob)
                 ob.select_set(True)
                 obs.append(ob)
-                if ob.parent == None:
+                if ob.parent is None:
                     parent = ob
                     bpy.context.view_layer.objects.active = parent
             except Exception as e:
@@ -233,7 +235,9 @@ class BringToScene(Operator):
             if i > 0:
                 bpy.ops.object.duplicate(linked=True)
 
-            related.append([ob, bpy.context.active_object, mathutils.Vector(bpy.context.active_object.scale)])
+            related.append(
+                [ob, bpy.context.active_object, mathutils.Vector(bpy.context.active_object.scale)]
+            )
 
         for relation in related:
             bpy.ops.object.select_all(action='DESELECT')
@@ -251,6 +255,7 @@ class BringToScene(Operator):
 
 class ModelProxy(Operator):
     """Attempt to create proxy armature from the asset"""
+
     bl_idname = "object.hana3d_make_proxy"
     bl_label = "Hana3D Make Proxy"
 
@@ -261,12 +266,16 @@ class ModelProxy(Operator):
     def execute(self, context):
         result = modelProxy()
         if not result:
-            self.report({'INFO'}, 'No proxy made.There is no armature or more than one in the model.')
+            self.report(
+                {'INFO'},
+                'No proxy made.There is no armature or more than one in the model.'
+            )
         return {'FINISHED'}
 
 
 class ColorCorrector(Operator):
     """Add color corector to the asset. """
+
     bl_idname = "object.hana3d_color_corrector"
     bl_label = "Add color corrector"
 
@@ -285,7 +294,7 @@ class ColorCorrector(Operator):
                 if ms.material not in mats:
                     mats.append(ms.material)
         for mat in mats:
-            correctors = addColorCorrectors(mat)
+            addColorCorrectors(mat)
 
         return 'FINISHED'
 

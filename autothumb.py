@@ -26,11 +26,10 @@ if "bpy" in locals():
 else:
     from hana3d import paths, utils, bg_blender
 
-import tempfile
+import json
 import os
 import subprocess
-import json
-import sys
+import tempfile
 
 import bpy
 
@@ -77,9 +76,11 @@ def update_upload_scene_preview(self, context):
 
 
 def update_upload_material_preview(self, context):
-    if hasattr(bpy.context, 'active_object') \
-            and bpy.context.view_layer.objects.active is not None \
-            and bpy.context.active_object.active_material is not None:
+    if (
+        hasattr(bpy.context, 'active_object')
+        and bpy.context.view_layer.objects.active is not None
+        and bpy.context.active_object.active_material is not None
+    ):
         mat = bpy.context.active_object.active_material
         props = mat.hana3d
         imgpath = props.thumbnail
@@ -129,32 +130,51 @@ def start_thumbnailer(self, context):
             obnames.append(ob.name)
         with open(datafile, 'w') as s:
             hana3d = mainmodel.hana3d
-            json.dump({
-                "type": "model",
-                "models": str(obnames),
-                "thumbnail_angle": hana3d.thumbnail_angle,
-                "thumbnail_snap_to": hana3d.thumbnail_snap_to,
-                "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
-                "thumbnail_resolution": hana3d.thumbnail_resolution,
-                "thumbnail_samples": hana3d.thumbnail_samples,
-                "thumbnail_denoising": hana3d.thumbnail_denoising,
-            }, s)
+            json.dump(
+                {
+                    "type": "model",
+                    "models": str(obnames),
+                    "thumbnail_angle": hana3d.thumbnail_angle,
+                    "thumbnail_snap_to": hana3d.thumbnail_snap_to,
+                    "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
+                    "thumbnail_resolution": hana3d.thumbnail_resolution,
+                    "thumbnail_samples": hana3d.thumbnail_samples,
+                    "thumbnail_denoising": hana3d.thumbnail_denoising,
+                },
+                s,
+            )
 
-        proc = subprocess.Popen([
-            binary_path,
-            "--background",
-            "-noaudio",
-            tfpath,
-            "--python", os.path.join(script_path, "autothumb_model_bg.py"),
-            "--", datafile, filepath, thumb_path, tempdir
-        ], bufsize=1, stdout=subprocess.PIPE, stdin=subprocess.PIPE, creationflags=utils.get_process_flags())
+        proc = subprocess.Popen(
+            [
+                binary_path,
+                "--background",
+                "-noaudio",
+                tfpath,
+                "--python",
+                os.path.join(script_path, "autothumb_model_bg.py"),
+                "--",
+                datafile,
+                filepath,
+                thumb_path,
+                tempdir,
+            ],
+            bufsize=1,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            creationflags=utils.get_process_flags(),
+        )
 
-        eval_path_computing = "bpy.data.objects['%s'].hana3d.is_generating_thumbnail" % mainmodel.name
-        eval_path_state = "bpy.data.objects['%s'].hana3d.thumbnail_generating_state" % mainmodel.name
+        eval_path_computing = "bpy.data.objects['%s'].hana3d.is_generating_thumbnail" % mainmodel.name  # noqa E501
+        eval_path_state = "bpy.data.objects['%s'].hana3d.thumbnail_generating_state" % mainmodel.name  # noqa E501
         eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
-        bg_blender.add_bg_process(eval_path_computing=eval_path_computing, eval_path_state=eval_path_state,
-                                  eval_path=eval_path, process_type='THUMBNAILER', process=proc)
+        bg_blender.add_bg_process(
+            eval_path_computing=eval_path_computing,
+            eval_path_state=eval_path_state,
+            eval_path=eval_path,
+            process_type='THUMBNAILER',
+            process=proc,
+        )
 
         mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
         mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
@@ -202,35 +222,54 @@ def start_material_thumbnailer(self, context):
 
         with open(datafile, 'w') as s:
             hana3d = mat.hana3d
-            json.dump({
-                "type": "material",
-                "material": mat.name,
-                "thumbnail_type": hana3d.thumbnail_generator_type,
-                "thumbnail_scale": hana3d.thumbnail_scale,
-                "thumbnail_background": hana3d.thumbnail_background,
-                "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
-                "thumbnail_resolution": hana3d.thumbnail_resolution,
-                "thumbnail_samples": hana3d.thumbnail_samples,
-                "thumbnail_denoising": hana3d.thumbnail_denoising,
-                "adaptive_subdivision": hana3d.adaptive_subdivision,
-                "texture_size_meters": hana3d.texture_size_meters,
-            }, s)
+            json.dump(
+                {
+                    "type": "material",
+                    "material": mat.name,
+                    "thumbnail_type": hana3d.thumbnail_generator_type,
+                    "thumbnail_scale": hana3d.thumbnail_scale,
+                    "thumbnail_background": hana3d.thumbnail_background,
+                    "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
+                    "thumbnail_resolution": hana3d.thumbnail_resolution,
+                    "thumbnail_samples": hana3d.thumbnail_samples,
+                    "thumbnail_denoising": hana3d.thumbnail_denoising,
+                    "adaptive_subdivision": hana3d.adaptive_subdivision,
+                    "texture_size_meters": hana3d.texture_size_meters,
+                },
+                s,
+            )
 
-        proc = subprocess.Popen([
-            binary_path,
-            "--background",
-            "-noaudio",
-            tfpath,
-            "--python", os.path.join(script_path, "autothumb_material_bg.py"),
-            "--", datafile, filepath, thumb_path, tempdir
-        ], bufsize=1, stdout=subprocess.PIPE, stdin=subprocess.PIPE, creationflags=utils.get_process_flags())
+        proc = subprocess.Popen(
+            [
+                binary_path,
+                "--background",
+                "-noaudio",
+                tfpath,
+                "--python",
+                os.path.join(script_path, "autothumb_material_bg.py"),
+                "--",
+                datafile,
+                filepath,
+                thumb_path,
+                tempdir,
+            ],
+            bufsize=1,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            creationflags=utils.get_process_flags(),
+        )
 
         eval_path_computing = "bpy.data.materials['%s'].hana3d.is_generating_thumbnail" % mat.name
         eval_path_state = "bpy.data.materials['%s'].hana3d.thumbnail_generating_state" % mat.name
         eval_path = "bpy.data.materials['%s']" % mat.name
 
-        bg_blender.add_bg_process(eval_path_computing=eval_path_computing, eval_path_state=eval_path_state,
-                                  eval_path=eval_path, process_type='THUMBNAILER', process=proc)
+        bg_blender.add_bg_process(
+            eval_path_computing=eval_path_computing,
+            eval_path_state=eval_path_state,
+            eval_path=eval_path,
+            process_type='THUMBNAILER',
+            process=proc,
+        )
 
         mat.hana3d.thumbnail = rel_thumb_path + '.png'
         mat.hana3d.thumbnail_generating_state = 'Saving .blend file'
@@ -296,6 +335,7 @@ def start_scene_thumbnailer(self, context):
 
 class GenerateThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
+
     bl_idname = "object.hana3d_generate_thumbnail"
     bl_label = "Hana3D Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
@@ -341,6 +381,7 @@ class GenerateThumbnailOperator(bpy.types.Operator):
 
 class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     """Tooltip"""
+
     bl_idname = "object.hana3d_material_thumbnail"
     bl_label = "Hana3D Material Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
@@ -379,6 +420,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
 class GenerateSceneThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for scene"""
+
     bl_idname = "object.hana3d_scene_thumbnail"
     bl_label = "Hana3D Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}

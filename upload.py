@@ -20,44 +20,41 @@
 if "bpy" in locals():
     from importlib import reload
 
-    asset_inspector = reload(asset_inspector)
     paths = reload(paths)
     utils = reload(utils)
     bg_blender = reload(bg_blender)
     autothumb = reload(autothumb)
     version_checker = reload(version_checker)
-    search = reload(search)
-    ui_panels = reload(ui_panels)
     ui = reload(ui)
     overrides = reload(overrides)
-    colors = reload(colors)
     rerequests = reload(rerequests)
 else:
-    from hana3d import asset_inspector, paths, utils, bg_blender, autothumb, version_checker, search, ui_panels, ui, \
-        overrides, colors, rerequests
+    from hana3d import (
+        paths,
+        utils,
+        bg_blender,
+        autothumb,
+        version_checker,
+        ui,
+        overrides,
+        rerequests,
+    )
 
-import tempfile
-import os
-import subprocess
 import json
+import os
 import re
+import subprocess
+import tempfile
+import threading
 
 import bpy
 import requests
-import threading
-
-from bpy.types import (
-    Operator,
-    Panel,
-    AddonPreferences,
-    PropertyGroup,
-    UIList
-)
-from bpy.props import (  # TODO only keep the ones actually used when cleaning
-    EnumProperty,
+from bpy.props import (
     BoolProperty,
-    StringProperty,
+    EnumProperty,
+    StringProperty
 )
+from bpy.types import Operator
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
@@ -101,8 +98,6 @@ def get_missing_data_model(props):
         write_to_report(props, 'Add thumbnail:')
 
         props.report += props.thumbnail_generating_state + '\n'
-    if props.engine == 'NONE':
-        write_to_report(props, 'Set at least one rendering/output engine')
     if not any(props.dimensions):
         write_to_report(props, 'Run autotags operator or fill in dimensions manually')
 
@@ -116,8 +111,6 @@ def get_missing_data_scene(props):
     if not props.has_thumbnail:
         write_to_report(props, 'Add thumbnail:')
         props.report += props.thumbnail_generating_state + '\n'
-    if props.engine == 'NONE':
-        write_to_report(props, 'Set at least one rendering/output engine')
 
 
 def get_missing_data_material(props):
@@ -130,14 +123,11 @@ def get_missing_data_material(props):
     if not props.has_thumbnail:
         write_to_report(props, 'Add thumbnail:')
         props.report += props.thumbnail_generating_state
-    if props.engine == 'NONE':
-        write_to_report(props, 'Set rendering/output engine')
 
 
 def sub_to_camel(content):
-    replaced = re.sub(r"_.",
-                      lambda m: m.group(0)[1].upper(), content)
-    return (replaced)
+    replaced = re.sub(r"_.", lambda m: m.group(0)[1].upper(), content)
+    return replaced
 
 
 def camel_to_sub(content):
@@ -146,9 +136,6 @@ def camel_to_sub(content):
 
 
 def get_upload_data(self, context, asset_type):
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-    api_key = user_preferences.api_key
-
     export_data = {
         "type": asset_type,
     }
@@ -170,80 +157,25 @@ def get_upload_data(self, context, asset_type):
         eval_path_state = "bpy.data.objects['%s'].hana3d.upload_state" % mainmodel.name
         eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
-        engines = [props.engine.lower()]
-        if props.engine1 != 'NONE':
-            engines.append(props.engine1.lower())
-        if props.engine2 != 'NONE':
-            engines.append(props.engine2.lower())
-        if props.engine3 != 'NONE':
-            engines.append(props.engine3.lower())
-        if props.engine == 'OTHER':
-            engines.append(props.engine_other.lower())
-
-        style = props.style.lower()
-        # if style == 'OTHER':
-        #     style = props.style_other.lower()
-
-        pl_dict = {'FINISHED': 'finished', 'TEMPLATE': 'template'}
-
         upload_data = {
             "assetType": 'model',
-
         }
         upload_params = {
-            "productionLevel": props.production_level.lower(),
-            "model_style": style,
-            "engines": engines,
-            "modifiers": comma2array(props.modifiers),
-            "materials": comma2array(props.materials),
-            "shaders": comma2array(props.shaders),
-            "uv": props.uv,
             "dimensionX": round(props.dimensions[0], 4),
             "dimensionY": round(props.dimensions[1], 4),
             "dimensionZ": round(props.dimensions[2], 4),
-
             "boundBoxMinX": round(props.bbox_min[0], 4),
             "boundBoxMinY": round(props.bbox_min[1], 4),
             "boundBoxMinZ": round(props.bbox_min[2], 4),
-
             "boundBoxMaxX": round(props.bbox_max[0], 4),
             "boundBoxMaxY": round(props.bbox_max[1], 4),
             "boundBoxMaxZ": round(props.bbox_max[2], 4),
-
-            "animated": props.animated,
-            "rig": props.rig,
-            "simulation": props.simulation,
-            "purePbr": props.pbr,
             "faceCount": props.face_count,
             "faceCountRender": props.face_count_render,
-            "manifold": props.manifold,
             "objectCount": props.object_count,
-
-            "procedural": props.is_procedural,
-            "nodeCount": props.node_count,
-            "textureCount": props.texture_count,
-            "megapixels": round(props.total_megapixels / 1000000),
-            # "scene": props.is_scene,
+            "manufacturer": props.manufacturer,
+            "designer": props.designer,
         }
-        if props.use_design_year:
-            upload_params["designYear"] = props.design_year
-        if props.condition != 'UNSPECIFIED':
-            upload_params["condition"] = props.condition.lower()
-        if props.pbr:
-            pt = props.pbr_type
-            pt = pt.lower()
-            upload_params["pbrType"] = pt
-
-        if props.texture_resolution_max > 0:
-            upload_params["textureResolutionMax"] = props.texture_resolution_max
-            upload_params["textureResolutionMin"] = props.texture_resolution_min
-        if props.mesh_poly_type != 'OTHER':
-            upload_params["meshPolyType"] = props.mesh_poly_type.lower()  # .replace('_',' ')
-
-        optional_params = ['manufacturer', 'designer', 'design_collection', 'design_variant']
-        for p in optional_params:
-            if eval('props.%s' % p) != '':
-                upload_params[sub_to_camel(p)] = eval('props.%s' % p)
 
     if asset_type == 'SCENE':
         # Prepare to save the file
@@ -258,58 +190,15 @@ def get_upload_data(self, context, asset_type):
         eval_path_state = "bpy.data.scenes['%s'].hana3d.upload_state" % s.name
         eval_path = "bpy.data.scenes['%s']" % s.name
 
-        engines = [props.engine.lower()]
-        if props.engine1 != 'NONE':
-            engines.append(props.engine1.lower())
-        if props.engine2 != 'NONE':
-            engines.append(props.engine2.lower())
-        if props.engine3 != 'NONE':
-            engines.append(props.engine3.lower())
-        if props.engine == 'OTHER':
-            engines.append(props.engine_other.lower())
-
-        style = props.style.lower()
-        # if style == 'OTHER':
-        #     style = props.style_other.lower()
-
-        pl_dict = {'FINISHED': 'finished', 'TEMPLATE': 'template'}
-
         upload_data = {
             "assetType": 'scene',
-
         }
         upload_params = {
-            "productionLevel": props.production_level.lower(),
-            "model_style": style,
-            "engines": engines,
-            "modifiers": comma2array(props.modifiers),
-            "materials": comma2array(props.materials),
-            "shaders": comma2array(props.shaders),
-            "uv": props.uv,
-
-            "animated": props.animated,
-            # "simulation": props.simulation,
-            "purePbr": props.pbr,
+            # TODO fix fixed values
             "faceCount": 1,  # props.face_count,
             "faceCountRender": 1,  # props.face_count_render,
             "objectCount": 1,  # props.object_count,
-
-            # "scene": props.is_scene,
         }
-        if props.use_design_year:
-            upload_params["designYear"] = props.design_year
-        if props.condition != 'UNSPECIFIED':
-            upload_params["condition"] = props.condition.lower()
-        if props.pbr:
-            pt = props.pbr_type
-            pt = pt.lower()
-            upload_params["pbrType"] = pt
-
-        if props.texture_resolution_max > 0:
-            upload_params["textureResolutionMax"] = props.texture_resolution_max
-            upload_params["textureResolutionMin"] = props.texture_resolution_min
-        if props.mesh_poly_type != 'OTHER':
-            upload_params["meshPolyType"] = props.mesh_poly_type.lower()  # .replace('_',' ')
 
     elif asset_type == 'MATERIAL':
         mat = bpy.context.active_object.active_material
@@ -319,61 +208,22 @@ def get_upload_data(self, context, asset_type):
 
         export_data["material"] = str(mat.name)
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-        # mat analytics happen here, since they don't take up any time...
-        asset_inspector.check_material(props, mat)
 
         eval_path_computing = "bpy.data.materials['%s'].hana3d.uploading" % mat.name
         eval_path_state = "bpy.data.materials['%s'].hana3d.upload_state" % mat.name
         eval_path = "bpy.data.materials['%s']" % mat.name
 
-        engine = props.engine
-        if engine == 'OTHER':
-            engine = props.engine_other
-        engine = engine.lower()
-        style = props.style.lower()
-        # if style == 'OTHER':
-        #     style = props.style_other.lower()
-
         upload_data = {
             "assetType": 'material',
-
         }
 
-        upload_params = {
-            "material_style": style,
-            "engine": engine,
-            "shaders": comma2array(props.shaders),
-            "uv": props.uv,
-            "animated": props.animated,
-            "purePbr": props.pbr,
-            "textureSizeMeters": props.texture_size_meters,
-            "procedural": props.is_procedural,
-            "nodeCount": props.node_count,
-            "textureCount": props.texture_count,
-            "megapixels": round(props.total_megapixels / 1000000),
-
-        }
-
-        if props.pbr:
-            upload_params["pbrType"] = props.pbr_type.lower()
-
-        if props.texture_resolution_max > 0:
-            upload_params["textureResolutionMax"] = props.texture_resolution_max
-            upload_params["textureResolutionMin"] = props.texture_resolution_min
+        upload_params = {}
 
     add_version(upload_data)
 
     upload_data["name"] = props.name
     upload_data["description"] = props.description
     upload_data["tags"] = comma2array(props.tags)
-    if props.category == '':
-        upload_data["category"] = asset_type.lower()
-    else:
-        upload_data["category"] = props.category
-    if props.subcategory != '':
-        upload_data["category"] = props.subcategory
-    upload_data["license"] = props.license
-    upload_data["token"] = user_preferences.api_key
 
     if props.asset_base_id != '':
         upload_data['assetBaseId'] = props.asset_base_id
@@ -388,16 +238,15 @@ def get_upload_data(self, context, asset_type):
     metadata = {}
     list_clients = getattr(props, 'client', '').split(',')
     list_skus = getattr(props, 'sku', '').split(',')
-    product_info = [
-        {'client': client, 'sku': sku}
-        for client, sku in zip(list_clients, list_skus)
-    ]
+    product_info = [{'client': client, 'sku': sku} for client, sku in zip(list_clients, list_skus)]
     if len(product_info) > 0:
         metadata['product_info'] = product_info
     if hasattr(props, 'custom_props'):
         metadata.update(props.custom_props)
     if metadata:
         upload_data['metadata'] = metadata
+
+    export_data['publish_message'] = props.publish_message
 
     return export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props
 
@@ -406,17 +255,15 @@ def validate_upload_data(props):
     list_clients = getattr(props, 'client', '').split(',')
     list_skus = getattr(props, 'sku', '').split(',')
 
-    assert len(list_clients) == len(list_skus), 'Number of clients must be the same as number of SKUs'
+    assert len(list_clients) == len(list_skus), 'Number of clients must be the same as number of SKUs'  # noqa E501
 
 
-def verification_status_change_thread(asset_id, state, api_key):
-    upload_data = {
-        "verificationStatus": state
-    }
+def verification_status_change_thread(asset_id, state):
+    upload_data = {"verificationStatus": state}
     url = paths.get_api_url() + 'assets/' + str(asset_id) + '/'
-    headers = utils.get_headers(api_key)
+    headers = utils.get_headers()
     try:
-        r = rerequests.patch(url, json=upload_data, headers=headers, verify=True)  # files = files,
+        rerequests.patch(url, json=upload_data, headers=headers, verify=True)
     except requests.exceptions.RequestException as e:
         print(e)
         return {'CANCELLED'}
@@ -433,7 +280,10 @@ def get_upload_location(props):
     if ui_props.asset_type == 'SCENE':
         return None
     elif ui_props.asset_type == 'MATERIAL':
-        if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
+        if (
+            bpy.context.view_layer.objects.active is not None
+            and bpy.context.active_object.active_material is not None
+        ):
             return bpy.context.active_object.location
     return None
 
@@ -480,12 +330,19 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     if not reupload:
         props.asset_base_id = ''
         props.id = ''
-    export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props = get_upload_data(self, context,
-                                                                                                       asset_type)
-    validate_upload_data(props)  # We have to validate here as get_upload_data() is called in other parts of the code
+    (
+        export_data,
+        upload_data,
+        eval_path_computing,
+        eval_path_state,
+        eval_path,
+        props,
+    ) = get_upload_data(self, context, asset_type)
+    # We have to validate here as get_upload_data() is called in other parts of the code
+    validate_upload_data(props)
     # utils.pprint(upload_data)
-    upload_data['parameters'] = utils.dict_to_params(
-        upload_data['parameters'])  # weird array conversion only for upload, not for tooltips.
+    # weird array conversion only for upload, not for tooltips.
+    upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -518,14 +375,19 @@ def start_upload(self, context, asset_type, reupload, upload_set):
     # first upload metadata to server, so it can be saved inside the current file
     url = paths.get_api_url() + 'assets/'
 
-    headers = utils.get_headers(upload_data['token'])
+    headers = utils.get_headers()
 
-    # upload_data['license'] = 'ovejajojo'
     json_metadata = upload_data  # json.dumps(upload_data, ensure_ascii=False).encode('utf8')
     global reports
     if props.asset_base_id == '':
         try:
-            r = rerequests.post(url, json=json_metadata, headers=headers, verify=True, immediate=True)  # files = files,
+            r = rerequests.post(
+                url,
+                json=json_metadata,
+                headers=headers,
+                verify=True,
+                immediate=True
+            )
             ui.add_report('uploaded metadata')
             utils.p(r.text)
         except requests.exceptions.RequestException as e:
@@ -539,7 +401,13 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         try:
             if 'MAINFILE' in upload_set:
                 json_metadata["verificationStatus"] = "uploading"
-            r = rerequests.put(url, json=json_metadata, headers=headers, verify=True, immediate=True)  # files = files,
+            r = rerequests.put(
+                url,
+                json=json_metadata,
+                headers=headers,
+                verify=True,
+                immediate=True
+            )
             ui.add_report('uploaded metadata')
             # parse the request
             # print('uploaded metadata')
@@ -581,17 +449,30 @@ def start_upload(self, context, asset_type, reupload, upload_set):
         with open(datafile, 'w') as s:
             json.dump(data, s)
 
-        proc = subprocess.Popen([
-            binary_path,
-            "--background",
-            "-noaudio",
-            clean_file_path,
-            "--python", os.path.join(script_path, "upload_bg.py"),
-            "--", datafile  # ,filepath, tempdir
-        ], bufsize=5000, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [
+                binary_path,
+                "--background",
+                "-noaudio",
+                clean_file_path,
+                "--python",
+                os.path.join(script_path, "upload_bg.py"),
+                "--",
+                datafile,  # ,filepath, tempdir
+            ],
+            bufsize=5000,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
 
-        bg_blender.add_bg_process(eval_path_computing=eval_path_computing, eval_path_state=eval_path_state,
-                                  eval_path=eval_path, process_type='UPLOAD', process=proc, location=location)
+        bg_blender.add_bg_process(
+            eval_path_computing=eval_path_computing,
+            eval_path_state=eval_path_state,
+            eval_path=eval_path,
+            process_type='UPLOAD',
+            process=proc,
+            location=location,
+        )
 
         if autopack is True:
             bpy.ops.file.autopack_toggle()
@@ -615,6 +496,7 @@ asset_types = (
 
 class UploadOperator(Operator):
     """Tooltip"""
+
     bl_idname = "object.hana3d_upload"
     bl_description = "Upload or re-upload asset + thumbnail + metadata"
 
@@ -633,26 +515,14 @@ class UploadOperator(Operator):
         name="reupload",
         description="reupload but also draw so that it asks what to reupload",
         default=False,
-        options={'SKIP_SAVE'}
+        options={'SKIP_SAVE'},
     )
 
-    metadata: BoolProperty(
-        name="metadata",
-        default=True,
-        options={'SKIP_SAVE'}
-    )
+    metadata: BoolProperty(name="metadata", default=True, options={'SKIP_SAVE'})
 
-    thumbnail: BoolProperty(
-        name="thumbnail",
-        default=False,
-        options={'SKIP_SAVE'}
-    )
+    thumbnail: BoolProperty(name="thumbnail", default=False, options={'SKIP_SAVE'})
 
-    main_file: BoolProperty(
-        name="main file",
-        default=False,
-        options={'SKIP_SAVE'}
-    )
+    main_file: BoolProperty(name="main file", default=False, options={'SKIP_SAVE'})
 
     @classmethod
     def poll(cls, context):
@@ -660,10 +530,7 @@ class UploadOperator(Operator):
 
     def execute(self, context):
         bpy.ops.object.hana3d_auto_tags()
-        props = utils.get_upload_props()
 
-        # TODO: separate asset properties in postgres from properties in .blend and
-        # check if object was modified
         upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
 
         result = start_upload(self, context, self.asset_type, self.reupload, upload_set)
@@ -696,20 +563,16 @@ class UploadOperator(Operator):
 
 class AssetVerificationStatusChange(Operator):
     """Change verification status"""
+
     bl_idname = "object.hana3d_change_status"
     bl_description = "Change asset ststus"
     bl_label = "Change verification status"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     # type of upload - model, material, textures, e.t.c.
-    asset_id: StringProperty(
-        name="asset id",
-    )
+    asset_id: StringProperty(name="asset id",)
 
-    state: StringProperty(
-        name="verification_status",
-        default='uploaded'
-    )
+    state: StringProperty(name="verification_status", default='uploaded')
 
     @classmethod
     def poll(cls, context):
@@ -722,8 +585,6 @@ class AssetVerificationStatusChange(Operator):
         # layout.prop(self, 'state')
 
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
-
         # update status in search results for validator's clarity
         sr = bpy.context.scene['search results']
         sro = bpy.context.scene['search results orig']['results']
@@ -735,8 +596,10 @@ class AssetVerificationStatusChange(Operator):
             if r['id'] == self.asset_id:
                 r['verificationStatus'] = self.state
 
-        thread = threading.Thread(target=verification_status_change_thread,
-                                  args=(self.asset_id, self.state, preferences.api_key))
+        thread = threading.Thread(
+            target=verification_status_change_thread,
+            args=(self.asset_id, self.state)
+        )
         thread.start()
         return {'FINISHED'}
 

@@ -19,10 +19,10 @@
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 3, 0),
+    "version": (0, 4, 0),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
-    "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",
+    "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
     "warning": "",
     # "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/hana3d.html",
     "category": "3D View",
@@ -43,43 +43,45 @@ if "bpy" in locals():
     utils = reload(utils)
     overrides = reload(overrides)
     ui_panels = reload(ui_panels)
-    categories = reload(categories)
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
     custom_props = reload(custom_props)
 else:
-    from hana3d import asset_inspector, search, download, upload, autothumb, ui, icons, bg_blender, paths, \
-        utils, \
-        overrides, ui_panels, categories, hana3d_oauth, tasks_queue, custom_props
+    from hana3d import (
+        asset_inspector,
+        search,
+        download,
+        upload,
+        autothumb,
+        ui,
+        icons,
+        bg_blender,
+        paths,
+        utils,
+        overrides,
+        ui_panels,
+        hana3d_oauth,
+        tasks_queue,
+        custom_props,
+    )
 
-import os
 import math
-import time
-# import logging
-import bpy
 
-from bpy.app.handlers import persistent
+import bpy
 import bpy.utils.previews
-import mathutils
-from mathutils import Vector
+from bpy.app.handlers import persistent
 from bpy.props import (
-    IntProperty,
+    BoolProperty,
+    EnumProperty,
     FloatProperty,
     FloatVectorProperty,
-    StringProperty,
-    EnumProperty,
-    BoolProperty,
+    IntProperty,
     PointerProperty,
+    StringProperty
 )
-from bpy.types import (
-    Operator,
-    Panel,
-    AddonPreferences,
-    PropertyGroup,
-)
+from bpy.types import AddonPreferences, PropertyGroup
 
 from . import addon_updater_ops
-
 
 # logging.basicConfig(filename = 'hana3d.log', level = logging.INFO,
 #                     format = '	%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d:%(message)s')
@@ -98,7 +100,9 @@ def scene_load(context):
 
 @bpy.app.handlers.persistent
 def check_timers_timer():
-    ''' checks if all timers are registered regularly. Prevents possible bugs from stopping the addon.'''
+    '''Checks if all timers are registered regularly.
+    Prevents possible bugs from stopping the addon.
+    '''
     if not bpy.app.timers.is_registered(search.timer_update):
         bpy.app.timers.register(search.timer_update)
     if not bpy.app.timers.is_registered(download.timer_update):
@@ -109,73 +113,6 @@ def check_timers_timer():
         bpy.app.timers.register(bg_blender.bg_update)
     return 5.0
 
-
-licenses = (
-    ('royalty_free', 'Royalty Free', 'royalty free commercial license'),
-    ('cc_zero', 'Creative Commons Zero', 'Creative Commons Zero'),
-)
-conditions = (
-    ('UNSPECIFIED', 'Unspecified', "Don't use this in search"),
-    ('NEW', 'New', 'Shiny new item'),
-    ('USED', 'Used', 'Casually used item'),
-    ('OLD', 'Old', 'Old item'),
-    ('DESOLATE', 'Desolate', 'Desolate item - dusty & rusty'),
-)
-model_styles = (
-    ('REALISTIC', 'Realistic', "photo realistic model"),
-    ('PAINTERLY', 'Painterly', 'hand painted with visible strokes, mostly for games'),
-    ('LOWPOLY', 'Lowpoly', "Lowpoly art -don't mix up with polycount!"),
-    ('ANIME', 'Anime', 'Anime style'),
-    ('2D_VECTOR', '2D Vector', '2D vector'),
-    ('3D_GRAPHICS', '3D Graphics', '3D graphics'),
-    ('OTHER', 'Other', 'Other style'),
-)
-search_model_styles = (
-    ('REALISTIC', 'Realistic', "photo realistic model"),
-    ('PAINTERLY', 'Painterly', 'hand painted with visible strokes, mostly for games'),
-    ('LOWPOLY', 'Lowpoly', "Lowpoly art -don't mix up with polycount!"),
-    ('ANIME', 'Anime', 'Anime style'),
-    ('2D_VECTOR', '2D Vector', '2D vector'),
-    ('3D_GRAPHICS', '3D Graphics', '3D graphics'),
-    ('OTHER', 'Other', 'Other Style'),
-    ('ANY', 'Any', 'Any Style'),
-)
-material_styles = (
-    ('REALISTIC', 'Realistic', "photo realistic model"),
-    ('NPR', 'Non photorealistic', 'hand painted with visible strokes, mostly for games'),
-    ('OTHER', 'Other', 'Other style'),
-)
-search_material_styles = (
-    ('REALISTIC', 'Realistic', "photo realistic model"),
-    ('NPR', 'Non photorealistic', 'hand painted with visible strokes, mostly for games'),
-    ('ANY', 'Any', 'Any'),
-)
-engines = (
-    ('CYCLES', 'Cycles', 'blender cycles pathtracer'),
-    ('EEVEE', 'Eevee', 'blender eevee renderer'),
-    ('OCTANE', 'Octane', 'octane render enginge'),
-    ('ARNOLD', 'Arnold', 'arnold render engine'),
-    ('V-RAY', 'V-Ray', 'V-Ray renderer'),
-    ('UNREAL', 'Unreal', 'Unreal engine'),
-    ('UNITY', 'Unity', 'Unity engine'),
-    ('GODOT', 'Godot', 'Godot engine'),
-    ('3D-PRINT', '3D printer', 'object can be 3D printed'),
-    ('OTHER', 'Other', 'any other engine'),
-    ('NONE', 'None', 'no more engine block'),
-)
-pbr_types = (
-    ('METALLIC', 'Metallic-Roughness', 'Metallic/Roughness PBR material type'),
-    ('SPECULAR', 'Specular  Glossy', ''),
-)
-
-mesh_poly_types = (
-    ('QUAD', 'quad', ''),
-    ('QUAD_DOMINANT', 'quad_dominant', ''),
-    ('TRI_DOMINANT', 'tri_dominant', ''),
-    ('TRI', 'tri', ''),
-    ('NGON', 'ngon_dominant', ''),
-    ('OTHER', 'other', ''),
-)
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -209,28 +146,6 @@ def get_upload_asset_type(self):
     return asset_type
 
 
-def get_subcategory_enums(self, context):
-    wm = bpy.context.window_manager
-    asset_type = get_upload_asset_type(self)
-    items = []
-    if self.category != '':
-        asset_categories = categories.get_category(wm['hana3d_categories'], cat_path=(asset_type, self.category,))
-        for c in asset_categories['children']:
-            items.append((c['slug'], c['name'], c['description']))
-
-    return items
-
-
-def get_category_enums(self, context):
-    wm = bpy.context.window_manager
-    asset_type = get_upload_asset_type(self)
-    asset_categories = categories.get_category(wm['hana3d_categories'], cat_path=(asset_type,))
-    items = []
-    for c in asset_categories['children']:
-        items.append((c['slug'], c['name'], c['description']))
-    return items
-
-
 def switch_search_results(self, context):
     s = bpy.context.scene
     props = s.Hana3DUI
@@ -252,9 +167,21 @@ def switch_search_results(self, context):
 def asset_type_callback(self, context):
     if self.down_up == 'SEARCH':
         items = (
-            ('MODEL', 'Find Models', 'Find models in the Hana3D online database', 'OBJECT_DATAMODE', 0),
+            (
+                'MODEL',
+                'Find Models',
+                'Find models in the Hana3D online database',
+                'OBJECT_DATAMODE',
+                0,
+            ),
             ('SCENE', 'Find Scenes', 'Find scenes in the Hana3D online database', 'SCENE_DATA', 1),
-            ('MATERIAL', 'Find Materials', 'Find materials in the Hana3D online database', 'MATERIAL', 2),
+            (
+                'MATERIAL',
+                'Find Materials',
+                'Find materials in the Hana3D online database',
+                'MATERIAL',
+                2,
+            ),
             # ('HDR', 'Find HDRs', 'Find HDRs in the Hana3D online database', 'WORLD_DATA', 3),
         )
     else:
@@ -282,15 +209,11 @@ class Hana3DUIProps(PropertyGroup):
         items=asset_type_callback,
         description="Activate asset in UI",
         default=None,
-        update=switch_search_results
+        update=switch_search_results,
     )
     # these aren't actually used ( by now, seems to better use globals in UI module:
     draw_tooltip: BoolProperty(name="Draw Tooltip", default=False)
-    addon_update: BoolProperty(name="Should Update Addon", default=False)
-    tooltip: StringProperty(
-        name="Tooltip",
-        description="asset preview info",
-        default="")
+    tooltip: StringProperty(name="Tooltip", description="asset preview info", default="")
 
     ui_scale = 1
 
@@ -300,9 +223,19 @@ class Hana3DUIProps(PropertyGroup):
     thumb_size: IntProperty(name="Thumbnail Size", default=thumb_size_def, min=-1, max=256)
 
     margin: IntProperty(name="Margin", default=margin_def, min=-1, max=256)
-    highlight_margin: IntProperty(name="Highlight Margin", default=int(margin_def / 2), min=-10, max=256)
+    highlight_margin: IntProperty(
+        name="Highlight Margin",
+        default=int(margin_def / 2),
+        min=-10,
+        max=256
+    )
 
-    bar_height: IntProperty(name="Bar Height", default=thumb_size_def + 2 * margin_def, min=-1, max=2048)
+    bar_height: IntProperty(
+        name="Bar Height",
+        default=thumb_size_def + 2 * margin_def,
+        min=-1,
+        max=2048
+    )
     bar_x_offset: IntProperty(name="Bar X Offset", default=20, min=0, max=5000)
     bar_y_offset: IntProperty(name="Bar Y Offset", default=80, min=0, max=5000)
 
@@ -338,19 +271,18 @@ class Hana3DUIProps(PropertyGroup):
     snapped_bbox_max: FloatVectorProperty(name="Snapped Bbox Max", default=(0, 0, 0))
     snapped_normal: FloatVectorProperty(name="Snapped Normal", default=(0, 0, 0))
 
-    snapped_rotation: FloatVectorProperty(name="Snapped Rotation", default=(0, 0, 0), subtype='QUATERNION')
+    snapped_rotation: FloatVectorProperty(
+        name="Snapped Rotation",
+        default=(0, 0, 0),
+        subtype='QUATERNION'
+    )
 
     has_hit: BoolProperty(name="has_hit", default=False)
     thumbnail_image = StringProperty(
         name="Thumbnail Image",
         description="",
-        default=paths.get_addon_thumbnail_path('thumbnail_notready.jpg'))
-
-
-def search_procedural_update(self, context):
-    if self.search_procedural in ('PROCEDURAL', 'BOTH'):
-        self.search_texture_resolution = False
-    search.search_update(self, context)
+        default=paths.get_addon_thumbnail_path('thumbnail_notready.jpg'),
+    )
 
 
 def workspace_items(self, context):
@@ -359,8 +291,7 @@ def workspace_items(self, context):
         user = profile.get('user')
         if user is not None:
             workspaces = tuple(
-                (workspace['id'], workspace['name'], '',)
-                for workspace in user['workspaces']
+                (workspace['id'], workspace['name'], '',) for workspace in user['workspaces']
             )
             return workspaces
     return ()
@@ -368,30 +299,33 @@ def workspace_items(self, context):
 
 class Hana3DCommonSearchProps(object):
     # STATES
-    is_searching: BoolProperty(name="Searching", description="search is currently running (internal)", default=False)
-    is_downloading: BoolProperty(name="Downloading", description="download is currently running (internal)",
-                                 default=False)
-    search_done: BoolProperty(name="Search Completed", description="at least one search did run (internal)",
-                              default=False)
-    public_only: BoolProperty(name="Public assets", description="Search only for public assets",
-                              default=False, update=search.search_update)
-    search_error: BoolProperty(name="Search Error", description="last search had an error", default=False)
-    report: StringProperty(
-        name="Report",
-        description="errors and messages",
-        default="")
-
-    search_procedural: EnumProperty(
-        items=(
-            ('BOTH', 'Both', ''),
-            ('PROCEDURAL', 'Procedural', ''),
-            ('TEXTURE_BASED', 'Texture based', ''),
-
-        ),
-        default='BOTH',
-        description='Search only procedural/texture based assets',
-        update=search_procedural_update
+    is_searching: BoolProperty(
+        name="Searching",
+        description="search is currently running (internal)",
+        default=False
     )
+    is_downloading: BoolProperty(
+        name="Downloading",
+        description="download is currently running (internal)",
+        default=False
+    )
+    search_done: BoolProperty(
+        name="Search Completed",
+        description="at least one search did run (internal)",
+        default=False
+    )
+    public_only: BoolProperty(
+        name="Public assets",
+        description="Search only for public assets",
+        default=False,
+        update=search.search_update,
+    )
+    search_error: BoolProperty(
+        name="Search Error",
+        description="last search had an error",
+        default=False
+    )
+    report: StringProperty(name="Report", description="errors and messages", default="")
 
     search_verification_status: EnumProperty(
         name="Verification status",
@@ -419,8 +353,8 @@ class Hana3DCommonSearchProps(object):
 
 
 def name_update(self, context):
-    ''' checks for name change, because it decides if whole asset has to be re-uploaded. Name is stored in the blend file
-    and that's the reason.'''
+    ''' checks for name change, because it decides if whole asset has to be re-uploaded.
+     Name is stored in the blend file and that's the reason.'''
     utils.name_update()
 
 
@@ -449,30 +383,17 @@ def update_tags(self, context):
         props.tags = ns
 
 
-def update_free(self, context):
-    if self.is_free == False:
-        self.is_free = True
-        title = "All hana3d materials are free"
-        message = "Any material uploaded to hana3d is free." \
-                  " However, it can still earn money for the author," \
-                  " based on our fair share system. " \
-                  "Part of subscription is sent to artists based on usage by paying users."
-
-        def draw_message(self, context):
-            ui_panels.label_multiline(self.layout, text=message, icon='NONE', width=-1)
-
-        bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
-
-
 class Hana3DCommonUploadProps(object):
     id: StringProperty(
         name="Asset Version Id",
         description="Unique name of the asset version(hidden)",
-        default="")
+        default=""
+    )
     asset_base_id: StringProperty(
         name="Asset Base Id",
         description="Unique name of the asset (hidden)",
-        default="")
+        default=""
+    )
     name: StringProperty(
         name="Name",
         description="Main name of the asset",
@@ -489,80 +410,55 @@ class Hana3DCommonUploadProps(object):
     description: StringProperty(
         name="Description",
         description="Description of the asset",
-        default="")
+        default=""
+    )
     tags: StringProperty(
         name="Tags",
         description="List of tags, separated by commas (optional)",
         default="",
-        update=update_tags
+        update=update_tags,
     )
 
-    name_changed: BoolProperty(name="Name Changed",
-                               description="Name has changed, the asset has to be re-uploaded with all data",
-                               default=False)
-
-    pbr: BoolProperty(name="Pure PBR Compatible",
-                      description="Is compatible with PBR standard. This means only image textures are used with no"
-                                  " procedurals and no color correction, only pbr shader is used",
-                      default=False)
-
-    pbr_type: EnumProperty(
-        name="PBR Type",
-        items=pbr_types,
-        description="PBR type",
-        default="METALLIC",
-    )
-    license: EnumProperty(
-        items=licenses,
-        default='royalty_free',
-        description='License. Please read our help for choosing the right licenses',
+    name_changed: BoolProperty(
+        name="Name Changed",
+        description="Name has changed, the asset has to be re-uploaded with all data",
+        default=False,
     )
 
-    is_public: BoolProperty(name="Public asset", description="Upload asset as public", default=False)
+    is_public: BoolProperty(
+        name="Public asset",
+        description="Upload asset as public",
+        default=False
+    )
 
-    is_procedural: BoolProperty(name="Procedural",
-                                description="Asset is procedural - has no texture.",
-                                default=True
-                                )
-    node_count: IntProperty(name="Node count", description="Total nodes in the asset", default=0)
-    texture_count: IntProperty(name="Texture count", description="Total texture count in asset", default=0)
-    total_megapixels: IntProperty(name="Megapixels", description="Total megapixels of texture", default=0)
-
-    is_free: BoolProperty(name="Free for Everyone",
-                          description="You consent you want to release this asset as free for everyone",
-                          default=False)
-
-    uploading: BoolProperty(name="Uploading",
-                            description="True when background process is running",
-                            default=False,
-                            update=autothumb.update_upload_material_preview)
+    uploading: BoolProperty(
+        name="Uploading",
+        description="True when background process is running",
+        default=False,
+        update=autothumb.update_upload_material_preview,
+    )
     upload_state: StringProperty(
         name="State Of Upload",
         description="bg process reports for upload",
-        default='')
+        default=''
+    )
 
-    has_thumbnail: BoolProperty(name="Has Thumbnail", description="True when thumbnail was checked and loaded",
-                                default=False)
+    has_thumbnail: BoolProperty(
+        name="Has Thumbnail",
+        description="True when thumbnail was checked and loaded",
+        default=False,
+    )
 
     thumbnail_generating_state: StringProperty(
         name="Thumbnail Generating State",
         description="bg process reports for thumbnail generation",
-        default='Please add thumbnail(jpg, at least 512x512)')
+        default='Please add thumbnail(jpg, at least 512x512)',
+    )
 
     report: StringProperty(
         name="Missing Upload Properties",
         description="used to write down what's missing",
-        default='')
-
-    category: EnumProperty(
-        name="Category",
-        description="main category to put into",
-        items=get_category_enums
-    )
-    subcategory: EnumProperty(
-        name="Subcategory",
-        description="main category to put into",
-        items=get_subcategory_enums
+        default='',
     )
 
     workspace: EnumProperty(
@@ -573,110 +469,76 @@ class Hana3DCommonUploadProps(object):
         options={'ANIMATABLE'},
     )
 
+    publish_message: StringProperty(
+        name="Publish Message",
+        description="Changes from previous version",
+        default=""
+    )
+
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     search_keywords: StringProperty(
         name="Search",
         description="Search for these keywords",
         default="",
-        update=search.search_update
-    )
-    search_style: EnumProperty(
-        name="Style",
-        items=search_material_styles,
-        description="Style of material",
-        default="ANY",
         update=search.search_update,
     )
-    search_style_other: StringProperty(
-        name="Style Other",
-        description="Style not in the list",
-        default="",
-        update=search.search_update,
+
+    automap: BoolProperty(
+        name="Auto-Map",
+        description="reset object texture space and also add automatically a cube mapped UV "
+        "to the object. \n this allows most materials to apply instantly to any mesh",
+        default=False,
     )
-    search_engine: EnumProperty(
-        name='Engine',
-        items=engines,
-        default='NONE',
-        description='Output engine',
-        update=search.search_update,
-    )
-    search_engine_other: StringProperty(
-        name="Engine",
-        description="engine not specified by addon",
-        default="",
-        update=search.search_update,
-    )
-    automap: BoolProperty(name="Auto-Map",
-                          description="reset object texture space and also add automatically a cube mapped UV "
-                                      "to the object. \n this allows most materials to apply instantly to any mesh",
-                          default=False)
 
 
 class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    style: EnumProperty(
-        name="Style",
-        items=material_styles,
-        description="Style of material",
-        default="REALISTIC",
-    )
-    style_other: StringProperty(
-        name="Style Other",
-        description="Style not in the list",
-        default="",
-    )
-    engine: EnumProperty(
-        name='Engine',
-        items=engines,
-        default='CYCLES',
-        description='Output engine',
-    )
-    engine_other: StringProperty(
-        name="Engine Other",
-        description="engine not specified by addon",
-        default="",
+    # TODO remove when removing addon thumbnailer
+    texture_size_meters: FloatProperty(
+        name="Texture Size in Meters",
+        description="face count, autofilled",
+        default=1.0,
+        min=0
     )
 
-    shaders: StringProperty(
-        name="Shaders Used",
-        description="shaders used in asset, autofilled",
-        default="",
+    thumbnail_scale: FloatProperty(
+        name="Thumbnail Object Size",
+        description="size of material preview object in meters "
+        "- change for materials that look better at sizes different than 1m",
+        default=1,
+        min=0.00001,
+        max=10,
     )
-
-    is_free: BoolProperty(name="Free for Everyone",
-                          description="You consent you want to release this asset as free for everyone",
-                          default=True, update=update_free
-                          )
-
-    uv: BoolProperty(name="Needs UV", description="needs an UV set", default=False)
-    # printable_3d : BoolProperty( name = "3d printable", description = "can be 3d printed", default = False)
-    animated: BoolProperty(name="Animated", description="is animated", default=False)
-    texture_resolution_min: IntProperty(name="Texture Resolution Min", description="texture resolution minimum",
-                                        default=0)
-    texture_resolution_max: IntProperty(name="Texture Resolution Max", description="texture resolution maximum",
-                                        default=0)
-
-    texture_size_meters: FloatProperty(name="Texture Size in Meters", description="face count, autofilled",
-                                       default=1.0, min=0)
-
-    thumbnail_scale: FloatProperty(name="Thumbnail Object Size",
-                                   description="size of material preview object in meters "
-                                               "- change for materials that look better at sizes different than 1m",
-                                   default=1, min=0.00001, max=10)
-    thumbnail_background: BoolProperty(name="Thumbnail Background (for Glass only)",
-                                       description="For refractive materials, you might need a background. "
-                                                   "Don't use if thumbnail looks good without it!",
-                                       default=False)
-    thumbnail_background_lightness: FloatProperty(name="Thumbnail Background Lightness",
-                                                  description="set to make your material stand out", default=.9,
-                                                  min=0.00001, max=1)
-    thumbnail_samples: IntProperty(name="Cycles Samples",
-                                   description="cycles samples setting", default=150,
-                                   min=5, max=5000)
-    thumbnail_denoising: BoolProperty(name="Use Denoising",
-                                      description="Use denoising", default=True)
-    adaptive_subdivision: BoolProperty(name="Adaptive Subdivide",
-                                       description="Use adaptive displacement subdivision", default=False)
+    thumbnail_background: BoolProperty(
+        name="Thumbnail Background (for Glass only)",
+        description="For refractive materials, you might need a background. "
+        "Don't use if thumbnail looks good without it!",
+        default=False,
+    )
+    thumbnail_background_lightness: FloatProperty(
+        name="Thumbnail Background Lightness",
+        description="set to make your material stand out",
+        default=0.9,
+        min=0.00001,
+        max=1,
+    )
+    thumbnail_samples: IntProperty(
+        name="Cycles Samples",
+        description="cycles samples setting",
+        default=150,
+        min=5,
+        max=5000
+    )
+    thumbnail_denoising: BoolProperty(
+        name="Use Denoising",
+        description="Use denoising",
+        default=True
+    )
+    adaptive_subdivision: BoolProperty(
+        name="Adaptive Subdivide",
+        description="Use adaptive displacement subdivision",
+        default=False,
+    )
 
     thumbnail_resolution: EnumProperty(
         name="Resolution",
@@ -692,7 +554,7 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
             ('CUBE', 'Cube', 'cube'),
             ('FLUID', 'Fluid', 'Fluid'),
             ('CLOTH', 'Cloth', 'Cloth'),
-            ('HAIR', 'Hair', 'Hair  ')
+            ('HAIR', 'Hair', 'Hair  '),
         ),
         description="Style of asset",
         default="BALL",
@@ -703,11 +565,15 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         description="Path to the thumbnail - 512x512 .jpg image",
         subtype='FILE_PATH',
         default="",
-        update=autothumb.update_upload_material_preview)
+        update=autothumb.update_upload_material_preview,
+    )
 
-    is_generating_thumbnail: BoolProperty(name="Generating Thumbnail",
-                                          description="True when background process is running", default=False,
-                                          update=autothumb.update_upload_material_preview)
+    is_generating_thumbnail: BoolProperty(
+        name="Generating Thumbnail",
+        description="True when background process is running",
+        default=False,
+        update=autothumb.update_upload_material_preview,
+    )
 
     client: StringProperty(name="Client")
     sku: StringProperty(name="SKU")
@@ -716,82 +582,14 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
 
 # upload properties
 class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    style: EnumProperty(
-        name="Style",
-        items=model_styles,
-        description="Style of asset",
-        default="REALISTIC",
-    )
-    style_other: StringProperty(
-        name="Style Other",
-        description="Style not in the list",
-        default="",
-    )
-    engine: EnumProperty(
-        name='Engine',
-        items=engines,
-        default='CYCLES',
-        description='Output engine',
-    )
-
-    production_level: EnumProperty(
-        name='Production Level',
-        items=(
-            ('FINISHED', 'Finished', 'Render or animation ready asset'),
-            ('TEMPLATE', 'Template', 'Asset intended to help in creation of something else'),
-        ),
-        default='FINISHED',
-        description='Production state of the asset, \n also template should be actually finished, \n'
-                    'just the nature of it can be a template, like a thumbnailer scene, \n '
-                    'finished mesh topology as start for modelling or similar',
-    )
-
-    engine_other: StringProperty(
-        name="Engine",
-        description="engine not specified by addon",
-        default="",
-    )
-
-    engine1: EnumProperty(
-        name='2nd Engine',
-        items=engines,
-        default='NONE',
-        description='Output engine',
-    )
-    engine2: EnumProperty(
-        name='3rd Engine',
-        items=engines,
-        default='NONE',
-        description='Output engine',
-    )
-    engine3: EnumProperty(
-        name='4th Engine',
-        items=engines,
-        default='NONE',
-        description='Output engine',
-    )
-
     manufacturer: StringProperty(
         name="Manufacturer",
         description="Manufacturer, company making a design peace or product. Not you",
         default="",
     )
-
     designer: StringProperty(
         name="Designer",
         description="Author of the original design piece depicted. Usually not you",
-        default="",
-    )
-
-    design_collection: StringProperty(
-        name="Design Collection",
-        description="Fill if this piece is part of a real world design collection",
-        default="",
-    )
-
-    design_variant: StringProperty(
-        name="Variant",
-        description="Colour or material variant of the product",
         default="",
     )
 
@@ -800,11 +598,16 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         description="Path to the thumbnail - 512x512 .jpg image",
         subtype='FILE_PATH',
         default="",
-        update=autothumb.update_upload_model_preview)
+        update=autothumb.update_upload_model_preview,
+    )
 
-    thumbnail_background_lightness: FloatProperty(name="Thumbnail Background Lightness",
-                                                  description="set to make your material stand out", default=.9,
-                                                  min=0.01, max=10)
+    thumbnail_background_lightness: FloatProperty(
+        name="Thumbnail Background Lightness",
+        description="set to make your material stand out",
+        default=0.9,
+        min=0.01,
+        max=10,
+    )
 
     thumbnail_angle: EnumProperty(
         name='Thumbnail Angle',
@@ -817,7 +620,8 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         name='Model Snaps To:',
         items=thumbnail_snap,
         default='GROUND',
-        description='typical placing of the interior. Leave on ground for most objects that respect gravity :)',
+        description='typical placing of the interior.'
+        'Leave on ground for most objects that respect gravity :)',
     )
 
     thumbnail_resolution: EnumProperty(
@@ -827,44 +631,17 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default="512",
     )
 
-    thumbnail_samples: IntProperty(name="Cycles Samples",
-                                   description="cycles samples setting", default=200,
-                                   min=5, max=5000)
-    thumbnail_denoising: BoolProperty(name="Use Denoising",
-                                      description="Use denoising", default=True)
-
-    use_design_year: BoolProperty(name="Use Design Year",
-                                  description="When this thing came into world for the first time\n"
-                                              " e.g. for dinosaur, you set -240 million years ;) ",
-                                  default=False)
-    design_year: IntProperty(name="Design Year", description="when was this item designed", default=1960)
-    # use_age : BoolProperty( name = "use item age", description = "use item age", default = False)
-    condition: EnumProperty(
-        items=conditions,
-        default='UNSPECIFIED',
-        description='age of the object',
+    thumbnail_samples: IntProperty(
+        name="Cycles Samples",
+        description="cycles samples setting",
+        default=200,
+        min=5,
+        max=5000
     )
-
-    adult: BoolProperty(name="Adult Content", description="adult content", default=False)
-
-    work_hours: FloatProperty(name="Work Hours", description="How long did it take you to finish the asset?",
-                              default=0.0, min=0.0, max=8760)
-
-    modifiers: StringProperty(
-        name="Modifiers Used",
-        description="if you need specific modifiers, autofilled",
-        default="",
-    )
-
-    materials: StringProperty(
-        name="Material Names",
-        description="names of materials in the file, autofilled",
-        default="",
-    )
-    shaders: StringProperty(
-        name="Shaders Used",
-        description="shaders used in asset, autofilled",
-        default="",
+    thumbnail_denoising: BoolProperty(
+        name="Use Denoising",
+        description="Use denoising",
+        default=True
     )
 
     dimensions: FloatVectorProperty(
@@ -875,54 +652,40 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
     bbox_min: FloatVectorProperty(
         name="Bbox Min",
         description="dimensions of the whole asset hierarchy",
-        default=(-.25, -.25, 0),
+        default=(-0.25, -0.25, 0),
     )
     bbox_max: FloatVectorProperty(
         name="Bbox Max",
         description="dimensions of the whole asset hierarchy",
-        default=(.25, .25, .5),
+        default=(0.25, 0.25, 0.5),
     )
 
-    texture_resolution_min: IntProperty(name="Texture Resolution Min",
-                                        description="texture resolution min, autofilled", default=0)
-    texture_resolution_max: IntProperty(name="Texture Resolution Max",
-                                        description="texture resolution max, autofilled", default=0)
-
-    pbr: BoolProperty(name="PBR Compatible", description="Is compatible with PBR standard", default=False)
-
-    uv: BoolProperty(name="Has UV", description="has an UV set", default=False)
-    # printable_3d : BoolProperty( name = "3d printable", description = "can be 3d printed", default = False)
-    animated: BoolProperty(name="Animated", description="is animated", default=False)
     face_count: IntProperty(name="Face count", description="face count, autofilled", default=0)
-    face_count_render: IntProperty(name="Render Face Count", description="render face count, autofilled", default=0)
-
-    object_count: IntProperty(name="Number of Objects", description="how many objects are in the asset, autofilled",
-                              default=0)
-    mesh_poly_type: EnumProperty(
-        name='Dominant Poly Type',
-        items=mesh_poly_types,
-        default='OTHER',
-        description='',
+    face_count_render: IntProperty(
+        name="Render Face Count",
+        description="render face count, autofilled",
+        default=0
     )
 
-    manifold: BoolProperty(name="Manifold", description="asset is manifold, autofilled", default=False)
-
-    rig: BoolProperty(name="Rig", description="asset is rigged, autofilled", default=False)
-    simulation: BoolProperty(name="Simulation", description="asset uses simulation, autofilled", default=False)
-    '''
-    filepath : StringProperty(
-            name="Filepath",
-            description="file path",
-            default="",
-            )
-    '''
+    object_count: IntProperty(
+        name="Number of Objects",
+        description="how many objects are in the asset, autofilled",
+        default=0,
+    )
 
     # THUMBNAIL STATES
-    is_generating_thumbnail: BoolProperty(name="Generating Thumbnail",
-                                          description="True when background process is running", default=False,
-                                          update=autothumb.update_upload_model_preview)
+    is_generating_thumbnail: BoolProperty(
+        name="Generating Thumbnail",
+        description="True when background process is running",
+        default=False,
+        update=autothumb.update_upload_model_preview,
+    )
 
-    has_autotags: BoolProperty(name="Has Autotagging Done", description="True when autotagging done", default=False)
+    has_autotags: BoolProperty(
+        name="Has Autotagging Done",
+        description="True when autotagging done",
+        default=False
+    )
 
     client: StringProperty(name="Client")
     sku: StringProperty(name="SKU")
@@ -930,100 +693,12 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
 
 
 class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    style: EnumProperty(
-        name="Style",
-        items=model_styles,
-        description="Style of asset",
-        default="REALISTIC",
-    )
-    style_other: StringProperty(
-        name="Style Other",
-        description="Style not in the list",
-        default="",
-    )
-    engine: EnumProperty(
-        name='Engine',
-        items=engines,
-        default='CYCLES',
-        description='Output engine',
-    )
-
-    production_level: EnumProperty(
-        name='Production Level',
-        items=(
-            ('FINISHED', 'Finished', 'Render or animation ready asset'),
-            ('TEMPLATE', 'Template', 'Asset intended to help in creation of something else'),
-        ),
-        default='FINISHED',
-        description='Production state of the asset, \n also template should be actually finished, \n'
-                    'just the nature of it can be a template, like a thumbnailer scene, \n '
-                    'finished mesh topology as start for modelling or similar',
-    )
-
-    engine_other: StringProperty(
-        name="Engine",
-        description="engine not specified by addon",
-        default="",
-    )
-
-    engine1: EnumProperty(
-        name='2nd Engine',
-        items=engines,
-        default='NONE',
-        description='Output engine',
-    )
-    engine2: EnumProperty(
-        name='3rd Engine',
-        items=engines,
-        default='NONE',
-        description='Output engine',
-    )
-    engine3: EnumProperty(
-        name='4th Engine',
-        items=engines,
-        default='NONE',
-        description='Output engine',
-    )
-
     thumbnail: StringProperty(
         name="Thumbnail",
         description="Path to the thumbnail - 512x512 .jpg image",
         subtype='FILE_PATH',
         default="",
-        update=autothumb.update_upload_scene_preview)
-
-    use_design_year: BoolProperty(name="Use Design Year",
-                                  description="When this thing came into world for the first time\n"
-                                              " e.g. for dinosaur, you set -240 million years ;) ",
-                                  default=False)
-    design_year: IntProperty(name="Design Year", description="when was this item designed", default=1960)
-    # use_age : BoolProperty( name = "use item age", description = "use item age", default = False)
-    condition: EnumProperty(
-        items=conditions,
-        default='UNSPECIFIED',
-        description='age of the object',
-    )
-
-    adult: BoolProperty(name="Adult Content", description="adult content", default=False)
-
-    work_hours: FloatProperty(name="Work Hours", description="How long did it take you to finish the asset?",
-                              default=0.0, min=0.0, max=8760)
-
-    modifiers: StringProperty(
-        name="Modifiers Used",
-        description="if you need specific modifiers, autofilled",
-        default="",
-    )
-
-    materials: StringProperty(
-        name="Material Names",
-        description="names of materials in the file, autofilled",
-        default="",
-    )
-    shaders: StringProperty(
-        name="Shaders Used",
-        description="shaders used in asset, autofilled",
-        default="",
+        update=autothumb.update_upload_scene_preview,
     )
 
     dimensions: FloatVectorProperty(
@@ -1034,45 +709,40 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
     bbox_min: FloatVectorProperty(
         name="Dimensions",
         description="dimensions of the whole asset hierarchy",
-        default=(-.25, -.25, 0),
+        default=(-0.25, -0.25, 0),
     )
     bbox_max: FloatVectorProperty(
         name="Dimensions",
         description="dimensions of the whole asset hierarchy",
-        default=(.25, .25, .5),
+        default=(0.25, 0.25, 0.5),
     )
 
-    texture_resolution_min: IntProperty(name="Texture Resolution Min",
-                                        description="texture resolution min, autofilled", default=0)
-    texture_resolution_max: IntProperty(name="Texture Resolution Max",
-                                        description="texture resolution max, autofilled", default=0)
-
-    pbr: BoolProperty(name="PBR Compatible", description="Is compatible with PBR standard", default=False)
-
-    uv: BoolProperty(name="Has UV", description="has an UV set", default=False)
-    # printable_3d : BoolProperty( name = "3d printable", description = "can be 3d printed", default = False)
-    animated: BoolProperty(name="Animated", description="is animated", default=False)
     face_count: IntProperty(name="Face Count", description="face count, autofilled", default=0)
-    face_count_render: IntProperty(name="Render Face Count", description="render face count, autofilled", default=0)
-
-    object_count: IntProperty(name="Number of Objects", description="how many objects are in the asset, autofilled",
-                              default=0)
-    mesh_poly_type: EnumProperty(
-        name='Dominant Poly Type',
-        items=mesh_poly_types,
-        default='OTHER',
-        description='',
+    face_count_render: IntProperty(
+        name="Render Face Count",
+        description="render face count, autofilled",
+        default=0
     )
 
-    rig: BoolProperty(name="Rig", description="asset is rigged, autofilled", default=False)
-    simulation: BoolProperty(name="Simulation", description="asset uses simulation, autofilled", default=False)
+    object_count: IntProperty(
+        name="Number of Objects",
+        description="how many objects are in the asset, autofilled",
+        default=0,
+    )
 
     # THUMBNAIL STATES
-    is_generating_thumbnail: BoolProperty(name="Generating Thumbnail",
-                                          description="True when background process is running", default=False,
-                                          update=autothumb.update_upload_scene_preview)
+    is_generating_thumbnail: BoolProperty(
+        name="Generating Thumbnail",
+        description="True when background process is running",
+        default=False,
+        update=autothumb.update_upload_scene_preview,
+    )
 
-    has_autotags: BoolProperty(name="Has Autotagging Done", description="True when autotagging done", default=False)
+    has_autotags: BoolProperty(
+        name="Has Autotagging Done",
+        description="True when autotagging done",
+        default=False
+    )
 
     thumbnail_denoising: BoolProperty(
         name="Use Denoising",
@@ -1092,14 +762,6 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         min=5,
         max=5000
     )
-    category: StringProperty(
-        name="Category",
-        default='',
-    )
-    subcategory: StringProperty(
-        name="Subcategory",
-        default='',
-    )
 
 
 class Hana3DModelSearchProps(PropertyGroup, Hana3DCommonSearchProps):
@@ -1107,36 +769,8 @@ class Hana3DModelSearchProps(PropertyGroup, Hana3DCommonSearchProps):
         name="Search",
         description="Search for these keywords",
         default="",
-        update=search.search_update
+        update=search.search_update,
     )
-    search_style: EnumProperty(
-        name="Style",
-        items=search_model_styles,
-        description="Keywords defining style (realistic, painted, polygonal, other)",
-        default="ANY",
-        update=search.search_update
-    )
-    search_style_other: StringProperty(
-        name="Style",
-        description="Search style - other",
-        default="",
-        update=search.search_update
-    )
-    search_engine: EnumProperty(
-        items=engines,
-        default='CYCLES',
-        description='Output engine',
-        update=search.search_update
-    )
-    search_engine_other: StringProperty(
-        name="Engine",
-        description="Engine not specified by addon",
-        default="",
-        update=search.search_update
-    )
-
-    free_only: BoolProperty(name="Free only", description="Show only free models",
-                            default=False, update=search.search_update)
 
     append_method: EnumProperty(
         name="Import Method",
@@ -1144,50 +778,39 @@ class Hana3DModelSearchProps(PropertyGroup, Hana3DCommonSearchProps):
             ('LINK_COLLECTION', 'Link', 'Link Collection'),
             ('APPEND_OBJECTS', 'Append', 'Append as Objects'),
         ),
-        description="Appended objects are editable in your scene. Linked assets are saved in original files, "
-                    "aren't editable but also don't increase your file size",
-        default="APPEND_OBJECTS"
+        description="Appended objects are editable in your scene."
+        "Linked assets are saved in original files, "
+        "aren't editable but also don't increase your file size",
+        default="APPEND_OBJECTS",
     )
     append_link: EnumProperty(
         name="How to Attach",
-        items=(
-            ('LINK', 'Link', ''),
-            ('APPEND', 'Append', ''),
-        ),
+        items=(('LINK', 'Link', ''), ('APPEND', 'Append', ''),),
         description="choose if the assets will be linked or appended",
-        default="APPEND"
+        default="APPEND",
     )
     import_as: EnumProperty(
         name="Import as",
-        items=(
-            ('GROUP', 'group', ''),
-            ('INDIVIDUAL', 'objects', ''),
-
-        ),
+        items=(('GROUP', 'group', ''), ('INDIVIDUAL', 'objects', ''),),
         description="choose if the assets will be linked or appended",
-        default="GROUP"
+        default="GROUP",
     )
-    randomize_rotation: BoolProperty(name='Randomize Rotation',
-                                     description="randomize rotation at placement",
-                                     default=False)
-    randomize_rotation_amount: FloatProperty(name="Randomization Max Angle",
-                                             description="maximum angle for random rotation",
-                                             default=math.pi / 36,
-                                             min=0,
-                                             max=2 * math.pi,
-                                             subtype='ANGLE')
-    offset_rotation_amount: FloatProperty(name="Offset Rotation",
-                                          description="offset rotation, hidden prop",
-                                          default=0,
-                                          min=0,
-                                          max=360,
-                                          subtype='ANGLE')
-    offset_rotation_step: FloatProperty(name="Offset Rotation Step",
-                                        description="offset rotation, hidden prop",
-                                        default=math.pi / 2,
-                                        min=0,
-                                        max=180,
-                                        subtype='ANGLE')
+    offset_rotation_amount: FloatProperty(
+        name="Offset Rotation",
+        description="offset rotation, hidden prop",
+        default=0,
+        min=0,
+        max=360,
+        subtype='ANGLE',
+    )
+    offset_rotation_step: FloatProperty(
+        name="Offset Rotation Step",
+        description="offset rotation, hidden prop",
+        default=math.pi / 2,
+        min=0,
+        max=180,
+        subtype='ANGLE',
+    )
 
 
 class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
@@ -1195,41 +818,13 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
         name="Search",
         description="Search for these keywords",
         default="",
-        update=search.search_update
-    )
-    search_style: EnumProperty(
-        name="Style",
-        items=search_model_styles,
-        description="keywords defining style (realistic, painted, polygonal, other)",
-        default="ANY",
-        update=search.search_update
-    )
-    search_style_other: StringProperty(
-        name="Style",
-        description="Search style - other",
-        default="",
-        update=search.search_update
-    )
-    search_engine: EnumProperty(
-        items=engines,
-        default='CYCLES',
-        description='Output engine',
-        update=search.search_update
-    )
-    search_engine_other: StringProperty(
-        name="Engine",
-        description="engine not specified by addon",
-        default="",
-        update=search.search_update
+        update=search.search_update,
     )
     merge_add: EnumProperty(
         name="How to Attach Scene",
-        items=(
-            ('MERGE', 'Merge Scenes', ''),
-            ('ADD', 'Add New Scene', ''),
-        ),
+        items=(('MERGE', 'Merge Scenes', ''), ('ADD', 'Add New Scene', ''),),
         description="choose if the scene will be merged or appended",
-        default="MERGE"
+        default="MERGE",
     )
     import_world: BoolProperty(
         name='Import World',
@@ -1239,7 +834,7 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     import_render: BoolProperty(
         name='Import Render Settings',
         description="import render settings to current scene",
-        default=True
+        default=True,
     )
 
 
@@ -1258,7 +853,7 @@ class Hana3DAddonPreferences(AddonPreferences):
         description="Your Hana3D API Key. Get it from your page on the website",
         default="",
         subtype="PASSWORD",
-        update=utils.save_prefs
+        update=utils.save_prefs,
     )
 
     api_key_refresh: StringProperty(
@@ -1272,32 +867,32 @@ class Hana3DAddonPreferences(AddonPreferences):
         name='api key timeout',
         description='time where the api key will need to be refreshed',
         default=0,
-        update=utils.save_prefs
+        update=utils.save_prefs,
     )
 
     api_key_life: IntProperty(
         name='api key life time',
         description='maximum lifetime of the api key, in seconds',
         default=3600,
-        update=utils.save_prefs
+        update=utils.save_prefs,
     )
 
     refresh_in_progress: BoolProperty(
         name="Api key refresh in progress",
         description="Api key is currently being refreshed. Don't refresh it again.",
-        default=False
+        default=False,
     )
 
     login_attempt: BoolProperty(
         name="Login/Signup attempt",
         description="When this is on, hana3d is trying to connect and login",
-        default=False
+        default=False,
     )
 
     show_on_start: BoolProperty(
         name="Show assetbar when starting blender",
         description="Show assetbar when starting blender",
-        default=False
+        default=False,
     )
 
     search_in_header: BoolProperty(
@@ -1311,7 +906,7 @@ class Hana3DAddonPreferences(AddonPreferences):
         description="Global storage for your assets, will use subdirectories for the contents",
         subtype='DIR_PATH',
         default=default_global_dict,
-        update=utils.save_prefs
+        update=utils.save_prefs,
     )
 
     project_subdir: StringProperty(
@@ -1324,17 +919,26 @@ class Hana3DAddonPreferences(AddonPreferences):
     directory_behaviour: EnumProperty(
         name="Use Directories",
         items=(
-            ('BOTH', 'Global and subdir',
-             'store files both in global lib and subdirectory of current project. '
-             'Warning - each file can be many times on your harddrive, but helps you keep your projects in one piece'),
-            ('GLOBAL', 'Global',
-             "store downloaded files only in global directory. \n "
-             "This can bring problems when moving your projects, \n"
-             "since assets won't be in subdirectory of current project"),
-            ('LOCAL', 'Local',
-             'store downloaded files only in local directory.\n'
-             ' This can use more bandwidth when you reuse assets in different projects. ')
-
+            (
+                'BOTH',
+                'Global and subdir',
+                'store files both in global lib and subdirectory of current project. '
+                'Warning - each file can be many times on your harddrive, '
+                'but helps you keep your projects in one piece',
+            ),
+            (
+                'GLOBAL',
+                'Global',
+                "store downloaded files only in global directory. \n "
+                "This can bring problems when moving your projects, \n"
+                "since assets won't be in subdirectory of current project",
+            ),
+            (
+                'LOCAL',
+                'Local',
+                'store downloaded files only in local directory.\n'
+                ' This can use more bandwidth when you reuse assets in different projects. ',
+            ),
         ),
         description="Which directories will be used for storing downloaded data",
         default="BOTH",
@@ -1342,51 +946,44 @@ class Hana3DAddonPreferences(AddonPreferences):
     thumbnail_use_gpu: BoolProperty(
         name="Use GPU for Thumbnails Rendering",
         description="By default this is off so you can continue your work without any lag",
-        default=False
+        default=False,
     )
 
     panel_behaviour: EnumProperty(
         name="Panels Locations",
         items=(
-            ('BOTH', 'Both Types',
-             ''),
-            ('UNIFIED', 'Unified 3D View Panel',
-             ""),
-            ('LOCAL', 'Relative to Data',
-             '')
-
+            ('BOTH', 'Both Types', ''),
+            ('UNIFIED', 'Unified 3D View Panel', ""),
+            ('LOCAL', 'Relative to Data', ''),
         ),
         description="Which directories will be used for storing downloaded data",
         default="UNIFIED",
     )
 
-    max_assetbar_rows: IntProperty(name="Max Assetbar Rows",
-                                   description="max rows of assetbar in the 3D view",
-                                   default=1,
-                                   min=0,
-                                   max=20)
+    max_assetbar_rows: IntProperty(
+        name="Max Assetbar Rows",
+        description="max rows of assetbar in the 3D view",
+        default=1,
+        min=0,
+        max=20,
+    )
 
     thumb_size: IntProperty(name="Assetbar thumbnail Size", default=96, min=-1, max=256)
 
-    asset_counter: IntProperty(name="Usage Counter",
-                               description="Counts usages so it asks for registration only after reaching a limit",
-                               default=0,
-                               min=0,
-                               max=20000)
+    asset_counter: IntProperty(
+        name="Usage Counter",
+        description="Counts usages so it asks for registration only after reaching a limit",
+        default=0,
+        min=0,
+        max=20000,
+    )
 
     first_run: BoolProperty(
         name="First run",
         description="Detects if addon was already registered/run.",
         default=True,
-        update=utils.save_prefs
+        update=utils.save_prefs,
     )
-    # allow_proximity : BoolProperty(
-    #     name="allow proximity data reports",
-    #     description="This sends anonymized proximity data \n \
-    #             and allows us to make relations between database objects \n \
-    #              without user interaction",
-    #     default=False
-    # )
 
     auto_check_update = bpy.props.BoolProperty(
         name="Auto-check for Update",
@@ -1404,21 +1001,21 @@ class Hana3DAddonPreferences(AddonPreferences):
         description="Number of days between checking for updates",
         default=7,
         min=0,
-        max=31
+        max=31,
     )
     updater_intrval_hours = bpy.props.IntProperty(
         name='Hours',
         description="Number of hours between checking for updates",
         default=0,
         min=0,
-        max=23
+        max=23,
     )
     updater_intrval_minutes = bpy.props.IntProperty(
         name='Minutes',
         description="Number of minutes between checking for updates",
         default=0,
         min=0,
-        max=59
+        max=59,
     )
 
     def draw(self, context):
@@ -1430,18 +1027,15 @@ class Hana3DAddonPreferences(AddonPreferences):
                 ui_panels.draw_login_buttons(layout)
         else:
             if self.enable_oauth:
-                layout.operator("wm.hana3d_logout", text="Logout",
-                                icon='URL')
+                layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
 
         # if not self.enable_oauth:
         layout.prop(self, "api_key", text='Your API Key')
-        # layout.label(text='After you paste API Key, categories are downloaded, so blender will freeze for a few seconds.')
         layout.prop(self, "global_dir")
         layout.prop(self, "project_subdir")
         # layout.prop(self, "temp_dir")
         layout.prop(self, "directory_behaviour")
         layout.prop(self, "thumbnail_use_gpu")
-        # layout.prop(self, "allow_proximity")
         # layout.prop(self, "panel_behaviour")
         layout.prop(self, "thumb_size")
         layout.prop(self, "max_assetbar_rows")
@@ -1452,16 +1046,12 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 # registration
 classes = (
-
     Hana3DAddonPreferences,
     Hana3DUIProps,
-
     Hana3DModelSearchProps,
     Hana3DModelUploadProps,
-
     Hana3DSceneSearchProps,
     Hana3DSceneUploadProps,
-
     Hana3DMaterialUploadProps,
     Hana3DMaterialSearchProps,
 )
@@ -1475,26 +1065,19 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.Scene.Hana3DUI = PointerProperty(
-        type=Hana3DUIProps)
+    bpy.types.Scene.Hana3DUI = PointerProperty(type=Hana3DUIProps)
 
     # MODELS
-    bpy.types.Scene.hana3d_models = PointerProperty(
-        type=Hana3DModelSearchProps)
-    bpy.types.Object.hana3d = PointerProperty(  # for uploads, not now...
-        type=Hana3DModelUploadProps)
+    bpy.types.Scene.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
+    bpy.types.Object.hana3d = PointerProperty(type=Hana3DModelUploadProps)
 
     # SCENES
-    bpy.types.Scene.hana3d_scene = PointerProperty(
-        type=Hana3DSceneSearchProps)
-    bpy.types.Scene.hana3d = PointerProperty(  # for uploads, not now...
-        type=Hana3DSceneUploadProps)
+    bpy.types.Scene.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
+    bpy.types.Scene.hana3d = PointerProperty(type=Hana3DSceneUploadProps)
 
     # MATERIALS
-    bpy.types.Scene.hana3d_mat = PointerProperty(
-        type=Hana3DMaterialSearchProps)
-    bpy.types.Material.hana3d = PointerProperty(  # for uploads, not now...
-        type=Hana3DMaterialUploadProps)
+    bpy.types.Scene.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
+    bpy.types.Material.hana3d = PointerProperty(type=Hana3DMaterialUploadProps)
 
     search.register_search()
     asset_inspector.register_asset_inspector()

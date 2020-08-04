@@ -24,7 +24,6 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 
-
 # TODO: Uncomment when using PKCE
 # import base64
 # import hashlib
@@ -52,17 +51,13 @@ class SimpleOAuthAuthenticator(object):
         self.audience = audience
 
     def _get_tokens(
-            self,
-            authorization_code=None,
-            refresh_token=None,
-            grant_type='authorization_code'
-            # code_verifier=None, # TODO: Uncomment when using PKCE
-            ):
-        data = {
-            'grant_type': grant_type,
-            'client_id': self.client_id,
-            'scopes': 'read write'
-        }
+        self,
+        authorization_code=None,
+        refresh_token=None,
+        grant_type='authorization_code'
+        # code_verifier=None, # TODO: Uncomment when using PKCE
+    ):
+        data = {'grant_type': grant_type, 'client_id': self.client_id, 'scopes': 'read write'}
         if hasattr(self, 'redirect_uri'):
             data['redirect_uri'] = self.redirect_uri
         if authorization_code:
@@ -74,10 +69,7 @@ class SimpleOAuthAuthenticator(object):
         # if code_verifier:
         #     data['code_verifier'] = code_verifier
 
-        response = requests.post(
-            f'{self.auth0_url}/oauth/token/',
-            data=data
-        )
+        response = requests.post(f'{self.auth0_url}/oauth/token/', data=data)
         if response.status_code != 200:
             print(f'error retrieving refresh tokens {response.status_code}')
             print(response.content)
@@ -101,16 +93,30 @@ class SimpleOAuthAuthenticator(object):
                     # Display to the user that they no longer need the browser window
                     if redirect_url:
                         redirect_string = (
-                            '<head><meta http-equiv="refresh" content="0;url=%(redirect_url)s"></head>'
-                            '<script> window.location.href="%(redirect_url)s"; </script>' % {'redirect_url': redirect_url}
+                            '<head><meta http-equiv="refresh" content="0;url=%(redirect_url)s"></head>'  # noqa E501
+                            '<script> window.location.href="%(redirect_url)s"; </script>' % {'redirect_url': redirect_url}  # noqa E501
                         )
                     else:
                         redirect_string = ''
-                    self.wfile.write(bytes(self.html_template % {'head': redirect_string, 'message': 'You may now close this window.'}, 'utf-8'))
+                    self.wfile.write(
+                        bytes(
+                            self.html_template
+                            % {
+                                'head': redirect_string,
+                                'message': 'You may now close this window.',
+                            },
+                            'utf-8',
+                        )
+                    )
                     qs = parse_qs(urlparse(self.path).query)
                     self.server.authorization_code = qs['code'][0]
                 else:
-                    self.wfile.write(bytes(self.html_template % {'head': '', 'message': 'Authorization failed.'}, 'utf-8'))
+                    self.wfile.write(
+                        bytes(
+                            self.html_template % {'head': '', 'message': 'Authorization failed.'},
+                            'utf-8',
+                        )
+                    )
 
         for port in self.ports:
             try:
@@ -140,7 +146,8 @@ class SimpleOAuthAuthenticator(object):
 
         httpServer.handle_request()
         authorization_code = httpServer.authorization_code
-        return self._get_tokens(authorization_code=authorization_code)  # TODO: add code_verifier=verifier
+        # TODO: add code_verifier
+        return self._get_tokens(authorization_code=authorization_code)
 
     def get_refreshed_token(self, refresh_token):
         return self._get_tokens(refresh_token=refresh_token, grant_type='refresh_token')
