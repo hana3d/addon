@@ -22,44 +22,24 @@ if "bpy" in locals():
 
     paths = reload(paths)
     utils = reload(utils)
-    categories = reload(categories)
     ui = reload(ui)
-    colors = reload(colors)
     hana3d_oauth = reload(hana3d_oauth)
-    version_checker = reload(version_checker)
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from hana3d import paths, utils, categories, ui, colors, hana3d_oauth, version_checker, tasks_queue, rerequests
+    from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests
 
-import hana3d
-from bpy.app.handlers import persistent
-
-from bpy.props import (  # TODO only keep the ones actually used when cleaning
-    IntProperty,
-    FloatProperty,
-    FloatVectorProperty,
-    StringProperty,
-    EnumProperty,
-    BoolProperty,
-    PointerProperty,
-)
-from bpy.types import (
-    Operator,
-    Panel,
-    AddonPreferences,
-    PropertyGroup,
-    UIList
-)
-
-import requests
-import os
-import random
-import time
-import threading
-import platform
 import json
+import os
+import platform
+import threading
+import time
+
 import bpy
+import requests
+from bpy.app.handlers import persistent
+from bpy.props import BoolProperty, StringProperty
+from bpy.types import Operator
 
 search_start_time = 0
 prev_time = 0
@@ -85,36 +65,33 @@ reports = ''
 
 
 def refresh_token_timer():
-    ''' this timer gets run every time the token needs refresh. It refreshes tokens and also categories.'''
+    ''' this timer gets run every time the token needs refresh. '''
     utils.p('refresh timer')
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     fetch_server_data()
-    categories.load_categories()
 
     return user_preferences.api_key_life
 
 
 @persistent
 def scene_load(context):
-    wm = bpy.context.window_manager
     if not bpy.app.timers.is_registered(refresh_token_timer):
         bpy.app.timers.register(refresh_token_timer, persistent=True)
 
 
 def fetch_server_data():
-    ''' download categories and addon version'''
     if not bpy.app.background:
         user_preferences = bpy.context.preferences.addons['hana3d'].preferences
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
-        if user_preferences.enable_oauth and \
-                len(user_preferences.api_key) > 0 and \
-                user_preferences.api_key_timeout < time.time():
+        if (
+            user_preferences.enable_oauth
+            and len(user_preferences.api_key) > 0
+            and user_preferences.api_key_timeout < time.time()
+        ):
             hana3d_oauth.refresh_token_thread()
-        if api_key != '' and bpy.context.window_manager.get('hana3d profile') == None:
+        if api_key != '' and bpy.context.window_manager.get('hana3d profile') is None:
             get_profile()
-        if bpy.context.window_manager.get('hana3d_categories') is None:
-            categories.fetch_categories_thread(api_key)
 
 
 first_time = True
@@ -129,14 +106,16 @@ def check_clipboard():
             last_clipboard = bpy.context.window_manager.clipboard
             instr = 'asset_base_id:'
             # first check if contains asset id, then asset type
-            if last_clipboard[:len(instr)] == instr:
+            if last_clipboard[: len(instr)] == instr:
                 atstr = 'asset_type:'
                 ati = last_clipboard.find(atstr)
-                # this only checks if the asset_type keyword is there but let's the keywords update function do the parsing.
+                # this only checks if the asset_type keyword is there but
+                # let's the keywords update function do the parsing.
                 if ati > -1:
                     search_props = utils.get_search_props()
                     search_props.search_keywords = last_clipboard
-                    # don't run search after this - assigning to keywords runs the search_update function.
+                    # don't run search after this
+                    # assigning to keywords runs the search_update function.
 
 
 # @bpy.app.handlers.persistent
@@ -184,7 +163,7 @@ def timer_update():
             global reports
             if reports != '':
                 props.report = str(reports)
-                return .2
+                return 0.2
             with open(json_filepath, 'r') as data_file:
                 rdata = json.load(data_file)
 
@@ -195,7 +174,7 @@ def timer_update():
                 for r in rdata['results']:
                     try:
                         r['filesSize'] = int(r['filesSize'] / 1024)
-                    except:
+                    except Exception:
                         utils.p('asset with no files-size')
                     if r['assetType'] == asset_type:
                         if len(r['files']) > 0:
@@ -205,7 +184,9 @@ def timer_update():
                             for f in r['files']:
                                 if f['fileType'] == 'thumbnail':
                                     tname = paths.extract_filename_from_url(f['fileThumbnailLarge'])
-                                    small_tname = paths.extract_filename_from_url(f['fileThumbnail'])
+                                    small_tname = paths.extract_filename_from_url(
+                                        f['fileThumbnail']
+                                    )
                                     allthumbs.append(tname)
 
                                 tdict = {}
@@ -246,21 +227,21 @@ def timer_update():
                                             'bbox_min': (
                                                 float(params['boundBoxMinX']),
                                                 float(params['boundBoxMinY']),
-                                                float(params['boundBoxMinZ'])),
+                                                float(params['boundBoxMinZ']),
+                                            ),
                                             'bbox_max': (
                                                 float(params['boundBoxMaxX']),
                                                 float(params['boundBoxMaxY']),
-                                                float(params['boundBoxMaxZ']))
+                                                float(params['boundBoxMaxZ']),
+                                            ),
                                         }
 
                                     else:
                                         bbox = {
-                                            'bbox_min': (-.5, -.5, 0),
-                                            'bbox_max': (.5, .5, 1)
+                                            'bbox_min': (-0.5, -0.5, 0),
+                                            'bbox_max': (0.5, 0.5, 1),
                                         }
                                     asset_data.update(bbox)
-                                if asset_type == 'material':
-                                    asset_data['texture_size_meters'] = params.get('textureSizeMeters', 1.0)
 
                                 asset_data.update(tdict)
                                 if r['assetBaseId'] in scene.get('assets used', {}).keys():
@@ -288,7 +269,7 @@ def timer_update():
                 props.search_error = True
 
             mt('preview loading finished')
-    return .3
+    return 0.3
 
 
 def load_previews():
@@ -306,9 +287,6 @@ def load_previews():
     results = s.get('search results')
     #
     if results is not None:
-        inames = []
-        tpaths = []
-
         i = 0
         for r in results:
 
@@ -379,7 +357,7 @@ def writeblock(t, input, width=40):  # for longer texts
 
 
 def writeblockm(tooltip, mdata, key='', pretext=None, width=40):  # for longer texts
-    if mdata.get(key) == None:
+    if mdata.get(key) is None:
         return tooltip
     else:
         intext = mdata[key]
@@ -390,7 +368,7 @@ def writeblockm(tooltip, mdata, key='', pretext=None, width=40):  # for longer t
         intext = str(intext)
         if intext.rstrip() == '':
             return tooltip
-        if pretext == None:
+        if pretext is None:
             pretext = key
         if pretext != '':
             pretext = pretext + ': '
@@ -428,70 +406,31 @@ def generate_tooltip(mdata):
     if mdata['description'] != '':
         t += '\n'
 
-    bools = (('rig', None), ('animated', None), ('manifold', 'non-manifold'), ('scene', None), ('simulation', None),
-             ('uv', None))
-    for b in bools:
-        if mparams.get(b[0]):
-            mdata['tags'].append(b[0])
-        elif b[1] != None:
-            mdata['tags'].append(b[1])
-
-    bools_data = ('adult',)
-    for b in bools_data:
-        if mdata.get(b) and mdata[b]:
-            mdata['tags'].append(b)
     t = writeblockm(t, mparams, key='designer', pretext='designer', width=col_w)
     t = writeblockm(t, mparams, key='manufacturer', pretext='manufacturer', width=col_w)
-    t = writeblockm(t, mparams, key='designCollection', pretext='design collection', width=col_w)
-
-    # t = writeblockm(t, mparams, key='engines', pretext='engine', width = col_w)
-    # t = writeblockm(t, mparams, key='model_style', pretext='style', width = col_w)
-    # t = writeblockm(t, mparams, key='material_style', pretext='style', width = col_w)
     # t = writeblockm(t, mdata, key='tags', width = col_w)
-    # t = writeblockm(t, mparams, key='condition', pretext='condition', width = col_w)
-    # t = writeblockm(t, mparams, key='productionLevel', pretext='production level', width = col_w)
-    if has(mdata, 'purePbr'):
-        t = writeblockm(t, mparams, key='pbrType', pretext='pbr', width=col_w)
-
-    t = writeblockm(t, mparams, key='designYear', pretext='design year', width=col_w)
 
     if has(mparams, 'dimensionX'):
-        t += 'size: %s, %s, %s\n' % (fmt_length(mparams['dimensionX']),
-                                     fmt_length(mparams['dimensionY']),
-                                     fmt_length(mparams['dimensionZ']))
+        t += 'size: %s, %s, %s\n' % (
+            fmt_length(mparams['dimensionX']),
+            fmt_length(mparams['dimensionY']),
+            fmt_length(mparams['dimensionZ']),
+        )
     if has(mparams, 'faceCount'):
         t += 'face count: %s, render: %s\n' % (mparams['faceCount'], mparams['faceCountRender'])
 
-    # t = writeblockm(t, mparams, key='meshPolyType', pretext='mesh type', width = col_w)
     # t = writeblockm(t, mparams, key='objectCount', pretext='nubmber of objects', width = col_w)
-
-    # t = writeblockm(t, mparams, key='materials', width = col_w)
-    # t = writeblockm(t, mparams, key='modifiers', width = col_w)
-    # t = writeblockm(t, mparams, key='shaders', width = col_w)
-
-    if has(mparams, 'textureSizeMeters'):
-        t += 'texture size: %s\n' % fmt_length(mparams['textureSizeMeters'])
-
-    if has(mparams, 'textureResolutionMax') and mparams['textureResolutionMax'] > 0:
-        if mparams['textureResolutionMin'] == mparams['textureResolutionMax']:
-            t = writeblockm(t, mparams, key='textureResolutionMin', pretext='texture resolution', width=col_w)
-        else:
-            t += 'tex resolution: %i - %i\n' % (mparams['textureResolutionMin'], mparams['textureResolutionMax'])
 
     if has(mparams, 'thumbnailScale'):
         t = writeblockm(t, mparams, key='thumbnailScale', pretext='preview scale', width=col_w)
-
-    # t += 'uv: %s\n' % mdata['uv']
-    # t += '\n'
-    t = writeblockm(t, mdata, key='license', width=col_w)
 
     # generator is for both upload preview and search, this is only after search
     # if mdata.get('versionNumber'):
     #     # t = writeblockm(t, mdata, key='versionNumber', pretext='version', width = col_w)
     #     a_id = mdata['author'].get('id')
-    #     if a_id != None:
+    #     if a_id is not None:
     #         adata = bpy.context.window_manager['hana3d authors'].get(str(a_id))
-    #         if adata != None:
+    #         if adata is not None:
     #             t += generate_author_textblock(adata)
 
     # t += '\n'
@@ -514,21 +453,6 @@ def generate_author_textblock(adata):
                 t = writeblockm(t, adata, key='aboutMe', pretext='', width=col_w)
                 t += '\n'
     return t
-
-
-def get_items_models(self, context):
-    global search_items_models
-    return search_items_models
-
-
-def get_items_materials(self, context):
-    global search_items_materials
-    return search_items_materials
-
-
-def get_items_textures(self, context):
-    global search_items_textures
-    return search_items_textures
 
 
 class ThumbDownloader(threading.Thread):
@@ -580,7 +504,7 @@ def fetch_gravatar(adata):
             tasks_queue.add_task((write_gravatar, (adata['id'], gravatar_path)))
             return
 
-        url = "https://www.gravatar.com/avatar/" + adata['gravatarHash'] + '?d=404'
+        # url = "https://www.gravatar.com/avatar/" + adata['gravatarHash'] + '?d=404'
         r = rerequests.get(gravatar_url, stream=False)
         if r.status_code == 200:
             with open(gravatar_path, 'wb') as f:
@@ -599,12 +523,12 @@ def get_author(r):
     global fetching_gravatars
 
     a_id = str(r['author']['id'])
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
     authors = bpy.context.window_manager.get('hana3d authors', {})
     if authors == {}:
         bpy.context.window_manager['hana3d authors'] = authors
     a = authors.get(a_id)
-    if a is None:  # or a is '' or (a.get('gravatarHash') is not None and a.get('gravatarImg') is None):
+    # or a is '' or (a.get('gravatarHash') is not None and a.get('gravatarImg') is None):
+    if a is None:
         a = r['author']
         a['id'] = a_id
         a['tooltip'] = generate_author_textblock(a)
@@ -620,13 +544,12 @@ def get_author(r):
 
 def write_profile(adata):
     utils.p('writing profile')
-    user = adata['user']
     bpy.context.window_manager['hana3d profile'] = adata
 
 
-def request_profile(api_key):
+def request_profile():
     a_url = paths.get_api_url() + 'me/'
-    headers = utils.get_headers(api_key)
+    headers = utils.get_headers()
     r = rerequests.get(a_url, headers=headers)
     adata = r.json()
     if adata.get('user') is None:
@@ -636,10 +559,10 @@ def request_profile(api_key):
     return adata
 
 
-def fetch_profile(api_key):
+def fetch_profile():
     utils.p('fetch profile')
     try:
-        adata = request_profile(api_key)
+        adata = request_profile()
         if adata is not None:
             tasks_queue.add_task((write_profile, (adata,)))
     except Exception as e:
@@ -647,9 +570,8 @@ def fetch_profile(api_key):
 
 
 def get_profile():
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
     a = bpy.context.window_manager.get('hana3d profile')
-    thread = threading.Thread(target=fetch_profile, args=(preferences.api_key,), daemon=True)
+    thread = threading.Thread(target=fetch_profile, args=(), daemon=True)
     thread.start()
     return a
 
@@ -681,8 +603,8 @@ class Searcher(threading.Thread):
 
         # result ordering: _score - relevance, score - hana3d score
 
-        if query.get('search_term') is None and query.get('category_subtree') is None:
-            # assumes no keywords and no category, thus an empty search that is triggered on start.
+        if query.get('search_term') is None:
+            # assumes no keywords, thus an empty search that is triggered on start.
             # orders by last core file upload
             if query.get('verification_status') == 'uploaded':
                 # for validators, sort uploaded from oldest
@@ -693,10 +615,7 @@ class Searcher(threading.Thread):
 
             requeststring += '&order=-created'
         else:
-            if query.get('category_subtree') is not None:
-                requeststring += '&order=-score,_score'
-            else:
-                requeststring += '&order=_score'
+            requeststring += '&order=_score'
 
         urlquery = url + requeststring
         return urlquery
@@ -707,12 +626,11 @@ class Searcher(threading.Thread):
         params = self.params
         global reports
 
-        t = time.time()
         mt('search thread started')
         tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
         json_filepath = os.path.join(tempdir, '%s_searchresult.json' % query['asset_type'])
 
-        headers = utils.get_headers(params['api_key'])
+        headers = utils.get_headers()
 
         rdata = {}
         rdata['results'] = []
@@ -723,9 +641,9 @@ class Searcher(threading.Thread):
                     origdata = json.load(infile)
                     urlquery = origdata['next']
                     # rparameters = {}
-                    if urlquery == None:
+                    if urlquery is None:
                         return
-                except:
+                except Exception:
                     # in case no search results found on drive we don't do next page loading.
                     params['get_next'] = False
         if not params['get_next']:
@@ -770,10 +688,14 @@ class Searcher(threading.Thread):
 
             for f in d['files']:
                 # TODO move validation of published assets to server, too manmy checks here.
-                if f['fileType'] == 'thumbnail' and f['fileThumbnail'] != None and f['fileThumbnailLarge'] != None:
-                    if f['fileThumbnail'] == None:
+                if (
+                    f['fileType'] == 'thumbnail'
+                    and f['fileThumbnail'] is not None
+                    and f['fileThumbnailLarge'] is not None
+                ):
+                    if f['fileThumbnail'] is None:
                         f['fileThumbnail'] = 'NONE'
-                    if f['fileThumbnailLarge'] == None:
+                    if f['fileThumbnailLarge'] is None:
                         f['fileThumbnailLarge'] = 'NONE'
 
                     thumb_small_urls.append(f['fileThumbnail'])
@@ -825,24 +747,26 @@ class Searcher(threading.Thread):
 
                 if len(thumb_sml_download_threads) > maxthreads:
                     while len(thumb_sml_download_threads) > maxthreads:
-                        threads_copy = thumb_sml_download_threads.copy()  # because for loop can erase some of the items.
+                        # because for loop can erase some of the items.
+                        threads_copy = thumb_sml_download_threads.copy()
                         for tk, thread in threads_copy.items():
                             if not thread.is_alive():
                                 thread.join()
                                 # utils.p(x)
-                                del (thumb_sml_download_threads[tk])
+                                del thumb_sml_download_threads[tk]
                                 # utils.p('fetched thumbnail ', i)
                                 i += 1
         if self.stopped():
             utils.p('stopping search : ' + str(query))
             return
-        idx = 0
+
         while len(thumb_sml_download_threads) > 0:
-            threads_copy = thumb_sml_download_threads.copy()  # because for loop can erase some of the items.
+            # because for loop can erase some of the items.
+            threads_copy = thumb_sml_download_threads.copy()
             for tk, thread in threads_copy.items():
                 if not thread.is_alive():
                     thread.join()
-                    del (thumb_sml_download_threads[tk])
+                    del thumb_sml_download_threads[tk]
                     i += 1
 
         if self.stopped():
@@ -881,13 +805,7 @@ def build_query_model():
     props = bpy.context.scene.hana3d_models
     query = {
         "asset_type": 'model',
-        # "engine": props.search_engine,
     }
-    if props.search_style != 'ANY':
-        if props.search_style != 'OTHER':
-            query["model_style"] = props.search_style
-        else:
-            query["model_style"] = props.search_style_other
 
     build_query_common(query, props)
 
@@ -900,7 +818,6 @@ def build_query_scene():
     props = bpy.context.scene.hana3d_scene
     query = {
         "asset_type": 'scene',
-        # "engine": props.search_engine,
     }
     build_query_common(query, props)
     return query
@@ -910,19 +827,7 @@ def build_query_material():
     props = bpy.context.scene.hana3d_mat
     query = {
         "asset_type": 'material',
-
     }
-    # if props.search_engine == 'NONE':
-    #     query["engine"] = ''
-    # if props.search_engine != 'OTHER':
-    #     query["engine"] = props.search_engine
-    # else:
-    #     query["engine"] = props.search_engine_other
-    if props.search_style != 'ANY':
-        if props.search_style != 'OTHER':
-            query["style"] = props.search_style
-        else:
-            query["style"] = props.search_style_other
 
     build_query_common(query, props)
 
@@ -940,10 +845,11 @@ def mt(text):
 def add_search_process(query, params):
     global search_threads
 
-    while (len(search_threads) > 0):
+    while len(search_threads) > 0:
         old_thread = search_threads.pop(0)
         old_thread[0].stop()
-        # TODO CARE HERE FOR ALSO KILLING THE THREADS...AT LEAST NOW SEARCH DONE FIRST WON'T REWRITE AN OLDER ONE
+        # TODO CARE HERE FOR ALSO KILLING THE THREADS...
+        # AT LEAST NOW SEARCH DONE FIRST WON'T REWRITE AN OLDER ONE
 
     tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
     thread = Searcher(query, params)
@@ -954,10 +860,9 @@ def add_search_process(query, params):
     mt('thread started')
 
 
-def search(category='', get_next=False, author_id=''):
+def search(get_next=False, author_id=''):
     ''' initialize searching'''
     global search_start_time
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
     search_start_time = time.time()
     # mt('start')
@@ -985,30 +890,15 @@ def search(category='', get_next=False, author_id=''):
     if props.is_searching and get_next:
         return
 
-    if category != '':
-        query['category_subtree'] = category
-
     if author_id != '':
         query['author_id'] = author_id
 
     if props.workspace != '' and not props.public_only:
         query['workspace'] = props.workspace
 
-    # elif not props.public_only:
-    #     # if user searches for [another] author, 'only my assets' is invalid. that's why in elif.
-    #     profile = bpy.context.window_manager.get('hana3d profile')
-    #     if profile is not None:
-    #         query['author_id'] = str(profile['user']['id'])
-
     props.is_searching = True
 
-    # extra params
-    query['scene_uuid'] = bpy.context.scene.get('uuid')
-    query['addon_version'] = version_checker.get_addon_version()
-    params = {
-        'api_key': user_preferences.api_key,
-        'get_next': get_next
-    }
+    params = {'get_next': get_next}
 
     add_search_process(query, params)
     tasks_queue.add_task((ui.add_report, ('hana3d searching....', 2)))
@@ -1023,7 +913,8 @@ def search_update(self, context):
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
 
-    # here we tweak the input if it comes form the clipboard. we need to get rid of asset type and set it to
+    # here we tweak the input if it comes form the clipboard.
+    # we need to get rid of asset type and set it to
     sprops = utils.get_search_props()
     instr = 'asset_base_id:'
     atstr = 'asset_type:'
@@ -1036,7 +927,8 @@ def search_update(self, context):
         return
     if ati > -1:
         at = kwds[ati:].lower()
-        # uncertain length of the remaining string -  find as better method to check the presence of asset type
+        # uncertain length of the remaining string
+        # find as better method to check the presence of asset type
         if at.find('model') > -1:
             ui_props.asset_type = 'MODEL'
         elif at.find('material') > -1:
@@ -1044,7 +936,8 @@ def search_update(self, context):
         # now we trim the input copypaste by anything extra that is there,
         # this is also a way for this function to recognize that it already has parsed the clipboard
         # the search props can have changed and this needs to transfer the data to the other field
-        # this complex behaviour is here for the case where the user needs to paste manually into blender?
+        # this complex behaviour is here for the case where
+        # the user needs to paste manually into blender?
         sprops = utils.get_search_props()
         sprops.search_keywords = kwds[:ati].rstrip()
     search()
@@ -1052,33 +945,26 @@ def search_update(self, context):
 
 class SearchOperator(Operator):
     """Tooltip"""
+
     bl_idname = "view3d.hana3d_search"
     bl_label = "hana3d asset search"
     bl_description = "Search online for assets"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-    own: BoolProperty(name="own assets only",
-                      description="Find all own assets",
-                      default=False)
-
-    category: StringProperty(
-        name="category",
-        description="search only subtree of this category",
-        default="",
-        options={'SKIP_SAVE'}
-    )
+    own: BoolProperty(name="own assets only", description="Find all own assets", default=False)
 
     author_id: StringProperty(
         name="Author ID",
         description="Author ID - search only assets by this author",
         default="",
-        options={'SKIP_SAVE'}
+        options={'SKIP_SAVE'},
     )
 
-    get_next: BoolProperty(name="next page",
-                           description="get next page from previous search",
-                           default=False,
-                           options={'SKIP_SAVE'}
-                           )
+    get_next: BoolProperty(
+        name="next page",
+        description="get next page from previous search",
+        default=False,
+        options={'SKIP_SAVE'},
+    )
 
     keywords: StringProperty(
         name="Keywords",
@@ -1092,22 +978,21 @@ class SearchOperator(Operator):
         return True
 
     def execute(self, context):
-        # TODO ; this should all get transferred to properties of the search operator, so sprops don't have to be fetched here at all.
+        # TODO this should all get transferred to properties of the search operator,
+        #  so sprops don't have to be fetched here at all.
         sprops = utils.get_search_props()
         if self.author_id != '':
             sprops.search_keywords = ''
         if self.keywords != '':
             sprops.search_keywords = self.keywords
 
-        search(category=self.category, get_next=self.get_next, author_id=self.author_id)
+        search(get_next=self.get_next, author_id=self.author_id)
         # bpy.ops.view3d.hana3d_asset_bar()
 
         return {'FINISHED'}
 
 
-classes = [
-    SearchOperator
-]
+classes = [SearchOperator]
 
 
 def register_search():
@@ -1117,8 +1002,6 @@ def register_search():
         bpy.utils.register_class(c)
 
     bpy.app.timers.register(timer_update)
-
-    categories.load_categories()
 
 
 def unregister_search():

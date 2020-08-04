@@ -22,16 +22,11 @@ if "bpy" in locals():
     paths = importlib.reload(paths)
     utils = importlib.reload(utils)
     download = importlib.reload(download)
-    categories = importlib.reload(categories)
-    icons = importlib.reload(icons)
 else:
-    from hana3d import paths, utils, download, categories, icons
-
-from bpy.types import (
-    Panel
-)
+    from hana3d import paths, utils, download
 
 import bpy
+from bpy.types import Panel
 
 from . import addon_updater_ops
 
@@ -47,21 +42,21 @@ def label_multiline(layout, text='', icon='NONE', width=-1):
         threshold = 35
     maxlines = 8
     li = 0
-    for l in lines:
-        while len(l) > threshold:
-            i = l.rfind(' ', 0, threshold)
+    for line in lines:
+        while len(line) > threshold:
+            i = line.rfind(' ', 0, threshold)
             if i < 1:
                 i = threshold
-            l1 = l[:i]
+            l1 = line[:i]
             layout.label(text=l1, icon=icon)
             icon = 'NONE'
-            l = l[i:].lstrip()
+            line = line[i:].lstrip()
             li += 1
             if li > maxlines:
                 break
         if li > maxlines:
             break
-        layout.label(text=l, icon=icon)
+        layout.label(text=line, icon=icon)
         icon = 'NONE'
 
 
@@ -70,20 +65,57 @@ def draw_not_logged_in(source):
 
     def draw_message(source, context):
         layout = source.layout
-        label_multiline(layout, text='Please login or sign up '
-                        'to upload files.')
+        label_multiline(layout, text='Please login or sign up ' 'to upload files.')
         draw_login_buttons(layout)
+
     bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
 
 
-def draw_upload_common(layout, props, asset_type, context):
-    op = layout.operator("wm.url_open", text="Read upload instructions",
-                         icon='QUESTION')
+def draw_upload_common(layout, context):
+    scene = bpy.context.scene
+    uiprops = scene.Hana3DUI
+    asset_type = uiprops.asset_type
+    props = utils.get_upload_props()
 
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    prop_needed(layout, props, 'name', props.name)
+    layout.prop(props, 'description')
+    layout.prop(props, 'publish_message')
+    layout.prop(props, 'tags')
+    layout.prop(props, 'client')
+    layout.prop(props, 'sku')
     layout.prop(props, 'is_public')
 
-    row = layout.row(align=True)
+    col = layout.column()
+    if props.is_generating_thumbnail:
+        col.enabled = False
+    prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
+    if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
+        if asset_type == 'MODEL':
+            col.operator(
+                "object.hana3d_generate_thumbnail",
+                text='Generate thumbnail',
+                icon='IMAGE_DATA'
+            )
+        elif asset_type == 'SCENE':
+            col.operator(
+                "object.hana3d_scene_thumbnail",
+                text='Generate thumbnail',
+                icon='IMAGE_DATA'
+            )
+        elif asset_type == 'MATERIAL':
+            col.operator(
+                "object.hana3d_material_thumbnail",
+                text='Generate thumbnail',
+                icon='IMAGE_DATA'
+            )
+    if props.is_generating_thumbnail:
+        row = layout.row(align=True)
+        row.label(text=props.thumbnail_generating_state)
+        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
+        op.process_source = asset_type
+        op.process_type = 'THUMBNAILER'
+
     if props.upload_state != '':
         label_multiline(layout, text=props.upload_state, width=context.region.width)
     if props.uploading:
@@ -92,9 +124,6 @@ def draw_upload_common(layout, props, asset_type, context):
         op.process_type = 'UPLOAD'
         layout = layout.column()
         layout.enabled = False
-
-    # if props.upload_state.find('Error') > -1:
-    #     layout.label(text = props.upload_state)
 
     if props.asset_base_id == '':
         optext = 'Upload %s' % asset_type.lower()
@@ -110,20 +139,7 @@ def draw_upload_common(layout, props, asset_type, context):
         op.asset_type = asset_type
         op.reupload = False
 
-        # layout.label(text = 'asset id, overwrite only for reuploading')
         layout.label(text='asset has a version online.')
-        # row = layout.row()
-        # row.enabled = False
-        # row.prop(props, 'asset_base_id', icon='FILE_TICK')
-        # row = layout.row()
-        # row.enabled = False
-        # row.prop(props, 'id', icon='FILE_TICK')
-
-    # layout.prop(props, 'category')
-    # if asset_type == 'MODEL' and props.subcategory != '':  # by now block this for other asset types.
-    #     layout.prop(props, 'subcategory')
-
-    #     layout.prop(props, 'license')
 
 
 def poll_local_panels():
@@ -134,84 +150,11 @@ def poll_local_panels():
 def prop_needed(layout, props, name, value, is_not_filled=''):
     row = layout.row()
     if value == is_not_filled:
-        # row.label(text='', icon = 'ERROR')
-        icon = 'ERROR'
         row.alert = True
-        row.prop(props, name)  # , icon=icon)
+        row.prop(props, name)
         row.alert = False
     else:
-        # row.label(text='', icon = 'FILE_TICK')
-        icon = None
         row.prop(props, name)
-
-
-def draw_panel_model_upload(self, context):
-    scene = context.scene
-    ob = bpy.context.active_object
-    while ob.parent is not None:
-        ob = ob.parent
-    props = ob.hana3d
-
-    layout = self.layout
-
-    draw_upload_common(layout, props, 'MODEL', context)
-
-    prop_needed(layout, props, 'name', props.name)
-
-    col = layout.column()
-    if props.is_generating_thumbnail:
-        col.enabled = False
-    prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
-    if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        col.operator("object.hana3d_generate_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
-
-    if props.is_generating_thumbnail:
-        row = layout.row(align=True)
-        row.label(text=props.thumbnail_generating_state)
-        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-        op.process_source = 'MODEL'
-        op.process_type = 'THUMBNAILER'
-    elif props.thumbnail_generating_state != '':
-        label_multiline(layout, text=props.thumbnail_generating_state)
-
-    layout.prop(props, 'description')
-    layout.prop(props, 'tags')
-    layout.prop(props, 'client')
-    layout.prop(props, 'sku')
-
-    for key in props.custom_props.keys():
-        layout.prop(props.custom_props, f'["{key}"]')
-
-    row = layout.row()
-    row.operator('hana3d.model_custom_props', text='Create Custom Prop')
-    layout.prop(scene.hana3d_custom_props, "key")
-    layout.prop(scene.hana3d_custom_props, "value")
-
-
-def draw_panel_scene_upload(self, context):
-    s = bpy.context.scene
-    props = s.hana3d
-    layout = self.layout
-
-    draw_upload_common(layout, props, 'SCENE', context)
-    prop_needed(layout, props, 'name', props.name)
-    layout.prop(props, 'description')
-    layout.prop(props, 'tags')
-
-    col = layout.column()
-    if props.is_generating_thumbnail:
-        col.enabled = False
-    prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
-    if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        col.operator("object.hana3d_scene_thumbnail", text='Generate thumbnail', icon='IMAGE_DATA')
-    if props.is_generating_thumbnail:
-        row = layout.row(align=True)
-        row.label(text=props.thumbnail_generating_state, icon='RENDER_STILL')
-        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-        op.process_source = 'SCENE'
-        op.process_type = 'THUMBNAILER'
-    elif props.thumbnail_generating_state != '':
-        label_multiline(layout, text=props.thumbnail_generating_state)
 
 
 def draw_assetbar_show_hide(layout, props):
@@ -249,25 +192,14 @@ def draw_panel_model_search(self, context):
 
     layout.prop(props, "public_only")
 
-    # layout.prop(props, "search_style")
-    # layout.prop(props, "free_only")
-
-    # if props.search_style == 'OTHER':
-    #     layout.prop(props, "search_style_other")
-    # layout.prop(props, "search_engine")
     # col = layout.column()
     # layout.prop(props, 'append_link', expand=True, icon_only=False)
     # layout.prop(props, 'import_as', expand=True, icon_only=False)
-
-    # draw_panel_categories(self, context)
 
     layout.separator()
     layout.label(text='Import method:')
     row = layout.row()
     row.prop(props, 'append_method', expand=True, icon_only=False)
-    layout.prop(props, 'randomize_rotation')
-    if props.randomize_rotation:
-        layout.prop(props, 'randomize_rotation_amount')
 
 
 def draw_panel_scene_search(self, context):
@@ -306,7 +238,10 @@ class VIEW3D_PT_hana3d_model_properties(Panel):
         o = utils.get_active_model()
         # o = bpy.context.active_object
         if o.get('asset_data') is None:
-            label_multiline(layout, text='To upload this asset to hana3d, go to the Find and Upload Assets panel.')
+            label_multiline(
+                layout,
+                text='To upload this asset to hana3d, go to the Find and Upload Assets panel.',
+            )
             layout.prop(o, 'name')
 
         if o.get('asset_data') is not None:
@@ -320,35 +255,6 @@ def draw_login_progress(layout):
     layout.label(text='Login through browser')
     layout.label(text='in progress.')
     layout.operator("wm.hana3d_login_cancel", text="Cancel", icon='CANCEL')
-
-
-class VIEW3D_PT_hana3d_profile(Panel):
-    bl_category = "Hana3D"
-    bl_idname = "VIEW3D_PT_hana3d_profile"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_label = "Hana3D Profile"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-
-        return True
-
-    def draw(self, context):
-        # draw asset properties here
-        layout = self.layout
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-
-        if user_preferences.login_attempt:
-            draw_login_progress(layout)
-            return
-
-        if user_preferences.api_key != '':
-            me = bpy.context.window_manager.get('hana3d profile')
-            if me is not None:
-                me = me['user']
-                layout.label(text='Me: %s %s' % (me['firstName'], me['lastName']))
 
 
 class VIEW3D_PT_hana3d_login(Panel):
@@ -375,47 +281,6 @@ class VIEW3D_PT_hana3d_login(Panel):
             draw_login_buttons(layout)
 
 
-def draw_panel_material_upload(self, context):
-    scene = context.scene
-    mat = bpy.context.active_object.active_material
-
-    props = mat.hana3d
-    layout = self.layout
-
-    draw_upload_common(layout, props, 'MATERIAL', context)
-
-    prop_needed(layout, props, 'name', props.name)
-    layout.prop(props, 'description')
-    layout.prop(props, 'tags')
-    layout.prop(props, 'client')
-    layout.prop(props, 'sku')
-
-    for key in props.custom_props.keys():
-        layout.prop(props.custom_props, f'["{key}"]')
-
-    row = layout.row()
-    row.operator('hana3d.material_custom_props', text='Create Custom Prop')
-    layout.prop(scene.hana3d_custom_props, "key")
-    layout.prop(scene.hana3d_custom_props, "value")
-
-    row = layout.row()
-    if props.is_generating_thumbnail:
-        row.enabled = False
-    prop_needed(row, props, 'thumbnail', props.has_thumbnail, False)
-
-    if props.is_generating_thumbnail:
-        row = layout.row(align=True)
-        row.label(text=props.thumbnail_generating_state, icon='RENDER_STILL')
-        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-        op.process_source = 'MATERIAL'
-        op.process_type = 'THUMBNAILER'
-    elif props.thumbnail_generating_state != '':
-        label_multiline(layout, text=props.thumbnail_generating_state)
-
-    if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        layout.operator("object.hana3d_material_thumbnail", text='Render thumbnail with Cycles', icon='IMAGE_DATA')
-
-
 def draw_panel_material_search(self, context):
     wm = context.scene
     props = wm.hana3d_mat
@@ -428,17 +293,6 @@ def draw_panel_material_search(self, context):
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
 
-    # layout.prop(props, 'search_style')
-    # if props.search_style == 'OTHER':
-    #     layout.prop(props, 'search_style_other')
-    # layout.prop(props, 'search_engine')
-    # if props.search_engine == 'OTHER':
-    #     layout.prop(props, 'search_engine_other')
-
-    # draw_panel_categories(self, context)
-
-    layout.prop(props, 'automap')
-
 
 def draw_login_buttons(layout):
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
@@ -447,11 +301,9 @@ def draw_login_buttons(layout):
         draw_login_progress(layout)
     else:
         if user_preferences.api_key == '':
-            layout.operator("wm.hana3d_login", text="Login / Sign up",
-                            icon='URL')
+            layout.operator("wm.hana3d_login", text="Login / Sign up", icon='URL')
         else:
-            layout.operator("wm.hana3d_logout", text="Logout",
-                            icon='URL')
+            layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
 
 
 class VIEW3D_PT_hana3d_unified(Panel):
@@ -464,30 +316,19 @@ class VIEW3D_PT_hana3d_unified(Panel):
     @classmethod
     def poll(cls, context):
         user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-        return user_preferences.panel_behaviour == 'BOTH' or user_preferences.panel_behaviour == 'UNIFIED'
+        return (
+            user_preferences.panel_behaviour == 'BOTH'
+            or user_preferences.panel_behaviour == 'UNIFIED'
+        )
 
     def draw(self, context):
         s = context.scene
         ui_props = s.Hana3DUI
         user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-        wm = bpy.context.window_manager
         layout = self.layout
 
-        # layout.prop_tabs_enum(ui_props, "asset_type", icon_only = True)
-
         row = layout.row()
-        # row.scale_x = 1.6
-        # row.scale_y = 1.6
-        #
         row.prop(ui_props, 'down_up', expand=True, icon_only=False)
-        # row.label(text='')
-        # row = row.split().row()
-        # layout.alert = True
-        # layout.alignment = 'CENTER'
-        # row = layout.row(align = True)
-        # split = row.split(factor=.5)
-        # row.prop(ui_props, 'asset_type', expand=True, icon_only=True)
-        # row = layout.column(align = False)
         layout.prop(ui_props, 'asset_type', expand=False, text='')
 
         w = context.region.width
@@ -499,29 +340,20 @@ class VIEW3D_PT_hana3d_unified(Panel):
             if user_preferences.enable_oauth:
                 draw_login_buttons(layout)
             else:
-                op = layout.operator("wm.url_open", text="Get your API Key",
-                                     icon='QUESTION')
+                op = layout.operator("wm.url_open", text="Get your API Key", icon='QUESTION')
                 op.url = paths.HANA3D_SIGNUP_URL
                 layout.label(text='Paste your API Key:')
                 layout.prop(user_preferences, 'api_key', text='')
             layout.separator()
-        # if bpy.data.filepath == '':
-        #     layout.alert = True
-        #     label_multiline(layout, text="It's better to save your file first.", width=w)
-        #     layout.alert = False
-        #     layout.separator()
 
         if ui_props.down_up == 'SEARCH':
             if utils.profile_is_validator():
                 search_props = utils.get_search_props()
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type == 'MODEL':
-                # noinspection PyCallByClass
                 draw_panel_model_search(self, context)
-            if ui_props.asset_type == 'SCENE':
-                # noinspection PyCallByClass
+            elif ui_props.asset_type == 'SCENE':
                 draw_panel_scene_search(self, context)
-
             elif ui_props.asset_type == 'MATERIAL':
                 draw_panel_material_search(self, context)
 
@@ -537,27 +369,32 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
             e = s.render.engine
             if e not in ('CYCLES', 'BLENDER_EEVEE'):
-                rtext = 'Only Cycles and EEVEE render engines are currently supported. ' \
-                        'Please use Cycles for all assets you upload to hana3d.'
+                rtext = (
+                    'Only Cycles and EEVEE render engines are currently supported. '
+                    'Please use Cycles for all assets you upload to hana3d.'
+                )
                 label_multiline(layout, rtext, icon='ERROR', width=w)
                 return
 
             if ui_props.asset_type == 'MODEL':
-                # label_multiline(layout, "Uploaded models won't be available in b2.79", icon='ERROR')
                 if bpy.context.view_layer.objects.active is not None:
-                    draw_panel_model_upload(self, context)
+                    draw_upload_common(self.layout, context)
                 else:
                     layout.label(text='selet object to upload')
             elif ui_props.asset_type == 'SCENE':
-                draw_panel_scene_upload(self, context)
-
+                draw_upload_common(self.layout, context)
             elif ui_props.asset_type == 'MATERIAL':
-                # label_multiline(layout, "Uploaded materials won't be available in b2.79", icon='ERROR')
-
-                if bpy.context.view_layer.objects.active is not None and bpy.context.active_object.active_material is not None:
-                    draw_panel_material_upload(self, context)
+                if (
+                    bpy.context.view_layer.objects.active is not None
+                    and bpy.context.active_object.active_material is not None
+                ):
+                    draw_upload_common(self.layout, context)
                 else:
-                    label_multiline(layout, text='select object with material to upload materials', width=w)
+                    label_multiline(
+                        layout,
+                        text='select object with material to upload materials',
+                        width=w
+                    )
 
 
 class OBJECT_MT_hana3d_asset_menu(bpy.types.Menu):
@@ -587,7 +424,13 @@ class OBJECT_MT_hana3d_asset_menu(bpy.types.Menu):
                 op.author_id = author_id
 
         op = layout.operator('view3d.hana3d_search', text='Search Similar')
-        op.keywords = asset_data['name'] + ' ' + asset_data['description'] + ' ' + ' '.join(asset_data['tags'])
+        op.keywords = (
+            asset_data['name']
+            + ' '
+            + asset_data['description']
+            + ' '
+            + ' '.join(asset_data['tags'])
+        )
         if asset_data.get('canDownload') != 0:
             if len(bpy.context.selected_objects) > 0 and ui_props.asset_type == 'MODEL':
                 aob = bpy.context.active_object
@@ -634,57 +477,18 @@ class OBJECT_MT_hana3d_asset_menu(bpy.types.Menu):
                 op.state = 'deleted'
 
 
-class SetCategoryOperator(bpy.types.Operator):
-    """Visit subcategory"""
-    bl_idname = "view3d.hana3d_set_category"
-    bl_label = "Hana3D Set Active Category"
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    category: bpy.props.StringProperty(
-        name="Category",
-        description="set this category active",
-        default="")
-
-    asset_type: bpy.props.StringProperty(
-        name="Asset Type",
-        description="asset type",
-        default="")
-
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def execute(self, context):
-        acat = bpy.context.window_manager['active_category'][self.asset_type]
-        if self.category == '':
-            acat.remove(acat[-1])
-        else:
-            acat.append(self.category)
-        # we have to write back to wm. Thought this should happen with original list.
-        bpy.context.window_manager['active_category'][self.asset_type] = acat
-        return {'FINISHED'}
-
-
 class UrlPopupDialog(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
+
     bl_idname = "wm.hana3d_url_dialog"
     bl_label = "hana3d message:"
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    url: bpy.props.StringProperty(
-        name="Url",
-        description="url",
-        default="")
+    url: bpy.props.StringProperty(name="Url", description="url", default="")
 
-    link_text: bpy.props.StringProperty(
-        name="Url",
-        description="url",
-        default="Go to website")
+    link_text: bpy.props.StringProperty(name="Url", description="url", default="Go to website")
 
-    message: bpy.props.StringProperty(
-        name="Text",
-        description="text",
-        default="")
+    message: bpy.props.StringProperty(name="Text", description="text", default="")
 
     # @classmethod
     # def poll(cls, context):
@@ -707,61 +511,6 @@ class UrlPopupDialog(bpy.types.Operator):
         wm = context.window_manager
 
         return wm.invoke_props_dialog(self)
-
-
-def draw_panel_categories(self, context):
-    s = context.scene
-    ui_props = s.Hana3DUI
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-    layout = self.layout
-    # row = layout.row()
-    # row.prop(ui_props, 'asset_type', expand=True, icon_only=True)
-    layout.separator()
-
-    layout.label(text='Categories')
-    wm = bpy.context.window_manager
-    if wm.get('hana3d_categories') is None:
-        return
-    col = layout.column(align=True)
-    if wm.get('active_category') is not None:
-        acat = wm['active_category'][ui_props.asset_type]
-        if len(acat) > 1:
-            # we are in subcategory, so draw the parent button
-            op = col.operator('view3d.hana3d_set_category', text='...', icon='FILE_PARENT')
-            op.asset_type = ui_props.asset_type
-            op.category = ''
-    cats = categories.get_category(wm['hana3d_categories'], cat_path=acat)
-    # draw freebies only in models parent category
-    # if ui_props.asset_type == 'MODEL' and len(acat) == 1:
-    #     op = col.operator('view3d.hana3d_asset_bar', text='freebies')
-    #     op.free_only = True
-
-    for c in cats['children']:
-        if c['assetCount'] > 0:
-            row = col.row(align=True)
-            if len(c['children']) > 0 and c['assetCount'] > 15:
-                row = row.split(factor=.8, align=True)
-            # row = split.split()
-            ctext = '%s (%i)' % (c['name'], c['assetCount'])
-            op = row.operator('view3d.hana3d_asset_bar', text=ctext)
-            op.do_search = True
-            op.keep_running = True
-            op.category = c['slug']
-            # TODO enable subcategories, now not working due to some bug on server probably
-            if len(c['children']) > 0 and c['assetCount'] > 15:
-                # row = row.split()
-                op = row.operator('view3d.hana3d_set_category', text='>>')
-                op.asset_type = ui_props.asset_type
-                op.category = c['slug']
-                # for c1 in c['children']:
-                #     if c1['assetCount']>0:
-                #         row = col.row()
-                #         split = row.split(percentage=.2)
-                #         row = split.split()
-                #         row = split.split()
-                #         ctext = '%s (%i)' % (c1['name'], c1['assetCount'])
-                #         op = row.operator('view3d.hana3d_search', text=ctext)
-                #         op.category = c1['slug']
 
 
 class VIEW3D_PT_hana3d_downloads(Panel):
@@ -812,7 +561,10 @@ def header_search_draw(self, context):
         # if ui_props.asset_type == 'HDR':
         #     props = s.hana3d_hdr
 
-        if context.space_data.show_region_tool_header is True or context.mode[:4] not in ('EDIT', 'OBJE'):
+        if context.space_data.show_region_tool_header is True or context.mode[:4] not in (
+            'EDIT',
+            'OBJE',
+        ):
             layout.separator_spacer()
         layout.prop(ui_props, "asset_type", text='', icon='URL')
         layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
@@ -821,6 +573,7 @@ def header_search_draw(self, context):
 
 class VIEW3D_PT_UpdaterPanel(Panel):
     """Panel to demo popup notice and ignoring functionality"""
+
     bl_label = "Preferences"
     bl_idname = "VIEW3D_PT_UpdaterPanel"
     bl_space_type = 'VIEW_3D'
@@ -846,15 +599,13 @@ class VIEW3D_PT_UpdaterPanel(Panel):
 # however in this example we only store "main"
 preview_collections = {}
 classess = (
-    SetCategoryOperator,
     VIEW3D_PT_UpdaterPanel,
-    VIEW3D_PT_hana3d_profile,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
     VIEW3D_PT_hana3d_model_properties,
     VIEW3D_PT_hana3d_downloads,
     OBJECT_MT_hana3d_asset_menu,
-    UrlPopupDialog
+    UrlPopupDialog,
 )
 
 

@@ -26,8 +26,11 @@ if "bpy" in locals():
 else:
     from hana3d import utils, append_link, bg_blender
 
-import sys, json, math
+import json
+import math
+import sys
 from pathlib import Path
+
 import bpy
 import mathutils
 
@@ -49,7 +52,7 @@ def center_obs_for_thumbnail(obs):
     # obs = bpy.context.selected_objects
     parent = obs[0]
 
-    while parent.parent != None:
+    while parent.parent is not None:
         parent = parent.parent
     # reset parent rotation, so we see how it really snaps.
     parent.rotation_euler = (0, 0, 0)
@@ -66,14 +69,14 @@ def center_obs_for_thumbnail(obs):
 
     camZ = s.camera.parent.parent
     camZ.location.z = (maxz - minz) / 2
-    dx = (maxx - minx)
-    dy = (maxy - miny)
-    dz = (maxz - minz)
+    dx = maxx - minx
+    dy = maxy - miny
+    dz = maxz - minz
     r = math.sqrt(dx * dx + dy * dy + dz * dz)
 
     scaler = bpy.context.view_layer.objects['scaler']
     scaler.scale = (r, r, r)
-    coef = .7
+    coef = 0.7
     r *= coef
     camZ.scale = (r, r, r)
     bpy.context.view_layer.update()
@@ -92,16 +95,18 @@ if __name__ == "__main__":
 
         bg_blender.progress('preparing thumbnail scene')
         obnames = get_obnames()
-        main_object, allobs = append_link.append_objects(file_name=HANA3D_EXPORT_FILE_INPUT,
-                                                         obnames=obnames,
-                                                         link=True)
+        main_object, allobs = append_link.append_objects(
+            file_name=HANA3D_EXPORT_FILE_INPUT,
+            obnames=obnames,
+            link=True
+        )
         bpy.context.view_layer.update()
 
         camdict = {
             'GROUND': 'camera ground',
             'WALL': 'camera wall',
             'CEILING': 'camera ceiling',
-            'FLOAT': 'camera float'
+            'FLOAT': 'camera float',
         }
 
         bpy.context.scene.camera = bpy.data.objects[camdict[data['thumbnail_snap_to']]]
@@ -119,12 +124,7 @@ if __name__ == "__main__":
         s = bpy.context.scene
         s.frame_set(fdict[data['thumbnail_angle']])
 
-        snapdict = {
-            'GROUND': 'Ground',
-            'WALL': 'Wall',
-            'CEILING': 'Ceiling',
-            'FLOAT': 'Float'
-        }
+        snapdict = {'GROUND': 'Ground', 'WALL': 'Wall', 'CEILING': 'Ceiling', 'FLOAT': 'Float'}
 
         collection = bpy.context.scene.collection.children[snapdict[data['thumbnail_snap_to']]]
         collection.hide_viewport = False
@@ -132,8 +132,9 @@ if __name__ == "__main__":
         collection.hide_select = False
 
         main_object.rotation_euler = (0, 0, 0)
-        bpy.data.materials['hana3d background'].node_tree.nodes['Value'].outputs['Value'].default_value \
-            = data['thumbnail_background_lightness']
+        bpy.data.materials['hana3d background'].node_tree.nodes['Value'].outputs[
+            'Value'
+        ].default_value = data['thumbnail_background_lightness']
         s.cycles.samples = data['thumbnail_samples']
         bpy.context.view_layer.cycles.use_denoising = data['thumbnail_denoising']
         bpy.context.view_layer.update()
@@ -161,8 +162,7 @@ if __name__ == "__main__":
         fpath = HANA3D_THUMBNAIL_PATH + '0001.jpg'
         bg_blender.progress('background autothumbnailer finished successfully')
 
-
-    except:
+    except Exception:
         import traceback
 
         traceback.print_exc()

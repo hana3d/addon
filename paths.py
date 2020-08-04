@@ -16,9 +16,10 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy
 import os
 import sys
+
+import bpy
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
 HANA3D_API = "/v1/"
@@ -101,13 +102,9 @@ def get_auth_audience():
 
 def default_global_dict():
     from os.path import expanduser
+
     home = expanduser("~")
     return home + os.sep + 'hana3d_data'
-
-
-def get_categories_filepath():
-    tempdir = get_temp_dir()
-    return os.path.join(tempdir, 'categories.json')
 
 
 def get_temp_dir(subdir=None):
@@ -124,11 +121,11 @@ def get_temp_dir(subdir=None):
             tempdir = os.path.join(tempdir, subdir)
             if not os.path.exists(tempdir):
                 os.makedirs(tempdir)
-    except:
+    except Exception:
         print('Cache directory not found. Resetting Cache folder path.')
         p = default_global_dict()
         if p == user_preferences.global_dir:
-            print('Global dir was already default, plese set a global directory in addon preferences to a dir where you have write permissions.')
+            print('Global dir was already default, please set a global directory in addon preferences to a dir where you have write permissions.')  # noqa E501
             return None
         user_preferences.global_dir = p
         tempdir = get_temp_dir(subdir=subdir)
@@ -156,7 +153,16 @@ def get_download_dirs(asset_type):
             if subdmapping[asset_type] == subd:
                 dirs.append(subdir)
     if (
-            user_preferences.directory_behaviour == 'BOTH' or user_preferences.directory_behaviour == 'LOCAL') and bpy.data.is_saved:  # it's important local get's solved as second, since for the linking process only last filename will be taken. For download process first name will be taken and if 2 filenames were returned, file will be copied to the 2nd path.
+        (
+            user_preferences.directory_behaviour == 'BOTH'
+            or user_preferences.directory_behaviour == 'LOCAL'
+        )
+        and bpy.data.is_saved
+    ):
+        # it's important local get's solved as second,
+        # since for the linking process only last filename will be taken.
+        #  For download process first name will be taken and if 2 filenames were returned,
+        #  file will be copied to the 2nd path.
         ddir = user_preferences.project_subdir
         if ddir.startswith('//'):
             ddir = bpy.path.abspath(ddir)
@@ -179,8 +185,8 @@ def slugify(slug):
     Normalizes string, converts to lowercase, removes non-alpha characters,
     and converts spaces to hyphens.
     """
-    import unicodedata
     import re
+
     slug = slug.lower()
     slug = slug.replace('.', '_')
     slug = slug.replace('"', '')
@@ -218,10 +224,8 @@ def get_download_filenames(asset_data):
 
 def delete_asset_debug(asset_data):
     from hana3d import download
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-    api_key = user_preferences.api_key
 
-    download.get_download_url(asset_data, download.get_scene_id(), api_key)
+    download.get_download_url(asset_data)
 
     file_names = get_download_filenames(asset_data)
     for f in file_names:
@@ -229,7 +233,7 @@ def delete_asset_debug(asset_data):
             try:
                 print(f)
                 os.remove(f)
-            except:
+            except Exception:
                 e = sys.exc_info()[0]
                 print(e)
                 pass

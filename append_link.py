@@ -21,13 +21,11 @@ if "bpy" in locals():
     from importlib import reload
 
     utils = reload(utils)
-    ui = reload(ui)
     render_settings = reload(render_settings)
 else:
-    from hana3d import utils, ui, render_settings
+    from hana3d import utils, render_settings
 
 import bpy
-import uuid
 
 
 def append_material(file_name, matname=None, link=False, fake_user=True):
@@ -81,8 +79,12 @@ def copy_curves(from_scene: bpy.types.Scene, to_scene: bpy.types.Scene):
         for j, point in enumerate(curve.points):
             points[j].location = point.location
 
-    to_scene.view_settings.curve_mapping.black_level = from_scene.view_settings.curve_mapping.black_level
-    to_scene.view_settings.curve_mapping.white_level = from_scene.view_settings.curve_mapping.white_level
+    to_scene.view_settings.curve_mapping.black_level = (
+        from_scene.view_settings.curve_mapping.black_level
+    )
+    to_scene.view_settings.curve_mapping.white_level = (
+        from_scene.view_settings.curve_mapping.white_level
+    )
     to_scene.view_settings.curve_mapping.update()
 
 
@@ -124,8 +126,6 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
     scene = bpy.data.scenes[scenename]
     if fake_user:
         scene.use_fake_user = True
-    # scene has to have a new uuid, so user reports aren't screwed.
-    scene['uuid'] = str(uuid.uuid4())
     return scene
 
 
@@ -134,7 +134,6 @@ def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, paren
     sel = utils.selection_get()
 
     with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
-        scols = []
         for col in data_from.collections:
             print('linking this ', col)
             if col == kwargs['name']:
@@ -161,8 +160,13 @@ def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, paren
 
     main_object.name = main_object.instance_collection.name
 
-    # bpy.ops.wm.link(directory=file_name + "/Collection/", filename=kwargs['name'], link=link, instance_collections=True,
-    #                 autoselect=True)
+    # bpy.ops.wm.link(
+    #     directory=file_name + "/Collection/",
+    #     filename=kwargs['name'],
+    #     link=link,
+    #     instance_collections=True,
+    #     autoselect=True
+    # )
     # main_object = bpy.context.view_layer.objects.active
     # if kwargs.get('rotation') is not None:
     #     main_object.rotation_euler = kwargs['rotation']
@@ -170,57 +174,6 @@ def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, paren
 
     utils.selection_set(sel)
     return main_object, []
-
-
-def append_particle_system(file_name, obnames=[], location=(0, 0, 0), link=False, **kwargs):
-    '''link an instanced group - model type asset'''
-
-    pss = []
-    with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
-        for ps in data_from.particles:
-            pss.append(ps)
-        data_to.particles = pss
-
-    s = bpy.context.scene
-    sel = utils.selection_get()
-
-    target_object = bpy.context.scene.objects.get(kwargs['target_object'])
-    if target_object is not None and target_object.type == 'MESH':
-        target_object.select_set(True)
-        bpy.context.view_layer.objects.active = target_object
-
-        for ps in pss:
-            # now let's tune this ps to the particular objects area:
-            totarea = 0
-            for p in target_object.data.polygons:
-                totarea += p.area
-            count = int(ps.count * totarea)
-            if ps.child_type in ('INTERPOLATED', 'SIMPLE'):
-                total_count = count * ps.rendered_child_count
-                disp_count = count * ps.child_nbr
-            else:
-                total_count = count
-            threshold = 2000
-            total_max_threshold = 50000
-            # emitting too many parent particles just kills blender now:
-            if count > total_max_threshold:
-                ratio = round(count / total_max_threshold)
-
-                if ps.child_type in ('INTERPOLATED', 'SIMPLE'):
-                    ps.rendered_child_count *= ratio
-                else:
-                    ps.child_type = 'INTERPOLATED'
-                    ps.rendered_child_count = ratio
-                count = max(2, int(count / ratio))
-            ps.display_percentage = min(ps.display_percentage, max(1, int(100 * threshold / total_count)))
-
-            ps.count = count
-            bpy.ops.object.particle_system_add()
-            target_object.particle_systems[-1].settings = ps
-
-        target_object.select_set(False)
-    utils.selection_set(sel)
-    return target_object, []
 
 
 def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwargs):

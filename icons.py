@@ -18,6 +18,7 @@
 
 
 import os
+
 import bpy
 
 # We can store multiple preview collections here,
@@ -34,6 +35,7 @@ def register_icons():
     # Note that preview collections returned by bpy.utils.previews
     # are regular py objects - you can use them to store custom data.
     import bpy.utils.previews
+
     pcoll = bpy.utils.previews.new()
 
     # path to the folder where the icon is

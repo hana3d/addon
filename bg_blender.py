@@ -23,15 +23,12 @@ if "bpy" in locals():
 else:
     from hana3d import utils
 
-import bpy
+import re
 import sys
 import threading
-import os
-import re
 
-from bpy.props import (
-    EnumProperty,
-)
+import bpy
+from bpy.props import EnumProperty
 
 bg_processes = []
 
@@ -39,7 +36,16 @@ bg_processes = []
 class threadCom:  # object passed to threads to read background process stdout info
     ''' Object to pass data between thread and '''
 
-    def __init__(self, eval_path_computing, eval_path_state, eval_path, process_type, proc, location=None, name=''):
+    def __init__(
+        self,
+        eval_path_computing,
+        eval_path_state,
+        eval_path,
+        process_type,
+        proc,
+        location=None,
+        name='',
+    ):
         # self.obname=ob.name
         self.name = name
         self.eval_path_computing = eval_path_computing  # property that gets written to.
@@ -57,7 +63,8 @@ class threadCom:  # object passed to threads to read background process stdout i
 
 
 def threadread(tcom):
-    '''reads stdout of background process, done this way to have it non-blocking. this threads basically waits for a stdout line to come in, fills the data, dies.'''
+    '''reads stdout of background process, done this way to have it non-blocking.
+    this threads basically waits for a stdout line to come in, fills the data, dies.'''
     found = False
     while not found:
         inline = tcom.proc.stdout.readline()
@@ -66,10 +73,10 @@ def threadread(tcom):
         s = inline.find('progress{')
         if s > -1:
             e = inline.find('}')
-            tcom.outtext = inline[s + 9:e]
+            tcom.outtext = inline[s + 9: e]
             found = True
             if tcom.outtext.find('%') > -1:
-                tcom.progress = float(re.findall('\d+\.\d+|\d+', tcom.outtext)[0])
+                tcom.progress = float(re.findall(r'\d+\.\d+|\d+', tcom.outtext)[0])
             return
         if s == -1:
             s = inline.find('Remaining')
@@ -94,7 +101,6 @@ def progress(text, n=None):
         n = ''
     else:
         n = ' ' + ' ' + str(int(n * 1000) / 1000) + '% '
-    spaces = ' ' * (len(text) + 55)
     sys.stdout.write('progress{%s%s}\n' % (text, n))
     sys.stdout.flush()
 
@@ -102,9 +108,6 @@ def progress(text, n=None):
 # @bpy.app.handlers.persistent
 def bg_update():
     '''monitoring of background process'''
-    text = ''
-    s = bpy.context.scene
-
     global bg_processes
     if len(bg_processes) == 0:
         return 2
@@ -138,8 +141,8 @@ def bg_update():
     # if len(bg_processes) == 0:
     #     bpy.app.timers.unregister(bg_update)
     if len(bg_processes) > 0:
-        return .3
-    return 1.
+        return 0.3
+    return 1.0
 
 
 process_types = (
@@ -156,6 +159,7 @@ process_sources = (
 
 class KillBgProcess(bpy.types.Operator):
     '''Remove processes in background'''
+
     bl_idname = "object.kill_bg_process"
     bl_label = "Kill Background Process"
     bl_options = {'REGISTER'}
@@ -175,9 +179,6 @@ class KillBgProcess(bpy.types.Operator):
     )
 
     def execute(self, context):
-        s = bpy.context.scene
-
-        cls = bpy.ops.object.convert.__class__
         # first do the easy stuff...TODO all cases.
         props = utils.get_upload_props()
         if self.process_type == 'UPLOAD':
@@ -186,7 +187,8 @@ class KillBgProcess(bpy.types.Operator):
             props.is_generating_thumbnail = False
         global hana3d_bg_process
         # print('killing', self.process_source, self.process_type)
-        # then go kill the process. this wasn't working for unsetting props and that was the reason for changing to the method above.
+        # then go kill the process. this wasn't working for unsetting props
+        # and that was the reason for changing to the method above.
 
         processes = bg_processes
         for p in processes:
@@ -213,11 +215,26 @@ class KillBgProcess(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def add_bg_process(location=None, name=None, eval_path_computing='', eval_path_state='', eval_path='', process_type='',
-                   process=None):
+def add_bg_process(
+    location=None,
+    name=None,
+    eval_path_computing='',
+    eval_path_state='',
+    eval_path='',
+    process_type='',
+    process=None,
+):
     '''adds process for monitoring'''
     global bg_processes
-    tcom = threadCom(eval_path_computing, eval_path_state, eval_path, process_type, process, location, name)
+    tcom = threadCom(
+        eval_path_computing,
+        eval_path_state,
+        eval_path,
+        process_type,
+        process,
+        location,
+        name
+    )
     readthread = threading.Thread(target=threadread, args=([tcom]), daemon=True)
     readthread.start()
 

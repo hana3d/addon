@@ -2,11 +2,7 @@ import bpy
 
 
 class Hana3DCustomProps(bpy.types.PropertyGroup):
-    key: bpy.props.StringProperty(
-        name="Key",
-        description="Name of new property",
-        default='author'
-    )
+    key: bpy.props.StringProperty(name="Key", description="Name of new property", default='author')
 
     value: bpy.props.StringProperty(
         name="Value",
@@ -17,6 +13,7 @@ class Hana3DCustomProps(bpy.types.PropertyGroup):
 
 class ModelCreateCustomProps(bpy.types.Operator):
     """Model Create Custom Props"""
+
     bl_idname = "hana3d.model_custom_props"
     bl_label = "Model Custom Props"
     bl_options = {'REGISTER', 'UNDO'}
@@ -34,6 +31,7 @@ class ModelCreateCustomProps(bpy.types.Operator):
 
 class MaterialCreateCustomProps(bpy.types.Operator):
     """Material Create Custom Props"""
+
     bl_idname = "hana3d.material_custom_props"
     bl_label = "Material Custom Props"
     bl_options = {'REGISTER', 'UNDO'}
@@ -57,7 +55,7 @@ classes = (
     Hana3DCustomProps,
     ModelCreateCustomProps,
     MaterialCreateCustomProps,
-    CustomPropsPropertyGroup
+    CustomPropsPropertyGroup,
 )
 
 

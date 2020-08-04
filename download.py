@@ -24,60 +24,54 @@ if "bpy" in locals():
     utils = reload(utils)
     ui = reload(ui)
     colors = reload(colors)
-    tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
 else:
-    from hana3d import paths, append_link, utils, ui, colors, tasks_queue, rerequests
+    from hana3d import paths, append_link, utils, ui, colors, rerequests
 
-import threading
-import time
-import requests
+import copy
+import os
 import shutil
 import sys
-import os
-import uuid
-import copy
+import threading
 
 import bpy
-from bpy.props import (
-    IntProperty,
-    FloatProperty,
-    FloatVectorProperty,
-    StringProperty,
-    EnumProperty,
-    BoolProperty,
-    PointerProperty,
-)
+import requests
 from bpy.app.handlers import persistent
+from bpy.props import (
+    BoolProperty,
+    EnumProperty,
+    FloatVectorProperty,
+    IntProperty,
+    StringProperty
+)
 
 download_threads = []
 
 
 def check_missing():
     '''checks for missing files, and possibly starts re-download of these into the scene'''
-    s = bpy.context.scene
     # missing libs:
     # TODO: put these into a panel and let the user decide if these should be downloaded.
     missing = []
-    for l in bpy.data.libraries:
-        fp = l.filepath
+    for library in bpy.data.libraries:
+        fp = library.filepath
         if fp.startswith('//'):
             fp = bpy.path.abspath(fp)
-        if not os.path.exists(fp) and l.get('asset_data') is not None:
-            missing.append(l)
+        if not os.path.exists(fp) and library.get('asset_data') is not None:
+            missing.append(library)
 
     # print('missing libraries', missing)
 
-    for l in missing:
-        asset_data = l['asset_data']
+    for library in missing:
+        asset_data = library['asset_data']
         downloaded = check_existing(asset_data)
         if downloaded:
             try:
-                l.reload()
-            except:
-                download(l['asset_data'], redownload=True)
+                library.reload()
+            except Exception:
+                download(library['asset_data'], redownload=True)
         else:
-            download(l['asset_data'], redownload=True)
+            download(library['asset_data'], redownload=True)
 
 
 def check_unused():
@@ -91,20 +85,22 @@ def check_unused():
                 used_libs.append(ob.instance_collection.library)
 
         for ps in ob.particle_systems:
-            set = ps.settings
-            if ps.settings.render_type == 'GROUP' \
-                    and ps.settings.instance_collection is not None \
-                    and ps.settings.instance_collection.library not in used_libs:
+            if (
+                ps.settings.render_type == 'GROUP'
+                and ps.settings.instance_collection is not None
+                and ps.settings.instance_collection.library not in used_libs
+            ):
                 used_libs.append(ps.settings.instance_collection)
 
-    for l in bpy.data.libraries:
-        if l not in used_libs:
-            print('attempt to remove this library: ', l.filepath)
-            # have to unlink all groups, since the file is a 'user' even if the groups aren't used at all...
-            for user_id in l.users_id:
+    for library in bpy.data.libraries:
+        if library not in used_libs:
+            print('attempt to remove this library: ', library.filepath)
+            # have to unlink all groups, since the file is a 'user'
+            # even if the groups aren't used at all...
+            for user_id in library.users_id:
                 if type(user_id) == bpy.types.Collection:
                     bpy.data.collections.remove(user_id)
-            l.user_clear()
+            library.user_clear()
 
 
 @persistent
@@ -118,12 +114,11 @@ def scene_save(context):
 @persistent
 def scene_load(context):
     '''restart broken downloads on scene load'''
-    t = time.time()
-    s = bpy.context.scene
     global download_threads
     download_threads = []
 
-    # commenting this out - old restore broken download on scene start. Might come back if downloads get recorded in scene
+    # commenting this out - old restore broken download on scene start.
+    # Might come back if downloads get recorded in scene
     # reset_asset_ids = {}
     # reset_obs = {}
     # for ob in bpy.context.scene.collection.objects:
@@ -160,15 +155,8 @@ def scene_load(context):
     # TODO scenes fixing part... download the assets not present on drive,
     # and erase from scene linked files that aren't used in the scene.
     # print('continue downlaods ', time.time() - t)
-    t = time.time()
     check_missing()
     # print('missing check', time.time() - t)
-
-
-def get_scene_id():
-    '''gets scene id and possibly also generates a new one'''
-    bpy.context.scene['uuid'] = bpy.context.scene.get('uuid', str(uuid.uuid4()))
-    return bpy.context.scene['uuid']
 
 
 def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
@@ -211,7 +199,8 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                         rotation=downloader['rotation'],
                         link=link,
                         name=asset_data['name'],
-                        parent=kwargs.get('parent'))
+                        parent=kwargs.get('parent'),
+                    )
                 else:
                     parent, newobs = append_link.append_objects(
                         file_names[-1],
@@ -219,12 +208,16 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                         rotation=downloader['rotation'],
                         link=link,
                         name=asset_data['name'],
-                        parent=kwargs.get('parent'))
+                        parent=kwargs.get('parent'),
+                    )
 
                 if parent.type == 'EMPTY' and link:
                     bmin = asset_data['bbox_min']
                     bmax = asset_data['bbox_max']
-                    size_min = min(1.0, (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3)
+                    size_min = min(
+                        1.0,
+                        (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3
+                    )
                     parent.empty_display_size = size_min
 
         elif kwargs.get('model_location') is not None:
@@ -235,14 +228,16 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                     rotation=kwargs['model_rotation'],
                     link=link,
                     name=asset_data['name'],
-                    parent=kwargs.get('parent'))
+                    parent=kwargs.get('parent'),
+                )
             else:
                 parent, newobs = append_link.append_objects(
                     file_names[-1],
                     location=kwargs['model_location'],
                     rotation=kwargs['model_rotation'],
                     link=link,
-                    parent=kwargs.get('parent'))
+                    parent=kwargs.get('parent'),
+                )
             if parent.type == 'EMPTY' and link:
                 bmin = asset_data['bbox_min']
                 bmax = asset_data['bbox_max']
@@ -276,8 +271,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     scene['assets used'] = scene.get('assets used', {})
     scene['assets used'][asset_data['asset_base_id']] = asset_data.copy()
 
-    id = asset_data['asset_base_id']
-
     parent['asset_data'] = asset_data
 
     set_thumbnail(asset_data, parent)
@@ -285,7 +278,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     parent.hana3d.id = asset_data['id']
     parent.hana3d.asset_base_id = asset_data['asset_base_id']
     parent.hana3d.name = asset_data['name']
-    asset_data['tags'].remove('non-manifold')
     parent.hana3d.tags = ','.join(asset_data['tags'])
     parent.hana3d.description = asset_data['description']
     if hasattr(parent.hana3d, 'custom_props') and 'metadata' in asset_data:
@@ -325,14 +317,10 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
     global download_threads
     if len(download_threads) == 0:
         return 1.0
-    s = bpy.context.scene
     for threaddata in download_threads:
         t = threaddata[0]
         asset_data = threaddata[1]
         tcom = threaddata[2]
-
-        progress_bars = []
-        downloaders = []
 
         if t.is_alive():  # set downloader size
             sr = bpy.context.scene.get('search results')
@@ -348,15 +336,21 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                 download_threads.remove(threaddata)
                 return
             file_names = paths.get_download_filenames(asset_data)
-            wm = bpy.context.window_manager
 
             at = asset_data['asset_type']
-            if (bpy.context.mode == 'OBJECT' and (at == 'model' or at == 'material')) \
-                    or at == 'scene':  # don't do this stuff in editmode and other modes, just wait...
+            # don't do this stuff in editmode and other modes, just wait...
+            if (
+                (
+                    bpy.context.mode == 'OBJECT'
+                    and (at == 'model' or at == 'material')
+                )
+                or at == 'scene'
+            ):
                 download_threads.remove(threaddata)
 
                 # duplicate file if the global and subdir are used in prefs
-                if len(file_names) == 2:  # todo this should try to check if both files exist and are ok.
+                # todo this should try to check if both files exist and are ok.
+                if len(file_names) == 2:
                     shutil.copyfile(file_names[0], file_names[1])
 
                 utils.p('appending asset')
@@ -366,10 +360,13 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
 
                 if tcom.passargs.get('redownload'):
                     # handle lost libraries here:
-                    for l in bpy.data.libraries:
-                        if l.get('asset_data') is not None and l['asset_data']['id'] == asset_data['id']:
-                            l.filepath = file_names[-1]
-                            l.reload()
+                    for library in bpy.data.libraries:
+                        if (
+                            library.get('asset_data') is not None
+                            and library['asset_data']['id'] == asset_data['id']
+                        ):
+                            library.filepath = file_names[-1]
+                            library.reload()
                 else:
                     done = try_finished_append(asset_data, **tcom.passargs)
                     if not done:
@@ -387,7 +384,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                                 sres['downloaded'] = 100
 
                 utils.p('finished download thread')
-    return .5
+    return 0.5
 
 
 def download_file(asset_data):
@@ -395,15 +392,14 @@ def download_file(asset_data):
     file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
 
     if check_existing(asset_data):
-        # this sends the thread for processing, where another check should occur, since the file might be corrupted.
+        # this sends the thread for processing,
+        # where another check should occur,
+        # since the file might be corrupted.
         utils.p('not downloading, already in db')
         return file_name
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
-    api_key = preferences.api_key
 
     with open(file_name, "wb") as f:
         print("Downloading %s" % file_name)
-        headers = utils.get_headers(api_key)
 
         response = requests.get(asset_data['download_url'], stream=True)
         total_length = response.headers.get('Content-Length')
@@ -420,12 +416,10 @@ def download_file(asset_data):
 
 
 class Downloader(threading.Thread):
-    def __init__(self, asset_data, tcom, scene_id, api_key):
+    def __init__(self, asset_data, tcom):
         super(Downloader, self).__init__()
         self.asset_data = asset_data
         self.tcom = tcom
-        self.scene_id = scene_id
-        self.api_key = api_key
         self._stop_event = threading.Event()
 
     def stop(self):
@@ -434,20 +428,22 @@ class Downloader(threading.Thread):
     def stopped(self):
         return self._stop_event.is_set()
 
-    # def main_download_thread(asset_data, tcom, scene_id, api_key):
+    # def main_download_thread(asset_data, tcom):
     def run(self):
         '''try to download file from hana3d'''
         asset_data = self.asset_data
         tcom = self.tcom
-        scene_id = self.scene_id
-        api_key = self.api_key
 
         if tcom.error:
             return
-        # only now we can check if the file already exists. This should have 2 levels, for materials
-        # different than for the non free content. delete is here when called after failed append tries.
+        # only now we can check if the file already exists.
+        # This should have 2 levels, for materials
+        # different than for the non free content.
+        # delete is here when called after failed append tries.
         if check_existing(asset_data) and not tcom.passargs.get('delete'):
-            # this sends the thread for processing, where another check should occur, since the file might be corrupted.
+            # this sends the thread for processing,
+            # where another check should occur,
+            # since the file might be corrupted.
             tcom.downloaded = 100
             utils.p('not downloading, trying to append again')
             return
@@ -461,7 +457,6 @@ class Downloader(threading.Thread):
 
         with open(file_name, "wb") as f:
             print("Downloading %s" % file_name)
-            headers = utils.get_headers(api_key)
 
             response = requests.get(asset_data['download_url'], stream=True)
             total_length = response.headers.get('Content-Length')
@@ -496,9 +491,6 @@ class ThreadCom:  # object passed to threads to read background process stdout i
 
 def download(asset_data, **kwargs):
     '''start the download thread'''
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-    api_key = user_preferences.api_key
-    scene_id = get_scene_id()
 
     tcom = ThreadCom()
     tcom.passargs = kwargs
@@ -518,16 +510,16 @@ def download(asset_data, **kwargs):
         asset_data = copy.deepcopy(asset_data)
     else:
         asset_data = asset_data.to_dict()
-    readthread = Downloader(asset_data, tcom, scene_id, api_key)
+    readthread = Downloader(asset_data, tcom)
     readthread.start()
 
     global download_threads
-    download_threads.append(
-        [readthread, asset_data, tcom])
+    download_threads.append([readthread, asset_data, tcom])
 
 
 def check_downloading(asset_data, **kwargs):
-    ''' check if an asset is already downloading, if yes, just make a progress bar with downloader object.'''
+    ''' check if an asset is already downloading, if yes,
+    just make a progress bar with downloader object.'''
     global download_threads
 
     downloading = False
@@ -537,8 +529,10 @@ def check_downloading(asset_data, **kwargs):
         if p_asset_data['id'] == asset_data['id']:
             at = asset_data['asset_type']
             if at in ('model', 'material'):
-                downloader = {'location': kwargs['model_location'],
-                              'rotation': kwargs['model_rotation']}
+                downloader = {
+                    'location': kwargs['model_location'],
+                    'rotation': kwargs['model_rotation'],
+                }
                 p[2].passargs['downloaders'].append(downloader)
             downloading = True
 
@@ -554,12 +548,13 @@ def check_existing(asset_data):
     utils.p('check if file already exists')
     if len(file_names) == 2:
         # TODO this should check also for failed or running downloads.
-        # If download is running, assign just the running thread. if download isn't running but the file is wrong size,
+        # If download is running, assign just the running thread.
+        # if download isn't running but the file is wrong size,
         #  delete file and restart download (or continue downoad? if possible.)
         if os.path.isfile(file_names[0]) and not os.path.isfile(file_names[1]):
             shutil.copy(file_names[0], file_names[1])
-        elif not os.path.isfile(file_names[0]) and os.path.isfile(
-                file_names[1]):  # only in case of changed settings or deleted/moved global dict.
+        # only in case of changed settings or deleted/moved global dict.
+        elif not os.path.isfile(file_names[0]) and os.path.isfile(file_names[1]):
             shutil.copy(file_names[1], file_names[0])
 
     if len(file_names) > 0 and os.path.isfile(file_names[0]) and 'created' in asset_data:
@@ -591,7 +586,7 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
                 for f in file_names:
                     try:
                         os.remove(f)
-                    except:
+                    except Exception:
                         e = sys.exc_info()[0]
                         print(e)
                         pass
@@ -600,14 +595,15 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
 
 
 def check_asset_in_scene(asset_data):
-    '''checks if the asset is already in scene. If yes, modifies asset data so the asset can be reached again.'''
+    '''checks if the asset is already in scene. If yes,
+    modifies asset data so the asset can be reached again.'''
     scene = bpy.context.scene
     au = scene.get('assets used', {})
 
     id = asset_data['asset_base_id']
     if id in au.keys():
         ad = au[id]
-        if ad.get('file_name') != None:
+        if ad.get('file_name') is not None:
 
             asset_data['file_name'] = ad['file_name']
             asset_data['download_url'] = ad['download_url']
@@ -628,24 +624,19 @@ def fprint(text):
     print('###################################################################################')
 
 
-def get_download_url(asset_data, scene_id, api_key, tcom=None):
+def get_download_url(asset_data, tcom=None):
     ''''retrieves the download url. The server checks if user can download the item.'''
-    mt = time.time()
+    headers = utils.get_headers()
 
-    headers = utils.get_headers(api_key)
-
-    data = {
-        'scene_uuid': scene_id
-    }
     r = None
 
     try:
-        r = rerequests.get(asset_data['download_url'], params=data, headers=headers)
+        r = rerequests.get(asset_data['download_url'], headers=headers)
     except Exception as e:
         print(e)
         if tcom is not None:
             tcom.error = True
-    if r == None:
+    if r is None:
         if tcom is not None:
             tcom.report = 'Connection Error'
             tcom.error = True
@@ -670,12 +661,12 @@ def start_download(asset_data, **kwargs):
     '''
     check if file isn't downloading or doesn't exist, then start new download
     '''
-    # first check if the asset is already in scene. We can use that asset without checking with server
+    # first check if the asset is already in scene.
+    # We can use that asset without checking with server
     asset_in_scene = check_asset_in_scene(asset_data)
 
     # otherwise, check on server
 
-    s = bpy.context.scene
     done = False
     # is the asseet being currently downloaded?
     downloading = check_downloading(asset_data, **kwargs)
@@ -692,8 +683,10 @@ def start_download(asset_data, **kwargs):
         if not done:
             at = asset_data['asset_type']
             if at in ('model', 'material'):
-                downloader = {'location': kwargs['model_location'],
-                              'rotation': kwargs['model_rotation']}
+                downloader = {
+                    'location': kwargs['model_location'],
+                    'rotation': kwargs['model_rotation'],
+                }
                 download(asset_data, downloaders=[downloader], **kwargs)
 
             elif asset_data['asset_type'] == 'scene':
@@ -710,11 +703,16 @@ asset_types = (
 
 class Hana3DKillDownloadOperator(bpy.types.Operator):
     """Kill a download"""
+
     bl_idname = "scene.hana3d_download_kill"
     bl_label = "Hana3D Kill Asset Download"
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    thread_index: IntProperty(name="Thread index", description='index of the thread to kill', default=-1)
+    thread_index: IntProperty(
+        name="Thread index",
+        description='index of the thread to kill',
+        default=-1
+    )
 
     def execute(self, context):
         global download_threads
@@ -726,6 +724,7 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
 
 class Hana3DDownloadOperator(bpy.types.Operator):
     """Download and link asset to scene. Only link if asset already available locally."""
+
     bl_idname = "scene.hana3d_download"
     bl_label = "Hana3D Asset Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
@@ -736,23 +735,33 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         description="Type of download",
         default="MODEL",
     )
-    asset_index: IntProperty(name="Asset Index", description='asset index in search results', default=-1)
+    asset_index: IntProperty(
+        name="Asset Index",
+        description='asset index in search results',
+        default=-1
+    )
 
     target_object: StringProperty(
         name="Target Object",
         description="Material or object target for replacement",
-        default="")
+        default=""
+    )
 
-    material_target_slot: IntProperty(name="Asset Index", description='asset index in search results', default=0)
+    material_target_slot: IntProperty(
+        name="Asset Index",
+        description='asset index in search results',
+        default=0
+    )
     model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))
     model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))
 
-    replace: BoolProperty(name='Replace', description='replace selection with the asset', default=False)
+    replace: BoolProperty(
+        name='Replace',
+        description='replace selection with the asset',
+        default=False
+    )
 
-    cast_parent: StringProperty(
-        name="Particles Target Object",
-        description="",
-        default="")
+    cast_parent: StringProperty(name="Particles Target Object", description="", default="")
 
     # @classmethod
     # def poll(cls, context):
@@ -762,14 +771,19 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         s = bpy.context.scene
         sr = s['search results']
 
-        asset_data = sr[self.asset_index].to_dict()  # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
+        asset_data = sr[
+            self.asset_index
+        ].to_dict()  # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
         au = s.get('assets used')
         if au is None:
             s['assets used'] = {}
 
         atype = asset_data['asset_type']
-        if bpy.context.mode != 'OBJECT' and (
-                atype == 'model' or atype == 'material') and bpy.context.view_layer.objects.active is not None:
+        if (
+            bpy.context.mode != 'OBJECT'
+            and (atype == 'model' or atype == 'material')
+            and bpy.context.view_layer.objects.active is not None
+        ):
             bpy.ops.object.mode_set(mode='OBJECT')
 
         if self.replace:  # cleanup first, assign later.
@@ -783,7 +797,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
                     'model_location': tuple(ob.matrix_world.translation),
                     'model_rotation': tuple(ob.matrix_world.to_euler()),
                     'replace': False,
-                    'parent': ob.parent
+                    'parent': ob.parent,
                 }
                 utils.delete_hierarchy(ob)
                 start_download(asset_data, **kwargs)
@@ -794,7 +808,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
                 'material_target_slot': self.material_target_slot,
                 'model_location': tuple(self.model_location),
                 'model_rotation': tuple(self.model_rotation),
-                'replace': False
+                'replace': False,
             }
 
             start_download(asset_data, **kwargs)

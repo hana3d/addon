@@ -10,7 +10,7 @@ SETTINGS = {
         "hair_subdiv",
         "use_freestyle",
         "line_thickness_mode",
-        "line_thickness"
+        "line_thickness",
     ],
     "cycles": [
         "aa_samples",
@@ -78,7 +78,7 @@ SETTINGS = {
         "volume_bounces",
         "volume_max_steps",
         "volume_samples",
-        "volume_step_rate"
+        "volume_step_rate",
     ],
     "eevee": [
         "bloom_clamp",
@@ -138,19 +138,9 @@ SETTINGS = {
         "volumetric_samples",
         "volumetric_shadow_samples",
         "volumetric_start",
-        "volumetric_tile_size"
+        "volumetric_tile_size",
     ],
-    "display_settings": [
-        "display_device"
-    ],
-    "view_settings": [
-        "view_transform",
-        "look",
-        "exposure",
-        "gamma",
-        "use_curve_mapping"
-    ],
-    "sequencer_colorspace_settings": [
-        "name"
-    ]
+    "display_settings": ["display_device"],
+    "view_settings": ["view_transform", "look", "exposure", "gamma", "use_curve_mapping"],
+    "sequencer_colorspace_settings": ["name"],
 }

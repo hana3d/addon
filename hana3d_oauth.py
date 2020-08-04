@@ -24,17 +24,16 @@ if "bpy" in locals():
     paths = reload(paths)
     search = reload(search)
     colors = reload(colors)
-    categories = reload(categories)
     oauth = reload(oauth)
     ui = reload(ui)
 else:
-    from hana3d import tasks_queue, utils, paths, search, colors, categories, oauth, ui
-
-import bpy
+    from hana3d import tasks_queue, utils, paths, search, colors, oauth, ui
 
 import threading
-import requests
 import time
+
+import bpy
+import requests
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -53,7 +52,7 @@ def login_thread():
         platform_url=PLATFORM_URL,
         client_id=CLIENT_ID,
         ports=PORTS,
-        audience=AUDIENCE
+        audience=AUDIENCE,
     )
     # we store authenticator globally to be able to ping the server if connection fails.
     active_authenticator = authenticator
@@ -62,7 +61,9 @@ def login_thread():
 
 
 def login(authenticator):
-    auth_token, refresh_token, oauth_response = authenticator.get_new_token(redirect_url=REDIRECT_URL)
+    auth_token, refresh_token, oauth_response = authenticator.get_new_token(
+        redirect_url=REDIRECT_URL
+    )
     utils.p('tokens retrieved')
     tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
 
@@ -71,7 +72,11 @@ def refresh_token_thread():
     preferences = bpy.context.preferences.addons['hana3d'].preferences
     if len(preferences.api_key_refresh) > 0 and not preferences.refresh_in_progress:
         preferences.refresh_in_progress = True
-        thread = threading.Thread(target=refresh_token, args=([preferences.api_key_refresh]), daemon=True)
+        thread = threading.Thread(
+            target=refresh_token,
+            args=([preferences.api_key_refresh]),
+            daemon=True
+        )
         thread.start()
     else:
         ui.add_report('Already Refreshing token, will be ready soon.')
@@ -83,7 +88,7 @@ def refresh_token(api_key_refresh):
         platform_url=PLATFORM_URL,
         client_id=CLIENT_ID,
         ports=PORTS,
-        audience=AUDIENCE
+        audience=AUDIENCE,
     )
     auth_token, refresh_token, oauth_response = authenticator.get_refreshed_token(api_key_refresh)
     if auth_token is not None and refresh_token is not None:
@@ -107,7 +112,6 @@ def write_tokens(auth_token, refresh_token, oauth_response):
         props.report = ''
     ui.add_report('Hana3D Re-Login success')
     search.get_profile()
-    categories.fetch_categories_thread(auth_token)
 
 
 def fail_refresh():
@@ -120,7 +124,7 @@ def fail_refresh():
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
     if 'hana3d profile' in bpy.context.window_manager.keys():
-        del (bpy.context.window_manager['hana3d profile'])
+        del bpy.context.window_manager['hana3d profile']
 
 
 class RegisterLoginOnline(bpy.types.Operator):
@@ -161,7 +165,7 @@ class Logout(bpy.types.Operator):
         preferences.login_attempt = False
         preferences.refresh_in_progress = False
         if 'hana3d profile' in bpy.context.window_manager.keys():
-            del (bpy.context.window_manager['hana3d profile'])
+            del bpy.context.window_manager['hana3d profile']
         return {'FINISHED'}
 
 

@@ -26,9 +26,11 @@ if "bpy" in locals():
 else:
     from hana3d import utils, append_link, bg_blender
 
-import sys, json, math
-import bpy
+import json
+import sys
 from pathlib import Path
+
+import bpy
 
 HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
 HANA3D_THUMBNAIL_PATH = sys.argv[-2]
@@ -53,8 +55,12 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
             # append_material(file_name, matname = None, link = False, fake_user = True)
-        mat = append_link.append_material(file_name=HANA3D_EXPORT_FILE_INPUT, matname=data["material"], link=True,
-                                          fake_user=False)
+        mat = append_link.append_material(
+            file_name=HANA3D_EXPORT_FILE_INPUT,
+            matname=data["material"],
+            link=True,
+            fake_user=False
+        )
 
         user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
@@ -65,14 +71,15 @@ if __name__ == "__main__":
             'CUBE': 'Cube',
             'FLUID': 'Fluid',
             'CLOTH': 'Cloth',
-            'HAIR': 'Hair'
+            'HAIR': 'Hair',
         }
 
         unhide_collection(colmapdict[data["thumbnail_type"]])
         if data['thumbnail_background']:
             unhide_collection('Background')
-            bpy.data.materials["bg checker colorable"].node_tree.nodes['input_level'].outputs['Value'].default_value \
-                = data['thumbnail_background_lightness']
+            bpy.data.materials["bg checker colorable"].node_tree.nodes['input_level'].outputs[
+                'Value'
+            ].default_value = data['thumbnail_background_lightness']
         tscale = data["thumbnail_scale"]
         bpy.context.view_layer.objects['scaler'].scale = (tscale, tscale, tscale)
         bpy.context.view_layer.update()
@@ -82,17 +89,16 @@ if __name__ == "__main__":
                 ob.data.texspace_size.x = 1 / tscale
                 ob.data.texspace_size.y = 1 / tscale
                 ob.data.texspace_size.z = 1 / tscale
-                if data["adaptive_subdivision"] == True:
+                if data["adaptive_subdivision"]:
                     ob.cycles.use_adaptive_subdivision = True
-
                 else:
                     ob.cycles.use_adaptive_subdivision = False
                 ts = data['texture_size_meters']
                 if data["thumbnail_type"] in ['BALL', 'CUBE', 'CLOTH']:
-                   utils.automap(ob.name, tex_size = ts / tscale, just_scale = True, bg_exception=True)
+                    utils.automap(ob.name, tex_size=ts / tscale, just_scale=True, bg_exception=True)
         bpy.context.view_layer.update()
 
-        s.cycles.volume_step_size = tscale * .1
+        s.cycles.volume_step_size = tscale * 0.1
 
         if user_preferences.thumbnail_use_gpu:
             bpy.context.scene.cycles.device = 'GPU'
@@ -122,7 +128,6 @@ if __name__ == "__main__":
         bg_blender.progress('rendering thumbnail')
         render_thumbnails()
         bg_blender.progress('background autothumbnailer finished successfully')
-
 
     except Exception as e:
         print(e)

@@ -16,9 +16,8 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bgl, blf
-
-import bpy, blf
+import bgl
+import blf
 import gpu
 from gpu_extras.batch import batch_for_shader
 
@@ -26,11 +25,12 @@ from gpu_extras.batch import batch_for_shader
 def draw_rect(x, y, width, height, color):
     xmax = x + width
     ymax = y + height
-    points = [[x, y],  # [x, y]
-              [x, ymax],  # [x, y]
-              [xmax, ymax],  # [x, y]
-              [xmax, y],  # [x, y]
-              ]
+    points = [
+        [x, y],  # [x, y]
+        [x, ymax],  # [x, y]
+        [xmax, ymax],  # [x, y]
+        [xmax, y],  # [x, y]
+    ]
     indices = ((0, 1, 2), (2, 3, 0))
 
     shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
@@ -43,11 +43,9 @@ def draw_rect(x, y, width, height, color):
 
 
 def draw_line2d(x1, y1, x2, y2, width, color):
-    coords = (
-        (x1, y1), (x2, y2))
+    coords = ((x1, y1), (x2, y2))
 
-    indices = (
-        (0, 1),)
+    indices = ((0, 1),)
     bgl.glEnable(bgl.GL_BLEND)
 
     shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
@@ -78,23 +76,19 @@ def draw_rect_3d(coords, color):
 def draw_image(x, y, width, height, image, transparency, crop=(0, 0, 1, 1)):
     # draw_rect(x,y, width, height, (.5,0,0,.5))
 
-    coords = [
-        (x, y), (x + width, y),
-        (x, y + height), (x + width, y + height)]
+    coords = [(x, y), (x + width, y), (x, y + height), (x + width, y + height)]
 
-    uvs = [(crop[0], crop[1]),
-           (crop[2], crop[1]),
-           (crop[0], crop[3]),
-           (crop[2], crop[3]),
-           ]
+    uvs = [
+        (crop[0], crop[1]),
+        (crop[2], crop[1]),
+        (crop[0], crop[3]),
+        (crop[2], crop[3]),
+    ]
 
     indices = [(0, 1, 2), (2, 1, 3)]
 
     shader = gpu.shader.from_builtin('2D_IMAGE')
-    batch = batch_for_shader(shader, 'TRIS',
-                             {"pos": coords,
-                              "texCoord": uvs},
-                             indices=indices)
+    batch = batch_for_shader(shader, 'TRIS', {"pos": coords, "texCoord": uvs}, indices=indices)
 
     # send image to gpu if it isn't there already
     if image.gl_load():
