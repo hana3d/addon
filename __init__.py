@@ -41,7 +41,6 @@ if "bpy" in locals():
     bg_blender = reload(bg_blender)
     paths = reload(paths)
     utils = reload(utils)
-    overrides = reload(overrides)
     ui_panels = reload(ui_panels)
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
@@ -58,7 +57,6 @@ else:
         bg_blender,
         paths,
         utils,
-        overrides,
         ui_panels,
         hana3d_oauth,
         tasks_queue,
@@ -283,6 +281,14 @@ class Hana3DUIProps(PropertyGroup):
         description="",
         default=paths.get_addon_thumbnail_path('thumbnail_notready.jpg'),
     )
+
+
+def get_user_credits(self):
+    return '$0'
+
+
+class Hana3DRenderProps(PropertyGroup):
+    user_credits: StringProperty(name="Credits", description="", get=get_user_credits)
 
 
 def workspace_items(self, context):
@@ -949,17 +955,6 @@ class Hana3DAddonPreferences(AddonPreferences):
         default=False,
     )
 
-    panel_behaviour: EnumProperty(
-        name="Panels Locations",
-        items=(
-            ('BOTH', 'Both Types', ''),
-            ('UNIFIED', 'Unified 3D View Panel', ""),
-            ('LOCAL', 'Relative to Data', ''),
-        ),
-        description="Which directories will be used for storing downloaded data",
-        default="UNIFIED",
-    )
-
     max_assetbar_rows: IntProperty(
         name="Max Assetbar Rows",
         description="max rows of assetbar in the 3D view",
@@ -1036,7 +1031,6 @@ class Hana3DAddonPreferences(AddonPreferences):
         # layout.prop(self, "temp_dir")
         layout.prop(self, "directory_behaviour")
         layout.prop(self, "thumbnail_use_gpu")
-        # layout.prop(self, "panel_behaviour")
         layout.prop(self, "thumb_size")
         layout.prop(self, "max_assetbar_rows")
         layout.prop(self, "search_in_header")
@@ -1048,6 +1042,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 classes = (
     Hana3DAddonPreferences,
     Hana3DUIProps,
+    Hana3DRenderProps,
     Hana3DModelSearchProps,
     Hana3DModelUploadProps,
     Hana3DSceneSearchProps,
@@ -1066,6 +1061,7 @@ def register():
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.Hana3DUI = PointerProperty(type=Hana3DUIProps)
+    bpy.types.Scene.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
 
     # MODELS
     bpy.types.Scene.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
@@ -1089,7 +1085,6 @@ def register():
     ui_panels.register_ui_panels()
     bg_blender.register()
     utils.load_prefs()
-    overrides.register_overrides()
     hana3d_oauth.register()
     tasks_queue.register()
 
@@ -1112,7 +1107,6 @@ def unregister():
     upload.unregister_upload()
     autothumb.unregister_thumbnailer()
     bg_blender.unregister()
-    overrides.unregister_overrides()
     hana3d_oauth.unregister()
     tasks_queue.unregister()
 

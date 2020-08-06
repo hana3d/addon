@@ -733,10 +733,6 @@ def draw_callback_2d_search(self, context):
                     # object type icons - just a test..., adds clutter/ not so userfull:
                     # icons = ('type_finished.png', 'type_template.png', 'type_particle_system.png')
 
-                    if (result.get('can_download', True)) == 0:
-                        img = utils.get_thumbnail('locked.png')
-                        ui_bgl.draw_image(x + 2, y + 2, 24, 24, img, 1)
-
                     v_icon = verification_icons[result.get('verification_status', 'validated')]
                     if v_icon is not None:
                         img = utils.get_thumbnail(v_icon)
@@ -1302,7 +1298,6 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.draw_tooltip = True
 
                     ui_props.tooltip = asset_data['tooltip']
-                    # bpy.ops.wm.call_menu(name='OBJECT_MT_hana3d_asset_menu')
 
                 else:
                     ui_props.draw_tooltip = False
@@ -1360,10 +1355,6 @@ class AssetBarOperator(bpy.types.Operator):
             mx = event.mouse_x - r.x
             my = event.mouse_y - r.y
 
-            if event.value == 'PRESS' and mouse_in_asset_bar(mx, my):
-                bpy.ops.wm.call_menu(name='OBJECT_MT_hana3d_asset_menu')
-                return {'RUNNING_MODAL'}
-
         if event.type == 'LEFTMOUSE':
 
             r = self.region
@@ -1376,22 +1367,6 @@ class AssetBarOperator(bpy.types.Operator):
                     # check if asset is locked and let the user know in that case
                     asset_search_index = ui_props.active_index
                     asset_data = sr[asset_search_index]
-                    if not asset_data['can_download']:
-                        message = "Let's support asset creators and Blender development."
-                        link_text = 'Unlock the asset.'
-                        url = (
-                            paths.get_hana3d_url()
-                            + '/get-hana3d/'
-                            + asset_data['id']
-                            + '/?from_addon'
-                        )
-                        bpy.ops.wm.hana3d_url_dialog(
-                            'INVOKE_REGION_WIN',
-                            url=url,
-                            message=message,
-                            link_text=link_text
-                        )
-                        return {'RUNNING_MODAL'}
                     # go on with drag init
                     ui_props.drag_init = True
                     bpy.context.window.cursor_set("NONE")

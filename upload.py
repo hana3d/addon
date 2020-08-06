@@ -26,7 +26,6 @@ if "bpy" in locals():
     autothumb = reload(autothumb)
     version_checker = reload(version_checker)
     ui = reload(ui)
-    overrides = reload(overrides)
     rerequests = reload(rerequests)
 else:
     from hana3d import (
@@ -36,7 +35,6 @@ else:
         autothumb,
         version_checker,
         ui,
-        overrides,
         rerequests,
     )
 
@@ -288,15 +286,6 @@ def get_upload_location(props):
     return None
 
 
-def auto_fix(asset_type=''):
-    # this applies various procedures to ensure coherency in the database.
-    asset = utils.get_active_asset()
-    props = utils.get_upload_props()
-    if asset_type == 'MATERIAL':
-        overrides.ensure_eevee_transparency(asset)
-        asset.name = props.name
-
-
 def start_upload(self, context, asset_type, reupload, upload_set):
     '''start upload process, by processing data'''
 
@@ -307,8 +296,6 @@ def start_upload(self, context, asset_type, reupload, upload_set):
 
     location = get_upload_location(props)
     props.upload_state = 'preparing upload'
-
-    auto_fix(asset_type=asset_type)
 
     # do this for fixing long tags in some upload cases
     props.tags = props.tags[:]

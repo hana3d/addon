@@ -207,7 +207,6 @@ def timer_update():
                                     'asset_type': r['assetType'],
                                     'tooltip': tooltip,
                                     'tags': r['tags'],
-                                    'can_download': r.get('canDownload', True),
                                     'verification_status': r['verificationStatus'],
                                     'author_id': str(r['author']['id']),
                                     'description': r['description'] or '',
