@@ -26,8 +26,9 @@ if "bpy" in locals():
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
+    render_ops = reload(render_ops)
 else:
-    from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests
+    from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests, render_ops
 
 import json
 import os
@@ -51,8 +52,7 @@ def check_errors(rdata):
         if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons['hana3d'].preferences
             if user_preferences.api_key != '':
-                if user_preferences.enable_oauth:
-                    hana3d_oauth.refresh_token_thread()
+                hana3d_oauth.refresh_token_thread()
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     return True, ''
@@ -85,8 +85,7 @@ def fetch_server_data():
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if (
-            user_preferences.enable_oauth
-            and len(user_preferences.api_key) > 0
+            len(user_preferences.api_key) > 0
             and user_preferences.api_key_timeout < time.time()
         ):
             hana3d_oauth.refresh_token_thread()
@@ -544,6 +543,7 @@ def get_author(r):
 def write_profile(adata):
     utils.p('writing profile')
     bpy.context.window_manager['hana3d profile'] = adata
+    render_ops.update_user()
 
 
 def request_profile():

@@ -23,7 +23,7 @@ if "bpy" in locals():
     utils = importlib.reload(utils)
     download = importlib.reload(download)
 else:
-    from hana3d import paths, utils, download
+    from hana3d import utils, download
 
 import bpy
 from bpy.types import Panel
@@ -215,8 +215,7 @@ class VIEW3D_PT_hana3d_login(Panel):
             draw_login_progress(layout)
             return
 
-        if user_preferences.enable_oauth:
-            draw_login_buttons(layout)
+        draw_login_buttons(layout)
 
 
 def draw_login_progress(layout):
@@ -264,13 +263,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
             return
 
         if len(user_preferences.api_key) < 20 and user_preferences.asset_counter > 20:
-            if user_preferences.enable_oauth:
-                draw_login_buttons(layout)
-            else:
-                op = layout.operator("wm.url_open", text="Get your API Key", icon='QUESTION')
-                op.url = paths.HANA3D_SIGNUP_URL
-                layout.label(text='Paste your API Key:')
-                layout.prop(user_preferences, 'api_key', text='')
+            draw_login_buttons(layout)
             layout.separator()
 
         if ui_props.down_up == 'SEARCH':
@@ -407,7 +400,7 @@ class VIEW3D_PT_UpdaterPanel(Panel):
 
 
 class VIEW3D_PT_hana3d_RenderPanel(Panel):
-    """Panel to demo popup notice and ignoring functionality"""
+    """Render Farm operations panel"""
 
     bl_label = "Render"
     bl_idname = "VIEW3D_PT_hana3d_RenderPanel"
@@ -421,8 +414,51 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
 
     def draw(self, context):
         layout = self.layout
-        props = context.scene.Hana3DRender
-        layout.prop(props, 'user_credits')
+        render_props = context.scene.Hana3DRender
+        row = layout.row()
+        row.label(text='Balance')
+        row.label(text=render_props.balance)
+
+        box = layout.box()
+        box.label(text='Rendering Asset', icon='GHOST_ENABLED')
+        box.prop(render_props, 'asset')
+
+        box = layout.box()
+        box.label(text='Render Parameters', icon='GHOST_DISABLED')
+        box.prop(render_props, 'engine')
+        row = box.row()
+        row.label(text="Resolution X")
+        row.prop(context.scene.render, "resolution_x", text='')
+        row = box.row()
+        row.label(text="Resolution Y")
+        row.prop(context.scene.render, "resolution_y", text='')
+
+        row = box.row()
+        row.prop(render_props, 'frame_animation', expand=True)
+        if render_props.frame_animation == 'FRAME':
+            row = box.row()
+            row.label(text="Frame")
+            row.prop(context.scene, "frame_current", text='')
+        elif render_props.frame_animation == 'ANIMATION':
+            row = box.row()
+            row.label(text="Frame Start")
+            row.prop(context.scene, "frame_start", text='')
+            row = box.row()
+            row.label(text="Frame End")
+            row.prop(context.scene, "frame_end", text='')
+            # TODO: uncomment when in notRenderFarm
+            # row = box.row()
+            # row.label(text="Frame Step")
+            # row.prop(context.scene.render, "frame_step", text='')
+
+        if render_props.rendering:
+            row = layout.row(align=True)
+            row.label(text=render_props.render_state)
+            op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
+            op.process_type = 'RENDER'
+        row = layout.row()
+        row.scale_y = 2.0
+        row.operator('hana3d.render_scene')
 
 
 # We can store multiple preview collections here,

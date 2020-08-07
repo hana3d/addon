@@ -34,6 +34,14 @@ HANA3D_PLATFORM_URL_PROD = "https://hana3d.com"
 HANA3D_AUTH_LANDING = "/landing"
 HANA3D_SETTINGS_FILENAME = os.path.join(_presets, "hana3d.json")
 
+RENDER_FARM_URL = 'https://api.notrenderfarm.com/dev'
+RENDER_FARM_USER = 'users'
+RENDER_FARM_UPLOAD = 'upload'
+RENDER_FARM_PROJECT = 'projects'
+RENDER_FARM_JOB = 'jobs'
+RENDER_FARM_JOB_START = 'start'
+RENDER_FARM_JOB_CANCEL = 'cancel'
+
 URL_HANA3D_MAIN = 'https://api.hana3d.com'
 URL_HANA3D_LOCAL = 'http://localhost:5000'
 URL_HANA3D_DEV = os.getenv('URL_HANA3D_DEV', 'https://staging-api.hana3d.com')
@@ -98,6 +106,34 @@ def get_auth_audience():
         return HANA3D_AUTH_AUDIENCE_DEV
 
     return HANA3D_AUTH_AUDIENCE_PROD
+
+
+def get_render_farm_user_url(email):
+    return f'{RENDER_FARM_URL}/{RENDER_FARM_USER}/?email={email}'
+
+
+def get_render_farm_upload_url():
+    return f'{RENDER_FARM_URL}/{RENDER_FARM_UPLOAD}/?extension=.blend'
+
+
+def get_render_farm_project_url(user_id):
+    return f'{RENDER_FARM_URL}/{RENDER_FARM_USER}/{user_id}/{RENDER_FARM_PROJECT}'
+
+
+def get_render_farm_job_url(project_id):
+    return f'{RENDER_FARM_URL}/{RENDER_FARM_PROJECT}/{project_id}/{RENDER_FARM_JOB}'
+
+
+def get_render_farm_job_start_url(job_id):
+    return f'{RENDER_FARM_URL}/{RENDER_FARM_JOB}/{job_id}/{RENDER_FARM_JOB_START}'
+
+
+def get_render_farm_job_get_url(user_id, job_id):
+    return f'{RENDER_FARM_URL}/{RENDER_FARM_USER}/{user_id}/{RENDER_FARM_JOB}?id={job_id}'
+
+
+def get_render_farm_job_cancel_url(job_id):
+    return f'{RENDER_FARM_URL}/{RENDER_FARM_JOB}/{job_id}/{RENDER_FARM_JOB_CANCEL}'
 
 
 def default_global_dict():

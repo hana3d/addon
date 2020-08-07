@@ -45,6 +45,7 @@ if "bpy" in locals():
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
     custom_props = reload(custom_props)
+    render_ops = reload(render_ops)
 else:
     from hana3d import (
         asset_inspector,
@@ -61,6 +62,7 @@ else:
         hana3d_oauth,
         tasks_queue,
         custom_props,
+        render_ops,
     )
 
 import math
@@ -283,12 +285,68 @@ class Hana3DUIProps(PropertyGroup):
     )
 
 
-def get_user_credits(self):
-    return '$0'
+def get_render_asset_name(self):
+    props = utils.get_upload_props()
+    if props is not None:
+        return props.name
+    return ''
+
+
+def get_render_engine(self):
+    return 0
+
+
+# def get_render_state(self):
+#     props = utils.get_upload_props()
+
+#     if props is None:
+#         return 'Please select an Asset'
+#     elif props.asset_base_id == '':
+#         return 'Please upload an Asset'
+
+#     return ''
 
 
 class Hana3DRenderProps(PropertyGroup):
-    user_credits: StringProperty(name="Credits", description="", get=get_user_credits)
+    user_id: IntProperty(name="User ID", description="", default=0)
+    balance: StringProperty(name="Credits", description="", default="$0.00")
+    asset: StringProperty(name="Asset", description="", get=get_render_asset_name)
+    engine: EnumProperty(
+        name="Engine",
+        items=(
+             ("CYCLES", "Cycles", ""),
+             ("BLENDER_EEVEE", "Eevee", "")
+        ),
+        description="",
+        get=get_render_engine  # TODO: Remove getter when both available at notRenderFarm
+    )
+    frame_animation: EnumProperty(
+        name="Frame vs Animation",
+        items=(
+            ("FRAME", "Single Frame", "", "MONKEY", 0),
+            ("ANIMATION", "Animation", "", "MONKEY", 1),
+        ),
+        description="",
+        default="FRAME",
+    )
+
+    render_state: StringProperty(
+        name="Render Generating State",
+        description="",
+        default=""
+    )
+
+    rendering: BoolProperty(
+        name="Rendering",
+        description="True when background process is running",
+        default=False
+    )
+
+    render_path: StringProperty(
+        name="Path to complete render",
+        description="",
+        default=''
+    )
 
 
 def workspace_items(self, context):
@@ -398,7 +456,7 @@ class Hana3DCommonUploadProps(object):
     asset_base_id: StringProperty(
         name="Asset Base Id",
         description="Unique name of the asset (hidden)",
-        default=""
+        default="",
     )
     name: StringProperty(
         name="Name",
@@ -852,8 +910,6 @@ class Hana3DAddonPreferences(AddonPreferences):
 
     default_global_dict = paths.default_global_dict()
 
-    enable_oauth = True
-
     api_key: StringProperty(
         name="Hana3D API Key",
         description="Your Hana3D API Key. Get it from your page on the website",
@@ -1018,13 +1074,10 @@ class Hana3DAddonPreferences(AddonPreferences):
         layout.prop(self, "show_on_start")
 
         if self.api_key.strip() == '':
-            if self.enable_oauth:
-                ui_panels.draw_login_buttons(layout)
+            ui_panels.draw_login_buttons(layout)
         else:
-            if self.enable_oauth:
-                layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
+            layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
 
-        # if not self.enable_oauth:
         layout.prop(self, "api_key", text='Your API Key')
         layout.prop(self, "global_dir")
         layout.prop(self, "project_subdir")
@@ -1087,6 +1140,7 @@ def register():
     utils.load_prefs()
     hana3d_oauth.register()
     tasks_queue.register()
+    render_ops.register()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
 
@@ -1109,6 +1163,7 @@ def unregister():
     bg_blender.unregister()
     hana3d_oauth.unregister()
     tasks_queue.unregister()
+    render_ops.unregister()
 
     del bpy.types.Scene.hana3d_models
     del bpy.types.Scene.hana3d_scene
