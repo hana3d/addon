@@ -420,11 +420,11 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         row.label(text=render_props.balance)
 
         box = layout.box()
-        box.label(text='Rendering Asset', icon='GHOST_ENABLED')
+        box.label(text="Job's Asset", icon='CUBE')
         box.prop(render_props, 'asset')
 
         box = layout.box()
-        box.label(text='Render Parameters', icon='GHOST_DISABLED')
+        box.label(text='Render Parameters', icon='PREFERENCES')
         box.prop(render_props, 'engine')
         row = box.row()
         row.label(text="Resolution X")

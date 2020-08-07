@@ -312,8 +312,8 @@ class Hana3DRenderProps(PropertyGroup):
     frame_animation: EnumProperty(
         name="Frame vs Animation",
         items=(
-            ("FRAME", "Single Frame", "", "MONKEY", 0),
-            ("ANIMATION", "Animation", "", "MONKEY", 1),
+            ("FRAME", "Single Frame", "", "RENDER_STILL", 0),
+            ("ANIMATION", "Animation", "", "RENDER_ANIMATION", 1),
         ),
         description="",
         default="FRAME",
