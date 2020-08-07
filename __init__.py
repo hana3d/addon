@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 4, 0),
+    "version": (0, 4, 2),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
     "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
