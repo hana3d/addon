@@ -37,26 +37,6 @@ def update_user():
         render_props.balance = '$0.00'
 
 
-def upload_scene():
-    pass
-
-
-def create_project():
-    pass
-
-
-def create_job():
-    pass
-
-
-def start_job():
-    pass
-
-
-def timer_job_progress():
-    pass
-
-
 def start_render_process(self, context):
     render_props = context.scene.Hana3DRender
     render_props.rendering = True
@@ -124,6 +104,7 @@ def start_render_process(self, context):
 
     except Exception as e:
         print(e)
+        render_props.rendering = False
 
 
 class RenderScene(Operator):
@@ -138,20 +119,20 @@ class RenderScene(Operator):
         return not context.scene.Hana3DRender.rendering
 
     def execute(self, context):
-        # props = utils.get_upload_props()
+        props = utils.get_upload_props()
 
-        # def draw_message(self, context):
-        #     self.layout.label(text=message)
-        # if props is None:
-        #     title = "Can't render"
-        #     message = "Please select an Asset"
-        #     bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
-        #     return {'FINISHED'}
-        # elif props.asset_base_id == '':
-        #     title = "Can't render"
-        #     message = "Please upload asset or select uploaded"
-        #     bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
-        #     return {'FINISHED'}
+        def draw_message(self, context):
+            self.layout.label(text=message)
+        if props is None:
+            title = "Can't render"
+            message = "Please select an Asset"
+            bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
+            return {'FINISHED'}
+        elif props.asset_base_id == '':
+            title = "Can't render"
+            message = "Please upload asset or select uploaded"
+            bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
+            return {'FINISHED'}
         start_render_process(self, context)
         return {'FINISHED'}
 

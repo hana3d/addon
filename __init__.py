@@ -296,17 +296,6 @@ def get_render_engine(self):
     return 0
 
 
-# def get_render_state(self):
-#     props = utils.get_upload_props()
-
-#     if props is None:
-#         return 'Please select an Asset'
-#     elif props.asset_base_id == '':
-#         return 'Please upload an Asset'
-
-#     return ''
-
-
 class Hana3DRenderProps(PropertyGroup):
     user_id: IntProperty(name="User ID", description="", default=0)
     balance: StringProperty(name="Credits", description="", default="$0.00")
@@ -333,7 +322,7 @@ class Hana3DRenderProps(PropertyGroup):
     render_state: StringProperty(
         name="Render Generating State",
         description="",
-        default=""
+        default="Starting Render process"
     )
 
     rendering: BoolProperty(
@@ -345,7 +334,7 @@ class Hana3DRenderProps(PropertyGroup):
     render_path: StringProperty(
         name="Path to complete render",
         description="",
-        default=''
+        default=""
     )
 
 

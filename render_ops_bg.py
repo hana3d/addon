@@ -191,11 +191,11 @@ if __name__ == "__main__":
         print(job_id)
         start_job(job_id)
         render = pool_job(user_id, job_id)
+        # TODO: improve bring-result-to-scene
         bpy.context.scene.Hana3DRender.render_path = render
         bg_blender.progress('Job finished successfully')
 
     except Exception as e:
-        print(e)
         bg_blender.progress(e)
         print(e)
         sys.exit(1)
