@@ -28,7 +28,6 @@ else:
     from hana3d import paths, bg_blender, utils, rerequests
 
 import json
-import logging
 import os
 import sys
 import time
@@ -37,14 +36,6 @@ import bpy
 import requests
 
 HANA3D_EXPORT_DATA = sys.argv[-1]
-
-
-def start_logging():
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(logging.DEBUG)
-    requests_log.propagate = True
 
 
 class upload_in_chunks(object):
@@ -65,7 +56,6 @@ class upload_in_chunks(object):
                 self.readsofar += len(data)
                 percent = self.readsofar * 1e2 / self.totalsize
                 bg_blender.progress('uploading %s' % self.report_name, percent)
-                print('uploading %s' % self.report_name, percent)
                 yield data
 
     def __len__(self):
@@ -97,25 +87,20 @@ def upload_file(filepath):
                 else:
                     print(upload_response.text)
                     bg_blender.progress(f'Upload failed, retry. {a}')
-                    print(f'Upload failed, retry. {a}')
             except Exception as e:
                 print(e)
                 bg_blender.progress('Upload .blend failed, retrying')
-                print('Upload .blend failed, retrying')
                 time.sleep(1)
     if not uploaded:
         bg_blender.progress('Upload failed.')
-        print('Upload failed.')
         return None
     bg_blender.progress('Upload complete')
-    print('Upload complete')
     return upload['url']
 
 
 def create_project(name: str, url: str, file_size: int, user_id: str):
     headers = utils.get_headers()
     bg_blender.progress('Creating Project')
-    print('Creating Project')
     project_url = paths.get_render_farm_project_url(user_id)
 
     data = {
@@ -132,7 +117,6 @@ def create_project(name: str, url: str, file_size: int, user_id: str):
 def create_job(project_id: str, engine: str, frame_start: int, frame_end: int):
     headers = utils.get_headers()
     bg_blender.progress('Creating Job')
-    print('Creating Job')
     job_url = paths.get_render_farm_job_url(project_id)
 
     data = {
@@ -188,7 +172,6 @@ if __name__ == "__main__":
         url = upload_file(filepath)
         project_id = create_project(name, url, file_size, user_id)
         job_id = create_job(project_id, engine, frame_start, frame_end)
-        print(job_id)
         start_job(job_id)
         render = pool_job(user_id, job_id)
         # TODO: improve bring-result-to-scene
