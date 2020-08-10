@@ -393,7 +393,7 @@ def get_dimensions(obs):
 
 
 def requests_post_thread(url, json, headers):
-    rerequests.post(url, json=json, verify=True, headers=headers)
+    rerequests.post(url, json=json, headers=headers)
 
 
 def get_headers(correlation_id: str = None) -> dict:

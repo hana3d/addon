@@ -68,7 +68,7 @@ def upload_file(filepath):
     headers = utils.get_headers()
 
     upload_create_url = paths.get_render_farm_upload_url()
-    upload = rerequests.get(upload_create_url, headers=headers, verify=True)
+    upload = rerequests.get(upload_create_url, headers=headers)
     upload = upload.json()
     chunk_size = 1024 * 1024 * 2
     uploaded = False
@@ -79,7 +79,6 @@ def upload_file(filepath):
                     upload['uploadUrls'][0],  # TODO: Change to multiparts
                     data=upload_in_chunks(filepath, chunk_size, "blend"),
                     stream=True,
-                    verify=True,
                 )
 
                 if upload_response.status_code == 200:
@@ -108,7 +107,7 @@ def create_project(name: str, url: str, file_size: int, user_id: str):
         'url': url,
         'sizeBytes': file_size
     }
-    project = rerequests.post(project_url, json=data, headers=headers, verify=True)
+    project = rerequests.post(project_url, json=data, headers=headers)
     project = project.json()
 
     return project['id']
@@ -125,7 +124,7 @@ def create_job(project_id: str, engine: str, frame_start: int, frame_end: int):
         'frameEnd': frame_end
     }
 
-    job = rerequests.post(job_url, json=data, headers=headers, verify=True)
+    job = rerequests.post(job_url, json=data, headers=headers)
     job = job.json()
 
     return job['id']
@@ -135,14 +134,14 @@ def start_job(job_id: str):
     headers = utils.get_headers()
     bg_blender.progress('Starting Job')
     job_url = paths.get_render_farm_job_start_url(job_id)
-    rerequests.post(job_url, headers=headers, verify=True)
+    rerequests.post(job_url, headers=headers)
 
 
 def pool_job(user_id: str, job_id: str):
     while True:
         headers = utils.get_headers()
         job_url = paths.get_render_farm_job_get_url(user_id, job_id)
-        job = rerequests.get(job_url, headers=headers, verify=True)
+        job = rerequests.get(job_url, headers=headers)
         job = job.json()[0]
         if job['status'] == 'FINISHED':
             bg_blender.progress('Job complete')

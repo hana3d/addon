@@ -262,7 +262,7 @@ def verification_status_change_thread(asset_id, state):
     url = paths.get_api_url() + 'assets/' + str(asset_id) + '/'
     headers = utils.get_headers()
     try:
-        rerequests.patch(url, json=upload_data, headers=headers, verify=True)
+        rerequests.patch(url, json=upload_data, headers=headers)
     except requests.exceptions.RequestException as e:
         print(e)
         return {'CANCELLED'}
@@ -374,7 +374,6 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
                 url,
                 json=json_metadata,
                 headers=headers,
-                verify=True,
                 immediate=True
             )
             ui.add_report('uploaded metadata')
@@ -394,7 +393,6 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
                 url,
                 json=json_metadata,
                 headers=headers,
-                verify=True,
                 immediate=True
             )
             ui.add_report('uploaded metadata')

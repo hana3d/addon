@@ -89,7 +89,7 @@ def upload_file(upload_data, f, correlation_id):
         'comment': f['publish_message']
     }
     upload_create_url = paths.get_api_url() + 'uploads/'
-    upload = rerequests.post(upload_create_url, json=upload_info, headers=headers, verify=True)
+    upload = rerequests.post(upload_create_url, json=upload_info, headers=headers)
     upload = upload.json()
     #
     chunk_size = 1024 * 1024 * 2
@@ -104,7 +104,6 @@ def upload_file(upload_data, f, correlation_id):
                     upload['s3UploadUrl'],
                     data=upload_in_chunks(f['file_path'], chunk_size, f['type']),
                     stream=True,
-                    verify=True,
                 )
 
                 if upload_response.status_code == 200:
@@ -119,7 +118,7 @@ def upload_file(upload_data, f, correlation_id):
 
             # confirm single file upload to hana3d server
             upload_done_url = paths.get_api_url() + 'uploads_s3/' + upload['id'] + '/upload-file/'
-            upload_response = rerequests.post(upload_done_url, headers=headers, verify=True)
+            upload_response = rerequests.post(upload_done_url, headers=headers)
 
     bg_blender.progress('finished uploading')
 
@@ -261,7 +260,7 @@ if __name__ == "__main__":
 
                 url += upload_data["id"] + '/'
 
-                r = rerequests.patch(url, json=confirm_data, headers=headers, verify=True)
+                r = rerequests.patch(url, json=confirm_data, headers=headers)
 
             bg_blender.progress('upload finished successfully')
         else:
