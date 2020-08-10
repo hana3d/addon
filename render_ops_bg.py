@@ -148,6 +148,12 @@ def pool_job(user_id: str, job_id: str):
         if job['status'] == 'FINISHED':
             complete = True
             bg_blender.progress('Job complete')
+        elif job['status'] == 'CANCELED':
+            complete = True
+            bg_blender.progress('Job cancelled')
+        elif job['status'] == 'ERRORED':
+            complete = True
+            bg_blender.progress('Error in job')
         else:
             bg_blender.progress('Job progress: ', job['progress'])
             time.sleep(1)
