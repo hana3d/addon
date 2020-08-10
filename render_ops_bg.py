@@ -139,21 +139,20 @@ def start_job(job_id: str):
 
 
 def pool_job(user_id: str, job_id: str):
-    complete = False
-    while not complete:
+    while True:
         headers = utils.get_headers()
         job_url = paths.get_render_farm_job_get_url(user_id, job_id)
         job = rerequests.get(job_url, headers=headers, verify=True)
         job = job.json()[0]
         if job['status'] == 'FINISHED':
-            complete = True
             bg_blender.progress('Job complete')
+            break
         elif job['status'] == 'CANCELED':
-            complete = True
             bg_blender.progress('Job cancelled')
+            break
         elif job['status'] == 'ERRORED':
-            complete = True
             bg_blender.progress('Error in job')
+            break
         else:
             bg_blender.progress('Job progress: ', job['progress'])
             time.sleep(1)
