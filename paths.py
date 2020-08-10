@@ -34,7 +34,7 @@ HANA3D_PLATFORM_URL_PROD = "https://hana3d.com"
 HANA3D_AUTH_LANDING = "/landing"
 HANA3D_SETTINGS_FILENAME = os.path.join(_presets, "hana3d.json")
 
-RENDER_FARM_URL = 'https://api.notrenderfarm.com/dev'
+RENDER_FARM_URL = 'https://api.notrenderfarm.com/production'
 RENDER_FARM_USER = 'users'
 RENDER_FARM_UPLOAD = 'upload'
 RENDER_FARM_PROJECT = 'projects'
