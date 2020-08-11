@@ -79,18 +79,19 @@ class upload_in_chunks(object):
 
 def upload_file(upload_data, f, correlation_id):
     headers = utils.get_headers(correlation_id)
-    version_id = upload_data['id']
     bg_blender.progress('uploading %s' % f['type'])
     upload_info = {
-        'assetId': version_id,
+        'assetId': upload_data['id'],
         'fileType': f['type'],
         'fileIndex': f['index'],
         'originalFilename': os.path.basename(f['file_path']),
         'comment': f['publish_message']
     }
+    if f['type'] == 'blend':
+        upload_info['viewId'] = upload_data['viewId']
     upload_create_url = paths.get_api_url() + 'uploads/'
-    upload = rerequests.post(upload_create_url, json=upload_info, headers=headers)
-    upload = upload.json()
+    response = rerequests.post(upload_create_url, json=upload_info, headers=headers)
+    upload = response.json()
     #
     chunk_size = 1024 * 1024 * 2
     utils.pprint(upload)
@@ -218,7 +219,7 @@ if __name__ == "__main__":
             bpy.ops.file.pack_all()
 
             main_source.hana3d.uploading = False
-            fpath = os.path.join(data['temp_dir'], upload_data['assetBaseId'] + '.blend')
+            fpath = os.path.join(data['temp_dir'], upload_data['viewId'] + '.blend')
 
             bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)
             os.remove(data['source_filepath'])

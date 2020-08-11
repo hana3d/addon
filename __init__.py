@@ -297,7 +297,6 @@ def get_render_engine(self):
 
 
 class Hana3DRenderProps(PropertyGroup):
-    user_id: IntProperty(name="User ID", description="", default=0)
     balance: StringProperty(name="Credits", description="", default="$0.00")
     asset: StringProperty(name="Asset", description="", get=get_render_asset_name)
     engine: EnumProperty(
@@ -438,13 +437,13 @@ def update_tags(self, context):
 
 class Hana3DCommonUploadProps(object):
     id: StringProperty(
-        name="Asset Version Id",
-        description="Unique name of the asset version(hidden)",
+        name="Asset Id",
+        description="ID of the asset (hidden)",
         default=""
     )
-    asset_base_id: StringProperty(
-        name="Asset Base Id",
-        description="Unique name of the asset (hidden)",
+    view_id: StringProperty(
+        name="View Id",
+        description="Unique ID of asset's current revision (hidden)",
         default="",
     )
     name: StringProperty(

@@ -193,10 +193,10 @@ def get_upload_data(self, context, asset_type):
             "assetType": 'scene',
         }
         upload_params = {
-            # TODO fix fixed values
-            "faceCount": 1,  # props.face_count,
-            "faceCountRender": 1,  # props.face_count_render,
-            "objectCount": 1,  # props.object_count,
+            # TODO add values
+            # "faceCount": 1,  # props.face_count,
+            # "faceCountRender": 1,  # props.face_count_render,
+            # "objectCount": 1,  # props.object_count,
         }
 
     elif asset_type == 'MATERIAL':
@@ -223,10 +223,6 @@ def get_upload_data(self, context, asset_type):
     upload_data["name"] = props.name
     upload_data["description"] = props.description
     upload_data["tags"] = comma2array(props.tags)
-
-    if props.asset_base_id != '':
-        upload_data['assetBaseId'] = props.asset_base_id
-        upload_data['id'] = props.id
 
     upload_data['parameters'] = upload_params
 
@@ -316,7 +312,7 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
         return {'CANCELLED'}
 
     if not reupload:
-        props.asset_base_id = ''
+        props.view_id = ''
         props.id = ''
     (
         export_data,
@@ -328,7 +324,7 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
     ) = get_upload_data(self, context, asset_type)
     # We have to validate here as get_upload_data() is called in other parts of the code
     validate_upload_data(props)
-    # utils.pprint(upload_data)
+
     # weird array conversion only for upload, not for tooltips.
     upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
 
@@ -340,6 +336,65 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
     if not ext:
         ext = ".blend"
     tempdir = tempfile.mkdtemp()
+    datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
+
+    # check if thumbnail exists:
+    if 'THUMBNAIL' in upload_set:
+        if not os.path.exists(export_data["thumbnail_path"]):
+            props.upload_state = 'Thumbnail not found'
+            props.uploading = False
+            return {'CANCELLED'}
+
+    # first upload metadata to server, so it can be saved inside the current file
+    url = paths.get_api_url() + 'assets/'
+    headers = utils.get_headers(correlation_id)
+
+    global reports
+    if props.id == '':
+        try:
+            response = rerequests.post(
+                url,
+                json=upload_data,
+                headers=headers,
+                immediate=True
+            )
+            ui.add_report('uploaded metadata')
+
+            dict_response = response.json()
+            utils.pprint(dict_response)
+            props.id = dict_response['id']
+        except requests.exceptions.RequestException as e:
+            print(e)
+            props.upload_state = str(e)
+            props.uploading = False
+            return {'CANCELLED'}
+    else:
+        url += props.id + '/'
+        try:
+            if 'MAINFILE' in upload_set:
+                json_metadata["verificationStatus"] = "uploading"
+            rerequests.put(
+                url,
+                json=upload_data,
+                headers=headers,
+                immediate=True
+            )
+            ui.add_report('uploaded metadata')
+        except requests.exceptions.RequestException as e:
+            print(e)
+            props.upload_state = str(e)
+            props.uploading = False
+            return {'CANCELLED'}
+
+    if upload_set == ['METADATA']:
+        props.uploading = False
+        props.upload_state = 'upload finished successfully'
+        return {'FINISHED'}
+
+    props.view_id = str(uuid.uuid4())
+    upload_data['viewId'] = props.view_id
+    upload_data['id'] = props.id
+
     source_filepath = os.path.join(tempdir, "export_hana3d" + ext)
     clean_file_path = paths.get_clean_filepath()
     data = {
@@ -352,84 +407,11 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
         'upload_set': upload_set,
         'correlation_id': correlation_id,
     }
-    datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
-    # check if thumbnail exists:
-    if 'THUMBNAIL' in upload_set:
-        if not os.path.exists(export_data["thumbnail_path"]):
-            props.upload_state = 'Thumbnail not found'
-            props.uploading = False
-            return {'CANCELLED'}
-
-    # first upload metadata to server, so it can be saved inside the current file
-    url = paths.get_api_url() + 'assets/'
-
-    headers = utils.get_headers(correlation_id)
-
-    json_metadata = upload_data  # json.dumps(upload_data, ensure_ascii=False).encode('utf8')
-    global reports
-    if props.asset_base_id == '':
-        try:
-            r = rerequests.post(
-                url,
-                json=json_metadata,
-                headers=headers,
-                immediate=True
-            )
-            ui.add_report('uploaded metadata')
-            utils.p(r.text)
-        except requests.exceptions.RequestException as e:
-            print(e)
-            props.upload_state = str(e)
-            props.uploading = False
-            return {'CANCELLED'}
-
-    else:
-        url += props.id + '/'
-        try:
-            if 'MAINFILE' in upload_set:
-                json_metadata["verificationStatus"] = "uploading"
-            r = rerequests.put(
-                url,
-                json=json_metadata,
-                headers=headers,
-                immediate=True
-            )
-            ui.add_report('uploaded metadata')
-            # parse the request
-            # print('uploaded metadata')
-            # print(r.text)
-        except requests.exceptions.RequestException as e:
-            print(e)
-            props.upload_state = str(e)
-            props.uploading = False
-            return {'CANCELLED'}
-
-    # props.upload_state = 'step 1'
-    if upload_set == ['METADATA']:
-        props.uploading = False
-        props.upload_state = 'upload finished successfully'
-        return {'FINISHED'}
     try:
-        rj = r.json()
-        utils.pprint(rj)
-        # if r.status_code not in (200, 201):
-        #     if r.status_code == 401:
-        #         ui.add_report(r.detail, 5, colors.RED)
-        #     return {'CANCELLED'}
-        props.asset_base_id = rj['assetBaseId']
-        props.id = rj['id']
-        upload_data['assetBaseId'] = props.asset_base_id
-        upload_data['id'] = props.id
-
-        # bpy.ops.wm.save_mainfile()
-        # bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
-
         props.uploading = True
-        # save a copy of actual scene but don't interfere with the users models
-        autopack = False
-        if bpy.data.use_autopack is True:
-            autopack = True
+        autopack = bpy.data.use_autopack is True
+        if autopack:
             bpy.ops.file.autopack_toggle()
         bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
 
@@ -461,7 +443,7 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
             location=location,
         )
 
-        if autopack is True:
+        if autopack:
             bpy.ops.file.autopack_toggle()
 
     except Exception as e:
@@ -541,7 +523,7 @@ class UploadOperator(Operator):
             layout.prop(self, 'main_file')
             layout.prop(self, 'thumbnail')
 
-        if props.asset_base_id != '' and not self.reupload:
+        if props.view_id != '' and not self.reupload:
             layout.label(text="Really upload as new? ")
             layout.label(text="Do this only when you create a new asset from an old one.")
             layout.label(text="For updates of thumbnail or model use reupload.")

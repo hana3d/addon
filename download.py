@@ -269,14 +269,14 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
         parent = material
 
     scene['assets used'] = scene.get('assets used', {})
-    scene['assets used'][asset_data['asset_base_id']] = asset_data.copy()
+    scene['assets used'][asset_data['view_id']] = asset_data.copy()
 
     parent['asset_data'] = asset_data
 
     set_thumbnail(asset_data, parent)
 
     parent.hana3d.id = asset_data['id']
-    parent.hana3d.asset_base_id = asset_data['asset_base_id']
+    parent.hana3d.view_id = asset_data['view_id']
     parent.hana3d.name = asset_data['name']
     parent.hana3d.tags = ','.join(asset_data['tags'])
     parent.hana3d.description = asset_data['description']
@@ -600,7 +600,7 @@ def check_asset_in_scene(asset_data):
     scene = bpy.context.scene
     au = scene.get('assets used', {})
 
-    id = asset_data['asset_base_id']
+    id = asset_data['view_id']
     if id in au.keys():
         ad = au[id]
         if ad.get('file_name') is not None:

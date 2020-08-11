@@ -85,7 +85,7 @@ def get_selected_models():
             while (
                 ob.parent is not None
                 and ob not in done
-                and ob.hana3d.asset_base_id != ''
+                and ob.hana3d.view_id != ''
                 and ob.instance_collection is not None
             ):
                 done[ob] = True

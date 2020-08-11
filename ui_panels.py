@@ -135,12 +135,12 @@ def draw_panel_common_upload(layout, context):
         layout = layout.column()
         layout.enabled = False
 
-    if props.asset_base_id == '':
+    if props.view_id == '':
         optext = 'Upload %s' % asset_type.lower()
         op = layout.operator("object.hana3d_upload", text=optext, icon='EXPORT')
         op.asset_type = asset_type
 
-    if props.asset_base_id != '':
+    if props.view_id != '':
         op = layout.operator("object.hana3d_upload", text='Reupload asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = True

@@ -28,7 +28,7 @@ if "bpy" in locals():
     rerequests = reload(rerequests)
     render_ops = reload(render_ops)
 else:
-    from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests, render_ops
+    from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests
 
 import json
 import os
@@ -103,7 +103,7 @@ def check_clipboard():
         global last_clipboard
         if bpy.context.window_manager.clipboard != last_clipboard:
             last_clipboard = bpy.context.window_manager.clipboard
-            instr = 'asset_base_id:'
+            instr = 'view_id:'
             # first check if contains asset id, then asset type
             if last_clipboard[: len(instr)] == instr:
                 atstr = 'asset_type:'
@@ -201,7 +201,7 @@ def timer_update():
                                     'thumbnail_small': small_tname,
                                     'download_url': durl,
                                     'id': r['id'],
-                                    'asset_base_id': r['assetBaseId'],
+                                    'view_id': r['viewId'],
                                     'name': r['name'],
                                     'asset_type': r['assetType'],
                                     'tooltip': tooltip,
@@ -242,7 +242,7 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if r['assetBaseId'] in scene.get('assets used', {}).keys():
+                                if r['viewId'] in scene.get('assets used', {}).keys():
                                     asset_data['downloaded'] = 100
 
                                 result_field.append(asset_data)
@@ -543,7 +543,6 @@ def get_author(r):
 def write_profile(adata):
     utils.p('writing profile')
     bpy.context.window_manager['hana3d profile'] = adata
-    render_ops.update_user()
 
 
 def request_profile():
@@ -915,7 +914,7 @@ def search_update(self, context):
     # here we tweak the input if it comes form the clipboard.
     # we need to get rid of asset type and set it to
     sprops = utils.get_search_props()
-    instr = 'asset_base_id:'
+    instr = 'view_id:'
     atstr = 'asset_type:'
     kwds = sprops.search_keywords
     idi = kwds.find(instr)
