@@ -546,7 +546,7 @@ def write_profile(adata):
 
 
 def request_profile():
-    a_url = paths.get_api_url() + 'me/'
+    a_url = paths.get_api_url('me')
     headers = utils.get_headers()
     r = rerequests.get(a_url, headers=headers)
     adata = r.json()
@@ -589,35 +589,6 @@ class Searcher(threading.Thread):
     def stopped(self):
         return self._stop_event.is_set()
 
-    def query_to_url(self):
-        query = self.query
-        # build a new request
-        url = paths.get_api_url() + 'search/'
-
-        requeststring = f'?search_term={query.get("search_term", "").lower()}'
-        for key, value in query.items():
-            if key != 'search_term':
-                requeststring += f'&{key}={str(value).lower()}'
-
-        # result ordering: _score - relevance, score - hana3d score
-
-        if query.get('search_term') is None:
-            # assumes no keywords, thus an empty search that is triggered on start.
-            # orders by last core file upload
-            if query.get('verification_status') == 'uploaded':
-                # for validators, sort uploaded from oldest
-                requeststring += '&order=created'
-            else:
-                requeststring += '&order=-last_upload'
-        elif query.get('author_id') is not None and utils.profile_is_validator():
-
-            requeststring += '&order=-created'
-        else:
-            requeststring += '&order=_score'
-
-        urlquery = url + requeststring
-        return urlquery
-
     def run(self):
         maxthreads = 50
         query = self.query
@@ -645,7 +616,7 @@ class Searcher(threading.Thread):
                     # in case no search results found on drive we don't do next page loading.
                     params['get_next'] = False
         if not params['get_next']:
-            urlquery = self.query_to_url()
+            urlquery = paths.get_api_url('search', query=self.query)
         try:
             utils.p(urlquery)
             r = rerequests.get(urlquery, headers=headers)

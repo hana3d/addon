@@ -255,7 +255,7 @@ def validate_upload_data(props):
 
 def verification_status_change_thread(asset_id, state):
     upload_data = {"verificationStatus": state}
-    url = paths.get_api_url() + 'assets/' + str(asset_id) + '/'
+    url = paths.get_api_url('assets', asset_id)
     headers = utils.get_headers()
     try:
         rerequests.patch(url, json=upload_data, headers=headers)
@@ -346,7 +346,7 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
             return {'CANCELLED'}
 
     # first upload metadata to server, so it can be saved inside the current file
-    url = paths.get_api_url() + 'assets/'
+    url = paths.get_api_url('assets')
     headers = utils.get_headers(correlation_id)
 
     global reports
@@ -371,8 +371,6 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
     else:
         url += props.id + '/'
         try:
-            if 'MAINFILE' in upload_set:
-                json_metadata["verificationStatus"] = "uploading"
             rerequests.put(
                 url,
                 json=upload_data,

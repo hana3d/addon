@@ -24,7 +24,7 @@ if "bpy" in locals():
     rerequests = importlib.reload(rerequests)
     bg_blender = importlib.reload(bg_blender)
 else:
-    from hana3d import utils, paths, rerequests, bg_blender
+    from hana3d import utils, paths, bg_blender
 
 import bpy
 
@@ -35,27 +35,7 @@ import subprocess
 from bpy.types import Operator
 
 
-def update_user():
-    render_props = bpy.context.scene.Hana3DRender
-    profile = bpy.context.window_manager.get('hana3d profile')
-    if profile is not None:
-        user = profile.get('user')
-        if user is not None:
-            headers = utils.get_headers()
-            r = rerequests.get(
-                paths.get_render_farm_user_url(user['email']),
-                headers=headers
-            )
-            r_json = json.loads(r.content)
-            render_props.balance = f'${r_json[0]["balance"]}'
-            render_props.user_id = r_json[0]["id"]
-        else:
-            render_props.balance = '$0.00'
-    else:
-        render_props.balance = '$0.00'
-
-
-def start_render_process(self, context):
+def start_render_process(self, context, props):
     render_props = context.scene.Hana3DRender
     render_props.rendering = True
 
@@ -63,12 +43,12 @@ def start_render_process(self, context):
     script_path = os.path.dirname(os.path.realpath(__file__))
     basename, ext = os.path.splitext(bpy.data.filepath)
     if not basename:
-        basename = os.path.join(basename, "temp")
+        basename = os.path.join(basename, 'temp')
     if not ext:
-        ext = ".blend"
+        ext = '.blend'
 
     tempdir = tempfile.mkdtemp()
-    filepath = os.path.join(tempdir, "export_render" + ext)
+    filepath = os.path.join(tempdir, 'export_render' + ext)
     datafile = os.path.join(tempdir, 'data.json')
 
     if render_props.frame_animation == 'FRAME':
@@ -86,12 +66,13 @@ def start_render_process(self, context):
         bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
         clean_filepath = paths.get_clean_filepath()
         data = {
-            "user_id": render_props.user_id,
-            "asset": render_props.asset,
-            "engine": render_props.engine,
-            "frame_start": frame_start,
-            "frame_end": frame_end,
-            "source_filepath": filepath,
+            'debug_value': bpy.app.debug_value,
+            'asset_id': props.id,
+            'view_id': props.view_id,
+            'engine': render_props.engine,
+            'frame_start': frame_start,
+            'frame_end': frame_end,
+            'filepath': filepath,
         }
         with open(datafile, 'w') as f:
             json.dump(data, f)
@@ -146,12 +127,12 @@ class RenderScene(Operator):
             message = "Please select an Asset"
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
-        elif props.asset_base_id == '':
+        elif props.view_id == '':
             title = "Can't render"
             message = "Please upload asset or select uploaded"
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
-        start_render_process(self, context)
+        start_render_process(self, context, props)
         return {'FINISHED'}
 
 

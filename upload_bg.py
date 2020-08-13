@@ -52,31 +52,6 @@ def print_gap():
     print('\n\n\n\n')
 
 
-class upload_in_chunks(object):
-    def __init__(self, filename, chunksize=1 << 13, report_name='file'):
-        self.filename = filename
-        self.chunksize = chunksize
-        self.totalsize = os.path.getsize(filename)
-        self.readsofar = 0
-        self.report_name = report_name
-
-    def __iter__(self):
-        with open(self.filename, 'rb') as file:
-            while True:
-                data = file.read(self.chunksize)
-                if not data:
-                    sys.stderr.write("\n")
-                    break
-                self.readsofar += len(data)
-                percent = self.readsofar * 1e2 / self.totalsize
-                bg_blender.progress('uploading %s' % self.report_name, percent)
-                # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
-                yield data
-
-    def __len__(self):
-        return self.totalsize
-
-
 def upload_file(upload_data, f, correlation_id):
     headers = utils.get_headers(correlation_id)
     bg_blender.progress('uploading %s' % f['type'])
@@ -89,7 +64,7 @@ def upload_file(upload_data, f, correlation_id):
     }
     if f['type'] == 'blend':
         upload_info['viewId'] = upload_data['viewId']
-    upload_create_url = paths.get_api_url() + 'uploads/'
+    upload_create_url = paths.get_api_url('uploads')
     response = rerequests.post(upload_create_url, json=upload_info, headers=headers)
     upload = response.json()
     #
@@ -103,7 +78,7 @@ def upload_file(upload_data, f, correlation_id):
             try:
                 upload_response = requests.put(
                     upload['s3UploadUrl'],
-                    data=upload_in_chunks(f['file_path'], chunk_size, f['type']),
+                    data=utils.upload_in_chunks(f['file_path'], chunk_size, f['type']),
                     stream=True,
                 )
 
@@ -118,7 +93,7 @@ def upload_file(upload_data, f, correlation_id):
                 time.sleep(1)
 
             # confirm single file upload to hana3d server
-            upload_done_url = paths.get_api_url() + 'uploads_s3/' + upload['id'] + '/upload-file/'
+            upload_done_url = paths.get_api_url('uploads_s3', upload['id'], 'upload-file')
             upload_response = rerequests.post(upload_done_url, headers=headers)
 
     bg_blender.progress('finished uploading')
@@ -255,13 +230,9 @@ if __name__ == "__main__":
             if 'MAINFILE' in upload_set:
                 confirm_data = {"verificationStatus": "uploaded"}
 
-                url = paths.get_api_url() + 'assets/'
-
+                url = paths.get_api_url('assets', upload_data['id'])
                 headers = utils.get_headers(correlation_id)
-
-                url += upload_data["id"] + '/'
-
-                r = rerequests.patch(url, json=confirm_data, headers=headers)
+                rerequests.patch(url, json=confirm_data, headers=headers)
 
             bg_blender.progress('upload finished successfully')
         else:

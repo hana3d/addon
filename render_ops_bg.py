@@ -31,6 +31,8 @@ import json
 import os
 import sys
 import time
+import uuid
+from typing import Tuple
 
 import bpy
 import requests
@@ -38,111 +40,76 @@ import requests
 HANA3D_EXPORT_DATA = sys.argv[-1]
 
 
-class upload_in_chunks(object):
-    def __init__(self, filename, chunksize=1 << 13, report_name='file'):
-        self.filename = filename
-        self.chunksize = chunksize
-        self.totalsize = os.path.getsize(filename)
-        self.readsofar = 0
-        self.report_name = report_name
+def create_render_view(
+        asset_id: str,
+        view_id: str,
+        filepath: str,
+        headers: dict,
+) -> Tuple[str, str]:
+    url = paths.get_api_url('uploads')
+    data = {
+        'assetId': asset_id,
+        'originalFilename': os.path.basename(filepath),
+        'id_parent': view_id,
+        'metadata': {'is_render_scene': True},
+    }
+    response = rerequests.post(url, json=data, headers=headers)
+    assert response.ok, response.text
 
-    def __iter__(self):
-        with open(self.filename, 'rb') as file:
-            while True:
-                data = file.read(self.chunksize)
-                if not data:
-                    sys.stderr.write("\n")
-                    break
-                self.readsofar += len(data)
-                percent = self.readsofar * 1e2 / self.totalsize
-                bg_blender.progress('uploading %s' % self.report_name, percent)
-                yield data
+    dict_response = response.json()
 
-    def __len__(self):
-        return self.totalsize
+    render_scene_id = dict_response['id']
+    upload_url = dict_response['s3UploadUrl']
+    return render_scene_id, upload_url
 
 
-def upload_file(filepath):
-    bpy.app.debug_value = data.get('debug_value', 0)
-
-    headers = utils.get_headers()
-
-    upload_create_url = paths.get_render_farm_upload_url()
-    upload = rerequests.get(upload_create_url, headers=headers)
-    upload = upload.json()
-    chunk_size = 1024 * 1024 * 2
-    uploaded = False
-    for a in range(0, 5):
-        if not uploaded:
-            try:
-                upload_response = requests.put(
-                    upload['uploadUrls'][0],  # TODO: Change to multiparts
-                    data=upload_in_chunks(filepath, chunk_size, "blend"),
-                    stream=True,
-                )
-
-                if upload_response.status_code == 200:
-                    uploaded = True
-                else:
-                    print(upload_response.text)
-                    bg_blender.progress(f'Upload failed, retry. {a}')
-            except Exception as e:
-                print(e)
-                bg_blender.progress('Upload .blend failed, retrying')
-                time.sleep(1)
-    if not uploaded:
+def upload_file(filepath: str, upload_url: str, headers: dict):
+    chunk_size = 2 * 1024 * 1024
+    try:
+        # TODO: Multipart upload
+        upload_response = requests.put(
+            upload_url,
+            data=utils.upload_in_chunks(filepath, chunk_size, report_name='blend'),
+            stream=True,
+        )
+        assert upload_response.ok
+    except Exception as e:
+        print(e)
         bg_blender.progress('Upload failed.')
-        return None
+        return
     bg_blender.progress('Upload complete')
-    return upload['url']
 
 
-def create_project(name: str, url: str, file_size: int, user_id: str):
-    headers = utils.get_headers()
-    bg_blender.progress('Creating Project')
-    project_url = paths.get_render_farm_project_url(user_id)
-
-    data = {
-        'name': name,
-        'url': url,
-        'sizeBytes': file_size
-    }
-    project = rerequests.post(project_url, json=data, headers=headers)
-    project = project.json()
-
-    return project['id']
+def confirm_file_upload(render_scene_id: str, headers: dict):
+    url = paths.get_api_url('uploads_s3', render_scene_id, 'upload-file')
+    rerequests.post(url, headers=headers)
 
 
-def create_job(project_id: str, engine: str, frame_start: int, frame_end: int):
-    headers = utils.get_headers()
+def create_job(
+        render_scene_id: str,
+        engine: str,
+        frame_start: int,
+        frame_end: int,
+        headers: dict) -> str:
     bg_blender.progress('Creating Job')
-    job_url = paths.get_render_farm_job_url(project_id)
+    job_url = paths.get_api_url('render_jobs')
 
     data = {
+        'render_scene_id': render_scene_id,
         'engine': engine,
-        'frameStart': frame_start,
-        'frameEnd': frame_end
+        'frame_start': frame_start,
+        'frame_end': frame_end,
     }
-
-    job = rerequests.post(job_url, json=data, headers=headers)
-    job = job.json()
-
+    response = rerequests.post(job_url, json=data, headers=headers)
+    job = response.json()
     return job['id']
 
 
-def start_job(job_id: str):
-    headers = utils.get_headers()
-    bg_blender.progress('Starting Job')
-    job_url = paths.get_render_farm_job_start_url(job_id)
-    rerequests.post(job_url, headers=headers)
-
-
-def pool_job(user_id: str, job_id: str):
+def pool_job(job_data: dict, headers: dict) -> str:
     while True:
-        headers = utils.get_headers()
-        job_url = paths.get_render_farm_job_get_url(user_id, job_id)
-        job = rerequests.get(job_url, headers=headers)
-        job = job.json()[0]
+        pool_url = paths.get_api_url('render_jobs', job_id)
+        response = rerequests.get(pool_url, headers=headers)
+        job = response.json()
         if job['status'] == 'FINISHED':
             bg_blender.progress('Job complete')
             break
@@ -153,9 +120,9 @@ def pool_job(user_id: str, job_id: str):
             bg_blender.progress('Error in job')
             break
         else:
-            bg_blender.progress('Job progress: ', job['progress'])
+            bg_blender.progress('Job progress: ', job['progress'] * 100)
             time.sleep(1)
-    return job['output'][0]
+    return job['output_url']
 
 
 if __name__ == "__main__":
@@ -165,19 +132,23 @@ if __name__ == "__main__":
 
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
-        name = data['asset'] + '.blend'
-        filepath = data['source_filepath']
-        user_id = data['user_id']
+        bpy.app.debug_value = data.get('debug_value', 0)
+        asset_id = data['asset_id']
+        view_id = data['view_id']
         engine = data['engine']
         frame_start = data['frame_start']
         frame_end = data['frame_end']
-        file_size = os.path.getsize(filepath)
+        filepath = data['filepath']
 
-        url = upload_file(filepath)
-        project_id = create_project(name, url, file_size, user_id)
-        job_id = create_job(project_id, engine, frame_start, frame_end)
-        start_job(job_id)
-        render = pool_job(user_id, job_id)
+        correlation_id = str(uuid.uuid4())
+        headers = utils.get_headers(correlation_id)
+
+        render_scene_id, upload_url = create_render_view(asset_id, view_id, filepath, headers)
+        upload_file(filepath, upload_url, headers)
+        confirm_file_upload(render_scene_id, headers)
+        job_id = create_job(render_scene_id, engine, frame_start, frame_end, headers)
+        render = pool_job(job_id, headers)
+
         # TODO: improve bring-result-to-scene
         bpy.context.scene.Hana3DRender.render_path = render
         bg_blender.progress('Job finished successfully')

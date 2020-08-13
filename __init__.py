@@ -296,8 +296,21 @@ def get_render_engine(self):
     return 0
 
 
+def get_balance(self) -> str:
+    profile = bpy.context.window_manager.get('hana3d profile')
+    if not profile:
+        return 'N/A'
+    balance = profile['user']['nrf_balance']
+    return f'${balance:.2f}'
+
+
 class Hana3DRenderProps(PropertyGroup):
-    balance: StringProperty(name="Credits", description="", default="$0.00")
+    balance: StringProperty(
+        name="Balance",
+        description="",
+        default='N/A',
+        get=get_balance,
+    )
     asset: StringProperty(name="Asset", description="", get=get_render_asset_name)
     engine: EnumProperty(
         name="Engine",

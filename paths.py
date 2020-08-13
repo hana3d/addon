@@ -18,11 +18,11 @@
 
 import os
 import sys
+import urllib.parse
 
 import bpy
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-HANA3D_API = "/v1/"
 HANA3D_AUTH_URL = "https://hana3d.us.auth0.com"
 HANA3D_AUTH_CLIENT_ID_DEV = "K3Tp6c6bbvF8gT6nwK1buVZjpTeDeXfu"
 HANA3D_AUTH_CLIENT_ID_PROD = "DDfs3mFwivtSoUOqwCZnJODaOhmwZvor"
@@ -33,8 +33,6 @@ HANA3D_PLATFORM_URL_DEV = "https://staging.hana3d.com"
 HANA3D_PLATFORM_URL_PROD = "https://hana3d.com"
 HANA3D_AUTH_LANDING = "/landing"
 HANA3D_SETTINGS_FILENAME = os.path.join(_presets, "hana3d.json")
-
-RENDER_FARM_URL = 'https://api.notrenderfarm.com/production'
 
 URL_HANA3D_MAIN = 'https://api.hana3d.com'
 URL_HANA3D_LOCAL = 'http://localhost:5000'
@@ -60,8 +58,13 @@ def find_in_local(text=''):
     return fs
 
 
-def get_api_url():
-    return get_hana3d_url() + HANA3D_API
+def get_api_url(*paths: str, query: dict = None) -> str:
+    base_url = get_hana3d_url() + '/v1/'
+    url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
+    if query is None:
+        return url
+    query_string = urllib.parse.urlencode(query)
+    return f'{url}?{query_string}'
 
 
 def get_auth_url():
@@ -100,34 +103,6 @@ def get_auth_audience():
         return HANA3D_AUTH_AUDIENCE_DEV
 
     return HANA3D_AUTH_AUDIENCE_PROD
-
-
-def get_render_farm_user_url(email):
-    return f'{RENDER_FARM_URL}/users/?email={email}'
-
-
-def get_render_farm_upload_url():
-    return f'{RENDER_FARM_URL}/upload/?extension=.blend'
-
-
-def get_render_farm_project_url(user_id):
-    return f'{RENDER_FARM_URL}/users/{user_id}/projects'
-
-
-def get_render_farm_job_url(project_id):
-    return f'{RENDER_FARM_URL}/projects/{project_id}/jobs'
-
-
-def get_render_farm_job_start_url(job_id):
-    return f'{RENDER_FARM_URL}/jobs/{job_id}/start'
-
-
-def get_render_farm_job_get_url(user_id, job_id):
-    return f'{RENDER_FARM_URL}/users/{user_id}/jobs?id={job_id}'
-
-
-def get_render_farm_job_cancel_url(job_id):
-    return f'{RENDER_FARM_URL}/jobs/{job_id}/cancel'
 
 
 def default_global_dict():
