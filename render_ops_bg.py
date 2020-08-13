@@ -105,7 +105,7 @@ def create_job(
     return job['id']
 
 
-def pool_job(job_id: str, headers: dict) -> str:
+def pool_job(job_id: str, headers: dict, pool_time: int = 5) -> str:
     while True:
         url = paths.get_api_url('render_jobs', job_id)
         response = rerequests.get(url, headers=headers)
@@ -121,7 +121,7 @@ def pool_job(job_id: str, headers: dict) -> str:
             break
         else:
             bg_blender.progress('Job progress: ', job['progress'] * 100)
-            time.sleep(1)
+            time.sleep(pool_time)
     return job['output_url']
 
 
