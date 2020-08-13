@@ -19,8 +19,6 @@
 
 import bpy
 
-# TODO Change to Menu
-
 
 class ListLibrariesOperator(bpy.types.Operator):
     """Lists Libraries"""
@@ -38,9 +36,20 @@ class ListLibrariesOperator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
 
+class SubMenu(bpy.types.Menu):
+    bl_idname = "OBJECT_MT_libraries_submenu"
+    bl_label = ""
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
+
+
 def register():
-    bpy.utils.register_class(ListLibrariesOperator)
+    # bpy.utils.register_class(ListLibrariesOperator)
+    bpy.utils.register_class(SubMenu)
 
 
 def unregister():
-    bpy.utils.unregister_class(ListLibrariesOperator)
+    bpy.utils.unregister_class(SubMenu)
+    # bpy.utils.unregister_class(ListLibrariesOperator)

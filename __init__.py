@@ -200,7 +200,7 @@ class Hana3DUIProps(PropertyGroup):
     down_up: EnumProperty(
         name="Download vs Upload",
         items=(
-            ('SEARCH', 'Search', 'Sctivate searching', 'VIEWZOOM', 0),
+            ('SEARCH', 'Search', 'Activate searching', 'VIEWZOOM', 0),
             ('UPLOAD', 'Upload', 'Activate uploading', 'COPYDOWN', 1),
         ),
         description="hana3d",
