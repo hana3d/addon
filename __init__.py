@@ -351,6 +351,9 @@ class Hana3DCommonSearchProps(object):
         options={'ANIMATABLE'},
     )
 
+    libraries: StringProperty(
+        name="Libraries", description="Libraries that the asset are linked to", default="")
+
 
 def name_update(self, context):
     ''' checks for name change, because it decides if whole asset has to be re-uploaded.
