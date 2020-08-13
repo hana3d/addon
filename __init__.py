@@ -46,6 +46,7 @@ if "bpy" in locals():
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
     custom_props = reload(custom_props)
+    libraries = reload(libraries)
 else:
     from hana3d import (
         asset_inspector,
@@ -63,6 +64,7 @@ else:
         hana3d_oauth,
         tasks_queue,
         custom_props,
+        libraries,
     )
 
 import math
@@ -1095,6 +1097,7 @@ def register():
     overrides.register_overrides()
     hana3d_oauth.register()
     tasks_queue.register()
+    libraries.register()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
 
@@ -1118,6 +1121,7 @@ def unregister():
     overrides.unregister_overrides()
     hana3d_oauth.unregister()
     tasks_queue.unregister()
+    libraries.unregister()
 
     del bpy.types.Scene.hana3d_models
     del bpy.types.Scene.hana3d_scene

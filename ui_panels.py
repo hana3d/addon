@@ -78,6 +78,10 @@ def draw_upload_common(layout, context):
     props = utils.get_upload_props()
 
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    layout.operator(
+        "object.hana3d_list_libraries",
+        text='Libraries',
+    )
     prop_needed(layout, props, 'name', props.name)
     layout.prop(props, 'description')
     layout.prop(props, 'publish_message')
