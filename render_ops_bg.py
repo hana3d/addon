@@ -105,10 +105,10 @@ def create_job(
     return job['id']
 
 
-def pool_job(job_data: dict, headers: dict) -> str:
+def pool_job(job_id: str, headers: dict) -> str:
     while True:
-        pool_url = paths.get_api_url('render_jobs', job_id)
-        response = rerequests.get(pool_url, headers=headers)
+        url = paths.get_api_url('render_jobs', job_id)
+        response = rerequests.get(url, headers=headers)
         job = response.json()
         if job['status'] == 'FINISHED':
             bg_blender.progress('Job complete')
