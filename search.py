@@ -194,14 +194,15 @@ def timer_update():
                                 if f['fileType'] == 'blend':
                                     durl = f['downloadUrl']
                             if durl and tname:
-
+                                # Check for assetBaseId for backwards compatibility
+                                view_id = r.get('viewId') or r.get('assetBaseId') or ''
                                 tooltip = generate_tooltip(r)
                                 asset_data = {
                                     'thumbnail': tname,
                                     'thumbnail_small': small_tname,
                                     'download_url': durl,
                                     'id': r['id'],
-                                    'view_id': r['viewId'],
+                                    'view_id': view_id,
                                     'name': r['name'],
                                     'asset_type': r['assetType'],
                                     'tooltip': tooltip,
@@ -242,7 +243,7 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if r['viewId'] in scene.get('assets used', {}).keys():
+                                if view_id in scene.get('assets used', {}).keys():
                                     asset_data['downloaded'] = 100
 
                                 result_field.append(asset_data)

@@ -300,7 +300,9 @@ def get_balance(self) -> str:
     profile = bpy.context.window_manager.get('hana3d profile')
     if not profile:
         return 'N/A'
-    balance = profile['user']['nrf_balance']
+    balance = profile['user'].get('nrf_balance')
+    if balance is None:
+        return 'N/A'
     return f'${balance:.2f}'
 
 
