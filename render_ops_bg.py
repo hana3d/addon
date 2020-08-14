@@ -51,7 +51,7 @@ def create_render_view(
         'assetId': asset_id,
         'originalFilename': os.path.basename(filepath),
         'id_parent': view_id,
-        'metadata': {'is_render_scene': True},
+        'metadata': {'render': {'file_type': 'scene'}},
     }
     response = rerequests.post(url, json=data, headers=headers)
     assert response.ok, response.text
@@ -61,6 +61,22 @@ def create_render_view(
     render_scene_id = dict_response['id']
     upload_url = dict_response['s3UploadUrl']
     return render_scene_id, upload_url
+
+
+def post_completed_job(asset_id: str, render_scene_id: str, render_url: str) -> str:
+    url = paths.get_api_url('uploads')
+    data = {
+        'assetId': asset_id,
+        'originalFilename': render_url.rpartition('/')[2],
+        'id_parent': render_scene_id,
+        'metadata': {'render': {'file_type': 'output'}},
+        'url': render_url,
+    }
+    response = rerequests.post(url, json=data, headers=headers)
+    assert response.ok, response.text
+
+    dict_response = response.json()
+    return dict_response['output_url']
 
 
 def upload_file(filepath: str, upload_url: str, headers: dict):
@@ -147,10 +163,11 @@ if __name__ == "__main__":
         upload_file(filepath, upload_url, headers)
         confirm_file_upload(render_scene_id, headers)
         job_id = create_job(render_scene_id, engine, frame_start, frame_end, headers)
-        render = pool_job(job_id, headers)
+        render_nrf_url = pool_job(job_id, headers)
+        render_hana3d_url = post_completed_job(asset_id, render_scene_id, render_nrf_url)
 
         # TODO: improve bring-result-to-scene
-        bpy.context.scene.Hana3DRender.render_path = render
+        bpy.context.scene.Hana3DRender.render_path = render_hana3d_url
         bg_blender.progress('Job finished successfully')
 
     except Exception as e:

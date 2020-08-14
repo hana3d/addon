@@ -330,19 +330,16 @@ class Hana3DRenderProps(PropertyGroup):
         description="",
         default="FRAME",
     )
-
     render_state: StringProperty(
         name="Render Generating State",
         description="",
         default="Starting Render process"
     )
-
     rendering: BoolProperty(
         name="Rendering",
         description="True when background process is running",
         default=False
     )
-
     render_path: StringProperty(
         name="Path to complete render",
         description="",
