@@ -81,11 +81,11 @@ def draw_upload_common(layout, context):
     row = layout.row(align=True)
     # split = layout.split(factor=0.25)
     col = row.column()
-    col.scale_x = 0.5
+    col.scale_x = 0.7
     col.label(text='Libraries:')
     # split = layout.split(factor=0.75)
     col = row.column()
-    col.scale_x = 1.29
+    col.scale_x = 1.24
     col.operator(
         "object.hana3d_list_libraries",
         text='Libraries'
