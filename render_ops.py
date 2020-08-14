@@ -19,19 +19,18 @@
 if "bpy" in locals():
     import importlib
 
+    bg_blender = importlib.reload(bg_blender)
     paths = importlib.reload(paths)
     utils = importlib.reload(utils)
-    rerequests = importlib.reload(rerequests)
-    bg_blender = importlib.reload(bg_blender)
 else:
-    from hana3d import utils, paths, bg_blender
+    from hana3d import bg_blender, paths, utils
+
+import json
+import os
+import subprocess
+import tempfile
 
 import bpy
-
-import os
-import tempfile
-import json
-import subprocess
 from bpy.types import Operator
 
 
