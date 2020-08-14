@@ -29,11 +29,17 @@ class ListLibrariesOperator(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
+        layout.prop(context.scene.tests, 'test0')
+        layout.prop(context.scene.tests, 'test1')
+        layout.prop(context.scene.tests, 'test2')
+
+    def execute(self, context):
+        start_thumbnailer(self, context)
+        return {'INTERFACE'}
 
     def invoke(self, context, event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self)
+        return wm.invoke_popup(self)
 
 
 class SubMenu(bpy.types.Menu):
@@ -42,14 +48,42 @@ class SubMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
+        layout.prop(context.scene.tests, 'test0')
+        layout.prop(context.scene.tests, 'test1')
+        layout.prop(context.scene.tests, 'test2')
+
+
+class MockProps(bpy.types.PropertyGroup):
+    test0: bpy.props.BoolProperty(
+        name="Test0",
+        description="Test0",
+        default=False,
+    )
+
+    test1: bpy.props.BoolProperty(
+        name="Test1",
+        description="Test1",
+        default=False,
+    )
+
+    test2: bpy.props.BoolProperty(
+        name="Test2",
+        description="Test2",
+        default=False,
+    )
 
 
 def register():
-    # bpy.utils.register_class(ListLibrariesOperator)
+    bpy.utils.register_class(ListLibrariesOperator)
+    bpy.utils.register_class(MockProps)
     bpy.utils.register_class(SubMenu)
+
+    bpy.types.Scene.tests = bpy.props.PointerProperty(type=MockProps)
 
 
 def unregister():
+    del bpy.types.Scene.tests
+
     bpy.utils.unregister_class(SubMenu)
-    # bpy.utils.unregister_class(ListLibrariesOperator)
+    bpy.utils.unregister_class(MockProps)
+    bpy.utils.unregister_class(ListLibrariesOperator)

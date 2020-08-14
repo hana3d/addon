@@ -79,9 +79,9 @@ def draw_upload_common(layout, context):
 
     layout.prop(props, 'workspace', expand=False, text='Workspace')
     layout.operator(
-        "wm.call_menu",
+        "object.hana3d_list_libraries",
         text='Libraries'
-    ).name = "OBJECT_MT_libraries_submenu"
+    )
     prop_needed(layout, props, 'name', props.name)
     layout.prop(props, 'description')
     layout.prop(props, 'publish_message')
