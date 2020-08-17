@@ -1744,8 +1744,6 @@ class DefaultNameOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         if ui_props.down_up == 'UPLOAD':
-            print('TEST1')
-
             # only generate tooltip once in a while
             if (
                 (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
