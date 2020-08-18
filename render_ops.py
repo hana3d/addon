@@ -57,7 +57,7 @@ def start_render_process(self, context):
         frame_start = context.scene.frame_start
         frame_end = context.scene.frame_end
 
-    *_, eval_path_computing, eval_path_state, eval_path, props = utils.get_export_data(
+    *_, bg_process_params, props = utils.get_export_data(
         context,
         asset_type,
         path_computing='rendering',
@@ -96,11 +96,9 @@ def start_render_process(self, context):
         )
 
         bg_blender.add_bg_process(
-            eval_path_computing=eval_path_computing,
-            eval_path_state=eval_path_state,
-            eval_path=eval_path,
             process_type='RENDER',
             process=proc,
+            **bg_process_params
         )
 
     except Exception as e:

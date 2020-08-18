@@ -50,7 +50,7 @@ class threadCom:  # object passed to threads to read background process stdout i
         self.name = name
         self.eval_path_computing = eval_path_computing  # property that gets written to.
         self.eval_path_state = eval_path_state  # property that gets written to.
-        self.eval_path = eval_path  # property that gets written to.
+        self.eval_path = eval_path  # property checked when killing background process.
         self.process_type = process_type
         self.outtext = ''
         self.proc = proc
@@ -182,13 +182,12 @@ class KillBgProcess(bpy.types.Operator):
     def execute(self, context):
         # first do the easy stuff...TODO all cases.
         props = utils.get_upload_props()
-        render_props = context.scene.Hana3DRender
         if self.process_type == 'UPLOAD':
             props.uploading = False
         if self.process_type == 'THUMBNAILER':
             props.is_generating_thumbnail = False
         if self.process_type == 'RENDER':
-            render_props.rendering = False
+            props.rendering = False
         global hana3d_bg_process
         # print('killing', self.process_source, self.process_type)
         # then go kill the process. this wasn't working for unsetting props
@@ -196,9 +195,7 @@ class KillBgProcess(bpy.types.Operator):
 
         processes = bg_processes
         for p in processes:
-
             tcom = p[1]
-            # print(tcom.process_type, self.process_type)
             if tcom.process_type == self.process_type:
                 source = eval(tcom.eval_path)
                 print(source.bl_rna.name, self.process_source)

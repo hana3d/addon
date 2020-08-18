@@ -180,9 +180,7 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
     (
         export_data,
         upload_data,
-        eval_path_computing,
-        eval_path_state,
-        eval_path,
+        bg_process_params,
         props,
     ) = utils.get_export_data(context, asset_type)
     # We have to validate here as get_export_data() is called in other parts of the code
@@ -295,12 +293,10 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
         )
 
         bg_blender.add_bg_process(
-            eval_path_computing=eval_path_computing,
-            eval_path_state=eval_path_state,
-            eval_path=eval_path,
             process_type='UPLOAD',
             process=proc,
             location=location,
+            **bg_process_params,
         )
 
         if autopack:

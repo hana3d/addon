@@ -1157,14 +1157,7 @@ class AssetBarOperator(bpy.types.Operator):
                     and ao is not None
                     and ao.active_material is not None
                 ):
-                    (
-                        export_data,
-                        upload_data,
-                        eval_path_computing,
-                        eval_path_state,
-                        eval_path,
-                        props,
-                    ) = utils.get_export_data(context, ui_props.asset_type)
+                    upload_data = utils.get_export_data(context, ui_props.asset_type)[1]
                     ui_props.tooltip = search.generate_tooltip(upload_data)
 
             return {'PASS_THROUGH'}

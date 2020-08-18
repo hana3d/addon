@@ -267,6 +267,11 @@ def get_export_data(context, asset_type, path_computing='uploading', path_state=
 
     eval_path_computing = f'{eval_path}.hana3d.{path_computing}'
     eval_path_state = f'{eval_path}.hana3d.{path_state}'
+    bg_process_params = {
+        'eval_path_computing': eval_path_computing,
+        'eval_path_state': eval_path_state,
+        'eval_path': eval_path,
+    }
 
     add_version(upload_data)
 
@@ -293,7 +298,7 @@ def get_export_data(context, asset_type, path_computing='uploading', path_state=
 
     export_data['publish_message'] = props.publish_message
 
-    return export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props
+    return export_data, upload_data, bg_process_params, props
 
 
 class upload_in_chunks:
