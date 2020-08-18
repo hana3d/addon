@@ -208,12 +208,11 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
             props.uploading = False
             return {'CANCELLED'}
 
-    # first upload metadata to server, so it can be saved inside the current file
-    url = paths.get_api_url('assets')
     headers = utils.get_headers(correlation_id)
 
     global reports
     if props.id == '':
+        url = paths.get_api_url('assets')
         try:
             response = rerequests.post(
                 url,
@@ -232,7 +231,7 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
             props.uploading = False
             return {'CANCELLED'}
     else:
-        url += props.id + '/'
+        url = paths.get_api_url('assets', props.id)
         try:
             rerequests.put(
                 url,
