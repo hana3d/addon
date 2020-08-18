@@ -24,7 +24,6 @@ if "bpy" in locals():
     utils = reload(utils)
     bg_blender = reload(bg_blender)
     autothumb = reload(autothumb)
-    version_checker = reload(version_checker)
     ui = reload(ui)
     rerequests = reload(rerequests)
 else:
@@ -33,7 +32,6 @@ else:
         utils,
         bg_blender,
         autothumb,
-        version_checker,
         ui,
         rerequests,
     )
@@ -56,29 +54,6 @@ from bpy.props import (
 from bpy.types import Operator
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
-
-
-def comma2array(text):
-    commasep = text.split(',')
-    ar = []
-    for i, s in enumerate(commasep):
-        s = s.strip()
-        if s != '':
-            ar.append(s)
-    return ar
-
-
-def get_app_version():
-    ver = bpy.app.version
-    return '%i.%i.%i' % (ver[0], ver[1], ver[2])
-
-
-def add_version(data):
-    app_version = get_app_version()
-    addon_version = version_checker.get_addon_version()
-    data["sourceAppName"] = "blender"
-    data["sourceAppVersion"] = app_version
-    data["addonVersion"] = addon_version
 
 
 def write_to_report(props, text):
@@ -132,118 +107,6 @@ def sub_to_camel(content):
 def camel_to_sub(content):
     replaced = re.sub(r"[A-Z]", lambda m: '_' + m.group(0).lower(), content)
     return replaced
-
-
-def get_upload_data(self, context, asset_type):
-    export_data = {
-        "type": asset_type,
-    }
-    upload_params = {}
-    if asset_type == 'MODEL':
-        # Prepare to save the file
-        mainmodel = utils.get_active_model()
-
-        props = mainmodel.hana3d
-
-        obs = utils.get_hierarchy(mainmodel)
-        obnames = []
-        for ob in obs:
-            obnames.append(ob.name)
-        export_data["models"] = obnames
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path_computing = "bpy.data.objects['%s'].hana3d.uploading" % mainmodel.name
-        eval_path_state = "bpy.data.objects['%s'].hana3d.upload_state" % mainmodel.name
-        eval_path = "bpy.data.objects['%s']" % mainmodel.name
-
-        upload_data = {
-            "assetType": 'model',
-        }
-        upload_params = {
-            "dimensionX": round(props.dimensions[0], 4),
-            "dimensionY": round(props.dimensions[1], 4),
-            "dimensionZ": round(props.dimensions[2], 4),
-            "boundBoxMinX": round(props.bbox_min[0], 4),
-            "boundBoxMinY": round(props.bbox_min[1], 4),
-            "boundBoxMinZ": round(props.bbox_min[2], 4),
-            "boundBoxMaxX": round(props.bbox_max[0], 4),
-            "boundBoxMaxY": round(props.bbox_max[1], 4),
-            "boundBoxMaxZ": round(props.bbox_max[2], 4),
-            "faceCount": props.face_count,
-            "faceCountRender": props.face_count_render,
-            "objectCount": props.object_count,
-            "manufacturer": props.manufacturer,
-            "designer": props.designer,
-        }
-
-    if asset_type == 'SCENE':
-        # Prepare to save the file
-        s = bpy.context.scene
-
-        props = s.hana3d
-
-        export_data["scene"] = s.name
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path_computing = "bpy.data.scenes['%s'].hana3d.uploading" % s.name
-        eval_path_state = "bpy.data.scenes['%s'].hana3d.upload_state" % s.name
-        eval_path = "bpy.data.scenes['%s']" % s.name
-
-        upload_data = {
-            "assetType": 'scene',
-        }
-        upload_params = {
-            # TODO add values
-            # "faceCount": 1,  # props.face_count,
-            # "faceCountRender": 1,  # props.face_count_render,
-            # "objectCount": 1,  # props.object_count,
-        }
-
-    elif asset_type == 'MATERIAL':
-        mat = bpy.context.active_object.active_material
-        props = mat.hana3d
-
-        # props.name = mat.name
-
-        export_data["material"] = str(mat.name)
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path_computing = "bpy.data.materials['%s'].hana3d.uploading" % mat.name
-        eval_path_state = "bpy.data.materials['%s'].hana3d.upload_state" % mat.name
-        eval_path = "bpy.data.materials['%s']" % mat.name
-
-        upload_data = {
-            "assetType": 'material',
-        }
-
-        upload_params = {}
-
-    add_version(upload_data)
-
-    upload_data["name"] = props.name
-    upload_data["description"] = props.description
-    upload_data["tags"] = comma2array(props.tags)
-
-    upload_data['parameters'] = upload_params
-
-    upload_data["is_public"] = props.is_public
-    if props.workspace != '' and not props.is_public:
-        upload_data['workspace'] = props.workspace
-
-    metadata = {}
-    list_clients = getattr(props, 'client', '').split(',')
-    list_skus = getattr(props, 'sku', '').split(',')
-    product_info = [{'client': client, 'sku': sku} for client, sku in zip(list_clients, list_skus)]
-    if len(product_info) > 0:
-        metadata['product_info'] = product_info
-    if hasattr(props, 'custom_props'):
-        metadata.update(props.custom_props)
-    if metadata:
-        upload_data['metadata'] = metadata
-
-    export_data['publish_message'] = props.publish_message
-
-    return export_data, upload_data, eval_path_computing, eval_path_state, eval_path, props
 
 
 def validate_upload_data(props):
@@ -321,8 +184,8 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
         eval_path_state,
         eval_path,
         props,
-    ) = get_upload_data(self, context, asset_type)
-    # We have to validate here as get_upload_data() is called in other parts of the code
+    ) = utils.get_export_data(context, asset_type)
+    # We have to validate here as get_export_data() is called in other parts of the code
     validate_upload_data(props)
 
     # weird array conversion only for upload, not for tooltips.

@@ -23,13 +23,12 @@ if "bpy" in locals():
     paths = importlib.reload(paths)
     utils = importlib.reload(utils)
     search = importlib.reload(search)
-    upload = importlib.reload(upload)
     ui_bgl = importlib.reload(ui_bgl)
     download = importlib.reload(download)
     bg_blender = importlib.reload(bg_blender)
     colors = importlib.reload(colors)
 else:
-    from hana3d import paths, utils, search, upload, ui_bgl, download, bg_blender, colors
+    from hana3d import paths, utils, search, ui_bgl, download, bg_blender, colors
 
 import math
 import os
@@ -1165,7 +1164,7 @@ class AssetBarOperator(bpy.types.Operator):
                         eval_path_state,
                         eval_path,
                         props,
-                    ) = upload.get_upload_data(self, context, ui_props.asset_type)
+                    ) = utils.get_export_data(context, ui_props.asset_type)
                     ui_props.tooltip = search.generate_tooltip(upload_data)
 
             return {'PASS_THROUGH'}
