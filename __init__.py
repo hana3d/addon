@@ -332,21 +332,6 @@ class Hana3DRenderProps(PropertyGroup):
         description="",
         default="FRAME",
     )
-    render_state: StringProperty(
-        name="Render Generating State",
-        description="",
-        default="Starting Render process"
-    )
-    rendering: BoolProperty(
-        name="Rendering",
-        description="True when background process is running",
-        default=False
-    )
-    render_path: StringProperty(
-        name="Path to complete render",
-        description="",
-        default=""
-    )
 
 
 def workspace_items(self, context):
@@ -537,6 +522,18 @@ class Hana3DCommonUploadProps(object):
         name="Publish Message",
         description="Changes from previous version",
         default=""
+    )
+
+    rendering: BoolProperty(
+        name="Rendering",
+        description="True when background process is running",
+        default=False
+    )
+
+    render_state: StringProperty(
+        name="Render Generating State",
+        description="",
+        default="Starting Render process"
     )
 
 

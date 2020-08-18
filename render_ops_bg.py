@@ -166,8 +166,6 @@ if __name__ == "__main__":
         render_nrf_url = pool_job(job_id, headers)
         render_hana3d_url = post_completed_job(asset_id, render_scene_id, render_nrf_url)
 
-        # TODO: improve bring-result-to-scene
-        bpy.context.scene.Hana3DRender.render_path = render_hana3d_url
         bg_blender.progress('Job finished successfully')
 
     except Exception as e:

@@ -34,7 +34,7 @@ import bpy
 from bpy.types import Operator
 
 
-def start_render_process(self, context, props):
+def start_render_process(self, context):
     render_props = context.scene.Hana3DRender
     render_props.rendering = True
 
@@ -57,9 +57,12 @@ def start_render_process(self, context, props):
         frame_start = context.scene.frame_start
         frame_end = context.scene.frame_end
 
-    eval_path_computing = "bpy.context.scene.Hana3DRender.rendering"
-    eval_path_state = "bpy.context.scene.Hana3DRender.render_state"
-    eval_path = "bpy.context.scene.Hana3DRender.render_path"
+    *_, eval_path_computing, eval_path_state, eval_path, props = utils.get_export_data(
+        context,
+        asset_type,
+        path_computing='rendering',
+        path_state='render_state'
+    )
 
     try:
         bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
@@ -131,7 +134,7 @@ class RenderScene(Operator):
             message = "Please upload asset or select uploaded"
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
-        start_render_process(self, context, props)
+        start_render_process(self, context)
         return {'FINISHED'}
 
 

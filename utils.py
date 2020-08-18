@@ -187,7 +187,7 @@ def comma2array(text):
     return ar
 
 
-def get_export_data(context, asset_type):
+def get_export_data(context, asset_type, path_computing='uploading', path_state='upload_state'):
     export_data = {
         "type": asset_type,
     }
@@ -205,9 +205,7 @@ def get_export_data(context, asset_type):
         export_data["models"] = obnames
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
-        eval_path_computing = "bpy.data.objects['%s'].hana3d.uploading" % mainmodel.name
-        eval_path_state = "bpy.data.objects['%s'].hana3d.upload_state" % mainmodel.name
-        eval_path = "bpy.data.objects['%s']" % mainmodel.name
+        eval_path = f"bpy.data.objects['{mainmodel.name}']"
 
         upload_data = {
             "assetType": 'model',
@@ -229,7 +227,7 @@ def get_export_data(context, asset_type):
             "designer": props.designer,
         }
 
-    if asset_type == 'SCENE':
+    elif asset_type == 'SCENE':
         # Prepare to save the file
         s = bpy.context.scene
 
@@ -238,9 +236,7 @@ def get_export_data(context, asset_type):
         export_data["scene"] = s.name
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
-        eval_path_computing = "bpy.data.scenes['%s'].hana3d.uploading" % s.name
-        eval_path_state = "bpy.data.scenes['%s'].hana3d.upload_state" % s.name
-        eval_path = "bpy.data.scenes['%s']" % s.name
+        eval_path = f"bpy.data.scenes['{s.name}']"
 
         upload_data = {
             "assetType": 'scene',
@@ -261,15 +257,16 @@ def get_export_data(context, asset_type):
         export_data["material"] = str(mat.name)
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
-        eval_path_computing = "bpy.data.materials['%s'].hana3d.uploading" % mat.name
-        eval_path_state = "bpy.data.materials['%s'].hana3d.upload_state" % mat.name
-        eval_path = "bpy.data.materials['%s']" % mat.name
+        eval_path = f"bpy.data.materials['{mat.name}']"
 
         upload_data = {
             "assetType": 'material',
         }
 
         upload_params = {}
+
+    eval_path_computing = f'{eval_path}.hana3d.{path_computing}'
+    eval_path_state = f'{eval_path}.hana3d.{path_state}'
 
     add_version(upload_data)
 
