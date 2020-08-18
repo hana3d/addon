@@ -474,6 +474,9 @@ class Hana3DCommonUploadProps(object):
         options={'ANIMATABLE'},
     )
 
+    libraries: StringProperty(
+        name="Libraries", description="Libraries that the asset are linked to", default="Select libraries")
+
     publish_message: StringProperty(
         name="Publish Message",
         description="Changes from previous version",

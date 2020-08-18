@@ -20,6 +20,18 @@
 import bpy
 
 
+def library_items(self, context):
+    profile = bpy.context.window_manager.get('hana3d profile')
+    if profile is not None:
+        user = profile.get('user')
+        if user is not None:
+            libraries = tuple(
+                (library['id'], library['name'], '',) for library in user['libraries']
+            )
+            return libraries
+    return ()
+
+
 class ListLibrariesOperator(bpy.types.Operator):
     """Lists Libraries"""
 
@@ -34,7 +46,7 @@ class ListLibrariesOperator(bpy.types.Operator):
         layout.prop(context.scene.tests, 'test2')
 
     def execute(self, context):
-        start_thumbnailer(self, context)
+        print('TEST1234')
         return {'INTERFACE'}
 
     def invoke(self, context, event):

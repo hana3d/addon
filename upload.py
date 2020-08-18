@@ -233,8 +233,10 @@ def get_upload_data(self, context, asset_type):
     upload_data['parameters'] = upload_params
 
     upload_data["is_public"] = props.is_public
-    if props.workspace != '' and not props.is_public:
+    if props.workspace != '':
         upload_data['workspace'] = props.workspace
+    if props.libraries != '':
+        upload_data['libraries'] = props.libraries
 
     metadata = {}
     list_clients = getattr(props, 'client', '').split(',')

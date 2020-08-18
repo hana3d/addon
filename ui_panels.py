@@ -88,7 +88,7 @@ def draw_upload_common(layout, context):
     col.scale_x = 1.24
     col.operator(
         "object.hana3d_list_libraries",
-        text='Libraries'
+        text=props.libraries
     )
     prop_needed(layout, props, 'name', props.name)
     layout.prop(props, 'description')
