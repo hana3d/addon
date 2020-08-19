@@ -1658,6 +1658,115 @@ class AssetBarOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
+class DefaultNameOperator(bpy.types.Operator):
+    '''assign object name as props name'''
+
+    bl_idname = "view3d.hana3d_default_name"
+    bl_label = "Hana3D Default Name"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    def modal(self, context, event):
+        # This is for case of closing the area or changing type:
+        ui_props = context.scene.Hana3DUI
+        areas = []
+
+        if bpy.context.scene != self.scene:
+            return {'CANCELLED'}
+
+        for w in context.window_manager.windows:
+            areas.extend(w.screen.areas)
+
+        if (
+            self.area not in areas
+            or self.area.type != 'VIEW_3D'
+            or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
+        ):
+            # print('search areas')   bpy.context.area.spaces[0].region_quadviews
+            # stopping here model by now - because of:
+            #   switching layouts or maximizing area now fails to assign new area throwing the bug
+            #   internal error: modal gizmo-map handler has invalid area
+            return {'CANCELLED'}
+
+            newarea = None
+            for a in context.window.screen.areas:
+                if a.type == 'VIEW_3D':
+                    self.area = a
+                    for r in a.regions:
+                        if r.type == 'WINDOW':
+                            self.region = r
+                    newarea = a
+                    break
+                    # context.area = a
+
+            # we check again and quit if things weren't fixed this way.
+            if newarea is None:
+                return {'CANCELLED'}
+
+        if ui_props.turn_off:
+            return {'CANCELLED'}
+
+        if context.region != self.region:
+            # print(time.time(), 'pass through because of region')
+            # print(context.region.type, self.region.type)
+            return {'PASS_THROUGH'}
+
+        if ui_props.down_up == 'UPLOAD':
+            # only generate tooltip once in a while
+            if (
+                (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
+                and event.value == 'RELEASE'
+                or event.type == 'ENTER'
+            ):
+                ao = bpy.context.active_object
+                if (
+                    ui_props.asset_type == 'MODEL'
+                    and ao is not None
+                    or ui_props.asset_type == 'MATERIAL'
+                    and ao is not None
+                    and ao.active_material is not None
+                    or ui_props.asset_type == 'SCENE'
+                    and bpy.context.scene is not None
+                ):
+
+                    if ui_props.asset_type == 'MODEL':
+                        ob = utils.get_active_model()
+                        if ob.hana3d.name == '':
+                            ob.hana3d.name = ob.name
+                    elif ui_props.asset_type == 'MATERIAL':
+                        mat = bpy.context.active_object.active_material
+                        if mat.hana3d.name == '':
+                            mat.hana3d.name = mat.name
+                    elif ui_props.asset_type == 'SCENE':
+                        scn = bpy.context.scene
+                        if scn.hana3d.name == '':
+                            scn.hana3d.name = scn.name
+
+            return {'PASS_THROUGH'}
+
+        return {'PASS_THROUGH'}
+
+    def invoke(self, context, event):
+        if context.area.type != 'VIEW_3D':
+            self.report({'WARNING'}, "View3D not found, cannot run operator")
+            return {'CANCELLED'}
+
+        self.window = context.window
+        self.area = context.area
+        self.scene = bpy.context.scene
+
+        self.has_quad_views = len(bpy.context.area.spaces[0].region_quadviews) > 0
+
+        for r in self.area.regions:
+            if r.type == 'WINDOW':
+                self.region = r
+
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        return {'RUNNING_MODAL'}
+
+
 class TransferHana3DData(bpy.types.Operator):
     """Regenerate cobweb"""
 
@@ -1725,10 +1834,12 @@ class RunAssetBarWithContext(bpy.types.Operator):
             keep_running=True,
             do_search=False
         )
+        bpy.ops.view3d.hana3d_default_name(C_dict, 'INVOKE_REGION_WIN')
         return {'FINISHED'}
 
 
-classess = (AssetBarOperator, RunAssetBarWithContext, TransferHana3DData, UndoWithContext)
+classess = (AssetBarOperator, DefaultNameOperator,
+            RunAssetBarWithContext, TransferHana3DData, UndoWithContext)
 
 # store keymap items here to access after registration
 addon_keymapitems = []

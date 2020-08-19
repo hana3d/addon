@@ -76,7 +76,7 @@ def refresh_token_timer():
 @persistent
 def scene_load(context):
     if not bpy.app.timers.is_registered(refresh_token_timer):
-        bpy.app.timers.register(refresh_token_timer, persistent=True)
+        bpy.app.timers.register(refresh_token_timer)
 
 
 def fetch_server_data():
