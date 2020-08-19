@@ -20,7 +20,7 @@
 import bpy
 
 
-def library_items(self, context):
+def library_items(context):
     profile = bpy.context.window_manager.get('hana3d profile')
     if profile is not None:
         user = profile.get('user')
@@ -32,8 +32,13 @@ def library_items(self, context):
     return ()
 
 
+def update_libraries(context):
+    return
+
+
 class ListLibrariesOperator(bpy.types.Operator):
-    """Lists Libraries"""
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
 
     bl_idname = "object.hana3d_list_libraries"
     bl_label = "Hana3D List Libraries"
@@ -41,28 +46,18 @@ class ListLibrariesOperator(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(context.scene.tests, 'test0')
-        layout.prop(context.scene.tests, 'test1')
-        layout.prop(context.scene.tests, 'test2')
+        # layout.prop(context.scene, 'hana3d_library_list')
+        i = 0
+        while hasattr(context.window_manager, f'hana3d_library_list_{i}'):
+            layout.prop(context.window_manager, f'hana3d_library_list_{i}')
+            i += 1
 
     def execute(self, context):
-        print('TEST1234')
         return {'INTERFACE'}
 
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_popup(self)
-
-
-class SubMenu(bpy.types.Menu):
-    bl_idname = "OBJECT_MT_libraries_submenu"
-    bl_label = ""
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(context.scene.tests, 'test0')
-        layout.prop(context.scene.tests, 'test1')
-        layout.prop(context.scene.tests, 'test2')
 
 
 class MockProps(bpy.types.PropertyGroup):
@@ -88,7 +83,6 @@ class MockProps(bpy.types.PropertyGroup):
 def register():
     bpy.utils.register_class(ListLibrariesOperator)
     bpy.utils.register_class(MockProps)
-    bpy.utils.register_class(SubMenu)
 
     bpy.types.Scene.tests = bpy.props.PointerProperty(type=MockProps)
 
@@ -96,6 +90,5 @@ def register():
 def unregister():
     del bpy.types.Scene.tests
 
-    bpy.utils.unregister_class(SubMenu)
     bpy.utils.unregister_class(MockProps)
     bpy.utils.unregister_class(ListLibrariesOperator)

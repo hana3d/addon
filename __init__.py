@@ -388,6 +388,47 @@ def update_tags(self, context):
         props.tags = ns
 
 
+def update_selected_libraries(self, context):
+    props = utils.get_upload_props()
+    names = []
+    ids = []
+    i = 0
+    while hasattr(context.window_manager, f'hana3d_library_list_{i}'):
+        exec(
+            f'''if context.window_manager.hana3d_library_list_{i} is True:
+            names.append(bpy.types.WindowManager.hana3d_library_list_{i}[1]['name'])
+            ids.append(bpy.types.WindowManager.hana3d_library_list_{i}[1]['id'])''')
+        i += 1
+    if names != []:
+        props.libraries_text = ','.join(names)
+    else:
+        ids.append(props.default_library)
+        props.libraries_text = 'Select libraries'
+    props.libraries = ','.join(ids)
+    print(props.libraries)
+
+
+def update_libraries_list(self, context):
+    i = 0
+    while hasattr(bpy.types.WindowManager, f'hana3d_library_list_{i}'):
+        exec(f"del bpy.types.WindowManager.hana3d_library_list_{i}")
+        i += 1
+    props = utils.get_upload_props()
+    current_workspace = props.workspace
+    for workspace in bpy.context.window_manager['hana3d profile']['user']['workspaces']:
+        if current_workspace == workspace['id']:
+            i = 0
+            for library in workspace['libraries']:
+                if library['is_default'] == 1:
+                    props.default_library = library['id']
+                else:
+                    exec(
+                        f'bpy.types.WindowManager.hana3d_library_list_{i}=BoolProperty('
+                        'name=library["name"], default=False, update=update_selected_libraries)')
+                    exec(f'bpy.types.WindowManager.hana3d_library_list_{i}[1]["id"]=library["id"]')
+                    i += 1
+
+
 class Hana3DCommonUploadProps(object):
     id: StringProperty(
         name="Asset Version Id",
@@ -472,10 +513,26 @@ class Hana3DCommonUploadProps(object):
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
+        update=update_libraries_list
+    )
+
+    default_library: StringProperty(
+        name="Default Library",
+        description="When no library is selected upload to this library",
+        default=""
     )
 
     libraries: StringProperty(
-        name="Libraries", description="Libraries that the asset are linked to", default="Select libraries")
+        name="Libraries",
+        description="Libraries that the asset are linked to",
+        default="Default"
+    )
+
+    libraries_text: StringProperty(
+        name="Libraries",
+        description="Libraries that the asset are linked to",
+        default="Select libraries"
+    )
 
     publish_message: StringProperty(
         name="Publish Message",

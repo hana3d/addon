@@ -79,16 +79,14 @@ def draw_upload_common(layout, context):
 
     layout.prop(props, 'workspace', expand=False, text='Workspace')
     row = layout.row(align=True)
-    # split = layout.split(factor=0.25)
     col = row.column()
     col.scale_x = 0.7
     col.label(text='Libraries:')
-    # split = layout.split(factor=0.75)
     col = row.column()
     col.scale_x = 1.24
     col.operator(
         "object.hana3d_list_libraries",
-        text=props.libraries
+        text=props.libraries_text
     )
     prop_needed(layout, props, 'name', props.name)
     layout.prop(props, 'description')

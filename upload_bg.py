@@ -83,6 +83,7 @@ def upload_file(upload_data, f, correlation_id):
     bg_blender.progress('uploading %s' % f['type'])
     upload_info = {
         'assetId': version_id,
+        'libraries': upload_data['libraries'],
         'fileType': f['type'],
         'fileIndex': f['index'],
         'originalFilename': os.path.basename(f['file_path']),

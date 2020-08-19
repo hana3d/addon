@@ -236,7 +236,7 @@ def get_upload_data(self, context, asset_type):
     if props.workspace != '':
         upload_data['workspace'] = props.workspace
     if props.libraries != '':
-        upload_data['libraries'] = props.libraries
+        upload_data['libraries'] = comma2array(props.libraries)
 
     metadata = {}
     list_clients = getattr(props, 'client', '').split(',')
