@@ -187,7 +187,11 @@ def comma2array(text):
     return ar
 
 
-def get_export_data(context, asset_type, path_computing='uploading', path_state='upload_state'):
+def get_export_data(
+        asset_type: str,
+        path_computing: str = 'uploading',
+        path_state: str = 'upload_state',
+        path_output: str = None):
     export_data = {
         "type": asset_type,
     }
@@ -264,14 +268,16 @@ def get_export_data(context, asset_type, path_computing='uploading', path_state=
         }
 
         upload_params = {}
+    else:
+        raise Exception(f'Unexpected asset_type={asset_type}')
 
-    eval_path_computing = f'{eval_path}.hana3d.{path_computing}'
-    eval_path_state = f'{eval_path}.hana3d.{path_state}'
     bg_process_params = {
-        'eval_path_computing': eval_path_computing,
-        'eval_path_state': eval_path_state,
+        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
+        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
         'eval_path': eval_path,
     }
+    if path_output is not None:
+        bg_process_params['eval_path_output'] = f'{eval_path}.hana3d.{path_output}'
 
     add_version(upload_data)
 
@@ -318,7 +324,7 @@ class upload_in_chunks:
                     sys.stderr.write("\n")
                     break
                 self.readsofar += len(data)
-                percent = self.readsofar * 1e2 / self.totalsize
+                percent = 100 * self.readsofar / self.totalsize
                 bg_blender.progress('uploading %s' % self.report_name, percent)
                 # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
                 yield data

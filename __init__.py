@@ -526,7 +526,7 @@ class Hana3DCommonUploadProps(object):
 
     rendering: BoolProperty(
         name="Rendering",
-        description="True when background process is running",
+        description="True when object is being rendered in background",
         default=False
     )
 
@@ -534,6 +534,12 @@ class Hana3DCommonUploadProps(object):
         name="Render Generating State",
         description="",
         default="Starting Render process"
+    )
+
+    render_path: StringProperty(
+        name="URL of render job output",
+        description="",
+        default=""
     )
 
 

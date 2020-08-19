@@ -415,6 +415,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
     def draw(self, context):
         layout = self.layout
         render_props = context.scene.Hana3DRender
+        props = utils.get_upload_props()
         row = layout.row()
         row.label(text='Balance')
         row.label(text=render_props.balance)
@@ -451,9 +452,9 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
             # row.label(text="Frame Step")
             # row.prop(context.scene.render, "frame_step", text='')
 
-        if render_props.rendering:
+        if props.rendering:
             row = layout.row(align=True)
-            row.label(text=render_props.render_state)
+            row.label(text=props.render_state)
             op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
             op.process_type = 'RENDER'
         row = layout.row()

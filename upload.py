@@ -177,12 +177,7 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
     if not reupload:
         props.view_id = ''
         props.id = ''
-    (
-        export_data,
-        upload_data,
-        bg_process_params,
-        props,
-    ) = utils.get_export_data(context, asset_type)
+    export_data, upload_data, bg_process_params, props = utils.get_export_data(asset_type)
     # We have to validate here as get_export_data() is called in other parts of the code
     validate_upload_data(props)
 

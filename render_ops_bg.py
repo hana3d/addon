@@ -143,9 +143,6 @@ def pool_job(job_id: str, headers: dict, pool_time: int = 5) -> str:
 
 if __name__ == "__main__":
     try:
-        render_props = bpy.context.scene.Hana3DRender
-        render_props.rendering = True
-
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
         bpy.app.debug_value = data.get('debug_value', 0)
@@ -166,6 +163,7 @@ if __name__ == "__main__":
         render_nrf_url = pool_job(job_id, headers)
         render_hana3d_url = post_completed_job(asset_id, render_scene_id, render_nrf_url)
 
+        bg_blender.write_output('render_hana3d_url')
         bg_blender.progress('Job finished successfully')
 
     except Exception as e:

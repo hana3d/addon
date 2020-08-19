@@ -34,9 +34,9 @@ import bpy
 from bpy.types import Operator
 
 
-def start_render_process(self, context):
+def start_render_process(self, context, props):
     render_props = context.scene.Hana3DRender
-    render_props.rendering = True
+    props.rendering = True
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -58,10 +58,10 @@ def start_render_process(self, context):
         frame_end = context.scene.frame_end
 
     *_, bg_process_params, props = utils.get_export_data(
-        context,
-        asset_type,
+        context.scene.Hana3DUI.asset_type,
         path_computing='rendering',
-        path_state='render_state'
+        path_state='render_state',
+        path_output='render_path',
     )
 
     try:
@@ -115,7 +115,7 @@ class RenderScene(Operator):
 
     @classmethod
     def poll(cls, context):
-        return not context.scene.Hana3DRender.rendering
+        return bpy.context.view_layer.objects.active is not None
 
     def execute(self, context):
         props = utils.get_upload_props()
@@ -132,7 +132,7 @@ class RenderScene(Operator):
             message = "Please upload asset or select uploaded"
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
-        start_render_process(self, context)
+        start_render_process(self, context, props)
         return {'FINISHED'}
 
 
