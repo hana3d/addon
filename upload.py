@@ -245,8 +245,12 @@ def get_upload_data(self, context, asset_type):
     if metadata:
         upload_data['metadata'] = metadata
 
-    if props.libraries != '':
-        upload_data['libraries'] = []
+    upload_data['libraries'] = []
+    if props.libraries == '':
+        upload_data['libraries'].append({
+            'id': props.default_library
+        })
+    else:
         libraries = comma2array(props.libraries)
         for library_id in libraries:
             library = {}

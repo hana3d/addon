@@ -556,7 +556,7 @@ class Hana3DCommonUploadProps(object):
     libraries: StringProperty(
         name="Libraries",
         description="Libraries that the asset are linked to",
-        default="Default"
+        default=''
     )
 
     libraries_text: StringProperty(
