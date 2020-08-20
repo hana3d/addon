@@ -295,8 +295,8 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                 parent.hana3d.custom_props['client'] = ','.join(clients)
                 parent.hana3d.custom_props['sku'] = ','.join(skus)
 
-        for key, value in asset_data['metadata']['custom_props'].items():
-            parent.hana3d.custom_props[key] = value
+        # for key, value in asset_data['metadata']['custom_props'].items():
+        #     parent.hana3d.custom_props[key] = value
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 
