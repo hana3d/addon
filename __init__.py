@@ -290,9 +290,12 @@ def workspace_items(self, context):
     if profile is not None:
         user = profile.get('user')
         if user is not None:
+            props = utils.get_upload_props()
             workspaces = tuple(
                 (workspace['id'], workspace['name'], '',) for workspace in user['workspaces']
             )
+            if props.workspace == '':
+                init_libraries()
             return workspaces
     return ()
 

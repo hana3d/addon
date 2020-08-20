@@ -607,6 +607,30 @@ class VIEW3D_PT_UpdaterPanel(Panel):
         layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
 
 
+class ListLibrariesOperator(bpy.types.Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_upload_props()
+        layout = self.layout
+        i = 0
+        while hasattr(props, f'library_{i}'):
+            layout.prop(props, f'library_{i}')
+            i += 1
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
+
+
 # We can store multiple preview collections here,
 # however in this example we only store "main"
 preview_collections = {}
@@ -618,6 +642,7 @@ classess = (
     VIEW3D_PT_hana3d_downloads,
     OBJECT_MT_hana3d_asset_menu,
     UrlPopupDialog,
+    ListLibrariesOperator
 )
 
 
