@@ -88,6 +88,12 @@ def draw_upload_common(layout, context):
         "object.hana3d_list_libraries",
         text=props.libraries_text
     )
+    for prop in dir(props.custom_props):
+        try:
+            if prop != 'name' and props.custom_props.is_property_readonly(prop) is False:
+                layout.prop(props.custom_props, prop)
+        except:     # noqa:E722
+            pass
     prop_needed(layout, props, 'name', props.name)
     layout.prop(props, 'description')
     layout.prop(props, 'publish_message')

@@ -45,7 +45,6 @@ if "bpy" in locals():
     ui_panels = reload(ui_panels)
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
-    custom_props = reload(custom_props)
     libraries = reload(libraries)
 else:
     from hana3d import (
@@ -63,7 +62,6 @@ else:
         ui_panels,
         hana3d_oauth,
         tasks_queue,
-        custom_props,
         libraries,
     )
 
@@ -389,44 +387,102 @@ def update_tags(self, context):
 
 
 def update_selected_libraries(self, context):
+    ui_props = context.scene.Hana3DUI
     props = utils.get_upload_props()
     names = []
     ids = []
     i = 0
-    while hasattr(context.window_manager, f'hana3d_library_list_{i}'):
-        exec(
-            f'''if context.window_manager.hana3d_library_list_{i} is True:
-            names.append(bpy.types.WindowManager.hana3d_library_list_{i}[1]['name'])
-            ids.append(bpy.types.WindowManager.hana3d_library_list_{i}[1]['id'])''')
+    while hasattr(props, f'library_{i}'):
+        current_value = getattr(props, f'library_{i}')
+        if ui_props.asset_type == 'MODEL':
+            library_info = getattr(bpy.types.Object.hana3d[1]["type"], f'library_{i}')
+            custom_props_class = bpy.types.Object.hana3d[1]["type"].__annotations__[
+                "custom_props"][1]["type"]
+        elif ui_props.asset_type == 'SCENE':
+            library_info = getattr(bpy.types.Scene.hana3d[1]["type"], f'library_{i}')
+            custom_props_class = bpy.types.Scene.hana3d[1]["type"].__annotations__[
+                "custom_props"][1]["type"]
+        elif ui_props.asset_type == 'MATERIAL':
+            library_info = getattr(bpy.types.Material.hana3d[1]["type"], f'library_{i}')
+            custom_props_class = bpy.types.Material.hana3d[1]["type"].__annotations__[
+                "custom_props"][1]["type"]
+
+        if current_value is True:
+            library_id = library_info[1]['id']
+            names.append(library_info[1]['name'])
+            ids.append(library_id)
+            for key, value in library_info[1]['metadata']['custom_props'].items():
+                name = f'{library_info[1]["name"]} {value}'
+                exec(
+                    f'custom_props_class.{library_info[1]["name"].lower()}_{key}='
+                    f'StringProperty(name="{name}")')
+                exec(
+                    f'custom_props_class.{library_info[1]["name"].lower()}_{key}[1]["library"]='
+                    f'"{library_id}"')
+                exec(
+                    f'custom_props_class.{library_info[1]["name"].lower()}_{key}[1]["key"]="{key}"')
+        else:
+            for key, value in library_info[1]['metadata']['custom_props'].items():
+                if hasattr(custom_props_class, f'{library_info[1]["name"].lower()}_{key}'):
+                    exec(f'del custom_props_class.{library_info[1]["name"].lower()}_{key}')
         i += 1
+
     if names != []:
         props.libraries_text = ','.join(names)
     else:
         ids.append(props.default_library)
         props.libraries_text = 'Select libraries'
     props.libraries = ','.join(ids)
-    print(props.libraries)
 
 
 def update_libraries_list(self, context):
-    i = 0
-    while hasattr(bpy.types.WindowManager, f'hana3d_library_list_{i}'):
-        exec(f"del bpy.types.WindowManager.hana3d_library_list_{i}")
-        i += 1
+    ui_props = context.scene.Hana3DUI
+    if ui_props.asset_type == 'MODEL':
+        i = 0
+        while hasattr(bpy.types.Object.hana3d[1]["type"], f'library_{i}'):
+            exec(f'del bpy.types.Object.hana3d[1]["type"].library_{i}')
+            i += 1
+    elif ui_props.asset_type == 'SCENE':
+        i = 0
+        while hasattr(bpy.types.Scene.hana3d[1]["type"], f'library_{i}'):
+            exec(f'del bpy.types.Scene.hana3d[1]["type"].library_{i}')
+            i += 1
+    elif ui_props.asset_type == 'MATERIAL':
+        i = 0
+        while hasattr(bpy.types.Material.hana3d[1]["type"], f'library_{i}'):
+            exec(f'del bpy.types.Material.hana3d[1]["type"].library_{i}')
+            i += 1
     props = utils.get_upload_props()
     current_workspace = props.workspace
-    for workspace in bpy.context.window_manager['hana3d profile']['user']['workspaces']:
+    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
         if current_workspace == workspace['id']:
             i = 0
             for library in workspace['libraries']:
                 if library['is_default'] == 1:
                     props.default_library = library['id']
                 else:
-                    exec(
-                        f'bpy.types.WindowManager.hana3d_library_list_{i}=BoolProperty('
-                        'name=library["name"], default=False, update=update_selected_libraries)')
-                    exec(f'bpy.types.WindowManager.hana3d_library_list_{i}[1]["id"]=library["id"]')
+                    if ui_props.asset_type == 'MODEL':
+                        exec(
+                            f'bpy.types.Object.hana3d[1]["type"].library_{i}=BoolProperty('
+                            'name=library["name"],default=False,update=update_selected_libraries)')
+                        library_info = getattr(bpy.types.Object.hana3d[1]["type"], f'library_{i}')
+                    elif ui_props.asset_type == 'SCENE':
+                        exec(
+                            f'bpy.types.Scene.hana3d[1]["type"].library_{i}=BoolProperty('
+                            'name=library["name"],default=False,update=update_selected_libraries)')
+                        library_info = getattr(bpy.types.Scene.hana3d[1]["type"], f'library_{i}')
+                    elif ui_props.asset_type == 'MATERIAL':
+                        exec(
+                            f'bpy.types.Material.hana3d[1]["type"].library_{i}=BoolProperty('
+                            'name=library["name"],default=False,update=update_selected_libraries)')
+                        library_info = getattr(bpy.types.Material.hana3d[1]["type"], f'library_{i}')
+                    library_info[1]["id"] = library["id"]
+                    library_info[1]["metadata"] = library["metadata"]
                     i += 1
+
+
+class CustomPropsPropertyGroup(PropertyGroup):
+    pass
 
 
 class Hana3DCommonUploadProps(object):
@@ -540,6 +596,10 @@ class Hana3DCommonUploadProps(object):
         default=""
     )
 
+    client: StringProperty(name="Client")
+
+    sku: StringProperty(name="SKU")
+
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     search_keywords: StringProperty(
@@ -640,9 +700,9 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         update=autothumb.update_upload_material_preview,
     )
 
-    client: StringProperty(name="Client")
-    sku: StringProperty(name="SKU")
-    custom_props: PointerProperty(type=custom_props.CustomPropsPropertyGroup)
+    custom_props: PointerProperty(
+        type=CustomPropsPropertyGroup
+    )
 
 
 # upload properties
@@ -752,9 +812,9 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=False
     )
 
-    client: StringProperty(name="Client")
-    sku: StringProperty(name="SKU")
-    custom_props: PointerProperty(type=custom_props.CustomPropsPropertyGroup)
+    custom_props: PointerProperty(
+        type=CustomPropsPropertyGroup
+    )
 
 
 class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
@@ -826,6 +886,10 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=200,
         min=5,
         max=5000
+    )
+
+    custom_props: PointerProperty(
+        type=CustomPropsPropertyGroup
     )
 
 
@@ -1111,6 +1175,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 # registration
 classes = (
+    CustomPropsPropertyGroup,
     Hana3DAddonPreferences,
     Hana3DUIProps,
     Hana3DModelSearchProps,
@@ -1124,8 +1189,6 @@ classes = (
 
 def register():
     addon_updater_ops.register(bl_info)
-
-    custom_props.register_custom_props()
 
     for cls in classes:
         bpy.utils.register_class(cls)

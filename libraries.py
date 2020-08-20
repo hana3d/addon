@@ -20,6 +20,9 @@
 import bpy
 
 
+from hana3d import utils
+
+
 def library_items(context):
     profile = bpy.context.window_manager.get('hana3d profile')
     if profile is not None:
@@ -45,11 +48,12 @@ If no library is selected the view will be assigned to the default library."""
     bl_options = {'REGISTER', 'INTERNAL'}
 
     def draw(self, context):
+        props = utils.get_upload_props()
         layout = self.layout
         # layout.prop(context.scene, 'hana3d_library_list')
         i = 0
-        while hasattr(context.window_manager, f'hana3d_library_list_{i}'):
-            layout.prop(context.window_manager, f'hana3d_library_list_{i}')
+        while hasattr(props, f'library_{i}'):
+            layout.prop(props, f'library_{i}')
             i += 1
 
     def execute(self, context):

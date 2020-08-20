@@ -245,7 +245,8 @@ def get_upload_data(self, context, asset_type):
     if len(product_info) > 0:
         metadata['product_info'] = product_info
     if hasattr(props, 'custom_props'):
-        metadata.update(props.custom_props)
+        metadata['custom_props'] = {}
+        metadata['custom_props'].update(props.custom_props)
     if metadata:
         upload_data['metadata'] = metadata
 
