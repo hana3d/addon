@@ -45,7 +45,6 @@ if "bpy" in locals():
     ui_panels = reload(ui_panels)
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
-    libraries = reload(libraries)
 else:
     from hana3d import (
         asset_inspector,
@@ -62,7 +61,6 @@ else:
         ui_panels,
         hana3d_oauth,
         tasks_queue,
-        libraries,
     )
 
 import math
@@ -290,12 +288,9 @@ def workspace_items(self, context):
     if profile is not None:
         user = profile.get('user')
         if user is not None:
-            props = utils.get_upload_props()
             workspaces = tuple(
                 (workspace['id'], workspace['name'], '',) for workspace in user['workspaces']
             )
-            if props.workspace == '':
-                init_libraries()
             return workspaces
     return ()
 
@@ -1194,7 +1189,6 @@ def register():
     overrides.register_overrides()
     hana3d_oauth.register()
     tasks_queue.register()
-    libraries.register()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
 
@@ -1218,7 +1212,6 @@ def unregister():
     overrides.unregister_overrides()
     hana3d_oauth.unregister()
     tasks_queue.unregister()
-    libraries.unregister()
 
     del bpy.types.Scene.hana3d_models
     del bpy.types.Scene.hana3d_scene

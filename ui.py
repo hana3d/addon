@@ -1760,7 +1760,10 @@ class DefaultNameOperator(bpy.types.Operator):
                     or ui_props.asset_type == 'SCENE'
                     and bpy.context.scene is not None
                 ):
-
+                    props = utils.get_upload_props()
+                    if props.default_library == '':
+                        workspace = props.workspace
+                        props.workspace = workspace
                     if ui_props.asset_type == 'MODEL':
                         ob = utils.get_active_model()
                         if ob.hana3d.name == '':
