@@ -151,13 +151,10 @@ class ImportRender(Operator):
                 img = bpy.data.images.load(job['file_path'], check_existing=True)
                 img.name = job['job_name']
 
-                message = "Your render is now on your scene's Image Data list"
-
                 def draw(self, context):
-                    self.layout.label(text=message)
+                    self.layout.label(text="Your render is now on your scene's Image Data list")
                 context.window_manager.popup_menu(draw, title='Success')
 
-                self.report({'INFO'}, message)
                 return {'FINISHED'}
         print(f'Cound not find render job id={job["id"]}')
         return {'CANCELLED'}
