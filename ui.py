@@ -1711,7 +1711,7 @@ class DefaultNamesOperator(bpy.types.Operator):
                 previous_names = []
             else:
                 previous_names = [job['job_name'] for job in props.render_data['jobs']]
-            name = asset.name or 'Render'
+            name = props.name or asset.name or 'Render'
             for n in range(1000):
                 new_name = f'{name}_{n:03d}'
                 if new_name not in previous_names:
