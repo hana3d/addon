@@ -73,14 +73,14 @@ def threadread(tcom: threadCom):
         line = str(line)
         start = line.find('progress{')
         if start > -1:
-            end = line.find('}')
+            end = line.rfind('}')
             tcom.progress_msg = line[start + 9: end]
             if tcom.progress_msg.find('%') > -1:
                 tcom.progress = float(re.findall(r'\d+\.\d+|\d+', tcom.progress_msg)[0])
             break
         start = line.find('write_output{')
         if start > -1:
-            end = line.find('}')
+            end = line.rfind('}')
             tcom.output_msg = line[start + 13: end]
             break
         if len(line) > 3:

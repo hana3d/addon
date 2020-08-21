@@ -326,8 +326,8 @@ class Hana3DRenderProps(PropertyGroup):
     frame_animation: EnumProperty(
         name="Frame vs Animation",
         items=(
-            ("FRAME", "Single Frame", "", "RENDER_STILL", 0),
-            ("ANIMATION", "Animation", "", "RENDER_ANIMATION", 1),
+            ("FRAME", "Single Frame", "Render a single frame", "RENDER_STILL", 0),
+            ("ANIMATION", "Animation", "Render a range of frames", "RENDER_ANIMATION", 1),
         ),
         description="",
         default="FRAME",
@@ -432,7 +432,21 @@ def update_tags(self, context):
         props.tags = ns
 
 
-class Hana3DCommonUploadProps(object):
+def get_render_job_outputs(self, context):
+    preview_collection = render_ops.render_previews[self.view_id]
+    if not hasattr(preview_collection, 'previews'):
+        preview_collection.previews = []
+
+    if len(preview_collection.previews) < len(self.render_data['jobs']):
+        for n, job in enumerate(self.render_data['jobs']):
+            preview_img = preview_collection.load(job['id'], job['file_path'], 'IMAGE')
+            enum_item = (job['id'], job['job_name'] or '', '', preview_img.icon_id, n)
+            preview_collection.previews.append(enum_item)
+
+    return preview_collection.previews
+
+
+class Hana3DCommonUploadProps:
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",
@@ -536,9 +550,26 @@ class Hana3DCommonUploadProps(object):
         default="Starting Render process"
     )
 
-    render_path: StringProperty(
-        name="URL of render job output",
+    render_output: StringProperty(
+        name="JSON-encoded render job data",
         description="",
+        default=""
+    )
+
+    render_data: PointerProperty(
+        type=PropertyGroup,
+        description='Container for holding data of completed render jobs',
+    )
+
+    render_job_output: EnumProperty(
+        name="Previous renders",
+        description='Render name',
+        items=get_render_job_outputs,
+    )
+
+    render_job_name: StringProperty(
+        name="Render name",
+        description="Name of render job",
         default=""
     )
 

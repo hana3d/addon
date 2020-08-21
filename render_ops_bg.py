@@ -44,6 +44,7 @@ def create_render_view(
         asset_id: str,
         view_id: str,
         filepath: str,
+        job_name: str,
         headers: dict,
 ) -> Tuple[str, str]:
     url = paths.get_api_url('uploads')
@@ -51,7 +52,7 @@ def create_render_view(
         'assetId': asset_id,
         'originalFilename': os.path.basename(filepath),
         'id_parent': view_id,
-        'metadata': {'render': {'file_type': 'scene'}},
+        'metadata': {'render': {'file_type': 'scene', 'job_name': job_name}},
     }
     response = rerequests.post(url, json=data, headers=headers)
     assert response.ok, response.text
@@ -63,20 +64,23 @@ def create_render_view(
     return render_scene_id, upload_url
 
 
-def post_completed_job(asset_id: str, render_scene_id: str, render_url: str) -> str:
+def post_completed_job(asset_id: str, render_scene_id: str, job_name: str, render_url: str) -> dict:
     url = paths.get_api_url('uploads')
     data = {
         'assetId': asset_id,
         'originalFilename': render_url.rpartition('/')[2],
         'id_parent': render_scene_id,
-        'metadata': {'render': {'file_type': 'output'}},
+        'metadata': {'render': {'file_type': 'output', 'job_name': job_name}},
         'url': render_url,
     }
     response = rerequests.post(url, json=data, headers=headers)
     assert response.ok, response.text
 
     dict_response = response.json()
-    return dict_response['output_url']
+    return {
+        'file_url': dict_response['output_url'],
+        'id': dict_response['id'],
+    }
 
 
 def upload_file(filepath: str, upload_url: str, headers: dict):
@@ -121,7 +125,7 @@ def create_job(
     return job['id']
 
 
-def pool_job(job_id: str, headers: dict, pool_time: int = 5) -> str:
+def pool_job(job_id: str, job_name: str, headers: dict, pool_time: int = 5) -> str:
     while True:
         url = paths.get_api_url('render_jobs', job_id)
         response = rerequests.get(url, headers=headers)
@@ -136,7 +140,7 @@ def pool_job(job_id: str, headers: dict, pool_time: int = 5) -> str:
             bg_blender.progress('Error in job')
             break
         else:
-            bg_blender.progress('Job progress: ', job['progress'] * 100)
+            bg_blender.progress(f'Creating render {job_name}:', job['progress'] * 100)
             time.sleep(pool_time)
     return job['output_url']
 
@@ -152,18 +156,22 @@ if __name__ == "__main__":
         frame_start = data['frame_start']
         frame_end = data['frame_end']
         filepath = data['filepath']
+        job_name = data['job_name']
 
         correlation_id = str(uuid.uuid4())
         headers = utils.get_headers(correlation_id)
 
-        render_scene_id, upload_url = create_render_view(asset_id, view_id, filepath, headers)
+        render_scene_id, upload_url = create_render_view(
+            asset_id, view_id, filepath, job_name, headers)
+
         upload_file(filepath, upload_url, headers)
         confirm_file_upload(render_scene_id, headers)
         job_id = create_job(render_scene_id, engine, frame_start, frame_end, headers)
-        render_nrf_url = pool_job(job_id, headers)
-        render_hana3d_url = post_completed_job(asset_id, render_scene_id, render_nrf_url)
+        render_nrf_url = pool_job(job_id, job_name, headers)
+        job_data = post_completed_job(asset_id, render_scene_id, job_name, render_nrf_url)
 
-        bg_blender.write_output('render_hana3d_url')
+        job_data['job_name'] = job_name
+        bg_blender.write_output(json.dumps(job_data))
         bg_blender.progress('Job finished successfully')
 
     except Exception as e:

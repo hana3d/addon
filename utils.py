@@ -145,23 +145,10 @@ def get_active_asset():
 
 
 def get_upload_props():
-    scene = bpy.context.scene
-    ui_props = scene.Hana3DUI
-    if ui_props.asset_type == 'MODEL':
-        if bpy.context.view_layer.objects.active is not None:
-            ob = get_active_model()
-            return ob.hana3d
-    if ui_props.asset_type == 'SCENE':
-        s = bpy.context.scene
-        return s.hana3d
-    elif ui_props.asset_type == 'MATERIAL':
-        if hasattr(bpy.context, 'active_object'):
-            if (
-                bpy.context.view_layer.objects.active is not None
-                and bpy.context.active_object.active_material is not None
-            ):
-                return bpy.context.active_object.active_material.hana3d
-    return None
+    active_asset = get_active_asset()
+    if active_asset is None:
+        return None
+    return active_asset.hana3d
 
 
 def get_app_version():

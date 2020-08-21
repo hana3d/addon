@@ -206,11 +206,11 @@ def slugify(slug):
 
 
 def extract_filename_from_url(url):
-    if url is not None:
-        imgname = url.split('/')[-1]
-        imgname = imgname.split('?')[0]
-        return imgname
-    return ''
+    if url is None:
+        return ''
+    path = urllib.parse.urlsplit(url).path
+
+    return path.rpartition('/')[2]
 
 
 def get_download_filenames(asset_data):

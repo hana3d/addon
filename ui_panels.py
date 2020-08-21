@@ -92,8 +92,9 @@ def draw_panel_common_upload(layout, context):
     layout.prop(props, 'description')
     layout.prop(props, 'publish_message')
     layout.prop(props, 'tags')
-    layout.prop(props, 'client')
-    layout.prop(props, 'sku')
+    if asset_type == 'MODEL':
+        layout.prop(props, 'client')
+        layout.prop(props, 'sku')
     layout.prop(props, 'is_public')
 
     col = layout.column()
@@ -415,17 +416,38 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
     def draw(self, context):
         layout = self.layout
         render_props = context.scene.Hana3DRender
-        props = utils.get_upload_props()
+        asset_props = utils.get_upload_props()
+        ui_props = context.scene.Hana3DUI
+
         row = layout.row()
         row.label(text='Balance')
         row.label(text=render_props.balance)
 
-        box = layout.box()
-        box.label(text="Job's Asset", icon='CUBE')
-        box.prop(render_props, 'asset')
+        if asset_props is not None and asset_props.view_id != '':
+            box = layout.box()
+
+            if ui_props.asset_type == 'MODEL':
+                icon = 'OBJECT_DATAMODE'
+            elif ui_props.asset_type == 'SCENE':
+                icon = 'SCENE_DATA'
+            elif ui_props.asset_type == 'MATERIAL':
+                icon = 'MATERIAL'
+            box.prop(render_props, 'asset', text='Asset', icon=icon)
+
+            row = box.row()
+            row.prop(asset_props, 'render_job_output', text='Render jobs')
+            row = box.row()
+            row.template_icon_view(asset_props, 'render_job_output', show_labels=True)
+            row = box.row()
+            row.operator('hana3d.import_render', icon='IMPORT')
+            row.operator('hana3d.remove_render', icon='X')
+            row = box.row()
+            row.operator('hana3d.link_image_as_render', icon='EXPORT')
 
         box = layout.box()
         box.label(text='Render Parameters', icon='PREFERENCES')
+        if asset_props is not None:
+            box.prop(asset_props, 'render_job_name')
         box.prop(render_props, 'engine')
         row = box.row()
         row.label(text="Resolution X")
@@ -435,7 +457,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         row.prop(context.scene.render, "resolution_y", text='')
 
         row = box.row()
-        row.prop(render_props, 'frame_animation', expand=True)
+        row.prop(render_props, 'frame_animation', text='')
         if render_props.frame_animation == 'FRAME':
             row = box.row()
             row.label(text="Frame")
@@ -452,9 +474,9 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
             # row.label(text="Frame Step")
             # row.prop(context.scene.render, "frame_step", text='')
 
-        if props.rendering:
+        if asset_props is not None and asset_props.rendering:
             row = layout.row(align=True)
-            row.label(text=props.render_state)
+            row.label(text=asset_props.render_state)
             op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
             op.process_type = 'RENDER'
         row = layout.row()
@@ -462,9 +484,6 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         row.operator('hana3d.render_scene')
 
 
-# We can store multiple preview collections here,
-# however in this example we only store "main"
-preview_collections = {}
 classess = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,

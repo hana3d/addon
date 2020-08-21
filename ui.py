@@ -1658,8 +1658,8 @@ class AssetBarOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class DefaultNameOperator(bpy.types.Operator):
-    '''assign object name as props name'''
+class DefaultNamesOperator(bpy.types.Operator):
+    '''Assign default object name as props name and object render job name'''
 
     bl_idname = "view3d.hana3d_default_name"
     bl_label = "Hana3D Default Name"
@@ -1681,26 +1681,7 @@ class DefaultNameOperator(bpy.types.Operator):
             or self.area.type != 'VIEW_3D'
             or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
         ):
-            # print('search areas')   bpy.context.area.spaces[0].region_quadviews
-            # stopping here model by now - because of:
-            #   switching layouts or maximizing area now fails to assign new area throwing the bug
-            #   internal error: modal gizmo-map handler has invalid area
             return {'CANCELLED'}
-
-            newarea = None
-            for a in context.window.screen.areas:
-                if a.type == 'VIEW_3D':
-                    self.area = a
-                    for r in a.regions:
-                        if r.type == 'WINDOW':
-                            self.region = r
-                    newarea = a
-                    break
-                    # context.area = a
-
-            # we check again and quit if things weren't fixed this way.
-            if newarea is None:
-                return {'CANCELLED'}
 
         if ui_props.turn_off:
             return {'CANCELLED'}
@@ -1710,38 +1691,32 @@ class DefaultNameOperator(bpy.types.Operator):
             # print(context.region.type, self.region.type)
             return {'PASS_THROUGH'}
 
-        if ui_props.down_up == 'UPLOAD':
-            # only generate tooltip once in a while
-            if (
-                (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
-                and event.value == 'RELEASE'
-                or event.type == 'ENTER'
-            ):
-                ao = bpy.context.active_object
-                if (
-                    ui_props.asset_type == 'MODEL'
-                    and ao is not None
-                    or ui_props.asset_type == 'MATERIAL'
-                    and ao is not None
-                    and ao.active_material is not None
-                    or ui_props.asset_type == 'SCENE'
-                    and bpy.context.scene is not None
-                ):
-
-                    if ui_props.asset_type == 'MODEL':
-                        ob = utils.get_active_model()
-                        if ob.hana3d.name == '':
-                            ob.hana3d.name = ob.name
-                    elif ui_props.asset_type == 'MATERIAL':
-                        mat = bpy.context.active_object.active_material
-                        if mat.hana3d.name == '':
-                            mat.hana3d.name = mat.name
-                    elif ui_props.asset_type == 'SCENE':
-                        scn = bpy.context.scene
-                        if scn.hana3d.name == '':
-                            scn.hana3d.name = scn.name
-
+        draw_event = (
+            (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE') and event.value == 'RELEASE'
+            or event.type == 'ENTER'
+        )
+        if not draw_event:
             return {'PASS_THROUGH'}
+
+        asset = utils.get_active_asset()
+        if asset is None:
+            return {'PASS_THROUGH'}
+
+        props = asset.hana3d
+        if ui_props.down_up == 'UPLOAD' and props.name == '' and props.name != asset.name:
+            props.name = asset.name
+
+        if props.render_job_name == '':
+            if 'jobs' not in props.render_data:
+                previous_names = []
+            else:
+                previous_names = [job['job_name'] for job in props.render_data['jobs']]
+            name = asset.name or 'Render'
+            for n in range(1000):
+                new_name = f'{name}_{n:03d}'
+                if new_name not in previous_names:
+                    break
+            props.render_job_name = new_name
 
         return {'PASS_THROUGH'}
 
@@ -1838,8 +1813,13 @@ class RunAssetBarWithContext(bpy.types.Operator):
         return {'FINISHED'}
 
 
-classess = (AssetBarOperator, DefaultNameOperator,
-            RunAssetBarWithContext, TransferHana3DData, UndoWithContext)
+classess = (
+    AssetBarOperator,
+    DefaultNamesOperator,
+    RunAssetBarWithContext,
+    TransferHana3DData,
+    UndoWithContext,
+)
 
 # store keymap items here to access after registration
 addon_keymapitems = []

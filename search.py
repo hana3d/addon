@@ -210,6 +210,7 @@ def timer_update():
                                     'verification_status': r['verificationStatus'],
                                     'author_id': str(r['author']['id']),
                                     'description': r['description'] or '',
+                                    'render_jobs': r.get('render_jobs', [])
                                 }
                                 asset_data['downloaded'] = 0
 
