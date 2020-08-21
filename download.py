@@ -274,7 +274,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     elif asset_data['asset_type'] == 'material':
         inscene = False
         for m in bpy.data.materials:
-            if m.hana3d.id == asset_data['id']:
+            if m.hana3d.view_id == asset_data['view_id']:
                 inscene = True
                 material = m
                 break
@@ -352,7 +352,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             sr = bpy.context.scene.get('search results')
             if sr is not None:
                 for r in sr:
-                    if asset_data['id'] == r['id']:
+                    if asset_data['view_id'] == r['view_id']:
                         r['downloaded'] = tcom.progress
 
         if not t.is_alive():
@@ -389,7 +389,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                     for library in bpy.data.libraries:
                         if (
                             library.get('asset_data') is not None
-                            and library['asset_data']['id'] == asset_data['id']
+                            and library['asset_data']['view_id'] == asset_data['view_id']
                         ):
                             library.filepath = file_names[-1]
                             library.reload()
@@ -406,7 +406,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                             download(asset_data, **tcom.passargs)
                     if bpy.context.scene['search results'] is not None and done:
                         for sres in bpy.context.scene['search results']:
-                            if asset_data['id'] == sres['id']:
+                            if asset_data['view_id'] == sres['view_id']:
                                 sres['downloaded'] = 100
 
                 utils.p('finished download thread')
@@ -552,7 +552,7 @@ def check_downloading(asset_data, **kwargs):
 
     for p in download_threads:
         p_asset_data = p[1]
-        if p_asset_data['id'] == asset_data['id']:
+        if p_asset_data['view_id'] == asset_data['view_id']:
             at = asset_data['asset_type']
             if at in ('model', 'material'):
                 downloader = {

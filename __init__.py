@@ -441,7 +441,11 @@ def get_render_job_outputs(self, context):
         for n, job in enumerate(self.render_data['jobs']):
             preview_img = preview_collection.load(job['id'], job['file_path'], 'IMAGE')
             enum_item = (job['id'], job['job_name'] or '', '', preview_img.icon_id, n)
-            preview_collection.previews.append(enum_item)
+            try:
+                preview_collection.previews.append(enum_item)
+            except KeyError:
+                # Fail case when new render jobs are completed
+                pass
 
     return preview_collection.previews
 
