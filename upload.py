@@ -265,7 +265,7 @@ def get_upload_data(self, context, asset_type):
                     prop_library_id = props.custom_props_info[name]['library_id']
                     if prop_library_id == library_id:
                         custom_props.update({key: value})
-                library.update({'metadata': {'custom_props': custom_props}})
+                library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
 
     export_data['publish_message'] = props.publish_message

@@ -26,7 +26,7 @@ else:
     from hana3d import paths, utils, download
 
 import bpy
-from bpy.types import Panel
+from bpy.types import Panel, Operator
 
 from . import addon_updater_ops
 
@@ -85,7 +85,7 @@ def draw_upload_common(layout, context):
     col = row.column()
     col.scale_x = 1.24
     col.operator(
-        "object.hana3d_list_libraries",
+        "object.hana3d_list_libraries_upload",
         text=props.libraries_text
     )
     for name in props.custom_props.keys():
@@ -198,6 +198,16 @@ def draw_panel_model_search(self, context):
 
     # Choose best layout:
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row = layout.row(align=True)
+    col = row.column()
+    col.scale_x = 0.7
+    col.label(text='Libraries:')
+    col = row.column()
+    col.scale_x = 1.24
+    col.operator(
+        "object.hana3d_list_libraries_search",
+        text=props.libraries_text
+    )
 
     icon = 'NONE'
     label_multiline(layout, text=props.report, icon=icon)
@@ -220,6 +230,16 @@ def draw_panel_scene_search(self, context):
     layout = self.layout
 
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row = layout.row(align=True)
+    col = row.column()
+    col.scale_x = 0.7
+    col.label(text='Libraries:')
+    col = row.column()
+    col.scale_x = 1.24
+    col.operator(
+        "object.hana3d_list_libraries_search",
+        text=props.libraries_text
+    )
     layout.prop(props, "public_only")
     layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     layout.prop(props, 'merge_add', expand=True, icon_only=False)
@@ -302,6 +322,16 @@ def draw_panel_material_search(self, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row = layout.row(align=True)
+    col = row.column()
+    col.scale_x = 0.7
+    col.label(text='Libraries:')
+    col = row.column()
+    col.scale_x = 1.24
+    col.operator(
+        "object.hana3d_list_libraries_search",
+        text=props.libraries_text
+    )
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
 
@@ -607,11 +637,35 @@ class VIEW3D_PT_UpdaterPanel(Panel):
         layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
 
 
-class ListLibrariesOperator(bpy.types.Operator):
+class ListLibrariesSearch(Operator):
     """Libraries that the view will be assigned to.
 If no library is selected the view will be assigned to the default library."""
 
-    bl_idname = "object.hana3d_list_libraries"
+    bl_idname = "object.hana3d_list_libraries_search"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_search_props()
+        layout = self.layout
+        i = 0
+        while hasattr(props, f'library_{i}'):
+            layout.prop(props, f'library_{i}')
+            i += 1
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
+
+
+class ListLibrariesUpload(Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries_upload"
     bl_label = "Hana3D List Libraries"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -642,7 +696,8 @@ classess = (
     VIEW3D_PT_hana3d_downloads,
     OBJECT_MT_hana3d_asset_menu,
     UrlPopupDialog,
-    ListLibrariesOperator
+    ListLibrariesSearch,
+    ListLibrariesUpload
 )
 
 

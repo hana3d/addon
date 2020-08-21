@@ -218,6 +218,8 @@ def timer_update():
                                     asset_data['metadata'] = r['metadata']
                                 if 'created' in r and r['created'] is not None:
                                     asset_data['created'] = r['created']
+                                if 'libraries' in r and r['libraries'] is not None:
+                                    asset_data['libraries'] = r['libraries']
 
                                 params = utils.params_to_dict(r['parameters'])
 
@@ -895,6 +897,11 @@ def search(get_next=False, author_id=''):
 
     if props.workspace != '' and not props.public_only:
         query['workspace'] = props.workspace
+
+    if props.libraries == '':
+        query['libraries'] = props.default_library
+    else:
+        query['libraries'] = props.libraries
 
     props.is_searching = True
 

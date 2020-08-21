@@ -295,8 +295,31 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                 parent.hana3d.custom_props['client'] = ','.join(clients)
                 parent.hana3d.custom_props['sku'] = ','.join(skus)
 
-        # for key, value in asset_data['metadata']['custom_props'].items():
-        #     parent.hana3d.custom_props[key] = value
+    if 'libraries' in asset_data:
+        ui_props = bpy.context.scene.Hana3DUI
+        if ui_props.asset_type == 'MODEL':
+            hana3d_class = bpy.types.Object.hana3d[1]["type"]
+        elif ui_props.asset_type == 'SCENE':
+            hana3d_class = bpy.types.Scene.hana3d[1]["type"]
+        elif ui_props.asset_type == 'MATERIAL':
+            hana3d_class = bpy.types.Material.hana3d[1]["type"]
+        for library in asset_data['libraries']:
+            i = 0
+            while hasattr(hana3d_class, f'library_{i}'):
+                library_info = getattr(hana3d_class, f'library_{i}')
+                if library_info[1]['id'] == library['library_id']:
+                    library_prop = getattr(parent.hana3d, f'library_{i}')
+                    library_prop = True  # noqa:F841
+                    break
+
+            for key, value in library['metadata']:
+                name = f'{library["name"]} {library_info[1]["metadata"]["view_props"][key]}'
+                parent.hana3d.custom_props_info[name] = {
+                    'key': key,
+                    'library_name': library["name"],
+                    'library_id': library['library_id']
+                }
+                parent.hana3d.custom_props[name] = value
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 

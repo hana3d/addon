@@ -1760,10 +1760,12 @@ class DefaultNameOperator(bpy.types.Operator):
                     or ui_props.asset_type == 'SCENE'
                     and bpy.context.scene is not None
                 ):
+                    # Force to trigger a workspace prop update to setup libraries
                     props = utils.get_upload_props()
                     if props.default_library == '':
                         workspace = props.workspace
                         props.workspace = workspace
+
                     if ui_props.asset_type == 'MODEL':
                         ob = utils.get_active_model()
                         if ob.hana3d.name == '':
@@ -1776,6 +1778,22 @@ class DefaultNameOperator(bpy.types.Operator):
                         scn = bpy.context.scene
                         if scn.hana3d.name == '':
                             scn.hana3d.name = scn.name
+
+        elif ui_props.down_up == 'UPLOAD':
+            # only generate tooltip once in a while
+            if (
+                (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
+                and event.value == 'RELEASE'
+                or event.type == 'ENTER'
+            ):
+                # Force to trigger a workspace prop update to setup libraries
+                props = utils.get_search_props()
+                if props.default_library == '':
+                    workspace = props.workspace
+                    props.workspace = workspace
+                if props.libraries == '':
+                    libraries = props.libraries
+                    props.libraries = libraries
 
             return {'PASS_THROUGH'}
 
