@@ -438,7 +438,9 @@ def get_render_job_outputs(self, context):
         preview_collection.previews = []
 
     if len(preview_collection.previews) < len(self.render_data['jobs']):
-        for n, job in enumerate(self.render_data['jobs']):
+        # Sort jobs to avoid error when appending newer render jobs
+        sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
+        for n, job in enumerate(sorted_jobs):
             job_id = job['id']
             file_path = job['file_path']
             try:
