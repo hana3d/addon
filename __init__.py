@@ -439,13 +439,15 @@ def get_render_job_outputs(self, context):
 
     if len(preview_collection.previews) < len(self.render_data['jobs']):
         for n, job in enumerate(self.render_data['jobs']):
-            preview_img = preview_collection.load(job['id'], job['file_path'], 'IMAGE')
-            enum_item = (job['id'], job['job_name'] or '', '', preview_img.icon_id, n)
+            job_id = job['id']
+            file_path = job['file_path']
             try:
-                preview_collection.previews.append(enum_item)
+                preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
             except KeyError:
                 # Fail case when new render jobs are completed
-                pass
+                continue
+            enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
+            preview_collection.previews.append(enum_item)
 
     return preview_collection.previews
 
