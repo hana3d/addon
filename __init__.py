@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 4, 1),
+    "version": (0, 5, 0),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
     "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
@@ -41,11 +41,11 @@ if "bpy" in locals():
     bg_blender = reload(bg_blender)
     paths = reload(paths)
     utils = reload(utils)
-    overrides = reload(overrides)
     ui_panels = reload(ui_panels)
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
     custom_props = reload(custom_props)
+    render_ops = reload(render_ops)
 else:
     from hana3d import (
         asset_inspector,
@@ -58,11 +58,11 @@ else:
         bg_blender,
         paths,
         utils,
-        overrides,
         ui_panels,
         hana3d_oauth,
         tasks_queue,
         custom_props,
+        render_ops,
     )
 
 import math
@@ -285,6 +285,55 @@ class Hana3DUIProps(PropertyGroup):
     )
 
 
+def get_render_asset_name(self):
+    props = utils.get_upload_props()
+    if props is not None:
+        return props.name
+    return ''
+
+
+def get_render_engine(self):
+    return 0
+
+
+def get_balance(self) -> str:
+    profile = bpy.context.window_manager.get('hana3d profile')
+    if not profile:
+        return 'N/A'
+    balance = profile['user'].get('nrf_balance')
+    if balance is None:
+        return 'N/A'
+    return f'${balance:.2f}'
+
+
+class Hana3DRenderProps(PropertyGroup):
+    balance: StringProperty(
+        name="Balance",
+        description="",
+        default='N/A',
+        get=get_balance,
+    )
+    asset: StringProperty(name="Asset", description="", get=get_render_asset_name)
+    engine: EnumProperty(
+        name="Engine",
+        items=(
+             ("CYCLES", "Cycles", ""),
+             ("BLENDER_EEVEE", "Eevee", "")
+        ),
+        description="",
+        get=get_render_engine  # TODO: Remove getter when both available at notRenderFarm
+    )
+    frame_animation: EnumProperty(
+        name="Frame vs Animation",
+        items=(
+            ("FRAME", "Single Frame", "Render a single frame", "RENDER_STILL", 0),
+            ("ANIMATION", "Animation", "Render a range of frames", "RENDER_ANIMATION", 1),
+        ),
+        description="",
+        default="FRAME",
+    )
+
+
 def workspace_items(self, context):
     profile = bpy.context.window_manager.get('hana3d profile')
     if profile is not None:
@@ -383,16 +432,38 @@ def update_tags(self, context):
         props.tags = ns
 
 
-class Hana3DCommonUploadProps(object):
+def get_render_job_outputs(self, context):
+    preview_collection = render_ops.render_previews[self.view_id]
+    if not hasattr(preview_collection, 'previews'):
+        preview_collection.previews = []
+
+    if len(preview_collection.previews) < len(self.render_data['jobs']):
+        # Sort jobs to avoid error when appending newer render jobs
+        sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
+        for n, job in enumerate(sorted_jobs):
+            job_id = job['id']
+            file_path = job['file_path']
+            try:
+                preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
+            except KeyError:
+                # Fail case when new render jobs are completed
+                continue
+            enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
+            preview_collection.previews.append(enum_item)
+
+    return preview_collection.previews
+
+
+class Hana3DCommonUploadProps:
     id: StringProperty(
-        name="Asset Version Id",
-        description="Unique name of the asset version(hidden)",
+        name="Asset Id",
+        description="ID of the asset (hidden)",
         default=""
     )
-    asset_base_id: StringProperty(
-        name="Asset Base Id",
-        description="Unique name of the asset (hidden)",
-        default=""
+    view_id: StringProperty(
+        name="View Id",
+        description="Unique ID of asset's current revision (hidden)",
+        default="",
     )
     name: StringProperty(
         name="Name",
@@ -472,6 +543,41 @@ class Hana3DCommonUploadProps(object):
     publish_message: StringProperty(
         name="Publish Message",
         description="Changes from previous version",
+        default=""
+    )
+
+    rendering: BoolProperty(
+        name="Rendering",
+        description="True when object is being rendered in background",
+        default=False
+    )
+
+    render_state: StringProperty(
+        name="Render Generating State",
+        description="",
+        default="Starting Render process"
+    )
+
+    render_output: StringProperty(
+        name="JSON-encoded render job data",
+        description="",
+        default=""
+    )
+
+    render_data: PointerProperty(
+        type=PropertyGroup,
+        description='Container for holding data of completed render jobs',
+    )
+
+    render_job_output: EnumProperty(
+        name="Previous renders",
+        description='Render name',
+        items=get_render_job_outputs,
+    )
+
+    render_job_name: StringProperty(
+        name="Render name",
+        description="Name of render job",
         default=""
     )
 
@@ -846,8 +952,6 @@ class Hana3DAddonPreferences(AddonPreferences):
 
     default_global_dict = paths.default_global_dict()
 
-    enable_oauth = True
-
     api_key: StringProperty(
         name="Hana3D API Key",
         description="Your Hana3D API Key. Get it from your page on the website",
@@ -949,17 +1053,6 @@ class Hana3DAddonPreferences(AddonPreferences):
         default=False,
     )
 
-    panel_behaviour: EnumProperty(
-        name="Panels Locations",
-        items=(
-            ('BOTH', 'Both Types', ''),
-            ('UNIFIED', 'Unified 3D View Panel', ""),
-            ('LOCAL', 'Relative to Data', ''),
-        ),
-        description="Which directories will be used for storing downloaded data",
-        default="UNIFIED",
-    )
-
     max_assetbar_rows: IntProperty(
         name="Max Assetbar Rows",
         description="max rows of assetbar in the 3D view",
@@ -1023,20 +1116,16 @@ class Hana3DAddonPreferences(AddonPreferences):
         layout.prop(self, "show_on_start")
 
         if self.api_key.strip() == '':
-            if self.enable_oauth:
-                ui_panels.draw_login_buttons(layout)
+            ui_panels.draw_login_buttons(layout)
         else:
-            if self.enable_oauth:
-                layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
+            layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
 
-        # if not self.enable_oauth:
         layout.prop(self, "api_key", text='Your API Key')
         layout.prop(self, "global_dir")
         layout.prop(self, "project_subdir")
         # layout.prop(self, "temp_dir")
         layout.prop(self, "directory_behaviour")
         layout.prop(self, "thumbnail_use_gpu")
-        # layout.prop(self, "panel_behaviour")
         layout.prop(self, "thumb_size")
         layout.prop(self, "max_assetbar_rows")
         layout.prop(self, "search_in_header")
@@ -1048,6 +1137,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 classes = (
     Hana3DAddonPreferences,
     Hana3DUIProps,
+    Hana3DRenderProps,
     Hana3DModelSearchProps,
     Hana3DModelUploadProps,
     Hana3DSceneSearchProps,
@@ -1066,6 +1156,7 @@ def register():
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.Hana3DUI = PointerProperty(type=Hana3DUIProps)
+    bpy.types.Scene.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
 
     # MODELS
     bpy.types.Scene.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
@@ -1089,9 +1180,9 @@ def register():
     ui_panels.register_ui_panels()
     bg_blender.register()
     utils.load_prefs()
-    overrides.register_overrides()
     hana3d_oauth.register()
     tasks_queue.register()
+    render_ops.register()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
 
@@ -1112,9 +1203,9 @@ def unregister():
     upload.unregister_upload()
     autothumb.unregister_thumbnailer()
     bg_blender.unregister()
-    overrides.unregister_overrides()
     hana3d_oauth.unregister()
     tasks_queue.unregister()
+    render_ops.unregister()
 
     del bpy.types.Scene.hana3d_models
     del bpy.types.Scene.hana3d_scene

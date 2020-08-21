@@ -45,14 +45,17 @@ class threadCom:  # object passed to threads to read background process stdout i
         proc,
         location=None,
         name='',
+        eval_path_output=None,
     ):
         # self.obname=ob.name
         self.name = name
         self.eval_path_computing = eval_path_computing  # property that gets written to.
         self.eval_path_state = eval_path_state  # property that gets written to.
-        self.eval_path = eval_path  # property that gets written to.
+        self.eval_path = eval_path  # property checked when killing background process.
+        self.eval_path_output = eval_path_output
         self.process_type = process_type
-        self.outtext = ''
+        self.progress_msg = None
+        self.output_msg = None
         self.proc = proc
         self.lasttext = ''
         self.message = ''  # the message to be sent.
@@ -62,34 +65,26 @@ class threadCom:  # object passed to threads to read background process stdout i
         self.log = ''
 
 
-def threadread(tcom):
+def threadread(tcom: threadCom):
     '''reads stdout of background process, done this way to have it non-blocking.
     this threads basically waits for a stdout line to come in, fills the data, dies.'''
-    found = False
-    while not found:
-        inline = tcom.proc.stdout.readline()
-        # print('readthread', time.time())
-        inline = str(inline)
-        s = inline.find('progress{')
-        if s > -1:
-            e = inline.find('}')
-            tcom.outtext = inline[s + 9: e]
-            found = True
-            if tcom.outtext.find('%') > -1:
-                tcom.progress = float(re.findall(r'\d+\.\d+|\d+', tcom.outtext)[0])
-            return
-        if s == -1:
-            s = inline.find('Remaining')
-            if s > -1:
-                # e=inline.find('}')
-                tcom.outtext = inline[s: s + 18]
-                found = True
-                return
-        if len(inline) > 3:
-            print(inline, len(inline))
-        # if inline.find('Error'):
-        #    tcom.error = True
-        #     tcom.outtext = inline[2:]
+    while True:
+        line = tcom.proc.stdout.readline()
+        line = str(line)
+        start = line.find('progress{')
+        if start > -1:
+            end = line.rfind('}')
+            tcom.progress_msg = line[start + 9: end]
+            if tcom.progress_msg.find('%') > -1:
+                tcom.progress = float(re.findall(r'\d+\.\d+|\d+', tcom.progress_msg)[0])
+            break
+        start = line.find('write_output{')
+        if start > -1:
+            end = line.rfind('}')
+            tcom.output_msg = line[start + 13: end]
+            break
+        if len(line) > 3:
+            print(line, len(line))
 
 
 def progress(text, n=None):
@@ -102,6 +97,13 @@ def progress(text, n=None):
     else:
         n = ' ' + ' ' + str(int(n * 1000) / 1000) + '% '
     sys.stdout.write('progress{%s%s}\n' % (text, n))
+    sys.stdout.flush()
+
+
+def write_output(text: str):
+    '''Assign value to variable defined in threadCom's eval_path_output'''
+    text = str(text)
+    sys.stdout.write('write_output{%s}\n' % text)
     sys.stdout.flush()
 
 
@@ -120,22 +122,22 @@ def bg_update():
             readthread.join()
             # readthread.
             if tcom.error:
-                estring = tcom.eval_path_computing + ' = False'
-                exec(estring)
+                exec(f'{tcom.eval_path_computing} = False')
 
-            tcom.lasttext = tcom.outtext
-            if tcom.outtext != '':
-                tcom.outtext = ''
-                estring = tcom.eval_path_state + ' = tcom.lasttext'
+            tcom.lasttext = tcom.progress_msg or ''
+            if tcom.progress_msg is not None:
+                exec(f'{tcom.eval_path_state} = tcom.progress_msg')
+                tcom.progress_msg = None
 
-                exec(estring)
-            # print(tcom.lasttext)
+            if tcom.eval_path_output is not None and tcom.output_msg is not None:
+                exec(f'{tcom.eval_path_output} = tcom.output_msg')
+                tcom.output_msg = None
+
             if 'finished successfully' in tcom.lasttext:
                 bg_processes.remove(p)
-                estring = tcom.eval_path_computing + ' = False'
-                exec(estring)
+                exec(f'{tcom.eval_path_computing} = False')
             else:
-                readthread = threading.Thread(target=threadread, args=([tcom]), daemon=True)
+                readthread = threading.Thread(target=threadread, args=(tcom,), daemon=True)
                 readthread.start()
                 p[0] = readthread
     # if len(bg_processes) == 0:
@@ -148,6 +150,7 @@ def bg_update():
 process_types = (
     ('UPLOAD', 'Upload', ''),
     ('THUMBNAILER', 'Thumbnailer', ''),
+    ('RENDER', 'Render', ''),
 )
 
 process_sources = (
@@ -185,6 +188,8 @@ class KillBgProcess(bpy.types.Operator):
             props.uploading = False
         if self.process_type == 'THUMBNAILER':
             props.is_generating_thumbnail = False
+        if self.process_type == 'RENDER':
+            props.rendering = False
         global hana3d_bg_process
         # print('killing', self.process_source, self.process_type)
         # then go kill the process. this wasn't working for unsetting props
@@ -192,9 +197,7 @@ class KillBgProcess(bpy.types.Operator):
 
         processes = bg_processes
         for p in processes:
-
             tcom = p[1]
-            # print(tcom.process_type, self.process_type)
             if tcom.process_type == self.process_type:
                 source = eval(tcom.eval_path)
                 print(source.bl_rna.name, self.process_source)
@@ -221,6 +224,7 @@ def add_bg_process(
     eval_path_computing='',
     eval_path_state='',
     eval_path='',
+    eval_path_output=None,
     process_type='',
     process=None,
 ):
@@ -233,7 +237,8 @@ def add_bg_process(
         process_type,
         process,
         location,
-        name
+        name,
+        eval_path_output,
     )
     readthread = threading.Thread(target=threadread, args=([tcom]), daemon=True)
     readthread.start()

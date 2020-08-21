@@ -26,6 +26,7 @@ if "bpy" in locals():
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
+    render_ops = reload(render_ops)
 else:
     from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests
 
@@ -51,8 +52,7 @@ def check_errors(rdata):
         if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons['hana3d'].preferences
             if user_preferences.api_key != '':
-                if user_preferences.enable_oauth:
-                    hana3d_oauth.refresh_token_thread()
+                hana3d_oauth.refresh_token_thread()
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     return True, ''
@@ -85,8 +85,7 @@ def fetch_server_data():
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if (
-            user_preferences.enable_oauth
-            and len(user_preferences.api_key) > 0
+            len(user_preferences.api_key) > 0
             and user_preferences.api_key_timeout < time.time()
         ):
             hana3d_oauth.refresh_token_thread()
@@ -104,7 +103,7 @@ def check_clipboard():
         global last_clipboard
         if bpy.context.window_manager.clipboard != last_clipboard:
             last_clipboard = bpy.context.window_manager.clipboard
-            instr = 'asset_base_id:'
+            instr = 'view_id:'
             # first check if contains asset id, then asset type
             if last_clipboard[: len(instr)] == instr:
                 atstr = 'asset_type:'
@@ -195,22 +194,23 @@ def timer_update():
                                 if f['fileType'] == 'blend':
                                     durl = f['downloadUrl']
                             if durl and tname:
-
+                                # Check for assetBaseId for backwards compatibility
+                                view_id = r.get('viewId') or r.get('assetBaseId') or ''
                                 tooltip = generate_tooltip(r)
                                 asset_data = {
                                     'thumbnail': tname,
                                     'thumbnail_small': small_tname,
                                     'download_url': durl,
                                     'id': r['id'],
-                                    'asset_base_id': r['assetBaseId'],
+                                    'view_id': view_id,
                                     'name': r['name'],
                                     'asset_type': r['assetType'],
                                     'tooltip': tooltip,
                                     'tags': r['tags'],
-                                    'can_download': r.get('canDownload', True),
                                     'verification_status': r['verificationStatus'],
                                     'author_id': str(r['author']['id']),
                                     'description': r['description'] or '',
+                                    'render_jobs': r.get('render_jobs', [])
                                 }
                                 asset_data['downloaded'] = 0
 
@@ -244,7 +244,7 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if r['assetBaseId'] in scene.get('assets used', {}).keys():
+                                if view_id in scene.get('assets used', {}).keys():
                                     asset_data['downloaded'] = 100
 
                                 result_field.append(asset_data)
@@ -548,7 +548,7 @@ def write_profile(adata):
 
 
 def request_profile():
-    a_url = paths.get_api_url() + 'me/'
+    a_url = paths.get_api_url('me')
     headers = utils.get_headers()
     r = rerequests.get(a_url, headers=headers)
     adata = r.json()
@@ -591,35 +591,6 @@ class Searcher(threading.Thread):
     def stopped(self):
         return self._stop_event.is_set()
 
-    def query_to_url(self):
-        query = self.query
-        # build a new request
-        url = paths.get_api_url() + 'search/'
-
-        requeststring = f'?search_term={query.get("search_term", "").lower()}'
-        for key, value in query.items():
-            if key != 'search_term':
-                requeststring += f'&{key}={str(value).lower()}'
-
-        # result ordering: _score - relevance, score - hana3d score
-
-        if query.get('search_term') is None:
-            # assumes no keywords, thus an empty search that is triggered on start.
-            # orders by last core file upload
-            if query.get('verification_status') == 'uploaded':
-                # for validators, sort uploaded from oldest
-                requeststring += '&order=created'
-            else:
-                requeststring += '&order=-last_upload'
-        elif query.get('author_id') is not None and utils.profile_is_validator():
-
-            requeststring += '&order=-created'
-        else:
-            requeststring += '&order=_score'
-
-        urlquery = url + requeststring
-        return urlquery
-
     def run(self):
         maxthreads = 50
         query = self.query
@@ -647,7 +618,7 @@ class Searcher(threading.Thread):
                     # in case no search results found on drive we don't do next page loading.
                     params['get_next'] = False
         if not params['get_next']:
-            urlquery = self.query_to_url()
+            urlquery = paths.get_api_url('search', query=self.query)
         try:
             utils.p(urlquery)
             r = rerequests.get(urlquery, headers=headers)
@@ -916,7 +887,7 @@ def search_update(self, context):
     # here we tweak the input if it comes form the clipboard.
     # we need to get rid of asset type and set it to
     sprops = utils.get_search_props()
-    instr = 'asset_base_id:'
+    instr = 'view_id:'
     atstr = 'asset_type:'
     kwds = sprops.search_keywords
     idi = kwds.find(instr)

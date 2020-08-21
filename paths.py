@@ -18,11 +18,11 @@
 
 import os
 import sys
+import urllib.parse
 
 import bpy
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-HANA3D_API = "/v1/"
 HANA3D_AUTH_URL = "https://hana3d.us.auth0.com"
 HANA3D_AUTH_CLIENT_ID_DEV = "K3Tp6c6bbvF8gT6nwK1buVZjpTeDeXfu"
 HANA3D_AUTH_CLIENT_ID_PROD = "DDfs3mFwivtSoUOqwCZnJODaOhmwZvor"
@@ -58,8 +58,13 @@ def find_in_local(text=''):
     return fs
 
 
-def get_api_url():
-    return get_hana3d_url() + HANA3D_API
+def get_api_url(*paths: str, query: dict = None) -> str:
+    base_url = get_hana3d_url() + '/v1/'
+    url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
+    if query is None:
+        return url
+    query_string = urllib.parse.urlencode(query)
+    return f'{url}?{query_string}'
 
 
 def get_auth_url():
@@ -201,11 +206,11 @@ def slugify(slug):
 
 
 def extract_filename_from_url(url):
-    if url is not None:
-        imgname = url.split('/')[-1]
-        imgname = imgname.split('?')[0]
-        return imgname
-    return ''
+    if url is None:
+        return ''
+    path = urllib.parse.urlsplit(url).path
+
+    return path.rpartition('/')[2]
 
 
 def get_download_filenames(asset_data):

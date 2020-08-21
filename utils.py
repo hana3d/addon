@@ -20,9 +20,11 @@
 if "bpy" in locals():
     from importlib import reload
 
+    bg_blender = reload(bg_blender)
     paths = reload(paths)
+    version_checker = reload(version_checker)
 else:
-    from hana3d import paths
+    from hana3d import bg_blender, paths, version_checker
 
 import json
 import os
@@ -85,7 +87,7 @@ def get_selected_models():
             while (
                 ob.parent is not None
                 and ob not in done
-                and ob.hana3d.asset_base_id != ''
+                and ob.hana3d.view_id != ''
                 and ob.instance_collection is not None
             ):
                 done[ob] = True
@@ -143,23 +145,179 @@ def get_active_asset():
 
 
 def get_upload_props():
-    scene = bpy.context.scene
-    ui_props = scene.Hana3DUI
-    if ui_props.asset_type == 'MODEL':
-        if bpy.context.view_layer.objects.active is not None:
-            ob = get_active_model()
-            return ob.hana3d
-    if ui_props.asset_type == 'SCENE':
+    active_asset = get_active_asset()
+    if active_asset is None:
+        return None
+    return active_asset.hana3d
+
+
+def get_app_version():
+    ver = bpy.app.version
+    return '%i.%i.%i' % (ver[0], ver[1], ver[2])
+
+
+def add_version(data):
+    app_version = get_app_version()
+    addon_version = version_checker.get_addon_version()
+    data["sourceAppName"] = "blender"
+    data["sourceAppVersion"] = app_version
+    data["addonVersion"] = addon_version
+
+
+def comma2array(text):
+    commasep = text.split(',')
+    ar = []
+    for i, s in enumerate(commasep):
+        s = s.strip()
+        if s != '':
+            ar.append(s)
+    return ar
+
+
+def get_export_data(
+        asset_type: str,
+        path_computing: str = 'uploading',
+        path_state: str = 'upload_state',
+        path_output: str = None):
+    export_data = {
+        "type": asset_type,
+    }
+    upload_params = {}
+    if asset_type == 'MODEL':
+        # Prepare to save the file
+        mainmodel = get_active_model()
+
+        props = mainmodel.hana3d
+
+        obs = get_hierarchy(mainmodel)
+        obnames = []
+        for ob in obs:
+            obnames.append(ob.name)
+        export_data["models"] = obnames
+        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
+
+        eval_path = f"bpy.data.objects['{mainmodel.name}']"
+
+        upload_data = {
+            "assetType": 'model',
+        }
+        upload_params = {
+            "dimensionX": round(props.dimensions[0], 4),
+            "dimensionY": round(props.dimensions[1], 4),
+            "dimensionZ": round(props.dimensions[2], 4),
+            "boundBoxMinX": round(props.bbox_min[0], 4),
+            "boundBoxMinY": round(props.bbox_min[1], 4),
+            "boundBoxMinZ": round(props.bbox_min[2], 4),
+            "boundBoxMaxX": round(props.bbox_max[0], 4),
+            "boundBoxMaxY": round(props.bbox_max[1], 4),
+            "boundBoxMaxZ": round(props.bbox_max[2], 4),
+            "faceCount": props.face_count,
+            "faceCountRender": props.face_count_render,
+            "objectCount": props.object_count,
+            "manufacturer": props.manufacturer,
+            "designer": props.designer,
+        }
+
+    elif asset_type == 'SCENE':
+        # Prepare to save the file
         s = bpy.context.scene
-        return s.hana3d
-    elif ui_props.asset_type == 'MATERIAL':
-        if hasattr(bpy.context, 'active_object'):
-            if (
-                bpy.context.view_layer.objects.active is not None
-                and bpy.context.active_object.active_material is not None
-            ):
-                return bpy.context.active_object.active_material.hana3d
-    return None
+
+        props = s.hana3d
+
+        export_data["scene"] = s.name
+        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
+
+        eval_path = f"bpy.data.scenes['{s.name}']"
+
+        upload_data = {
+            "assetType": 'scene',
+        }
+        upload_params = {
+            # TODO add values
+            # "faceCount": 1,  # props.face_count,
+            # "faceCountRender": 1,  # props.face_count_render,
+            # "objectCount": 1,  # props.object_count,
+        }
+
+    elif asset_type == 'MATERIAL':
+        mat = bpy.context.active_object.active_material
+        props = mat.hana3d
+
+        # props.name = mat.name
+
+        export_data["material"] = str(mat.name)
+        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
+
+        eval_path = f"bpy.data.materials['{mat.name}']"
+
+        upload_data = {
+            "assetType": 'material',
+        }
+
+        upload_params = {}
+    else:
+        raise Exception(f'Unexpected asset_type={asset_type}')
+
+    bg_process_params = {
+        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
+        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
+        'eval_path': eval_path,
+    }
+    if path_output is not None:
+        bg_process_params['eval_path_output'] = f'{eval_path}.hana3d.{path_output}'
+
+    add_version(upload_data)
+
+    upload_data["name"] = props.name
+    upload_data["description"] = props.description
+    upload_data["tags"] = comma2array(props.tags)
+
+    upload_data['parameters'] = upload_params
+
+    upload_data["is_public"] = props.is_public
+    if props.workspace != '' and not props.is_public:
+        upload_data['workspace'] = props.workspace
+
+    metadata = {}
+    list_clients = getattr(props, 'client', '').split(',')
+    list_skus = getattr(props, 'sku', '').split(',')
+    product_info = [{'client': client, 'sku': sku} for client, sku in zip(list_clients, list_skus)]
+    if len(product_info) > 0:
+        metadata['product_info'] = product_info
+    if hasattr(props, 'custom_props'):
+        metadata.update(props.custom_props)
+    if metadata:
+        upload_data['metadata'] = metadata
+
+    export_data['publish_message'] = props.publish_message
+
+    return export_data, upload_data, bg_process_params, props
+
+
+class upload_in_chunks:
+    def __init__(self, filename, chunksize=2 ** 20, report_name='file'):
+        """Helper class that creates iterable for uploading file in chunks"""
+        self.filename = filename
+        self.chunksize = chunksize
+        self.totalsize = os.path.getsize(filename)
+        self.readsofar = 0
+        self.report_name = report_name
+
+    def __iter__(self):
+        with open(self.filename, 'rb') as file:
+            while True:
+                data = file.read(self.chunksize)
+                if not data:
+                    sys.stderr.write("\n")
+                    break
+                self.readsofar += len(data)
+                percent = 100 * self.readsofar / self.totalsize
+                bg_blender.progress('uploading %s' % self.report_name, percent)
+                # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
+                yield data
+
+    def __len__(self):
+        return self.totalsize
 
 
 def previmg_name(index, fullsize=False):
@@ -393,7 +551,7 @@ def get_dimensions(obs):
 
 
 def requests_post_thread(url, json, headers):
-    rerequests.post(url, json=json, verify=True, headers=headers)
+    rerequests.post(url, json=json, headers=headers)
 
 
 def get_headers(correlation_id: str = None) -> dict:
