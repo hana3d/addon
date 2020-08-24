@@ -33,6 +33,7 @@ import os
 import shutil
 import sys
 import threading
+from typing import List
 
 import bpy
 import requests
@@ -159,6 +160,26 @@ def scene_load(context):
     # print('missing check', time.time() - t)
 
 
+def download_single_file(file_path: str, url) -> str:
+    response = requests.get(url, stream=True)
+    with open(file_path, 'wb') as f:
+        f.write(response.content)
+
+
+def download_renders(download_dir: str, jobs: List[dict]):
+    """Download render files from urls and write local paths to jobs dictionaries"""
+    # TODO: Execute in background threads
+    for job in jobs:
+        url = job['file_url']
+        filename = paths.extract_filename_from_url(url)
+
+        file_path = os.path.join(download_dir, filename)
+        job['file_path'] = file_path
+
+        if not os.path.exists(file_path):
+            download_single_file(file_path, url)
+
+
 def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     '''Link asset to the scene'''
 
@@ -253,7 +274,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     elif asset_data['asset_type'] == 'material':
         inscene = False
         for m in bpy.data.materials:
-            if m.hana3d.id == asset_data['id']:
+            if m.hana3d.view_id == asset_data['view_id']:
                 inscene = True
                 material = m
                 break
@@ -269,17 +290,22 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
         parent = material
 
     scene['assets used'] = scene.get('assets used', {})
-    scene['assets used'][asset_data['asset_base_id']] = asset_data.copy()
+    scene['assets used'][asset_data['view_id']] = asset_data.copy()
 
     parent['asset_data'] = asset_data
 
     set_thumbnail(asset_data, parent)
 
     parent.hana3d.id = asset_data['id']
-    parent.hana3d.asset_base_id = asset_data['asset_base_id']
+    parent.hana3d.view_id = asset_data['view_id']
     parent.hana3d.name = asset_data['name']
     parent.hana3d.tags = ','.join(asset_data['tags'])
     parent.hana3d.description = asset_data['description']
+
+    download_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
+    download_renders(download_dir, asset_data['render_jobs'])
+    parent.hana3d.render_data['jobs'] = asset_data['render_jobs']
+
     if hasattr(parent.hana3d, 'custom_props') and 'metadata' in asset_data:
         if 'product_info' in asset_data['metadata']:
             product_info = asset_data['metadata'].pop('product_info')
@@ -349,7 +375,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             sr = bpy.context.scene.get('search results')
             if sr is not None:
                 for r in sr:
-                    if asset_data['id'] == r['id']:
+                    if asset_data['view_id'] == r['view_id']:
                         r['downloaded'] = tcom.progress
 
         if not t.is_alive():
@@ -386,7 +412,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                     for library in bpy.data.libraries:
                         if (
                             library.get('asset_data') is not None
-                            and library['asset_data']['id'] == asset_data['id']
+                            and library['asset_data']['view_id'] == asset_data['view_id']
                         ):
                             library.filepath = file_names[-1]
                             library.reload()
@@ -403,7 +429,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                             download(asset_data, **tcom.passargs)
                     if bpy.context.scene['search results'] is not None and done:
                         for sres in bpy.context.scene['search results']:
-                            if asset_data['id'] == sres['id']:
+                            if asset_data['view_id'] == sres['view_id']:
                                 sres['downloaded'] = 100
 
                 utils.p('finished download thread')
@@ -549,7 +575,7 @@ def check_downloading(asset_data, **kwargs):
 
     for p in download_threads:
         p_asset_data = p[1]
-        if p_asset_data['id'] == asset_data['id']:
+        if p_asset_data['view_id'] == asset_data['view_id']:
             at = asset_data['asset_type']
             if at in ('model', 'material'):
                 downloader = {
@@ -564,8 +590,6 @@ def check_downloading(asset_data, **kwargs):
 
 def check_existing(asset_data):
     ''' check if the object exists on the hard drive'''
-    fexists = False
-
     file_names = paths.get_download_filenames(asset_data)
 
     utils.p('check if file already exists')
@@ -580,41 +604,47 @@ def check_existing(asset_data):
         elif not os.path.isfile(file_names[0]) and os.path.isfile(file_names[1]):
             shutil.copy(file_names[1], file_names[0])
 
-    if len(file_names) > 0 and os.path.isfile(file_names[0]) and 'created' in asset_data:
-        if float(asset_data['created']) > float(os.path.getctime(file_names[0])):
-            os.remove(file_names[0])
-        else:
-            fexists = True
-    return fexists
+    if len(file_names) == 0 or not os.path.isfile(file_names[0]):
+        return False
+
+    newer_asset_in_server = (
+        asset_data.get('created') is not None
+        and float(asset_data['created']) > float(os.path.getctime(file_names[0]))
+    )
+    if newer_asset_in_server:
+        os.remove(file_names[0])
+        return False
+
+    return True
 
 
 def try_finished_append(asset_data, **kwargs):  # location=None, material_target=None):
     ''' try to append asset, if not successfully delete source files.
      This means probably wrong download, so download should restart'''
     file_names = paths.get_download_filenames(asset_data)
-    done = False
     utils.p('try to append already existing asset')
-    if len(file_names) > 0:
-        if os.path.isfile(file_names[-1]):
-            kwargs['name'] = asset_data['name']
+
+    if len(file_names) == 0 or not os.path.isfile(file_names[-1]):
+        return False
+
+    kwargs['name'] = asset_data['name']
+    try:
+        append_asset(asset_data, **kwargs)
+        if asset_data['asset_type'] == 'scene':
+            if bpy.context.scene.hana3d_scene.merge_add == 'ADD':
+                for window in bpy.context.window_manager.windows:
+                    window.scene = bpy.data.scenes[asset_data['name']]
+        return True
+    except Exception as e:
+        print(e)
+        for f in file_names:
             try:
-                append_asset(asset_data, **kwargs)
-                if asset_data['asset_type'] == 'scene':
-                    if bpy.context.scene.hana3d_scene.merge_add == 'ADD':
-                        for window in bpy.context.window_manager.windows:
-                            window.scene = bpy.data.scenes[asset_data['name']]
-                done = True
-            except Exception as e:
+                os.remove(f)
+            except Exception:
+                e = sys.exc_info()[0]
                 print(e)
-                for f in file_names:
-                    try:
-                        os.remove(f)
-                    except Exception:
-                        e = sys.exc_info()[0]
-                        print(e)
-                        pass
-                done = False
-    return done
+                pass
+        return False
 
 
 def check_asset_in_scene(asset_data):
@@ -623,7 +653,7 @@ def check_asset_in_scene(asset_data):
     scene = bpy.context.scene
     au = scene.get('assets used', {})
 
-    id = asset_data['asset_base_id']
+    id = asset_data['view_id']
     if id in au.keys():
         ad = au[id]
         if ad.get('file_name') is not None:
@@ -684,36 +714,27 @@ def start_download(asset_data, **kwargs):
     '''
     check if file isn't downloading or doesn't exist, then start new download
     '''
-    # first check if the asset is already in scene.
-    # We can use that asset without checking with server
+    downloading = check_downloading(asset_data, **kwargs)
+    if downloading:
+        return
+
+    fexists = check_existing(asset_data)
     asset_in_scene = check_asset_in_scene(asset_data)
 
-    # otherwise, check on server
+    if fexists and asset_in_scene:
+        done = try_finished_append(asset_data, **kwargs)
+        if done:
+            return
 
-    done = False
-    # is the asseet being currently downloaded?
-    downloading = check_downloading(asset_data, **kwargs)
-    if not downloading:
-        # check if there are files already. This check happens 2x once here(for free assets),
-        # once in thread(for non-free)
-        fexists = check_existing(asset_data)
+    if asset_data['asset_type'] in ('model', 'material'):
+        downloader = {
+            'location': kwargs['model_location'],
+            'rotation': kwargs['model_rotation'],
+        }
+        download(asset_data, downloaders=[downloader], **kwargs)
 
-        if fexists and asset_in_scene:
-            done = try_finished_append(asset_data, **kwargs)
-        # else:
-        #     props = utils.get_search_props()
-        #     props.report = str('asset ')
-        if not done:
-            at = asset_data['asset_type']
-            if at in ('model', 'material'):
-                downloader = {
-                    'location': kwargs['model_location'],
-                    'rotation': kwargs['model_rotation'],
-                }
-                download(asset_data, downloaders=[downloader], **kwargs)
-
-            elif asset_data['asset_type'] == 'scene':
-                download(asset_data, **kwargs)
+    elif asset_data['asset_type'] == 'scene':
+        download(asset_data, **kwargs)
 
 
 asset_types = (

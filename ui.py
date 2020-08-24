@@ -23,13 +23,12 @@ if "bpy" in locals():
     paths = importlib.reload(paths)
     utils = importlib.reload(utils)
     search = importlib.reload(search)
-    upload = importlib.reload(upload)
     ui_bgl = importlib.reload(ui_bgl)
     download = importlib.reload(download)
     bg_blender = importlib.reload(bg_blender)
     colors = importlib.reload(colors)
 else:
-    from hana3d import paths, utils, search, upload, ui_bgl, download, bg_blender, colors
+    from hana3d import paths, utils, search, ui_bgl, download, bg_blender, colors
 
 import math
 import os
@@ -733,10 +732,6 @@ def draw_callback_2d_search(self, context):
                     # object type icons - just a test..., adds clutter/ not so userfull:
                     # icons = ('type_finished.png', 'type_template.png', 'type_particle_system.png')
 
-                    if (result.get('can_download', True)) == 0:
-                        img = utils.get_thumbnail('locked.png')
-                        ui_bgl.draw_image(x + 2, y + 2, 24, 24, img, 1)
-
                     v_icon = verification_icons[result.get('verification_status', 'validated')]
                     if v_icon is not None:
                         img = utils.get_thumbnail(v_icon)
@@ -1162,14 +1157,7 @@ class AssetBarOperator(bpy.types.Operator):
                     and ao is not None
                     and ao.active_material is not None
                 ):
-                    (
-                        export_data,
-                        upload_data,
-                        eval_path_computing,
-                        eval_path_state,
-                        eval_path,
-                        props,
-                    ) = upload.get_upload_data(self, context, ui_props.asset_type)
+                    upload_data = utils.get_export_data(ui_props.asset_type)[1]
                     ui_props.tooltip = search.generate_tooltip(upload_data)
 
             return {'PASS_THROUGH'}
@@ -1302,7 +1290,6 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.draw_tooltip = True
 
                     ui_props.tooltip = asset_data['tooltip']
-                    # bpy.ops.wm.call_menu(name='OBJECT_MT_hana3d_asset_menu')
 
                 else:
                     ui_props.draw_tooltip = False
@@ -1360,10 +1347,6 @@ class AssetBarOperator(bpy.types.Operator):
             mx = event.mouse_x - r.x
             my = event.mouse_y - r.y
 
-            if event.value == 'PRESS' and mouse_in_asset_bar(mx, my):
-                bpy.ops.wm.call_menu(name='OBJECT_MT_hana3d_asset_menu')
-                return {'RUNNING_MODAL'}
-
         if event.type == 'LEFTMOUSE':
 
             r = self.region
@@ -1376,22 +1359,6 @@ class AssetBarOperator(bpy.types.Operator):
                     # check if asset is locked and let the user know in that case
                     asset_search_index = ui_props.active_index
                     asset_data = sr[asset_search_index]
-                    if not asset_data['can_download']:
-                        message = "Let's support asset creators and Blender development."
-                        link_text = 'Unlock the asset.'
-                        url = (
-                            paths.get_hana3d_url()
-                            + '/get-hana3d/'
-                            + asset_data['id']
-                            + '/?from_addon'
-                        )
-                        bpy.ops.wm.hana3d_url_dialog(
-                            'INVOKE_REGION_WIN',
-                            url=url,
-                            message=message,
-                            link_text=link_text
-                        )
-                        return {'RUNNING_MODAL'}
                     # go on with drag init
                     ui_props.drag_init = True
                     bpy.context.window.cursor_set("NONE")
@@ -1691,8 +1658,8 @@ class AssetBarOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class DefaultNameOperator(bpy.types.Operator):
-    '''assign object name as props name'''
+class DefaultNamesOperator(bpy.types.Operator):
+    '''Assign default object name as props name and object render job name'''
 
     bl_idname = "view3d.hana3d_default_name"
     bl_label = "Hana3D Default Name"
@@ -1714,26 +1681,7 @@ class DefaultNameOperator(bpy.types.Operator):
             or self.area.type != 'VIEW_3D'
             or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
         ):
-            # print('search areas')   bpy.context.area.spaces[0].region_quadviews
-            # stopping here model by now - because of:
-            #   switching layouts or maximizing area now fails to assign new area throwing the bug
-            #   internal error: modal gizmo-map handler has invalid area
             return {'CANCELLED'}
-
-            newarea = None
-            for a in context.window.screen.areas:
-                if a.type == 'VIEW_3D':
-                    self.area = a
-                    for r in a.regions:
-                        if r.type == 'WINDOW':
-                            self.region = r
-                    newarea = a
-                    break
-                    # context.area = a
-
-            # we check again and quit if things weren't fixed this way.
-            if newarea is None:
-                return {'CANCELLED'}
 
         if ui_props.turn_off:
             return {'CANCELLED'}
@@ -1743,55 +1691,39 @@ class DefaultNameOperator(bpy.types.Operator):
             # print(context.region.type, self.region.type)
             return {'PASS_THROUGH'}
 
-        if ui_props.down_up == 'UPLOAD':
-            # only generate tooltip once in a while
-            if (
-                (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
-                and event.value == 'RELEASE'
-                or event.type == 'ENTER'
-            ):
-                ao = bpy.context.active_object
-                if (
-                    ui_props.asset_type == 'MODEL'
-                    and ao is not None
-                    or ui_props.asset_type == 'MATERIAL'
-                    and ao is not None
-                    and ao.active_material is not None
-                    or ui_props.asset_type == 'SCENE'
-                    and bpy.context.scene is not None
-                ):
-                    # Force to trigger a workspace prop update to setup libraries
-                    props = utils.get_upload_props()
-                    if props.default_library == '':
-                        workspace = props.workspace
-                        props.workspace = workspace
-
-                    if ui_props.asset_type == 'MODEL':
-                        ob = utils.get_active_model()
-                        if ob.hana3d.name == '':
-                            ob.hana3d.name = ob.name
-                    elif ui_props.asset_type == 'MATERIAL':
-                        mat = bpy.context.active_object.active_material
-                        if mat.hana3d.name == '':
-                            mat.hana3d.name = mat.name
-                    elif ui_props.asset_type == 'SCENE':
-                        scn = bpy.context.scene
-                        if scn.hana3d.name == '':
-                            scn.hana3d.name = scn.name
-
-        elif ui_props.down_up == 'SEARCH':
-            if (
-                (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
-                and event.value == 'RELEASE'
-                or event.type == 'ENTER'
-            ):
-                # Force to trigger a workspace prop update to setup libraries
-                props = utils.get_search_props()
-                if props.default_library == '':
-                    workspace = props.workspace
-                    props.workspace = workspace
-
+        draw_event = (
+            (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE') and event.value == 'RELEASE'
+            or event.type == 'ENTER'
+        )
+        if not draw_event:
             return {'PASS_THROUGH'}
+
+        asset = utils.get_active_asset()
+        if asset is None:
+            return {'PASS_THROUGH'}
+
+        props = asset.hana3d
+        if ui_props.down_up == 'UPLOAD':
+            if props.default_library == '':
+                props.workspace = props.workspace
+            if props.name == '' and props.name != asset.name:
+                props.name = asset.name
+        elif ui_props.down_up == 'SEARCH':
+            props = utils.get_search_props()
+            if props.default_library == '':
+                props.workspace = props.workspace
+
+        if props.render_job_name == '':
+            if 'jobs' not in props.render_data:
+                previous_names = []
+            else:
+                previous_names = [job['job_name'] for job in props.render_data['jobs']]
+            name = props.name or asset.name or 'Render'
+            for n in range(1000):
+                new_name = f'{name}_{n:03d}'
+                if new_name not in previous_names:
+                    break
+            props.render_job_name = new_name
 
         return {'PASS_THROUGH'}
 
@@ -1888,8 +1820,13 @@ class RunAssetBarWithContext(bpy.types.Operator):
         return {'FINISHED'}
 
 
-classess = (AssetBarOperator, DefaultNameOperator,
-            RunAssetBarWithContext, TransferHana3DData, UndoWithContext)
+classess = (
+    AssetBarOperator,
+    DefaultNamesOperator,
+    RunAssetBarWithContext,
+    TransferHana3DData,
+    UndoWithContext,
+)
 
 # store keymap items here to access after registration
 addon_keymapitems = []

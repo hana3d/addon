@@ -53,10 +53,10 @@ def rerequest(method, url, **kwargs):
             (ui.add_report, (method + ' request Failed.' + str(rdata.get('detail')),))
         )
 
-        if rdata.get('detail') == 'Invalid token.':
+        if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons['hana3d'].preferences
             if user_preferences.api_key != '':
-                if user_preferences.enable_oauth and user_preferences.api_key_refresh != '':
+                if user_preferences.api_key_refresh != '':
                     tasks_queue.add_task(
                         (ui.add_report, ('refreshing token. If this fails, please login in Hana3D Login panel.', 10,),)  # noqa E501
                     )
@@ -78,7 +78,7 @@ def rerequest(method, url, **kwargs):
                                 'hana3d'
                             ].preferences.api_key_refresh = refresh_token
 
-                        kwargs['headers'] = utils.get_headers()
+                        kwargs['headers'].update(utils.get_headers())
                         response = requests.request(method, url, **kwargs)
                         utils.p('reresult', response.status_code)
                         if response.status_code >= 400:
