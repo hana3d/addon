@@ -87,6 +87,33 @@ def threadread(tcom: threadCom):
             print(line, len(line))
 
 
+class upload_in_chunks:
+    def __init__(self, filename, chunksize=2 ** 20, report_name='file'):
+        """Helper class that creates iterable for uploading file in chunks.
+        Must be used only on background processes"""
+        self.filename = filename
+        self.chunksize = chunksize
+        self.totalsize = os.path.getsize(filename)
+        self.readsofar = 0
+        self.report_name = report_name
+
+    def __iter__(self):
+        with open(self.filename, 'rb') as file:
+            while True:
+                data = file.read(self.chunksize)
+                if not data:
+                    sys.stderr.write("\n")
+                    break
+                self.readsofar += len(data)
+                percent = 100 * self.readsofar / self.totalsize
+                progress('uploading %s' % self.report_name, percent)
+                # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
+                yield data
+
+    def __len__(self):
+        return self.totalsize
+
+
 def progress(text, n=None):
     '''function for reporting during the script, works for background operations in the header.'''
     # for i in range(n+1):
