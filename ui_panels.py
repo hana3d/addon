@@ -187,6 +187,7 @@ def draw_panel_common_search(layout, context):
     )
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
+    layout.operator("scene.hana3d_batch_download", text='Import all preview files')
 
     if asset_type == 'MODEL':
         layout.separator()

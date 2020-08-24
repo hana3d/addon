@@ -859,8 +859,54 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class Hana3DBatchDownloadOperator(bpy.types.Operator):
+    """Download and link all preview assets to scene."""
+
+    bl_idname = "scene.hana3d_batch_download"
+    bl_label = "Hana3D Batch Download"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    asset_type: EnumProperty(
+        name="Type",
+        items=asset_types,
+        description="Type of download",
+        default="MODEL",
+    )
+    asset_index: IntProperty(
+        name="Asset Index",
+        description='asset index in search results',
+        default=-1
+    )
+
+    target_object: StringProperty(
+        name="Target Object",
+        description="Material or object target for replacement",
+        default=""
+    )
+
+    material_target_slot: IntProperty(
+        name="Asset Index",
+        description='asset index in search results',
+        default=0
+    )
+    model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))
+    model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))
+
+    replace: BoolProperty(
+        name='Replace',
+        description='replace selection with the asset',
+        default=False
+    )
+
+    cast_parent: StringProperty(name="Particles Target Object", description="", default="")
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+
 def register_download():
     bpy.utils.register_class(Hana3DDownloadOperator)
+    bpy.utils.register_class(Hana3DBatchDownloadOperator)
     bpy.utils.register_class(Hana3DKillDownloadOperator)
     bpy.app.handlers.load_post.append(scene_load)
     bpy.app.handlers.save_pre.append(scene_save)
@@ -868,8 +914,9 @@ def register_download():
 
 
 def unregister_download():
-    bpy.utils.unregister_class(Hana3DDownloadOperator)
     bpy.utils.unregister_class(Hana3DKillDownloadOperator)
+    bpy.utils.unregister_class(Hana3DBatchDownloadOperator)
+    bpy.utils.unregister_class(Hana3DDownloadOperator)
     bpy.app.handlers.load_post.remove(scene_load)
     bpy.app.handlers.save_pre.remove(scene_save)
     if bpy.app.timers.is_registered(timer_update):
