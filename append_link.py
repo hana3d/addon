@@ -113,6 +113,9 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
             if scene.view_settings.use_curve_mapping:
                 copy_curves(imported_scene, scene)
 
+        if imported_scene.node_tree is not None:
+            print(imported_scene.node_tree)
+
         imported_scene.user_clear()
         bpy.data.scenes.remove(imported_scene, do_unlink=False)
 
