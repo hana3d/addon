@@ -177,8 +177,7 @@ def comma2array(text):
 def get_export_data(
         asset_type: str,
         path_computing: str = 'uploading',
-        path_state: str = 'upload_state',
-        path_output: str = None):
+        path_state: str = 'upload_state'):
     export_data = {
         "type": asset_type,
     }
@@ -263,8 +262,6 @@ def get_export_data(
         'eval_path_state': f'{eval_path}.hana3d.{path_state}',
         'eval_path': eval_path,
     }
-    if path_output is not None:
-        bg_process_params['eval_path_output'] = f'{eval_path}.hana3d.{path_output}'
 
     add_version(upload_data)
 

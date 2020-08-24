@@ -115,12 +115,10 @@ def bg_update():
         return 2
 
     for p in bg_processes:
-        # proc=p[1].proc
         readthread = p[0]
         tcom = p[1]
         if not readthread.is_alive():
             readthread.join()
-            # readthread.
             if tcom.error:
                 exec(f'{tcom.eval_path_computing} = False')
 
@@ -128,10 +126,6 @@ def bg_update():
             if tcom.progress_msg is not None:
                 exec(f'{tcom.eval_path_state} = tcom.progress_msg')
                 tcom.progress_msg = None
-
-            if tcom.eval_path_output is not None and tcom.output_msg is not None:
-                exec(f'{tcom.eval_path_output} = tcom.output_msg')
-                tcom.output_msg = None
 
             if 'finished successfully' in tcom.lasttext:
                 bg_processes.remove(p)
@@ -244,8 +238,6 @@ def add_bg_process(
     readthread.start()
 
     bg_processes.append([readthread, tcom])
-    # if not bpy.app.timers.is_registered(bg_update):
-    #     bpy.app.timers.register(bg_update, persistent=True)
 
 
 def register():

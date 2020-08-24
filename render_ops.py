@@ -87,7 +87,6 @@ class RenderScene(Operator):
             context.scene.Hana3DUI.asset_type,
             path_computing='rendering',
             path_state='render_state',
-            path_output='render_output',
         )
 
         try:

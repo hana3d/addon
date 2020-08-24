@@ -558,12 +558,6 @@ class Hana3DCommonUploadProps:
         default="Starting Render process"
     )
 
-    render_output: StringProperty(
-        name="JSON-encoded render job data",
-        description="",
-        default=""
-    )
-
     render_data: PointerProperty(
         type=PropertyGroup,
         description='Container for holding data of completed render jobs',
