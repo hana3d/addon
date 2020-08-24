@@ -211,7 +211,6 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    for pcoll in preview_collections.values():
-        if pcoll in render_previews.values():
-            bpy.utils.previews.remove(pcoll)
+    for pcoll in render_previews.values():
+        bpy.utils.previews.remove(pcoll)
     render_previews.clear()
