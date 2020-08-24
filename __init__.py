@@ -351,6 +351,7 @@ def update_libraries_list_search(self, context):
                     library_info[1]["id"] = library["id"]
                     library_info[1]["metadata"] = library["metadata"]
                     i += 1
+    update_selected_libraries_search(self, context)
 
 
 class Hana3DCommonSearchProps(object):

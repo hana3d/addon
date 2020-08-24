@@ -1779,8 +1779,7 @@ class DefaultNameOperator(bpy.types.Operator):
                         if scn.hana3d.name == '':
                             scn.hana3d.name = scn.name
 
-        elif ui_props.down_up == 'UPLOAD':
-            # only generate tooltip once in a while
+        elif ui_props.down_up == 'SEARCH':
             if (
                 (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
                 and event.value == 'RELEASE'
@@ -1791,9 +1790,6 @@ class DefaultNameOperator(bpy.types.Operator):
                 if props.default_library == '':
                     workspace = props.workspace
                     props.workspace = workspace
-                if props.libraries == '':
-                    libraries = props.libraries
-                    props.libraries = libraries
 
             return {'PASS_THROUGH'}
 
