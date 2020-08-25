@@ -866,41 +866,21 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     bl_label = "Hana3D Batch Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    asset_type: EnumProperty(
-        name="Type",
-        items=asset_types,
-        description="Type of download",
-        default="MODEL",
-    )
-    asset_index: IntProperty(
-        name="Asset Index",
-        description='asset index in search results',
-        default=-1
-    )
-
-    target_object: StringProperty(
-        name="Target Object",
-        description="Material or object target for replacement",
-        default=""
-    )
-
-    material_target_slot: IntProperty(
-        name="Asset Index",
-        description='asset index in search results',
-        default=0
-    )
-    model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))
-    model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))
-
-    replace: BoolProperty(
-        name='Replace',
-        description='replace selection with the asset',
-        default=False
-    )
-
-    cast_parent: StringProperty(name="Particles Target Object", description="", default="")
-
     def execute(self, context):
+        scene = context.scene
+        sr = scene['search results']
+
+        asset_data = sr[0].to_dict()
+        kwargs = {
+            'cast_parent': "",
+            'target_object': "",
+            'material_target_slot': 0,
+            'model_location': tuple((0, 0, 0)),
+            'model_rotation': tuple((0, 0, 0)),
+            'replace': False,
+        }
+
+        start_download(asset_data, **kwargs)
         return {'FINISHED'}
 
 
