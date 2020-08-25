@@ -16,18 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if "bpy" in locals():
-    from importlib import reload
-
-    paths = reload(paths)
-    append_link = reload(append_link)
-    utils = reload(utils)
-    ui = reload(ui)
-    colors = reload(colors)
-    rerequests = reload(rerequests)
-else:
-    from hana3d import paths, append_link, utils, ui, colors, rerequests
-
 import copy
 import os
 import shutil
@@ -45,6 +33,8 @@ from bpy.props import (
     IntProperty,
     StringProperty
 )
+
+from hana3d import append_link, colors, paths, rerequests, ui, utils
 
 download_threads = []
 
@@ -836,18 +826,28 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def register_download():
-    bpy.utils.register_class(Hana3DDownloadOperator)
-    bpy.utils.register_class(Hana3DKillDownloadOperator)
+classes = (
+    Hana3DDownloadOperator,
+    Hana3DKillDownloadOperator
+)
+
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
     bpy.app.handlers.load_post.append(scene_load)
     bpy.app.handlers.save_pre.append(scene_save)
+
     bpy.app.timers.register(timer_update)
 
 
-def unregister_download():
-    bpy.utils.unregister_class(Hana3DDownloadOperator)
-    bpy.utils.unregister_class(Hana3DKillDownloadOperator)
-    bpy.app.handlers.load_post.remove(scene_load)
-    bpy.app.handlers.save_pre.remove(scene_save)
+def unregister():
     if bpy.app.timers.is_registered(timer_update):
         bpy.app.timers.unregister(timer_update)
+
+    bpy.app.handlers.save_pre.remove(scene_save)
+    bpy.app.handlers.load_post.remove(scene_load)
+
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

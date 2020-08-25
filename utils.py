@@ -16,15 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
-    from importlib import reload
-
-    paths = reload(paths)
-    version_checker = reload(version_checker)
-else:
-    from hana3d import paths, version_checker
-
 import json
 import os
 import sys
@@ -33,6 +24,8 @@ from typing import List, Tuple
 
 import bpy
 from mathutils import Vector
+
+from hana3d import paths, version_checker
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000

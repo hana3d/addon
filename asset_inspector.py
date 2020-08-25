@@ -16,15 +16,9 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
-    from importlib import reload
-
-    utils = reload(utils)
-else:
-    from hana3d import utils
-
 import bpy
+
+from hana3d import utils
 
 
 def check_meshprops(props, obs):
@@ -111,11 +105,11 @@ class AutoFillTags(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def register_asset_inspector():
+def register():
     bpy.utils.register_class(AutoFillTags)
 
 
-def unregister_asset_inspector():
+def unregister():
     bpy.utils.unregister_class(AutoFillTags)
 
 

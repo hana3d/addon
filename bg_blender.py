@@ -16,19 +16,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if "bpy" in locals():
-    from importlib import reload
-
-    utils = reload(utils)
-else:
-    from hana3d import utils
-
 import re
 import sys
 import threading
 
 import bpy
 from bpy.props import EnumProperty
+
+from hana3d import utils
 
 bg_processes = []
 
@@ -273,6 +268,6 @@ def register():
 
 
 def unregister():
-    bpy.utils.unregister_class(KillBgProcess)
     if bpy.app.timers.is_registered(bg_update):
         bpy.app.timers.unregister(bg_update)
+    bpy.utils.unregister_class(KillBgProcess)

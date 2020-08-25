@@ -16,26 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
-    from importlib import reload
-
-    paths = reload(paths)
-    utils = reload(utils)
-    bg_blender = reload(bg_blender)
-    autothumb = reload(autothumb)
-    ui = reload(ui)
-    rerequests = reload(rerequests)
-else:
-    from hana3d import (
-        paths,
-        utils,
-        bg_blender,
-        autothumb,
-        ui,
-        rerequests,
-    )
-
 import json
 import os
 import re
@@ -46,12 +26,10 @@ import uuid
 
 import bpy
 import requests
-from bpy.props import (
-    BoolProperty,
-    EnumProperty,
-    StringProperty
-)
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import Operator
+
+from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
@@ -438,11 +416,17 @@ class AssetVerificationStatusChange(Operator):
             return wm.invoke_props_dialog(self)
 
 
-def register_upload():
-    bpy.utils.register_class(UploadOperator)
-    bpy.utils.register_class(AssetVerificationStatusChange)
+classes = (
+    UploadOperator,
+    AssetVerificationStatusChange,
+)
 
 
-def unregister_upload():
-    bpy.utils.unregister_class(UploadOperator)
-    bpy.utils.unregister_class(AssetVerificationStatusChange)
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
+
+def unregister():
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

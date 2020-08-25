@@ -16,19 +16,10 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if "bpy" in locals():
-    from importlib import reload
-
-    ui = reload(ui)
-    utils = reload(utils)
-    paths = reload(paths)
-    tasks_queue = reload(tasks_queue)
-    hana3d_oauth = reload(hana3d_oauth)
-else:
-    from hana3d import ui, utils, paths, tasks_queue, hana3d_oauth
-
 import bpy
 import requests
+
+from hana3d import hana3d_oauth, paths, tasks_queue, ui, utils
 
 
 def rerequest(method, url, **kwargs):
