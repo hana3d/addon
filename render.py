@@ -320,7 +320,8 @@ class ImportRender(Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        props = utils.get_upload_props()
+        return len(props.render_data['jobs']) > 0
 
     def execute(self, context):
         props = utils.get_upload_props()
