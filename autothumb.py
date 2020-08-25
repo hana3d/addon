@@ -16,14 +16,21 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(bg_blender)
+    reload(paths)
+    reload(utils)
+else:
+    from hana3d import bg_blender, paths, utils
+
 import json
 import os
 import subprocess
 import tempfile
 
 import bpy
-
-from hana3d import bg_blender, paths, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 

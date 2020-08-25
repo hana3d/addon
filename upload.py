@@ -16,6 +16,18 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(autothumb)
+    reload(bg_blender)
+    reload(paths)
+    reload(rerequests)
+    reload(ui)
+    reload(utils)
+else:
+    from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
+
 import json
 import os
 import re
@@ -28,8 +40,6 @@ import bpy
 import requests
 from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import Operator
-
-from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 

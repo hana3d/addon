@@ -16,13 +16,24 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(colors)
+    reload(oauth)
+    reload(paths)
+    reload(search)
+    reload(tasks_queue)
+    reload(ui)
+    reload(utils)
+else:
+    from hana3d import colors, oauth, paths, search, tasks_queue, ui, utils
+
 import threading
 import time
 
 import bpy
 import requests
-
-from hana3d import colors, oauth, paths, search, tasks_queue, ui, utils
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()

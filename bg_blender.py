@@ -16,14 +16,20 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(utils)
+else:
+    from hana3d import utils
+
+import os
 import re
 import sys
 import threading
 
 import bpy
 from bpy.props import EnumProperty
-
-from hana3d import utils
 
 bg_processes = []
 

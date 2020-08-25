@@ -16,6 +16,19 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(append_link)
+    reload(bg_blender)
+    reload(colors)
+    reload(paths)
+    reload(rerequests)
+    reload(ui)
+    reload(utils)
+else:
+    from hana3d import append_link, colors, paths, rerequests, ui, utils
+
 import copy
 import os
 import shutil
@@ -33,9 +46,6 @@ from bpy.props import (
     IntProperty,
     StringProperty
 )
-
-from hana3d import append_link, colors, paths, rerequests, ui, utils
-
 download_threads = []
 
 
@@ -150,7 +160,7 @@ def scene_load(context):
     # print('missing check', time.time() - t)
 
 
-def download_single_file(file_path: str, url) -> str:
+def download_single_file(file_path: str, url: str) -> str:
     response = requests.get(url, stream=True)
     with open(file_path, 'wb') as f:
         f.write(response.content)

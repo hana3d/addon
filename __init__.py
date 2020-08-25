@@ -28,30 +28,53 @@ bl_info = {
     "category": "3D View",
 }
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(asset_inspector)
+    reload(autothumb)
+    reload(bg_blender)
+    reload(custom_props)
+    reload(download)
+    reload(hana3d_oauth)
+    reload(icons)
+    reload(paths)
+    reload(render)
+    reload(search)
+    reload(tasks_queue)
+    reload(types)
+    reload(ui)
+    reload(ui_panels)
+    reload(upload)
+    reload(utils)
+else:
+    from . import (
+        asset_inspector,
+        autothumb,
+        bg_blender,
+        custom_props,
+        download,
+        hana3d_oauth,
+        icons,
+        paths,
+        render,
+        search,
+        tasks_queue,
+        types,
+        ui,
+        ui_panels,
+        upload,
+        utils
+    )
+
 import bpy
 import bpy.utils.previews
 from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
-from . import (
-    addon_updater_ops,
-    asset_inspector,
-    autothumb,
-    bg_blender,
-    custom_props,
-    download,
-    hana3d_oauth,
-    icons,
-    render,
-    search,
-    tasks_queue,
-    types,
-    ui,
-    ui_panels,
-    upload,
-    utils
-)
+
+from . import addon_updater_ops
 
 
 @persistent

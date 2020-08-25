@@ -16,10 +16,17 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(download)
+    reload(utils)
+else:
+    from hana3d import download, utils
+
 import bpy
 from bpy.types import Panel
 
-from hana3d import download, utils
 
 from . import addon_updater_ops
 

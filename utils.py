@@ -16,6 +16,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(paths)
+    reload(version_checker)
+else:
+    from hana3d import paths, version_checker
+
 import json
 import os
 import sys
@@ -24,8 +32,6 @@ from typing import List, Tuple
 
 import bpy
 from mathutils import Vector
-
-from hana3d import paths, version_checker
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -605,6 +611,8 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
 def name_update():
     props = get_upload_props()
+    if props is None:
+        return
     if props.name_old != props.name:
         props.name_changed = True
         props.name_old = props.name

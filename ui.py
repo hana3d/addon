@@ -16,6 +16,29 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(bg_blender)
+    reload(colors)
+    reload(download)
+    reload(paths)
+    reload(render)
+    reload(search)
+    reload(ui_bgl)
+    reload(utils)
+else:
+    from hana3d import (
+        bg_blender,
+        colors,
+        download,
+        paths,
+        render,
+        search,
+        ui_bgl,
+        utils
+    )
+
 import math
 import os
 import time
@@ -23,19 +46,8 @@ import time
 import bpy
 import mathutils
 from bpy.props import BoolProperty, StringProperty
-from mathutils import Vector
-
 from bpy_extras import view3d_utils
-from hana3d import (
-    bg_blender,
-    colors,
-    download,
-    paths,
-    render,
-    search,
-    ui_bgl,
-    utils
-)
+from mathutils import Vector
 
 handler_2d = None
 handler_3d = None

@@ -17,6 +17,17 @@
 # ##### END GPL LICENSE BLOCK #####
 
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(autothumb)
+    reload(paths)
+    reload(render)
+    reload(search)
+    reload(utils)
+else:
+    from hana3d import autothumb, paths, render, search, utils
+
 import math
 from typing import Union
 
@@ -31,8 +42,6 @@ from bpy.props import (
     StringProperty
 )
 from bpy.types import PropertyGroup
-
-from hana3d import autothumb, paths, render, search, utils
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -358,6 +367,8 @@ def name_update(self, context):
 
 def update_tags(self, context):
     props = utils.get_upload_props()
+    if props is None:
+        return
 
     commasep = props.tags.split(',')
     ntags = []
@@ -616,6 +627,7 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=False,
         update=autothumb.update_upload_material_preview,
     )
+    asset_type: StringProperty(default='material')
 
     client: StringProperty(name="Client")
     sku: StringProperty(name="SKU")
@@ -728,6 +740,8 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=False
     )
 
+    asset_type: StringProperty(default='model')
+
     client: StringProperty(name="Client")
     sku: StringProperty(name="SKU")
     custom_props: PointerProperty(type=PropertyGroup)
@@ -803,6 +817,7 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         min=5,
         max=5000
     )
+    asset_type: StringProperty(default='scene')
 
 
 class Hana3DModelSearchProps(PropertyGroup, Hana3DCommonSearchProps):

@@ -16,13 +16,18 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(paths)
+else:
+    from hana3d import paths
+
 import json
 import os
 import threading
 
 import requests
-
-from hana3d import paths
 
 
 def get_addon_version():

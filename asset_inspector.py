@@ -16,9 +16,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy
+if 'bpy' in locals():
+    from importlib import reload
 
-from hana3d import utils
+    reload(utils)
+else:
+    from hana3d import utils
+
+import bpy
 
 
 def check_meshprops(props, obs):

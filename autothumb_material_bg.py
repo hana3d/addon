@@ -17,13 +17,20 @@
 # ##### END GPL LICENSE BLOCK #####
 
 
+if 'bpy' in locals():
+    from importlib import reload
+
+    reload(append_link)
+    reload(bg_blender)
+    reload(utils)
+else:
+    from hana3d import append_link, bg_blender, utils
+
 import json
 import sys
 from pathlib import Path
 
 import bpy
-
-from hana3d import append_link, bg_blender, utils
 
 HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
 HANA3D_THUMBNAIL_PATH = sys.argv[-2]
