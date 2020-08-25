@@ -530,7 +530,7 @@ class Hana3DCommonUploadProps:
     )
 
     render_job_name: StringProperty(
-        name="Render name",
+        name="Name",
         description="Name of render job",
         default=""
     )

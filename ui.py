@@ -589,11 +589,11 @@ def draw_callback_2d_progress(self, context):
         index += 1
     for thread in render.render_threads:
         if thread.uploading:
-            text = f'Uploading scene for render: {thread.upload_progress:.1%}'
+            text = thread.props.render_state
             draw_progress(x, y - index * 30, text, int(thread.upload_progress * 100))
             index += 1
         elif thread.job_running:
-            text = f'Running render job: {thread.job_progress:.1%}'
+            text = thread.props.render_state
             draw_progress(x, y - index * 30, text, int(thread.job_progress * 100))
             index += 1
     global reports
