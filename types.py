@@ -397,7 +397,8 @@ def get_render_job_outputs(self, context):
     if not hasattr(preview_collection, 'previews'):
         preview_collection.previews = []
 
-    if len(preview_collection.previews) < len(self.render_data['jobs']):
+    n_render_jobs = len(self.render_data['jobs']) if 'jobs' in self.render_data else 0
+    if len(preview_collection.previews) < n_render_jobs:
         # Sort jobs to avoid error when appending newer render jobs
         sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
         for n, job in enumerate(sorted_jobs):

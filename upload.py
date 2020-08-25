@@ -147,6 +147,8 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
 
     # do this for fixing long tags in some upload cases
     props.tags = props.tags[:]
+    if 'jobs' not in props.render_data:
+        props.render_data['jobs'] = []
 
     props.name = props.name.strip()
     # TODO  move this to separate function

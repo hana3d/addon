@@ -22,11 +22,10 @@ if 'bpy' in locals():
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)
-    types = reload(types)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import colors, paths, rerequests, types, ui, utils
+    from hana3d import colors, paths, rerequests, ui, utils
 
 import os
 import shutil
@@ -67,16 +66,18 @@ def threads_timer():
 class RenderThread(threading.Thread):
     def __init__(
             self,
-            props: types.Props,
+            props,  # types.Props
             engine: str,
             frame_start: int,
             frame_end: int):
         super().__init__()
         self.props = props
-        self.render_job_name = props.render_job_name
         self.engine = engine
         self.frame_start = frame_start
         self.frame_end = frame_end
+
+        # Save job name on thread to avoid erros when changing asset name before job completes
+        self.render_job_name = props.render_job_name
 
         correlation_id = str(uuid.uuid4())
         self.headers = utils.get_headers(correlation_id)
@@ -200,7 +201,7 @@ class RenderThread(threading.Thread):
                 raise Exception(f'Error in render job: {job}')
             else:
                 self.job_progress = job['progress']
-                msg = f'Running render job: {job["progress"]:.1%}'
+                msg = f'Rendering {self.render_job_name}: {job["progress"]:.1%}'
                 self.props.render_state = msg
 
                 time.sleep(pool_time)
@@ -245,8 +246,11 @@ class RenderThread(threading.Thread):
         _, ext = os.path.splitext(filename)
         job_data['file_format'] = ext[1:] if len(ext) > 0 else ''
 
-        # Append this way as property is immutable and .append() does not work here
-        self.props.render_data['jobs'] += [job_data]
+        # Append this way as property type is different depending on length
+        if len(self.props.render_data['jobs']) == 0:
+            self.props.render_data['jobs'] = [job_data]
+        else:
+            self.props.render_data['jobs'] += [job_data]
 
 
 class _read_in_chunks:
