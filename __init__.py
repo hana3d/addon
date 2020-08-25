@@ -1307,7 +1307,6 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 # registration
 classes = (
-    CustomPropsPropertyGroup,
     Hana3DAddonPreferences,
     Hana3DUIProps,
     Hana3DRenderProps,
