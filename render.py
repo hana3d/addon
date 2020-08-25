@@ -29,6 +29,7 @@ else:
     from hana3d import colors, paths, rerequests, types, ui, utils
 
 import os
+import shutil
 import tempfile
 import threading
 import time
@@ -56,9 +57,9 @@ def threads_timer():
             continue
         if not thread.finished:
             # Implement retry logic here
-            render_threads.remove(thread)
-        else:
-            render_threads.remove(thread)
+            pass
+        shutil.rmtree(thread.tempdir, ignore_errors=True)
+        render_threads.remove(thread)
 
     return 2
 
@@ -80,8 +81,8 @@ class RenderThread(threading.Thread):
         correlation_id = str(uuid.uuid4())
         self.headers = utils.get_headers(correlation_id)
 
-        tempdir = tempfile.mkdtemp()
-        self.filepath = os.path.join(tempdir, 'export_render.blend')
+        self.tempdir = tempfile.mkdtemp()
+        self.filepath = os.path.join(self.tempdir, 'export_render.blend')
         bpy.ops.wm.save_as_mainfile(filepath=self.filepath, compress=False, copy=True)
         self.file_size = os.path.getsize(self.filepath)
 
@@ -155,6 +156,7 @@ class RenderThread(threading.Thread):
                 stream=True,
             )
             assert upload_response.ok
+            os.remove(self.filepath)
             self.log('Uploaded render scene file')
         except Exception as e:
             self.log(f'Error when uploading render scene file ({e!r})', error=True)
