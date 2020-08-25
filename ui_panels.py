@@ -187,12 +187,12 @@ def draw_panel_common_search(layout, context):
     )
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
-    layout.operator("scene.hana3d_batch_download", text='Import all preview files')
 
     if asset_type == 'MODEL':
         layout.separator()
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
+        layout.operator("scene.hana3d_batch_download", text='Import all preview files')
     elif asset_type == 'SCENE':
         layout.separator()
         layout.label(text='Import method:')
