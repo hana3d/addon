@@ -422,54 +422,6 @@ class VIEW3D_PT_UpdaterPanel(Panel):
         layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
 
 
-class ListLibrariesSearch(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_search"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_search_props()
-        layout = self.layout
-        i = 0
-        while hasattr(props, f'library_{i}'):
-            layout.prop(props, f'library_{i}')
-            i += 1
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
-class ListLibrariesUpload(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_upload"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_upload_props()
-        layout = self.layout
-        i = 0
-        while hasattr(props, f'library_{i}'):
-            layout.prop(props, f'library_{i}')
-            i += 1
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
 class VIEW3D_PT_hana3d_RenderPanel(Panel):
     """Render Farm operations panel"""
 
@@ -554,16 +506,62 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         row.operator('hana3d.render_scene')
 
 
+class ListLibrariesSearch(Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries_search"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_search_props()
+        layout = self.layout
+        i = 0
+        while hasattr(props, f'library_{i}'):
+            layout.prop(props, f'library_{i}')
+            i += 1
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
+
+
+class ListLibrariesUpload(Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries_upload"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_upload_props()
+        layout = self.layout
+        i = 0
+        while hasattr(props, f'library_{i}'):
+            layout.prop(props, f'library_{i}')
+            i += 1
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
+
+
 classess = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
     VIEW3D_PT_hana3d_downloads,
-    OBJECT_MT_hana3d_asset_menu,
-    UrlPopupDialog,
+    VIEW3D_PT_hana3d_RenderPanel,
     ListLibrariesSearch,
-    ListLibrariesUpload,
-    VIEW3D_PT_hana3d_RenderPanel
+    ListLibrariesUpload
 )
 
 

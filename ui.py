@@ -1704,14 +1704,14 @@ class DefaultNamesOperator(bpy.types.Operator):
 
         props = asset.hana3d
         if ui_props.down_up == 'UPLOAD':
-            if props.default_library == '':
+            if props.workspace != '' and props.default_library == '':
                 props.workspace = props.workspace
             if props.name == '' and props.name != asset.name:
                 props.name = asset.name
         elif ui_props.down_up == 'SEARCH':
-            props = utils.get_search_props()
-            if props.default_library == '':
-                props.workspace = props.workspace
+            search_props = utils.get_search_props()
+            if search_props.workspace != '' and search_props.default_library == '':
+                search_props.workspace = search_props.workspace
 
         if props.render_job_name == '':
             if 'jobs' not in props.render_data:
