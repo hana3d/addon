@@ -19,7 +19,6 @@
 if "bpy" in locals():
     import importlib
 
-    paths = importlib.reload(paths)
     utils = importlib.reload(utils)
     download = importlib.reload(download)
 else:

@@ -41,6 +41,7 @@ from bpy.app.handlers import persistent
 from bpy.props import (
     BoolProperty,
     EnumProperty,
+    FloatProperty,
     FloatVectorProperty,
     IntProperty,
     StringProperty
@@ -866,21 +867,53 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     bl_label = "Hana3D Batch Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
+    object_count: IntProperty(
+        name="Object Count",
+        description='number of objects imported to scene',
+        default=0,
+        options={'HIDDEN'}
+    )
+
+    grid_distance: FloatProperty(
+        name="Grid Distance",
+        description='distance between objects on the grid',
+        default=3
+    )
+
+    def _get_location(self):
+        x = y = 0
+        dx = 0
+        dy = -1
+        for i in range(self.object_count):
+            if x == y or (x < 0 and x == -y) or (x > 0 and x == 1 - y):
+                dx, dy = -dy, dx
+            x, y = x + dx, y + dy
+        self.object_count += 1
+        print('count: ', self.object_count)
+        print('x: ', x)
+        print('y: ', y)
+        return (self.grid_distance * x, self.grid_distance * y, 0)
+
     def execute(self, context):
+        self.object_count = 0
         scene = context.scene
         sr = scene['search results']
 
-        asset_data = sr[0].to_dict()
-        kwargs = {
-            'cast_parent': "",
-            'target_object': "",
-            'material_target_slot': 0,
-            'model_location': tuple((0, 0, 0)),
-            'model_rotation': tuple((0, 0, 0)),
-            'replace': False,
-        }
+        print('len: ', len(sr))
 
-        start_download(asset_data, **kwargs)
+        for result in sr:
+            asset_data = result.to_dict()
+            location = self._get_location()
+            kwargs = {
+                'cast_parent': "",
+                'target_object': "",
+                'material_target_slot': 0,
+                'model_location': tuple(location),
+                'model_rotation': tuple((0, 0, 0)),
+                'replace': False,
+            }
+
+            start_download(asset_data, **kwargs)
         return {'FINISHED'}
 
 
