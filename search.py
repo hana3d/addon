@@ -26,7 +26,6 @@ if "bpy" in locals():
     hana3d_oauth = reload(hana3d_oauth)
     tasks_queue = reload(tasks_queue)
     rerequests = reload(rerequests)
-    render_ops = reload(render_ops)
 else:
     from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests
 
