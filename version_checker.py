@@ -19,7 +19,7 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(paths)
+    paths = reload(paths)
 else:
     from hana3d import paths
 

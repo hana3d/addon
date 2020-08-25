@@ -19,8 +19,8 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(download)
-    reload(utils)
+    download = reload(download)
+    utils = reload(utils)
 else:
     from hana3d import download, utils
 

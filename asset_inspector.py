@@ -19,7 +19,7 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(utils)
+    utils = reload(utils)
 else:
     from hana3d import utils
 

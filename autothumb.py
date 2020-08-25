@@ -19,9 +19,9 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(bg_blender)
-    reload(paths)
-    reload(utils)
+    bg_blender = reload(bg_blender)
+    paths = reload(paths)
+    utils = reload(utils)
 else:
     from hana3d import bg_blender, paths, utils
 

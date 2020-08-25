@@ -19,8 +19,8 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(paths)
-    reload(version_checker)
+    paths = reload(paths)
+    version_checker = reload(version_checker)
 else:
     from hana3d import paths, version_checker
 

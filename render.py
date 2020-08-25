@@ -19,12 +19,12 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(colors)
-    reload(paths)
-    reload(rerequests)
-    reload(types)
-    reload(ui)
-    reload(utils)
+    colors = reload(colors)
+    paths = reload(paths)
+    rerequests = reload(rerequests)
+    types = reload(types)
+    ui = reload(ui)
+    utils = reload(utils)
 else:
     from hana3d import colors, paths, rerequests, types, ui, utils
 

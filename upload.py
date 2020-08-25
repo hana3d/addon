@@ -19,12 +19,12 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(autothumb)
-    reload(bg_blender)
-    reload(paths)
-    reload(rerequests)
-    reload(ui)
-    reload(utils)
+    autothumb = reload(autothumb)
+    bg_blender = reload(bg_blender)
+    paths = reload(paths)
+    rerequests = reload(rerequests)
+    ui = reload(ui)
+    utils = reload(utils)
 else:
     from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
 

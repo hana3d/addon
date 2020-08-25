@@ -20,11 +20,11 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(autothumb)
-    reload(paths)
-    reload(render)
-    reload(search)
-    reload(utils)
+    autothumb = reload(autothumb)
+    paths = reload(paths)
+    render = reload(render)
+    search = reload(search)
+    utils = reload(utils)
 else:
     from hana3d import autothumb, paths, render, search, utils
 

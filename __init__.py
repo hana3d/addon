@@ -31,22 +31,22 @@ bl_info = {
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(asset_inspector)
-    reload(autothumb)
-    reload(bg_blender)
-    reload(custom_props)
-    reload(download)
-    reload(hana3d_oauth)
-    reload(icons)
-    reload(paths)
-    reload(render)
-    reload(search)
-    reload(tasks_queue)
-    reload(types)
-    reload(ui)
-    reload(ui_panels)
-    reload(upload)
-    reload(utils)
+    asset_inspector = reload(asset_inspector)
+    autothumb = reload(autothumb)
+    bg_blender = reload(bg_blender)
+    custom_props = reload(custom_props)
+    download = reload(download)
+    hana3d_oauth = reload(hana3d_oauth)
+    icons = reload(icons)
+    paths = reload(paths)
+    render = reload(render)
+    search = reload(search)
+    tasks_queue = reload(tasks_queue)
+    types = reload(types)
+    ui = reload(ui)
+    ui_panels = reload(ui_panels)
+    upload = reload(upload)
+    utils = reload(utils)
 else:
     from . import (
         asset_inspector,

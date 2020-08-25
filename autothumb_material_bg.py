@@ -20,9 +20,9 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    reload(append_link)
-    reload(bg_blender)
-    reload(utils)
+    append_link = reload(append_link)
+    bg_blender = reload(bg_blender)
+    utils = reload(utils)
 else:
     from hana3d import append_link, bg_blender, utils
 
