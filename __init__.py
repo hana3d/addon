@@ -31,6 +31,7 @@ bl_info = {
 if 'bpy' in locals():
     from importlib import reload
 
+    append_link = reload(append_link)
     asset_inspector = reload(asset_inspector)
     autothumb = reload(autothumb)
     bg_blender = reload(bg_blender)
@@ -49,6 +50,7 @@ if 'bpy' in locals():
     utils = reload(utils)
 else:
     from . import (
+        append_link,
         asset_inspector,
         autothumb,
         bg_blender,
@@ -310,6 +312,7 @@ modules = (
     hana3d_oauth,
     tasks_queue,
     render,
+    append_link
 )
 
 
