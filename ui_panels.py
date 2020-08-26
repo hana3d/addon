@@ -16,17 +16,17 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if "bpy" in locals():
-    import importlib
+if 'bpy' in locals():
+    from importlib import reload
 
-    paths = importlib.reload(paths)
-    utils = importlib.reload(utils)
-    download = importlib.reload(download)
+    download = reload(download)
+    utils = reload(utils)
 else:
-    from hana3d import utils, download
+    from hana3d import download, utils
 
 import bpy
 from bpy.types import Panel
+
 
 from . import addon_updater_ops
 
@@ -484,7 +484,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         row.operator('hana3d.render_scene')
 
 
-classess = (
+classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
@@ -493,14 +493,14 @@ classess = (
 )
 
 
-def register_ui_panels():
+def register():
     addon_updater_ops.make_annotations(VIEW3D_PT_UpdaterPanel)
-    for c in classess:
+    for c in classes:
         bpy.utils.register_class(c)
     bpy.types.VIEW3D_MT_editor_menus.append(header_search_draw)
 
 
-def unregister_ui_panels():
-    bpy.types.VIEW3D_MT_editor_menus.remove(header_search_draw)
-    for c in classess:
+def unregister():
+    for c in reversed(classes):
         bpy.utils.unregister_class(c)
+    bpy.types.VIEW3D_MT_editor_menus.remove(header_search_draw)
