@@ -547,8 +547,7 @@ def write_profile(adata):
 
 def request_profile():
     a_url = paths.get_api_url('me')
-    headers = utils.get_headers()
-    r = rerequests.get(a_url, headers=headers)
+    r = rerequests.get(a_url)
     adata = r.json()
     if adata.get('user') is None:
         utils.p(adata)
@@ -599,8 +598,6 @@ class Searcher(threading.Thread):
         tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
         json_filepath = os.path.join(tempdir, '%s_searchresult.json' % query['asset_type'])
 
-        headers = utils.get_headers()
-
         rdata = {}
         rdata['results'] = []
 
@@ -619,7 +616,7 @@ class Searcher(threading.Thread):
             urlquery = paths.get_api_url('search', query=self.query)
         try:
             utils.p(urlquery)
-            r = rerequests.get(urlquery, headers=headers)
+            r = rerequests.get(urlquery)
             # print(r.url)
             reports = ''
             # utils.p(r.text)

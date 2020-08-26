@@ -656,12 +656,10 @@ def fprint(text):
 
 def get_download_url(asset_data, tcom=None):
     ''''retrieves the download url. The server checks if user can download the item.'''
-    headers = utils.get_headers()
-
     r = None
 
     try:
-        r = rerequests.get(asset_data['download_url'], headers=headers)
+        r = rerequests.get(asset_data['download_url'])
     except Exception as e:
         print(e)
         if tcom is not None:

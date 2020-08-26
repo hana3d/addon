@@ -107,9 +107,8 @@ def validate_upload_data(props):
 def verification_status_change_thread(asset_id, state):
     upload_data = {"verificationStatus": state}
     url = paths.get_api_url('assets', asset_id)
-    headers = utils.get_headers()
     try:
-        rerequests.patch(url, json=upload_data, headers=headers)
+        rerequests.patch(url, json=upload_data)
     except requests.exceptions.RequestException as e:
         print(e)
         return {'CANCELLED'}

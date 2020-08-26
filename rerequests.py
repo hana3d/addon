@@ -38,6 +38,8 @@ def rerequest(method, url, **kwargs):
         immediate = kwargs['immediate']
         kwargs.pop('immediate')
     # first normal attempt
+    if 'headers' not in kwargs:
+        kwargs['headers'] = utils.get_headers()
     response = requests.request(method, url, **kwargs)
 
     utils.p(url)
@@ -83,6 +85,11 @@ def rerequest(method, url, **kwargs):
                         utils.p('reresult', response.status_code)
                         if response.status_code >= 400:
                             utils.p('reresult', response.text)
+    return response
+
+
+def delete(url, **kwargs):
+    response = rerequest('delete', url, **kwargs)
     return response
 
 
