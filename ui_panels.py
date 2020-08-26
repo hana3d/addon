@@ -447,7 +447,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         box = layout.box()
         box.label(text='Render Parameters', icon='PREFERENCES')
         if asset_props is not None:
-            box.prop(asset_props, 'render_job_name')
+            box.prop(asset_props, 'render_job_name', text='Name')
         box.prop(render_props, 'engine')
         row = box.row()
         row.label(text="Resolution X")
