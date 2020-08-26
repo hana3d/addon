@@ -16,19 +16,17 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
-    paths = reload(paths)
-    utils = reload(utils)
-    ui = reload(ui)
     hana3d_oauth = reload(hana3d_oauth)
-    tasks_queue = reload(tasks_queue)
+    paths = reload(paths)
     rerequests = reload(rerequests)
-    render_ops = reload(render_ops)
+    tasks_queue = reload(tasks_queue)
+    ui = reload(ui)
+    utils = reload(utils)
 else:
-    from hana3d import paths, utils, ui, hana3d_oauth, tasks_queue, rerequests
+    from hana3d import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
 
 import json
 import os
@@ -877,43 +875,6 @@ def search(get_next=False, author_id=''):
     props.report = 'hana3d searching....'
 
 
-def search_update(self, context):
-    utils.p('search updater')
-    # if self.search_keywords != '':
-    ui_props = bpy.context.scene.Hana3DUI
-    if ui_props.down_up != 'SEARCH':
-        ui_props.down_up = 'SEARCH'
-
-    # here we tweak the input if it comes form the clipboard.
-    # we need to get rid of asset type and set it to
-    sprops = utils.get_search_props()
-    instr = 'view_id:'
-    atstr = 'asset_type:'
-    kwds = sprops.search_keywords
-    idi = kwds.find(instr)
-    ati = kwds.find(atstr)
-    # if the asset type already isn't there it means this update function
-    # was triggered by it's last iteration and needs to cancel
-    if idi > -1 and ati == -1:
-        return
-    if ati > -1:
-        at = kwds[ati:].lower()
-        # uncertain length of the remaining string
-        # find as better method to check the presence of asset type
-        if at.find('model') > -1:
-            ui_props.asset_type = 'MODEL'
-        elif at.find('material') > -1:
-            ui_props.asset_type = 'MATERIAL'
-        # now we trim the input copypaste by anything extra that is there,
-        # this is also a way for this function to recognize that it already has parsed the clipboard
-        # the search props can have changed and this needs to transfer the data to the other field
-        # this complex behaviour is here for the case where
-        # the user needs to paste manually into blender?
-        sprops = utils.get_search_props()
-        sprops.search_keywords = kwds[:ati].rstrip()
-    search()
-
-
 class SearchOperator(Operator):
     """Tooltip"""
 
@@ -966,19 +927,19 @@ class SearchOperator(Operator):
 classes = [SearchOperator]
 
 
-def register_search():
+def register():
     bpy.app.handlers.load_post.append(scene_load)
 
-    for c in classes:
-        bpy.utils.register_class(c)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
     bpy.app.timers.register(timer_update)
 
 
-def unregister_search():
+def unregister():
     bpy.app.handlers.load_post.remove(scene_load)
 
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
     if bpy.app.timers.is_registered(timer_update):
         bpy.app.timers.unregister(timer_update)

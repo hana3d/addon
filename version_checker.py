@@ -16,8 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "requests" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
     paths = reload(paths)

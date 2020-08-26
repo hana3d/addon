@@ -16,18 +16,18 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
-    tasks_queue = reload(tasks_queue)
-    utils = reload(utils)
-    paths = reload(paths)
-    search = reload(search)
     colors = reload(colors)
     oauth = reload(oauth)
+    paths = reload(paths)
+    search = reload(search)
+    tasks_queue = reload(tasks_queue)
     ui = reload(ui)
+    utils = reload(utils)
 else:
-    from hana3d import tasks_queue, utils, paths, search, colors, oauth, ui
+    from hana3d import colors, oauth, paths, search, tasks_queue, ui, utils
 
 import threading
 import time
@@ -194,7 +194,7 @@ class CancelLoginOnline(bpy.types.Operator):
         return {'FINISHED'}
 
 
-classess = (
+classes = (
     RegisterLoginOnline,
     CancelLoginOnline,
     Logout,
@@ -202,10 +202,10 @@ classess = (
 
 
 def register():
-    for c in classess:
-        bpy.utils.register_class(c)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 
 def unregister():
-    for c in classess:
-        bpy.utils.unregister_class(c)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
