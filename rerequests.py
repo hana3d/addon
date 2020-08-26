@@ -38,8 +38,6 @@ def rerequest(method, url, **kwargs):
         immediate = kwargs['immediate']
         kwargs.pop('immediate')
     # first normal attempt
-    if 'headers' not in kwargs:
-        kwargs['headers'] = utils.get_headers()
     response = requests.request(method, url, **kwargs)
 
     utils.p(url)

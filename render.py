@@ -359,9 +359,9 @@ class RemoveRender(Operator):
         props = utils.get_upload_props()
         id_job = props.render_job_output
 
-        url = paths.get_api_url('render', id_job)
-        response = rerequests.delete(url)
-        assert response.ok, f'Error deleting render using DELETE on {url}'
+        url = paths.get_api_url('renders', id_job)
+        response = rerequests.delete(url, headers=utils.get_headers())
+        assert response.ok, f'Error deleting render using DELETE on {url}: {response.text}'
 
         name = [j['job_name'] for j in props.render_data['jobs'] if j['id'] == id_job][0]
         ui.add_report(f'Deleted render {name}')
