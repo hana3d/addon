@@ -31,6 +31,7 @@ bl_info = {
 if "bpy" in locals():
     from importlib import reload
 
+    append_link = reload(append_link)
     asset_inspector = reload(asset_inspector)
     search = reload(search)
     download = reload(download)
@@ -48,6 +49,7 @@ if "bpy" in locals():
     render_ops = reload(render_ops)
 else:
     from hana3d import (
+        append_link,
         asset_inspector,
         search,
         download,
@@ -942,6 +944,11 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
         description="import render settings to current scene",
         default=True,
     )
+    import_compositing: BoolProperty(
+        name='Import Compositing',
+        description="import compositing to current scene",
+        default=True,
+    )
 
 
 @addon_updater_ops.make_annotations
@@ -1183,6 +1190,7 @@ def register():
     hana3d_oauth.register()
     tasks_queue.register()
     render_ops.register()
+    append_link.register()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
 
@@ -1206,6 +1214,7 @@ def unregister():
     hana3d_oauth.unregister()
     tasks_queue.unregister()
     render_ops.unregister()
+    append_link.unregister()
 
     del bpy.types.Scene.hana3d_models
     del bpy.types.Scene.hana3d_scene

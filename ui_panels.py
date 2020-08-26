@@ -177,6 +177,7 @@ def draw_panel_common_search(layout, context):
         if props.merge_add == 'MERGE':
             layout.prop(props, 'import_world')
             layout.prop(props, 'import_render')
+            layout.prop(props, 'import_compositing')
 
 
 def draw_assetbar_show_hide(layout, props):

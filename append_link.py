@@ -88,9 +88,62 @@ def copy_curves(from_scene: bpy.types.Scene, to_scene: bpy.types.Scene):
     to_scene.view_settings.curve_mapping.update()
 
 
+def copy_attributes(attributes, old_prop, new_prop):
+    """copies the list of attributes from the old to the new prop if the attribute exists"""
+
+    for attr in attributes:
+        if hasattr(new_prop, attr):
+            setattr(new_prop, attr, getattr(old_prop, attr))
+
+
+def get_node_attributes(node):
+    """returns a list of all propertie identifiers if they shoulnd't be ignored"""
+
+    ignore_attributes = ("rna_type", "type", "dimensions", "inputs",
+                         "outputs", "internal_links", "select")
+
+    attributes = []
+    for attr in node.bl_rna.properties:
+        if attr.identifier not in ignore_attributes and not attr.identifier.split("_")[0] == "bl":
+            attributes.append(attr.identifier)
+
+    return attributes
+
+
+def copy_nodes(nodes, group):
+    """copies all nodes from the given list into the group with their attributes"""
+
+    input_attributes = ("default_value", "name")
+    output_attributes = ("default_value", "name")
+
+    for node in nodes:
+        new_node = group.nodes.new(node.bl_idname)
+        node_attributes = get_node_attributes(node)
+        copy_attributes(node_attributes, node, new_node)
+
+        for i, inp in enumerate(node.inputs):
+            copy_attributes(input_attributes, inp, new_node.inputs[i])
+
+        for i, out in enumerate(node.outputs):
+            copy_attributes(output_attributes, out, new_node.outputs[i])
+
+
+def copy_links(context, nodes, group):
+    """copies all links between the nodes in the list to the nodes in the group"""
+
+    for node in nodes:
+        new_node = group.nodes[node.name]
+
+        for i, inp in enumerate(node.inputs):
+            for link in inp.links:
+                connected_node = group.nodes[link.from_node.name]
+                group.links.new(connected_node.outputs[link.from_socket.name], new_node.inputs[i])
+
+
 def append_scene(file_name, scenename=None, link=False, fake_user=False):
     '''append a scene type asset'''
-    scene = bpy.context.scene
+    context = bpy.context
+    scene = context.scene
     props = scene.hana3d_scene
 
     if props.merge_add == 'MERGE' and scenename is None:
@@ -113,11 +166,19 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
             if scene.view_settings.use_curve_mapping:
                 copy_curves(imported_scene, scene)
 
-        if imported_scene.node_tree is not None:
-            print(imported_scene.node_tree)
+        if props.import_compositing:
+            scene.use_nodes = True
 
-        imported_scene.user_clear()
-        bpy.data.scenes.remove(imported_scene, do_unlink=False)
+            for node in scene.node_tree.nodes:
+                scene.node_tree.nodes.clear()
+            nodes = imported_scene.node_tree.nodes
+            group = scene.node_tree
+            copy_nodes(nodes, group)
+            copy_links(context, nodes, group)
+
+        window = context.window_manager.windows[0]
+        ctx = {'window': window, 'screen': window.screen, 'scene': imported_scene}
+        bpy.ops.scene.hana3d_delete_scene(ctx)
 
         return scene
 
@@ -227,3 +288,20 @@ def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwar
     utils.selection_set(sel)
 
     return main_object, return_obs
+
+
+class DeleteSceneWorkaround(bpy.types.Operator):
+    bl_idname = "scene.hana3d_delete_scene"
+    bl_label = "Test Operator"
+
+    def execute(self, context):
+        bpy.data.scenes.remove(context.scene, do_unlink=True)
+        return {'FINISHED'}
+
+
+def register():
+    bpy.utils.register_class(DeleteSceneWorkaround)
+
+
+def unregister():
+    bpy.utils.unregister_class(DeleteSceneWorkaround)
