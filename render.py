@@ -352,10 +352,27 @@ class RemoveRender(Operator):
 
     @classmethod
     def poll(cls, context):
-        return False
+        props = utils.get_upload_props()
+        return props.render_job_output != ''
 
     def execute(self, context):
-        # WIP
+        props = utils.get_upload_props()
+        id_job = props.render_job_output
+
+        url = paths.get_api_url('render', id_job)
+        response = rerequests.delete(url)
+        assert response.ok, f'Error deleting render using DELETE on {url}'
+
+        name = [j['job_name'] for j in props.render_data['jobs'] if j['id'] == id_job][0]
+        ui.add_report(f'Deleted render {name}')
+
+        jobs = [
+            job
+            for job in props.render_data['jobs']
+            if job['id'] != id_job
+        ]
+        props.render_data['jobs'] = jobs
+
         return {'FINISHED'}
 
 
