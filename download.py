@@ -888,9 +888,6 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
                 dx, dy = -dy, dx
             x, y = x + dx, y + dy
         self.object_count += 1
-        print('count: ', self.object_count)
-        print('x: ', x)
-        print('y: ', y)
         return (self.grid_distance * x, self.grid_distance * y, 0)
 
     def execute(self, context):
