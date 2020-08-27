@@ -20,7 +20,6 @@ if 'bpy' in locals():
     from importlib import reload
 
     append_link = reload(append_link)
-    bg_blender = reload(bg_blender)
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)

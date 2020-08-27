@@ -415,6 +415,7 @@ class Hana3DCommonSearchProps(object):
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
+        update=update_libraries_list_search
     )
 
     default_library: StringProperty(
@@ -649,6 +650,7 @@ class Hana3DCommonUploadProps:
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
+        update=update_libraries_list_upload
     )
 
     default_library: StringProperty(
