@@ -162,13 +162,27 @@ def scene_load(context):
 
 def download_single_file(file_path: str, url: str) -> str:
     response = requests.get(url, stream=True)
-    with open(file_path, 'wb') as f:
+
+    # Write to temp file and then rename to avoid reading errors as file is being downloaded
+    tmp_file = file_path + '_tmp'
+    with open(tmp_file, 'wb') as f:
         f.write(response.content)
+    os.rename(tmp_file, file_path)
 
 
-def download_renders(download_dir: str, jobs: List[dict]):
+def download_renders(jobs: List[dict]):
     """Download render files from urls and write local paths to jobs dictionaries"""
-    # TODO: Execute in background threads
+    for job in jobs:
+        if not os.path.exists(job['file_path']):
+            thread = threading.Thread(
+                target=download_single_file,
+                args=(job['file_path'], job['file_url']),
+                daemon=True,
+            )
+            thread.start()
+
+
+def add_file_paths(jobs: List[dict], download_dir: str):
     for job in jobs:
         url = job['file_url']
         filename = paths.extract_filename_from_url(url)
@@ -176,8 +190,13 @@ def download_renders(download_dir: str, jobs: List[dict]):
         file_path = os.path.join(download_dir, filename)
         job['file_path'] = file_path
 
-        if not os.path.exists(file_path):
-            download_single_file(file_path, url)
+
+def get_render_jobs(view_id: str) -> List[dict]:
+    url = paths.get_api_url('renders', query={'view_id': view_id})
+    response = rerequests.get(url, headers=utils.get_headers())
+    assert response.ok, response.text
+
+    return response.json()
 
 
 def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
@@ -302,9 +321,11 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     parent.hana3d.tags = ','.join(asset_data['tags'])
     parent.hana3d.description = asset_data['description']
 
+    jobs = get_render_jobs(asset_data['view_id'])
     download_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
-    download_renders(download_dir, asset_data['render_jobs'])
-    parent.hana3d.render_data['jobs'] = asset_data['render_jobs']
+    add_file_paths(jobs, download_dir)
+    parent.hana3d.render_data['jobs'] = jobs
+    download_renders(jobs)
 
     if hasattr(parent.hana3d, 'custom_props') and 'metadata' in asset_data:
         if 'product_info' in asset_data['metadata']:

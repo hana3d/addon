@@ -29,6 +29,7 @@ else:
     from hana3d import autothumb, paths, render, search, utils
 
 import math
+import os
 from typing import Union
 
 import bpy
@@ -406,6 +407,8 @@ def get_render_job_outputs(self, context):
             job_id = job['id']
             if job_id not in preview_collection:
                 file_path = job['file_path']
+                if not os.path.exists(file_path):
+                    continue
                 preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
             else:
                 preview_img = preview_collection[job_id]
