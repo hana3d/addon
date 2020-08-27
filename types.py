@@ -281,7 +281,7 @@ def update_selected_libraries_search(self, context):
             ids.append(library_info[1]['id'])
         i += 1
 
-    if names != []:
+    if len(names) > 0:
         props.libraries_text = ','.join(names)
     else:
         props.libraries_text = 'Select libraries'
@@ -504,7 +504,7 @@ def update_selected_libraries_upload(self, context):
                     del props.custom_props_info[name]
         i += 1
 
-    if names != []:
+    if len(names) > 0:
         props.libraries_text = ','.join(names)
     else:
         props.libraries_text = 'Select libraries'
