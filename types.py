@@ -1054,6 +1054,11 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
         description="import render settings to current scene",
         default=True,
     )
+    import_compositing: BoolProperty(
+        name='Import Compositing',
+        description="import compositing to current scene",
+        default=True,
+    )
 
 
 Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
