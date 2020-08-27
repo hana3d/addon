@@ -16,13 +16,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
     utils = reload(utils)
 else:
     from hana3d import utils
 
+import os
 import re
 import sys
 import threading
@@ -87,6 +88,33 @@ def threadread(tcom: threadCom):
             print(line, len(line))
 
 
+class upload_in_chunks:
+    def __init__(self, filename, chunksize=2 ** 20, report_name='file'):
+        """Helper class that creates iterable for uploading file in chunks.
+        Must be used only on background processes"""
+        self.filename = filename
+        self.chunksize = chunksize
+        self.totalsize = os.path.getsize(filename)
+        self.readsofar = 0
+        self.report_name = report_name
+
+    def __iter__(self):
+        with open(self.filename, 'rb') as file:
+            while True:
+                data = file.read(self.chunksize)
+                if not data:
+                    sys.stderr.write("\n")
+                    break
+                self.readsofar += len(data)
+                percent = 100 * self.readsofar / self.totalsize
+                progress('uploading %s' % self.report_name, percent)
+                # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
+                yield data
+
+    def __len__(self):
+        return self.totalsize
+
+
 def progress(text, n=None):
     '''function for reporting during the script, works for background operations in the header.'''
     # for i in range(n+1):
@@ -115,12 +143,10 @@ def bg_update():
         return 2
 
     for p in bg_processes:
-        # proc=p[1].proc
         readthread = p[0]
         tcom = p[1]
         if not readthread.is_alive():
             readthread.join()
-            # readthread.
             if tcom.error:
                 exec(f'{tcom.eval_path_computing} = False')
 
@@ -128,10 +154,6 @@ def bg_update():
             if tcom.progress_msg is not None:
                 exec(f'{tcom.eval_path_state} = tcom.progress_msg')
                 tcom.progress_msg = None
-
-            if tcom.eval_path_output is not None and tcom.output_msg is not None:
-                exec(f'{tcom.eval_path_output} = tcom.output_msg')
-                tcom.output_msg = None
 
             if 'finished successfully' in tcom.lasttext:
                 bg_processes.remove(p)
@@ -244,8 +266,6 @@ def add_bg_process(
     readthread.start()
 
     bg_processes.append([readthread, tcom])
-    # if not bpy.app.timers.is_registered(bg_update):
-    #     bpy.app.timers.register(bg_update, persistent=True)
 
 
 def register():
@@ -254,6 +274,6 @@ def register():
 
 
 def unregister():
-    bpy.utils.unregister_class(KillBgProcess)
     if bpy.app.timers.is_registered(bg_update):
         bpy.app.timers.unregister(bg_update)
+    bpy.utils.unregister_class(KillBgProcess)

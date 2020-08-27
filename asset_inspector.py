@@ -16,8 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
     utils = reload(utils)
@@ -111,11 +110,11 @@ class AutoFillTags(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def register_asset_inspector():
+def register():
     bpy.utils.register_class(AutoFillTags)
 
 
-def unregister_asset_inspector():
+def unregister():
     bpy.utils.unregister_class(AutoFillTags)
 
 

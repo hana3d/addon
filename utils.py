@@ -16,15 +16,13 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
-    bg_blender = reload(bg_blender)
     paths = reload(paths)
     version_checker = reload(version_checker)
 else:
-    from hana3d import bg_blender, paths, version_checker
+    from hana3d import paths, version_checker
 
 import json
 import os
@@ -177,8 +175,7 @@ def comma2array(text):
 def get_export_data(
         asset_type: str,
         path_computing: str = 'uploading',
-        path_state: str = 'upload_state',
-        path_output: str = None):
+        path_state: str = 'upload_state'):
     export_data = {
         "type": asset_type,
     }
@@ -263,8 +260,6 @@ def get_export_data(
         'eval_path_state': f'{eval_path}.hana3d.{path_state}',
         'eval_path': eval_path,
     }
-    if path_output is not None:
-        bg_process_params['eval_path_output'] = f'{eval_path}.hana3d.{path_output}'
 
     add_version(upload_data)
 
@@ -315,32 +310,6 @@ def get_export_data(
     export_data['publish_message'] = props.publish_message
 
     return export_data, upload_data, bg_process_params, props
-
-
-class upload_in_chunks:
-    def __init__(self, filename, chunksize=2 ** 20, report_name='file'):
-        """Helper class that creates iterable for uploading file in chunks"""
-        self.filename = filename
-        self.chunksize = chunksize
-        self.totalsize = os.path.getsize(filename)
-        self.readsofar = 0
-        self.report_name = report_name
-
-    def __iter__(self):
-        with open(self.filename, 'rb') as file:
-            while True:
-                data = file.read(self.chunksize)
-                if not data:
-                    sys.stderr.write("\n")
-                    break
-                self.readsofar += len(data)
-                percent = 100 * self.readsofar / self.totalsize
-                bg_blender.progress('uploading %s' % self.report_name, percent)
-                # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
-                yield data
-
-    def __len__(self):
-        return self.totalsize
 
 
 def previmg_name(index, fullsize=False):
@@ -665,6 +634,8 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
 def name_update():
     props = get_upload_props()
+    if props is None:
+        return
     if props.name_old != props.name:
         props.name_changed = True
         props.name_old = props.name

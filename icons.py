@@ -31,7 +31,7 @@ icons_read = {
 }
 
 
-def register_icons():
+def register():
     # Note that preview collections returned by bpy.utils.previews
     # are regular py objects - you can use them to store custom data.
     import bpy.utils.previews
@@ -49,7 +49,7 @@ def register_icons():
     icon_collections["main"] = pcoll
 
 
-def unregister_icons():
+def unregister():
     for pcoll in icon_collections.values():
         bpy.utils.previews.remove(pcoll)
     icon_collections.clear()

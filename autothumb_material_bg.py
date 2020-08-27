@@ -17,14 +17,14 @@
 # ##### END GPL LICENSE BLOCK #####
 
 
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
-    utils = reload(utils)
     append_link = reload(append_link)
     bg_blender = reload(bg_blender)
+    utils = reload(utils)
 else:
-    from hana3d import utils, append_link, bg_blender
+    from hana3d import append_link, bg_blender, utils
 
 import json
 import sys

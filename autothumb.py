@@ -16,15 +16,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
+    bg_blender = reload(bg_blender)
     paths = reload(paths)
     utils = reload(utils)
-    bg_blender = reload(bg_blender)
 else:
-    from hana3d import paths, utils, bg_blender
+    from hana3d import bg_blender, paths, utils
 
 import json
 import os
@@ -457,13 +456,18 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
 
-def register_thumbnailer():
-    bpy.utils.register_class(GenerateThumbnailOperator)
-    bpy.utils.register_class(GenerateMaterialThumbnailOperator)
-    bpy.utils.register_class(GenerateSceneThumbnailOperator)
+classes = (
+    GenerateThumbnailOperator,
+    GenerateMaterialThumbnailOperator,
+    GenerateSceneThumbnailOperator,
+)
 
 
-def unregister_thumbnailer():
-    bpy.utils.unregister_class(GenerateThumbnailOperator)
-    bpy.utils.unregister_class(GenerateMaterialThumbnailOperator)
-    bpy.utils.unregister_class(GenerateSceneThumbnailOperator)
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
+
+def unregister():
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

@@ -16,25 +16,17 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
-    paths = reload(paths)
-    utils = reload(utils)
-    bg_blender = reload(bg_blender)
     autothumb = reload(autothumb)
-    ui = reload(ui)
+    bg_blender = reload(bg_blender)
+    paths = reload(paths)
     rerequests = reload(rerequests)
+    ui = reload(ui)
+    utils = reload(utils)
 else:
-    from hana3d import (
-        paths,
-        utils,
-        bg_blender,
-        autothumb,
-        ui,
-        rerequests,
-    )
+    from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
 
 import json
 import os
@@ -46,11 +38,7 @@ import uuid
 
 import bpy
 import requests
-from bpy.props import (
-    BoolProperty,
-    EnumProperty,
-    StringProperty
-)
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import Operator
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
@@ -159,6 +147,8 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
 
     # do this for fixing long tags in some upload cases
     props.tags = props.tags[:]
+    if 'jobs' not in props.render_data:
+        props.render_data['jobs'] = []
 
     props.name = props.name.strip()
     # TODO  move this to separate function
@@ -438,11 +428,17 @@ class AssetVerificationStatusChange(Operator):
             return wm.invoke_props_dialog(self)
 
 
-def register_upload():
-    bpy.utils.register_class(UploadOperator)
-    bpy.utils.register_class(AssetVerificationStatusChange)
+classes = (
+    UploadOperator,
+    AssetVerificationStatusChange,
+)
 
 
-def unregister_upload():
-    bpy.utils.unregister_class(UploadOperator)
-    bpy.utils.unregister_class(AssetVerificationStatusChange)
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
+
+def unregister():
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
