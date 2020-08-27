@@ -16,17 +16,16 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
-    paths = reload(paths)
     append_link = reload(append_link)
     bg_blender = reload(bg_blender)
-    utils = reload(utils)
+    paths = reload(paths)
     rerequests = reload(rerequests)
+    utils = reload(utils)
 else:
-    from hana3d import paths, append_link, bg_blender, utils, rerequests
+    from hana3d import append_link, bg_blender, paths, rerequests, utils
 
 import json
 import logging
@@ -79,7 +78,7 @@ def upload_file(upload_data, f, correlation_id):
             try:
                 upload_response = requests.put(
                     upload['s3UploadUrl'],
-                    data=utils.upload_in_chunks(f['file_path'], chunk_size, f['type']),
+                    data=bg_blender.upload_in_chunks(f['file_path'], chunk_size, f['type']),
                     stream=True,
                 )
 

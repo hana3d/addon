@@ -16,19 +16,28 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+if 'bpy' in locals():
+    from importlib import reload
 
-if "bpy" in locals():
-    import importlib
-
-    paths = importlib.reload(paths)
-    utils = importlib.reload(utils)
-    search = importlib.reload(search)
-    ui_bgl = importlib.reload(ui_bgl)
-    download = importlib.reload(download)
-    bg_blender = importlib.reload(bg_blender)
-    colors = importlib.reload(colors)
+    bg_blender = reload(bg_blender)
+    colors = reload(colors)
+    download = reload(download)
+    paths = reload(paths)
+    render = reload(render)
+    search = reload(search)
+    ui_bgl = reload(ui_bgl)
+    utils = reload(utils)
 else:
-    from hana3d import paths, utils, search, ui_bgl, download, bg_blender, colors
+    from hana3d import (
+        bg_blender,
+        colors,
+        download,
+        paths,
+        render,
+        search,
+        ui_bgl,
+        utils
+    )
 
 import math
 import os
@@ -578,6 +587,15 @@ def draw_callback_2d_progress(self, context):
         tcom = process[1]
         draw_progress(x, y - index * 30, '%s' % tcom.lasttext, tcom.progress)
         index += 1
+    for thread in render.render_threads:
+        if thread.uploading:
+            text = thread.props.render_state
+            draw_progress(x, y - index * 30, text, int(thread.upload_progress * 100))
+            index += 1
+        elif thread.job_running:
+            text = thread.props.render_state
+            draw_progress(x, y - index * 30, text, int(thread.job_progress * 100))
+            index += 1
     global reports
     for report in reports:
         report.draw(x, y - index * 30)
@@ -1820,7 +1838,7 @@ class RunAssetBarWithContext(bpy.types.Operator):
         return {'FINISHED'}
 
 
-classess = (
+classes = (
     AssetBarOperator,
     DefaultNamesOperator,
     RunAssetBarWithContext,
@@ -1841,10 +1859,10 @@ def pre_load(context):
     preferences.login_attempt = False
 
 
-def register_ui():
+def register():
     global handler_2d, handler_3d
 
-    for c in classess:
+    for c in classes:
         bpy.utils.register_class(c)
 
     args = (None, bpy.context)
@@ -1890,14 +1908,14 @@ def register_ui():
     addon_keymapitems.append(kmi)
 
 
-def unregister_ui():
+def unregister():
     global handler_2d, handler_3d
     pre_load(bpy.context)
 
     bpy.types.SpaceView3D.draw_handler_remove(handler_2d, 'WINDOW')
     bpy.types.SpaceView3D.draw_handler_remove(handler_3d, 'WINDOW')
 
-    for c in classess:
+    for c in classes:
         bpy.utils.unregister_class(c)
 
     wm = bpy.context.window_manager

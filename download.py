@@ -16,17 +16,18 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if "bpy" in locals():
+if 'bpy' in locals():
     from importlib import reload
 
-    paths = reload(paths)
     append_link = reload(append_link)
-    utils = reload(utils)
-    ui = reload(ui)
+    bg_blender = reload(bg_blender)
     colors = reload(colors)
+    paths = reload(paths)
     rerequests = reload(rerequests)
+    ui = reload(ui)
+    utils = reload(utils)
 else:
-    from hana3d import paths, append_link, utils, ui, colors, rerequests
+    from hana3d import append_link, colors, paths, rerequests, ui, utils
 
 import copy
 import os
@@ -46,7 +47,6 @@ from bpy.props import (
     IntProperty,
     StringProperty
 )
-
 download_threads = []
 
 
@@ -161,7 +161,7 @@ def scene_load(context):
     # print('missing check', time.time() - t)
 
 
-def download_single_file(file_path: str, url) -> str:
+def download_single_file(file_path: str, url: str) -> str:
     response = requests.get(url, stream=True)
     with open(file_path, 'wb') as f:
         f.write(response.content)
@@ -917,20 +917,29 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def register_download():
-    bpy.utils.register_class(Hana3DDownloadOperator)
-    bpy.utils.register_class(Hana3DBatchDownloadOperator)
-    bpy.utils.register_class(Hana3DKillDownloadOperator)
+classes = (
+    Hana3DDownloadOperator,
+    Hana3DBatchDownloadOperator,
+    Hana3DKillDownloadOperator
+)
+
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
     bpy.app.handlers.load_post.append(scene_load)
     bpy.app.handlers.save_pre.append(scene_save)
+
     bpy.app.timers.register(timer_update)
 
 
-def unregister_download():
-    bpy.utils.unregister_class(Hana3DKillDownloadOperator)
-    bpy.utils.unregister_class(Hana3DBatchDownloadOperator)
-    bpy.utils.unregister_class(Hana3DDownloadOperator)
-    bpy.app.handlers.load_post.remove(scene_load)
-    bpy.app.handlers.save_pre.remove(scene_save)
+def unregister():
     if bpy.app.timers.is_registered(timer_update):
         bpy.app.timers.unregister(timer_update)
+
+    bpy.app.handlers.save_pre.remove(scene_save)
+    bpy.app.handlers.load_post.remove(scene_load)
+
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
