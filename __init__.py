@@ -297,7 +297,6 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 modules = (
     types,
-    custom_props,
     search,
     asset_inspector,
     download,

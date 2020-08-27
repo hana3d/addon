@@ -555,7 +555,7 @@ If no library is selected the view will be assigned to the default library."""
         return wm.invoke_popup(self)
 
 
-classess = (
+classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
