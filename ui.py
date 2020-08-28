@@ -1737,7 +1737,6 @@ class DefaultNamesOperator(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
-        print('TEST000')
         if context.area.type != 'VIEW_3D':
             self.report({'WARNING'}, "View3D not found, cannot run operator")
             return {'CANCELLED'}
