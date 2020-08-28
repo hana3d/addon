@@ -714,10 +714,6 @@ class Hana3DCommonUploadProps:
         default=""
     )
 
-    client: StringProperty(name="Client")
-
-    sku: StringProperty(name="SKU")
-
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     automap: BoolProperty(
