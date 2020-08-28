@@ -181,6 +181,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self.log('Job finished successfully')
         finally:
             self.props.rendering = False
+            time.sleep(5)
+            self.props.render_state = ''
 
     def _create_render_view(self) -> Tuple[str, str]:
         url = paths.get_api_url('uploads')
@@ -501,6 +503,8 @@ class UploadThread(UploadFileMixin, threading.Thread):
             self.log('Uploaded render image')
         finally:
             self.props.uploading_render = False
+            time.sleep(5)
+            self.props.upload_render_state = ''
 
         return {'FINISHED'}
 
