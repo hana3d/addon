@@ -323,14 +323,15 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                     library_prop = True  # noqa:F841
                     break
 
-            for key, value in library['metadata']:
-                name = f'{library["name"]} {library_info[1]["metadata"]["view_props"][key]}'
-                parent.hana3d.custom_props_info[name] = {
-                    'key': key,
-                    'library_name': library["name"],
-                    'library_id': library['library_id']
-                }
-                parent.hana3d.custom_props[name] = value
+                if 'metadata' in library and library['metadata'] is not None:
+                    for view_prop in library['metadata']['view_props']:
+                        name = f'{library["name"]} {library_info[1]["metadata"]["view_props"][key]}'
+                        parent.hana3d.custom_props_info[name] = {
+                            'key': view_prop['key'],
+                            'library_name': library["name"],
+                            'library_id': library['library_id']
+                        }
+                        parent.hana3d.custom_props[name] = view_prop['value']
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 
