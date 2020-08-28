@@ -55,16 +55,22 @@ def threads_timer():
     if len(render_threads) == 0:
         return 10
 
-    for thread_list in [render_threads, upload_threads]:
-        for thread in copy(thread_list):
-            if thread.is_alive():
-                continue
-            if not thread.finished:
-                # Implement retry logic here
-                pass
-            if hasattr(thread, 'tempdir'):
-                shutil.rmtree(thread.tempdir, ignore_errors=True)
-            render_threads.remove(thread)
+    for thread in copy(render_threads):
+        if thread.is_alive():
+            continue
+        if not thread.finished:
+            # Implement retry logic here
+            pass
+        shutil.rmtree(thread.tempdir, ignore_errors=True)
+        render_threads.remove(thread)
+
+    for thread_list in copy(upload_threads):
+        if thread.is_alive():
+            continue
+        if not thread.finished:
+            # Implement retry logic here
+            pass
+        upload_threads.remove(thread)
 
     return 2
 
