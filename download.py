@@ -306,21 +306,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     download_renders(download_dir, asset_data['render_jobs'])
     parent.hana3d.render_data['jobs'] = asset_data['render_jobs']
 
-    if hasattr(parent.hana3d, 'custom_props') and 'metadata' in asset_data:
-        if 'product_info' in asset_data['metadata']:
-            product_info = asset_data['metadata'].pop('product_info')
-            clients = []
-            skus = []
-            for client_sku in product_info:
-                clients.append(client_sku['client'])
-                skus.append(client_sku['sku'])
-            if hasattr(parent.hana3d, 'client') and hasattr(parent.hana3d, 'sku'):
-                parent.hana3d.client = ','.join(clients)
-                parent.hana3d.sku = ','.join(skus)
-            else:
-                parent.hana3d.custom_props['client'] = ','.join(clients)
-                parent.hana3d.custom_props['sku'] = ','.join(skus)
-
     if 'libraries' in asset_data:
         ui_props = bpy.context.scene.Hana3DUI
         if ui_props.asset_type == 'MODEL':

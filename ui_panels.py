@@ -104,9 +104,6 @@ def draw_panel_common_upload(layout, context):
     layout.prop(props, 'description')
     layout.prop(props, 'publish_message')
     layout.prop(props, 'tags')
-    if asset_type == 'MODEL':
-        layout.prop(props, 'client')
-        layout.prop(props, 'sku')
     layout.prop(props, 'is_public')
 
     col = layout.column()

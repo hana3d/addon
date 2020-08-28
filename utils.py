@@ -274,11 +274,6 @@ def get_export_data(
         upload_data['workspace'] = props.workspace
 
     metadata = {}
-    list_clients = getattr(props, 'client', '').split(',')
-    list_skus = getattr(props, 'sku', '').split(',')
-    product_info = [{'client': client, 'sku': sku} for client, sku in zip(list_clients, list_skus)]
-    if len(product_info) > 0:
-        metadata['product_info'] = product_info
     if hasattr(props, 'custom_props'):
         metadata.update(props.custom_props)
     if metadata:

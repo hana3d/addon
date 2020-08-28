@@ -867,10 +867,7 @@ def search(get_next=False, author_id=''):
     if props.workspace != '' and not props.public_only:
         query['workspace'] = props.workspace
 
-    if props.libraries == '':
-        query['libraries'] = props.default_library
-    else:
-        query['libraries'] = props.libraries
+    query['libraries'] = props.libraries
 
     props.is_searching = True
 

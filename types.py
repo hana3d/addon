@@ -306,17 +306,14 @@ def update_libraries_list_search(self, context):
         if current_workspace == workspace['id']:
             i = 0
             for library in workspace['libraries']:
-                if library['is_default'] == 1:
-                    props.default_library = library['id']
-                else:
-                    exec(f'hana3d_class.library_{i}=BoolProperty('
-                         'name=library["name"],'
-                         'default=True,'
-                         'update=update_selected_libraries_search)')
-                    library_info = getattr(hana3d_class, f'library_{i}')
-                    library_info[1]["id"] = library["id"]
-                    library_info[1]["metadata"] = library["metadata"]
-                    i += 1
+                exec(f'hana3d_class.library_{i}=BoolProperty('
+                     'name=library["name"],'
+                     'default=False,'
+                     'update=update_selected_libraries_search)')
+                library_info = getattr(hana3d_class, f'library_{i}')
+                library_info[1]["id"] = library["id"]
+                library_info[1]["metadata"] = library["metadata"]
+                i += 1
     update_selected_libraries_search(self, context)
 
 
@@ -713,10 +710,6 @@ class Hana3DCommonUploadProps:
         description="Name of render job",
         default=""
     )
-
-    client: StringProperty(name="Client")
-
-    sku: StringProperty(name="SKU")
 
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
