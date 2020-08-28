@@ -434,12 +434,13 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
             row.label(text='Upload asset first')
             return
 
+        self.draw_main_panel(render_props, asset_props)
+        self.layout.separator()
+
         self.layout.prop(render_props, 'render_ui_mode', expand=True, icon_only=False)
         self.layout.separator()
 
-        if render_props.render_ui_mode == 'IMPORT':
-            self.draw_import_panel(render_props, asset_props)
-        elif render_props.render_ui_mode == 'GENERATE':
+        if render_props.render_ui_mode == 'GENERATE':
             self.draw_generate_panel(context, render_props, asset_props)
         elif render_props.render_ui_mode == 'UPLOAD':
             self.draw_upload_panel(asset_props)
@@ -454,7 +455,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         row = self.layout.row()
         row.prop(render_props, 'asset', text='Asset', icon=icon)
 
-    def draw_import_panel(self, render_props, asset_props):
+    def draw_main_panel(self, render_props, asset_props):
         if 'jobs' not in asset_props.render_data or len(asset_props.render_data['jobs']) == 0:
             row = self.layout.row()
             row.label(text='This asset has no saved renders in Hana3D')
@@ -526,15 +527,6 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         row = box.row()
         row.prop(asset_props, 'active_image', text='')
         row.operator('hana3d.open_image', text='', icon='FILEBROWSER')
-
-        row = box.row()
-        row.template_icon_view(
-            asset_props,
-            'active_image',
-            show_labels=True,
-            scale=10,
-            scale_popup=6,
-        )
 
         row = box.row()
         row.prop(asset_props, 'render_job_name', text='Name')

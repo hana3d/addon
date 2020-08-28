@@ -81,8 +81,6 @@ def switch_search_results(self, context):
         s['search results'] = s.get('hana3d hdr search')
         s['search results orig'] = s.get('hana3d hdr search orig')
     search.load_previews()
-    if self.asset_type in ('MODEL', 'SCENE'):
-        self.asset_type_render = self.asset_type
 
 
 def switch_active_asset_type(self, context):
@@ -246,9 +244,8 @@ class Hana3DRenderProps(PropertyGroup):
     render_ui_mode: EnumProperty(
         name='Render UI mode',
         items=(
-            ('IMPORT', 'Import', 'Dowload render to computer', 'IMPORT', 0),
-            ('GENERATE', 'Generate', 'Generate new render', 'SCENE', 1),
-            ('UPLOAD', 'Upload', 'Upload render from computer', 'EXPORT', 2),
+            ('GENERATE', 'Generate', 'Generate new render', 'SCENE', 0),
+            ('UPLOAD', 'Upload', 'Upload render from computer', 'EXPORT', 1),
         ),
     )
     balance: StringProperty(
