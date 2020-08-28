@@ -329,7 +329,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                         parent.hana3d.custom_props_info[name] = {
                             'key': view_prop['key'],
                             'library_name': library["name"],
-                            'library_id': library['library_id']
+                            'library_id': library['id_library']
                         }
                         parent.hana3d.custom_props[name] = view_prop['value']
 
@@ -879,6 +879,8 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     def execute(self, context):
         self.object_count = 0
         scene = context.scene
+        if 'search results' not in scene:
+            return {'CANCELLED'}
         sr = scene['search results']
 
         print('len: ', len(sr))

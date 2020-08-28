@@ -1712,6 +1712,8 @@ class DefaultNamesOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         props = asset.hana3d
+        print(props.workspace)
+        print(props.workspace == '')
         if ui_props.down_up == 'UPLOAD':
             if props.workspace != '' and props.default_library == '':
                 props.workspace = props.workspace
