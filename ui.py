@@ -45,6 +45,7 @@ import time
 
 import bpy
 import mathutils
+from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
@@ -1694,16 +1695,6 @@ class DefaultNamesOperator(bpy.types.Operator):
         for w in context.window_manager.windows:
             areas.extend(w.screen.areas)
 
-        if (
-            self.area not in areas
-            or self.area.type != 'VIEW_3D'
-            or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
-        ):
-            return {'CANCELLED'}
-
-        if ui_props.turn_off:
-            return {'CANCELLED'}
-
         if context.region != self.region:
             # print(time.time(), 'pass through because of region')
             # print(context.region.type, self.region.type)
@@ -1746,6 +1737,7 @@ class DefaultNamesOperator(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
+        print('TEST000')
         if context.area.type != 'VIEW_3D':
             self.report({'WARNING'}, "View3D not found, cannot run operator")
             return {'CANCELLED'}
@@ -1834,7 +1826,6 @@ class RunAssetBarWithContext(bpy.types.Operator):
             keep_running=True,
             do_search=False
         )
-        bpy.ops.view3d.hana3d_default_name(C_dict, 'INVOKE_REGION_WIN')
         return {'FINISHED'}
 
 
@@ -1848,6 +1839,17 @@ classes = (
 
 # store keymap items here to access after registration
 addon_keymapitems = []
+
+
+@persistent
+def default_name_handler(dummy):
+    C_dict = bpy.context.copy()
+    C_dict.update(region='WINDOW')
+    if bpy.context.area is None or bpy.context.area.type != 'VIEW_3D':
+        w, a, r = get_largest_3dview()
+        override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
+        C_dict.update(override)
+    bpy.ops.view3d.hana3d_default_name(C_dict, 'INVOKE_REGION_WIN')
 
 
 # @persistent
@@ -1907,10 +1909,14 @@ def register():
     )
     addon_keymapitems.append(kmi)
 
+    bpy.app.handlers.load_post.append(default_name_handler)
+
 
 def unregister():
     global handler_2d, handler_3d
     pre_load(bpy.context)
+
+    bpy.app.handlers.load_post.remove(default_name_handler)
 
     bpy.types.SpaceView3D.draw_handler_remove(handler_2d, 'WINDOW')
     bpy.types.SpaceView3D.draw_handler_remove(handler_3d, 'WINDOW')
