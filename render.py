@@ -495,7 +495,6 @@ class UploadThread(UploadFileMixin, threading.Thread):
                 'created': datetime.isoformat(datetime.utcnow()),
                 'job_name': self.props.render_job_name,
                 'file_url': None,
-                'image': img,
                 'file_format': self.file_extension,
             }
 
