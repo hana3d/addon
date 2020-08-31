@@ -167,15 +167,23 @@ class RenderThread(UploadFileMixin, threading.Thread):
 
         self.job_progress = 0.0
         self.job_running = False
+        self.cancelled = False
 
     def run(self):
         self.props.rendering = True
         try:
             render_scene_id, upload_url = self._create_render_view()
+
+            if self.cancelled:
+                return
             self.upload_file(upload_url)
             self._confirm_file_upload(render_scene_id)
+
+            if self.cancelled:
+                return
             job_id = self._create_job(render_scene_id)
             render_nrf_url = self._pool_job(job_id)
+
             if render_nrf_url:
                 job_data = self._post_completed_job(render_scene_id, render_nrf_url)
                 self._import_render(job_data)
@@ -184,7 +192,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             raise e
         else:
             self.finished = True
-            self.log('Job finished successfully')
+            if not self.cancelled:
+                self.log('Job finished successfully')
         finally:
             self.props.rendering = False
             time.sleep(5)
@@ -240,18 +249,24 @@ class RenderThread(UploadFileMixin, threading.Thread):
             job = response.json()
 
             if job['status'] == 'FINISHED':
-                self.log('Job complete')
+                self.log(f'Render job {self.render_job_name} completed')
+                self.job_running = False
+            elif job['status'] == 'CANCELLED' or self.cancelled:
+                # TODO: trigger notrenderfarm job cancellation
+                self.log(f'Render job {self.render_job_name} cancelled')
                 self.job_running = False
             elif job['status'] == 'ERRORED':
-                self.log('Error in job')
+                self.log(f'Error in render job {self.render_job_name}')
                 self.job_running = False
                 raise Exception(f'Error in render job: {job}')
-            else:
+            elif job['status'] == 'IN_PROGRESS':
                 self.job_progress = job['progress']
                 msg = f'Rendering {self.render_job_name}: {job["progress"]:.1%}'
                 self.props.render_state = msg
 
                 time.sleep(pool_time)
+            else:
+                raise Exception(f'Undexpected notrenderfarm job status: {job["status"]}')
         return job.get('output_url', '')
 
     def _post_completed_job(self, render_scene_id: str, render_url: str) -> dict:
@@ -339,6 +354,32 @@ class RenderScene(Operator):
         thread = RenderThread(props, render_props.engine, frame_start, frame_end)
         thread.start()
         render_threads.append(thread)
+
+        return {'FINISHED'}
+
+
+class CancelJob(Operator):
+    """Render Scene online at notrenderfarm.com"""
+
+    bl_idname = "hana3d.cancel_render_job"
+    bl_label = "Render Scene"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    view_id: StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        props = utils.get_upload_props()
+        return props is not None and props.rendering
+
+    def execute(self, context):
+        thread_job, = [
+            thread
+            for thread in render_threads
+            if thread.props.view_id == self.view_id
+        ]
+        thread_job.cancelled = True
+        thread_job.props.rendering = False
 
         return {'FINISHED'}
 
@@ -592,6 +633,7 @@ class UploadImage(Operator):
 
 classes = (
     RenderScene,
+    CancelJob,
     ImportRender,
     RemoveRender,
     OpenImage,

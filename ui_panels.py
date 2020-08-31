@@ -518,8 +518,8 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
     def draw_kill_job(self, asset_props):
         row = self.layout.row(align=True)
         row.label(text=asset_props.render_state)
-        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-        op.process_type = 'RENDER'
+        op = row.operator('hana3d.cancel_render_job', text="", icon='CANCEL')
+        op.view_id = asset_props.view_id
 
     def draw_upload_panel(self, asset_props):
         box = self.layout.box()
