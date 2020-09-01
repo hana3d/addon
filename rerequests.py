@@ -86,6 +86,11 @@ def rerequest(method, url, **kwargs):
     return response
 
 
+def delete(url, **kwargs):
+    response = rerequest('delete', url, **kwargs)
+    return response
+
+
 def get(url, **kwargs):
     response = rerequest('get', url, **kwargs)
     return response

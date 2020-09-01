@@ -519,10 +519,6 @@ def get_dimensions(obs):
     return dim, bbmin, bbmax
 
 
-def requests_post_thread(url, json, headers):
-    rerequests.post(url, json=json, headers=headers)
-
-
 def get_headers(correlation_id: str = None) -> dict:
     headers = {
         'accept': 'application/json',

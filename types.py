@@ -29,6 +29,7 @@ else:
     from hana3d import autothumb, paths, render, search, utils
 
 import math
+import os
 from typing import Union
 
 import bpy
@@ -398,19 +399,23 @@ def get_render_job_outputs(self, context):
         preview_collection.previews = []
 
     n_render_jobs = len(self.render_data['jobs']) if 'jobs' in self.render_data else 0
-    if len(preview_collection.previews) < n_render_jobs:
+    if len(preview_collection.previews) != n_render_jobs:
         # Sort jobs to avoid error when appending newer render jobs
         sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
+        available_previews = []
         for n, job in enumerate(sorted_jobs):
             job_id = job['id']
-            file_path = job['file_path']
-            try:
+            if job_id not in preview_collection:
+                file_path = job['file_path']
+                if not os.path.exists(file_path):
+                    continue
                 preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
-            except KeyError:
-                # Fail case when new render jobs are completed
-                continue
+            else:
+                preview_img = preview_collection[job_id]
+
             enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
-            preview_collection.previews.append(enum_item)
+            available_previews.append(enum_item)
+        preview_collection.previews = available_previews
 
     return preview_collection.previews
 
