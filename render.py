@@ -37,7 +37,7 @@ import uuid
 from collections import defaultdict
 from copy import copy
 from datetime import datetime
-from typing import Tuple
+from typing import List, Tuple
 
 import bpy
 import bpy.utils.previews
@@ -182,11 +182,10 @@ class RenderThread(UploadFileMixin, threading.Thread):
             if self.cancelled:
                 return
             job_id = self._create_job(render_scene_id)
-            render_nrf_url = self._pool_job(job_id)
-
-            if render_nrf_url:
-                job_data = self._post_completed_job(render_scene_id, render_nrf_url)
-                self._import_render(job_data)
+            nrf_output = self._pool_job(job_id)
+            if nrf_output:
+                jobs_data = self._post_completed_job(render_scene_id, nrf_output)
+                self._import_renders(jobs_data)
         except Exception as e:
             self.log(f'Error in render job {self.render_job_name}:{e!r}')
             raise e
@@ -241,7 +240,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         job = response.json()
         return job['id']
 
-    def _pool_job(self, job_id: str, pool_time: int = 5) -> str:
+    def _pool_job(self, job_id: str, pool_time: int = 5) -> List[str]:
         self.job_running = True
         while self.job_running:
             url = paths.get_api_url('render_jobs', job_id)
@@ -267,57 +266,64 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 time.sleep(pool_time)
             else:
                 raise Exception(f'Undexpected notrenderfarm job status: {job["status"]}')
-        return job.get('output_url', '')
+        return job.get('output', [])
 
-    def _post_completed_job(self, render_scene_id: str, render_url: str) -> dict:
+    def _post_completed_job(self, render_scene_id: str, nrf_output: List[str]) -> List[dict]:
         url = paths.get_api_url('uploads')
-        data = {
-            'assetId': self.props.id,
-            'originalFilename': render_url.rpartition('/')[2],
-            'id_parent': render_scene_id,
-            'url': render_url,
-            'metadata': {
-                'render': {
-                    'file_type': 'output',
-                    'job_name': self.render_job_name,
-                    'environment': 'notrenderfarm',
+        jobs_data = []
+        for n, render_url in enumerate(nrf_output):
+            frame = self.frame_start + n
+            data = {
+                'assetId': self.props.id,
+                'originalFilename': render_url.rpartition('/')[2],
+                'id_parent': render_scene_id,
+                'url': render_url,
+                'metadata': {
+                    'render': {
+                        'file_type': 'output',
+                        'job_name': self.render_job_name,
+                        'environment': 'notrenderfarm',
+                        'frame': frame,
+                    }
                 }
             }
-        }
-        response = rerequests.post(url, json=data, headers=self.headers)
-        assert response.ok, response.text
+            response = rerequests.post(url, json=data, headers=self.headers)
+            assert response.ok, response.text
 
-        dict_response = response.json()
-        return {
-            'id': dict_response['id'],
-            'file_url': dict_response['output_url'],
-            'created': datetime.isoformat(datetime.utcnow()),
-            'job_name': self.render_job_name,
-        }
+            dict_response = response.json()
+            job = {
+                'id': dict_response['id'],
+                'file_url': dict_response['output_url'],
+                'created': datetime.isoformat(datetime.utcnow()),
+                'job_name': f'{self.render_job_name}.{frame:03d}',
+            }
+            jobs_data.append(job)
+        return jobs_data
 
-    def _import_render(self, job_data: dict):
-        url = job_data['file_url']
-        filename = paths.extract_filename_from_url(url)
-        download_dir = paths.get_download_dirs(self.props.asset_type)[0]
-        file_path = os.path.join(download_dir, filename)
+    def _import_renders(self, jobs_data: List[dict]):
+        for job in jobs_data:
+            url = job['file_url']
+            filename = paths.extract_filename_from_url(url)
+            download_dir = paths.get_download_dirs(self.props.asset_type)[0]
+            file_path = os.path.join(download_dir, filename)
 
-        response = requests.get(url, stream=True)
-        with open(file_path, 'wb') as f:
-            f.write(response.content)
+            response = requests.get(url, stream=True)
+            with open(file_path, 'wb') as f:
+                f.write(response.content)
 
-        job_data['file_path'] = file_path
-        _, ext = os.path.splitext(filename)
-        job_data['file_format'] = ext[1:] if len(ext) > 0 else ''
+            job['file_path'] = file_path
+            _, ext = os.path.splitext(filename)
+            job['file_format'] = ext[1:] if len(ext) > 0 else ''
 
-        img = bpy.data.images.load(file_path, check_existing=True)
-        img.name = job_data['job_name']
-        job_data['image'] = img
+            img = bpy.data.images.load(file_path, check_existing=True)
+            img.name = job['job_name']
+            job['image'] = img
 
         # Append this way as property type is different depending on length
         if len(self.props.render_data['jobs']) == 0:
-            self.props.render_data['jobs'] = [job_data]
+            self.props.render_data['jobs'] = jobs_data
         else:
-            self.props.render_data['jobs'] += [job_data]
+            self.props.render_data['jobs'] += jobs_data
 
 
 class RenderScene(Operator):
