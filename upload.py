@@ -246,7 +246,6 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
         'temp_dir': tempdir,
         'export_data': export_data,
         'upload_data': upload_data,
-        'debug_value': bpy.app.debug_value,
         'upload_set': upload_set,
         'correlation_id': correlation_id,
     }
