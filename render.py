@@ -248,7 +248,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             job = response.json()
 
             if job['status'] == 'FINISHED':
-                self.log(f'Render job {self.render_job_name} completed')
+                self.log(f'Finishing render job {self.render_job_name}')
                 self.job_running = False
             elif job['status'] == 'CANCELLED' or self.cancelled:
                 # TODO: trigger notrenderfarm job cancellation
