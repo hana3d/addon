@@ -299,6 +299,19 @@ def search_update(self, context):
     search.search()
 
 
+def tags_update(self, context):
+    print('TAGS UPDATE')
+    new_tag = self.tags_selected.add()
+    new_tag.name = self.tags_input
+    new_tag.value = self.tags_input
+    print(self.tags_input)
+
+
+class Hana3DTagItem(PropertyGroup):
+    name: StringProperty(name="Test Property", default="Unknown")
+    value: StringProperty(name="Test Property", default="")
+
+
 class Hana3DCommonSearchProps(object):
     # STATES
     search_keywords: StringProperty(
@@ -359,9 +372,13 @@ class Hana3DCommonSearchProps(object):
         options={'ANIMATABLE'},
     )
 
-    tags_list: CollectionProperty(type=TagItem)
+    tags_list: CollectionProperty(type=Hana3DTagItem)
 
-    tags: StringProperty(name="Tags", description="tags", default="")
+    tags_input: StringProperty(
+        name="Tags", description="Asset Tags", default="", update=tags_update)
+
+    # tags_selected: CollectionProperty(
+    #     type=StringProperty, name="Selected Tags", description="All selected tags")
 
 
 def name_update(self, context):
@@ -540,6 +557,14 @@ class Hana3DCommonUploadProps:
         description="Name of render job",
         default=""
     )
+
+    tags_list: CollectionProperty(type=Hana3DTagItem)
+
+    tags_input: StringProperty(
+        name="Tags", description="Asset Tags", default="", update=tags_update)
+
+    # tags_selected: CollectionProperty(
+    #     type=StringProperty, name="Selected Tags", description="All selected tags")
 
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
@@ -887,16 +912,11 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     )
 
 
-class TagItem(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty(name="Test Property", default="Unknown")
-    value: bpy.props.IntProperty(name="Test Property", default=22)
-
-
 Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
 
 
 classes = (
-    TagItem,
+    Hana3DTagItem,
     Hana3DUIProps,
     Hana3DRenderProps,
     Hana3DModelSearchProps,
@@ -905,7 +925,6 @@ classes = (
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
     Hana3DMaterialSearchProps,
-    TagsSearchOperator,
 )
 
 

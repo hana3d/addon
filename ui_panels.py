@@ -87,45 +87,39 @@ def draw_panel_common_upload(layout, context):
     asset_type = uiprops.asset_type
     props = utils.get_upload_props()
 
-    layout.prop(props, 'workspace', expand=False, text='Workspace')
-    prop_needed(layout, props, 'name', props.name)
-    layout.prop(props, 'description')
-    layout.prop(props, 'publish_message')
-    layout.prop(props, 'tags')
-    if asset_type == 'MODEL':
-        layout.prop(props, 'client')
-        layout.prop(props, 'sku')
-    layout.prop(props, 'is_public')
+    box = layout.box()
+    box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
+    box.prop(props, 'workspace', expand=False, text='Workspace')
 
-    col = layout.column()
+    box = layout.box()
+    box.label(text='Asset Info', icon='MESH_CUBE')
+    prop_needed(box, props, 'name', props.name)
+    col = box.column()
     if props.is_generating_thumbnail:
         col.enabled = False
-    prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
+    row = col.row(align=True)
+    prop_needed(row, props, 'thumbnail', props.has_thumbnail, False)
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
         if asset_type == 'MODEL':
-            col.operator(
-                "object.hana3d_generate_thumbnail",
-                text='Generate thumbnail',
-                icon='IMAGE_DATA'
-            )
+            row.operator('object.hana3d_generate_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'SCENE':
-            col.operator(
-                "object.hana3d_scene_thumbnail",
-                text='Generate thumbnail',
-                icon='IMAGE_DATA'
-            )
+            row.operator('object.hana3d_scene_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'MATERIAL':
-            col.operator(
-                "object.hana3d_material_thumbnail",
-                text='Generate thumbnail',
-                icon='IMAGE_DATA'
-            )
+            row.operator('object.hana3d_material_thumbnail', text='', icon='IMAGE_DATA')
     if props.is_generating_thumbnail:
-        row = layout.row(align=True)
+        row = box.row(align=True)
         row.label(text=props.thumbnail_generating_state)
         op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
         op.process_source = asset_type
         op.process_type = 'THUMBNAILER'
+    box.prop(props, 'description')
+    box.prop(props, 'is_public')
+
+    box = layout.box()
+    box.label(text='Tags', icon='COLOR')
+    box.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
+
+    layout.prop(props, 'publish_message')
 
     if props.upload_state != '':
         label_multiline(layout, text=props.upload_state, width=context.region.width)
@@ -133,20 +127,22 @@ def draw_panel_common_upload(layout, context):
         op = layout.operator('object.kill_bg_process', text="", icon='CANCEL')
         op.process_source = asset_type
         op.process_type = 'UPLOAD'
-        layout = layout.column()
-        layout.enabled = False
+        box = box.column()
+        box.enabled = False
 
+    row = layout.row()
+    row.scale_y = 2.0
     if props.view_id == '':
         optext = 'Upload %s' % asset_type.lower()
-        op = layout.operator("object.hana3d_upload", text=optext, icon='EXPORT')
+        op = row.operator("object.hana3d_upload", text=optext, icon='EXPORT')
         op.asset_type = asset_type
 
     if props.view_id != '':
-        op = layout.operator("object.hana3d_upload", text='Reupload asset', icon='EXPORT')
+        op = row.operator("object.hana3d_upload", text='Reupload asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = True
 
-        op = layout.operator("object.hana3d_upload", text='Upload as new asset', icon='EXPORT')
+        op = row.operator("object.hana3d_upload", text='Upload as new asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = False
 
@@ -165,7 +161,7 @@ def draw_panel_common_search(layout, context):
     layout.prop(props, 'workspace', expand=False, text='Workspace')
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
-    layout.prop_search(props, "tags", props, "tags_list")
+    layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
 
     if asset_type == 'MODEL':
         layout.separator()
