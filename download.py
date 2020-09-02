@@ -417,14 +417,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                 else:
                     done = try_finished_append(asset_data, **tcom.passargs)
                     if not done:
-                        at = asset_data['asset_type']
                         tcom.passargs['retry_counter'] = tcom.passargs.get('retry_counter', 0) + 1
-                        if at in ('model', 'material'):
-                            download(asset_data, **tcom.passargs)
-                        elif asset_data['asset_type'] == 'material':
-                            download(asset_data, **tcom.passargs)
-                        elif asset_data['asset_type'] == 'scene':
-                            download(asset_data, **tcom.passargs)
+                        download(asset_data, **tcom.passargs)
                     if bpy.context.scene['search results'] is not None and done:
                         for sres in bpy.context.scene['search results']:
                             if asset_data['view_id'] == sres['view_id']:
