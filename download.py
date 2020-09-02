@@ -373,7 +373,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             sr = bpy.context.scene.get('search results')
             if sr is not None:
                 for r in sr:
-                    if asset_data['view_id'] == r['view_id']:
+                    if asset_data['view_id'] == r.get('view_id'):
                         r['downloaded'] = tcom.progress
 
         if not t.is_alive():
@@ -417,14 +417,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                 else:
                     done = try_finished_append(asset_data, **tcom.passargs)
                     if not done:
-                        at = asset_data['asset_type']
                         tcom.passargs['retry_counter'] = tcom.passargs.get('retry_counter', 0) + 1
-                        if at in ('model', 'material'):
-                            download(asset_data, **tcom.passargs)
-                        elif asset_data['asset_type'] == 'material':
-                            download(asset_data, **tcom.passargs)
-                        elif asset_data['asset_type'] == 'scene':
-                            download(asset_data, **tcom.passargs)
+                        download(asset_data, **tcom.passargs)
                     if bpy.context.scene['search results'] is not None and done:
                         for sres in bpy.context.scene['search results']:
                             if asset_data['view_id'] == sres['view_id']:
@@ -651,7 +645,7 @@ def check_asset_in_scene(asset_data):
     scene = bpy.context.scene
     au = scene.get('assets used', {})
 
-    id = asset_data['view_id']
+    id = asset_data.get('view_id')
     if id in au.keys():
         ad = au[id]
         if ad.get('file_name') is not None:

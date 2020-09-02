@@ -151,7 +151,6 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
-        bpy.app.debug_value = data.get('debug_value', 0)
         export_data = data['export_data']
         upload_data = data['upload_data']
         correlation_id = data['correlation_id']
