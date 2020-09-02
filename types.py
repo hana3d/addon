@@ -34,6 +34,7 @@ from typing import Union
 import bpy
 from bpy.props import (
     BoolProperty,
+    CollectionProperty,
     EnumProperty,
     FloatProperty,
     FloatVectorProperty,
@@ -357,6 +358,10 @@ class Hana3DCommonSearchProps(object):
         default=None,
         options={'ANIMATABLE'},
     )
+
+    tags_list: CollectionProperty(type=TagItem)
+
+    tags: StringProperty(name="Tags", description="tags", default="")
 
 
 def name_update(self, context):
@@ -882,10 +887,16 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     )
 
 
+class TagItem(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name="Test Property", default="Unknown")
+    value: bpy.props.IntProperty(name="Test Property", default=22)
+
+
 Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
 
 
 classes = (
+    TagItem,
     Hana3DUIProps,
     Hana3DRenderProps,
     Hana3DModelSearchProps,
@@ -894,6 +905,7 @@ classes = (
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
     Hana3DMaterialSearchProps,
+    TagsSearchOperator,
 )
 
 

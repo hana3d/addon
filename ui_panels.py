@@ -165,6 +165,7 @@ def draw_panel_common_search(layout, context):
     layout.prop(props, 'workspace', expand=False, text='Workspace')
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
+    layout.prop_search(props, "tags", props, "tags_list")
 
     if asset_type == 'MODEL':
         layout.separator()
