@@ -210,8 +210,6 @@ class KillBgProcess(bpy.types.Operator):
             props.uploading = False
         if self.process_type == 'THUMBNAILER':
             props.is_generating_thumbnail = False
-        if self.process_type == 'RENDER':
-            props.rendering = False
         global hana3d_bg_process
         # print('killing', self.process_source, self.process_type)
         # then go kill the process. this wasn't working for unsetting props

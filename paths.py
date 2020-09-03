@@ -40,10 +40,10 @@ URL_HANA3D_DEV = os.getenv('URL_HANA3D_DEV', 'https://staging-api.hana3d.com')
 
 
 def get_hana3d_url():
-    if bpy.app.debug_value == 1:
+    if os.getenv('HANA3D_ENV') == 'local':
         return URL_HANA3D_LOCAL
 
-    if bpy.app.debug_value == 2:
+    if os.getenv('HANA3D_ENV') == 'dev':
         return URL_HANA3D_DEV
 
     return URL_HANA3D_MAIN
@@ -72,10 +72,10 @@ def get_auth_url():
 
 
 def get_platform_url():
-    if bpy.app.debug_value == 1:
+    if os.getenv('HANA3D_ENV') == 'local':
         return HANA3D_PLATFORM_URL_LOCAL
 
-    if bpy.app.debug_value == 2:
+    if os.getenv('HANA3D_ENV') == 'dev':
         return HANA3D_PLATFORM_URL_DEV
 
     return HANA3D_PLATFORM_URL_PROD
@@ -86,20 +86,20 @@ def get_auth_landing_url():
 
 
 def get_auth_client_id():
-    if bpy.app.debug_value == 1:
+    if os.getenv('HANA3D_ENV') == 'local':
         return HANA3D_AUTH_CLIENT_ID_DEV
 
-    if bpy.app.debug_value == 2:
+    if os.getenv('HANA3D_ENV') == 'dev':
         return HANA3D_AUTH_CLIENT_ID_DEV
 
     return HANA3D_AUTH_CLIENT_ID_PROD
 
 
 def get_auth_audience():
-    if bpy.app.debug_value == 1:
+    if os.getenv('HANA3D_ENV') == 'local':
         return HANA3D_AUTH_AUDIENCE_DEV
 
-    if bpy.app.debug_value == 2:
+    if os.getenv('HANA3D_ENV') == 'dev':
         return HANA3D_AUTH_AUDIENCE_DEV
 
     return HANA3D_AUTH_AUDIENCE_PROD

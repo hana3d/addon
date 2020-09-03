@@ -597,6 +597,11 @@ def draw_callback_2d_progress(self, context):
             text = thread.props.render_state
             draw_progress(x, y - index * 30, text, int(thread.job_progress * 100))
             index += 1
+    for thread in render.upload_threads:
+        if thread.props.uploading_render:
+            text = thread.props.upload_state
+            draw_progress(x, y - index * 30, text, int(thread.upload_progress * 100))
+            index += 1
     global reports
     for report in reports:
         report.draw(x, y - index * 30)
@@ -1687,22 +1692,12 @@ class DefaultNamesOperator(bpy.types.Operator):
     def modal(self, context, event):
         # This is for case of closing the area or changing type:
         ui_props = context.scene.Hana3DUI
-        areas = []
 
-        if bpy.context.scene != self.scene:
+        if ui_props.turn_off:
             return {'CANCELLED'}
 
-        for w in context.window_manager.windows:
-            areas.extend(w.screen.areas)
-
-        if context.region != self.region:
-            # print(time.time(), 'pass through because of region')
-            # print(context.region.type, self.region.type)
-            return {'PASS_THROUGH'}
-
         draw_event = (
-            (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE') and event.value == 'RELEASE'
-            or event.type == 'ENTER'
+            event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE' or event.type == 'ENTER'
         )
         if not draw_event:
             return {'PASS_THROUGH'}
@@ -1712,6 +1707,7 @@ class DefaultNamesOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         props = asset.hana3d
+
         if ui_props.down_up == 'UPLOAD':
             if props.workspace != '' and props.default_library == '':
                 props.workspace = props.workspace
@@ -1737,24 +1733,7 @@ class DefaultNamesOperator(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
-        if context.area.type != 'VIEW_3D':
-            self.report({'WARNING'}, "View3D not found, cannot run operator")
-            return {'CANCELLED'}
-
-        self.window = context.window
-        self.area = context.area
-        self.scene = bpy.context.scene
-
-        self.has_quad_views = len(bpy.context.area.spaces[0].region_quadviews) > 0
-
-        for r in self.area.regions:
-            if r.type == 'WINDOW':
-                self.region = r
-
         context.window_manager.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
-
-    def execute(self, context):
         return {'RUNNING_MODAL'}
 
 

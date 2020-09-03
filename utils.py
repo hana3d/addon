@@ -405,7 +405,7 @@ def get_thumbnail(name):
 
 def p(text, text1='', text2='', text3='', text4='', text5=''):
     '''debug printing depending on blender's debug value'''
-    if bpy.app.debug_value != 0:
+    if os.getenv('HANA3D_ENV') in ('local', 'dev'):
         print(text, text1, text2, text3, text4, text5)
 
 
@@ -535,10 +535,6 @@ def get_dimensions(obs):
     bbmax = Vector((maxx, maxy, maxz))
     dim = Vector((maxx - minx, maxy - miny, maxz - minz))
     return dim, bbmin, bbmax
-
-
-def requests_post_thread(url, json, headers):
-    rerequests.post(url, json=json, headers=headers)
 
 
 def get_headers(correlation_id: str = None) -> dict:

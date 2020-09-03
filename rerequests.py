@@ -40,7 +40,7 @@ def rerequest(method, url, **kwargs):
     # first normal attempt
     response = requests.request(method, url, **kwargs)
 
-    utils.p(url)
+    utils.p(method.upper(), url)
     utils.p(response.status_code)
 
     if response.status_code == 401:
@@ -83,6 +83,11 @@ def rerequest(method, url, **kwargs):
                         utils.p('reresult', response.status_code)
                         if response.status_code >= 400:
                             utils.p('reresult', response.text)
+    return response
+
+
+def delete(url, **kwargs):
+    response = rerequest('delete', url, **kwargs)
     return response
 
 
