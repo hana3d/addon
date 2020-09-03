@@ -330,17 +330,19 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     if 'libraries' in asset_data:
         hana3d_class = type(parent.hana3d)
         for library in asset_data['libraries']:
-            i = 0
-            while hasattr(hana3d_class, f'library_{i}'):
-                library_info = getattr(hana3d_class, f'library_{i}')
-                if library_info[1]['id'] == library['library_id']:
+            for i in range(parent.hana3d.libraries_count):
+                library_entry = getattr(hana3d_class, f'library_{i}')
+                name = library_entry[1]['name']
+                library_info = parent.hana3d.libraries_info[name]
+
+                if library_info['id'] == library['library_id']:
                     library_prop = getattr(parent.hana3d, f'library_{i}')
                     library_prop = True  # noqa:F841
                     break
 
                 if 'metadata' in library and library['metadata'] is not None:
                     for view_prop in library['metadata']['view_props']:
-                        name = f'{library["name"]} {library_info[1]["metadata"]["view_props"][key]}'
+                        name = f'{library["name"]} {library_info["metadata"]["view_props"][key]}'
                         parent.hana3d.custom_props_info[name] = {
                             'key': view_prop['key'],
                             'library_name': library["name"],

@@ -572,10 +572,8 @@ If no library is selected the view will be assigned to the default library."""
     def draw(self, context):
         props = utils.get_search_props()
         layout = self.layout
-        i = 0
-        while hasattr(props, f'library_{i}'):
+        for i in range(props.libraries_count):
             layout.prop(props, f'library_{i}')
-            i += 1
 
     def execute(self, context):
         return {'INTERFACE'}
@@ -596,10 +594,8 @@ If no library is selected the view will be assigned to the default library."""
     def draw(self, context):
         props = utils.get_upload_props()
         layout = self.layout
-        i = 0
-        while hasattr(props, f'library_{i}'):
+        for i in range(props.libraries_count):
             layout.prop(props, f'library_{i}')
-            i += 1
 
     def execute(self, context):
         return {'INTERFACE'}

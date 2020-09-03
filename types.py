@@ -328,15 +328,15 @@ class Hana3DCommonSearchProps(object):
     def update_selected_libraries_search(self, context):
         names = []
         ids = []
-        i = 0
-        while hasattr(self, f'library_{i}'):
+        for i in range(self.libraries_count):
             current_value = getattr(self, f'library_{i}')
-            library_info = getattr(type(self), f'library_{i}')
+            library_entry = getattr(type(self), f'library_{i}')
+            name = library_entry[1]['name']
+            library_info = self.libraries_info[name]
 
             if current_value is True:
-                names.append(library_info[1]['name'])
-                ids.append(library_info[1]['id'])
-            i += 1
+                names.append(name)
+                ids.append(library_info['id'])
 
         if len(names) > 0:
             self.libraries_text = ','.join(names)
@@ -345,11 +345,9 @@ class Hana3DCommonSearchProps(object):
         self.libraries = ','.join(ids)
 
     def update_libraries_list_search(self, context):
-        hana3d_class = type(self)
-        i = 0
-        while hasattr(hana3d_class, f'library_{i}'):
+        hana3d_class = type(self)   # noqa F841
+        for i in range(self.libraries_count):
             exec(f'del hana3d_class.library_{i}')
-            i += 1
         current_workspace = self.workspace
         for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
             if current_workspace == workspace['id']:
@@ -360,10 +358,13 @@ class Hana3DCommonSearchProps(object):
                         default=False,
                         update=Hana3DCommonSearchProps.update_selected_libraries_search)
                     exec(f'hana3d_class.library_{i}=bool_prop')
-                    library_info = getattr(hana3d_class, f'library_{i}')
-                    library_info[1]["id"] = library["id"]
-                    library_info[1]["metadata"] = library["metadata"]
+                    self.libraries_info[library['name']] = {
+                        'name': library['name'],
+                        'id': library['id'],
+                        'metadata': library['metadata']
+                    }
                     i += 1
+            self.libraries_count = i
         self.update_selected_libraries_search(context)
 
     # STATES
@@ -442,6 +443,16 @@ class Hana3DCommonSearchProps(object):
         name="Libraries",
         description="Libraries that the asset are linked to",
         default="Select libraries"
+    )
+
+    libraries_count: IntProperty(
+        name="Libraries Count",
+        description="Number of libraries",
+        default=0
+    )
+
+    libraries_info: PointerProperty(
+        type=PropertyGroup
     )
 
 
@@ -537,30 +548,30 @@ class Hana3DCommonUploadProps:
     def update_selected_libraries_upload(self, context):
         names = []
         ids = []
-        i = 0
-        while hasattr(self, f'library_{i}'):
+        for i in range(self.libraries_count):
             current_value = getattr(self, f'library_{i}')
-            library_info = getattr(type(self), f'library_{i}')
+            library_entry = getattr(type(self), f'library_{i}')
+            name = library_entry[1]['name']
+            library_info = self.libraries_info[name]
 
             if current_value is True:
-                names.append(library_info[1]['name'])
-                ids.append(library_info[1]['id'])
-                for view_prop in library_info[1]['metadata']['view_props']:
-                    name = f'{library_info[1]["name"]} {view_prop["name"]}'
+                names.append(name)
+                ids.append(library_info['id'])
+                for view_prop in library_info['metadata']['view_props']:
+                    name = f'{name} {view_prop["name"]}'
                     if name not in self.custom_props:
                         self.custom_props_info[name] = {
                             'key': view_prop['slug'],
-                            'library_name': library_info[1]["name"],
-                            'library_id': library_info[1]['id']
+                            'library_name': library_info["name"],
+                            'library_id': library_info['id']
                         }
                         self.custom_props[name] = ''
             else:
-                for view_prop in library_info[1]['metadata']['view_props']:
-                    name = f'{library_info[1]["name"]} {view_prop["name"]}'
+                for view_prop in library_info['metadata']['view_props']:
+                    name = f'{name} {view_prop["name"]}'
                     if name in self.custom_props.keys():
                         del self.custom_props[name]
                         del self.custom_props_info[name]
-            i += 1
 
         if len(names) > 0:
             self.libraries_text = ','.join(names)
@@ -569,11 +580,9 @@ class Hana3DCommonUploadProps:
         self.libraries = ','.join(ids)
 
     def update_libraries_list_upload(self, context):
-        hana3d_class = type(self)
-        i = 0
-        while hasattr(hana3d_class, f'library_{i}'):
+        hana3d_class = type(self)   # noqa F841
+        for i in range(self.libraries_count):
             exec(f'del hana3d_class.library_{i}')
-            i += 1
         current_workspace = self.workspace
         for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
             if current_workspace == workspace['id']:
@@ -587,10 +596,13 @@ class Hana3DCommonUploadProps:
                             default=False,
                             update=Hana3DCommonUploadProps.update_selected_libraries_upload)
                         exec(f'hana3d_class.library_{i}=bool_prop')
-                        library_info = getattr(hana3d_class, f'library_{i}')
-                        library_info[1]["id"] = library["id"]
-                        library_info[1]["metadata"] = library["metadata"]
+                        self.libraries_info[library['name']] = {
+                            'name': library['name'],
+                            'id': library['id'],
+                            'metadata': library['metadata']
+                        }
                         i += 1
+                self.libraries_count = i
 
     id: StringProperty(
         name="Asset Id",
@@ -694,6 +706,16 @@ class Hana3DCommonUploadProps:
         name="Libraries",
         description="Libraries that the asset are linked to",
         default="Select libraries"
+    )
+
+    libraries_count: IntProperty(
+        name="Libraries Count",
+        description="Number of libraries",
+        default=0
+    )
+
+    libraries_info: PointerProperty(
+        type=PropertyGroup
     )
 
     publish_message: StringProperty(
