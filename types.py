@@ -287,62 +287,6 @@ def workspace_items(self, context):
     return ()
 
 
-def update_selected_libraries_search(self, context):
-    ui_props = context.scene.Hana3DUI
-    props = utils.get_search_props()
-    names = []
-    ids = []
-    i = 0
-    while hasattr(props, f'library_{i}'):
-        current_value = getattr(props, f'library_{i}')
-        if ui_props.asset_type == 'MODEL':
-            library_info = getattr(bpy.types.Scene.hana3d_models[1]["type"], f'library_{i}')
-        elif ui_props.asset_type == 'SCENE':
-            library_info = getattr(bpy.types.Scene.hana3d_scene[1]["type"], f'library_{i}')
-        elif ui_props.asset_type == 'MATERIAL':
-            library_info = getattr(bpy.types.Scene.hana3d_mat[1]["type"], f'library_{i}')
-
-        if current_value is True:
-            names.append(library_info[1]['name'])
-            ids.append(library_info[1]['id'])
-        i += 1
-
-    if len(names) > 0:
-        props.libraries_text = ','.join(names)
-    else:
-        props.libraries_text = 'Select libraries'
-    props.libraries = ','.join(ids)
-
-
-def update_libraries_list_search(self, context):
-    ui_props = context.scene.Hana3DUI
-    if ui_props.asset_type == 'MODEL':
-        hana3d_class = bpy.types.Scene.hana3d_models[1]["type"]
-    elif ui_props.asset_type == 'SCENE':
-        hana3d_class = bpy.types.Scene.hana3d_scene[1]["type"]
-    elif ui_props.asset_type == 'MATERIAL':
-        hana3d_class = bpy.types.Scene.hana3d_mat[1]["type"]
-    i = 0
-    while hasattr(hana3d_class, f'library_{i}'):
-        exec(f'del hana3d_class.library_{i}')
-        i += 1
-    props = utils.get_search_props()
-    current_workspace = props.workspace
-    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            i = 0
-            for library in workspace['libraries']:
-                exec(f'hana3d_class.library_{i}=BoolProperty('
-                     'name=library["name"],'
-                     'default=False,'
-                     'update=update_selected_libraries_search)')
-                library_info = getattr(hana3d_class, f'library_{i}')
-                library_info[1]["id"] = library["id"]
-                library_info[1]["metadata"] = library["metadata"]
-                i += 1
-    update_selected_libraries_search(self, context)
-
-
 def search_update(self, context):
     utils.p('search updater')
     # if self.search_keywords != '':
@@ -381,6 +325,47 @@ def search_update(self, context):
 
 
 class Hana3DCommonSearchProps(object):
+    def update_selected_libraries_search(self, context):
+        names = []
+        ids = []
+        i = 0
+        while hasattr(self, f'library_{i}'):
+            current_value = getattr(self, f'library_{i}')
+            library_info = getattr(type(self), f'library_{i}')
+
+            if current_value is True:
+                names.append(library_info[1]['name'])
+                ids.append(library_info[1]['id'])
+            i += 1
+
+        if len(names) > 0:
+            self.libraries_text = ','.join(names)
+        else:
+            self.libraries_text = 'Select libraries'
+        self.libraries = ','.join(ids)
+
+    def update_libraries_list_search(self, context):
+        hana3d_class = type(self)
+        i = 0
+        while hasattr(hana3d_class, f'library_{i}'):
+            exec(f'del hana3d_class.library_{i}')
+            i += 1
+        current_workspace = self.workspace
+        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                i = 0
+                for library in workspace['libraries']:
+                    bool_prop = BoolProperty(  # noqa F841
+                        name=library["name"],
+                        default=False,
+                        update=Hana3DCommonSearchProps.update_selected_libraries_search)
+                    exec(f'hana3d_class.library_{i}=bool_prop')
+                    library_info = getattr(hana3d_class, f'library_{i}')
+                    library_info[1]["id"] = library["id"]
+                    library_info[1]["metadata"] = library["metadata"]
+                    i += 1
+        self.update_selected_libraries_search(context)
+
     # STATES
     search_keywords: StringProperty(
         name="Search",
@@ -493,79 +478,6 @@ def update_tags(self, context):
         props.tags = ns
 
 
-def update_selected_libraries_upload(self, context):
-    ui_props = context.scene.Hana3DUI
-    props = utils.get_upload_props()
-    names = []
-    ids = []
-    i = 0
-    while hasattr(props, f'library_{i}'):
-        current_value = getattr(props, f'library_{i}')
-        if ui_props.asset_type == 'MODEL':
-            library_info = getattr(bpy.types.Object.hana3d[1]["type"], f'library_{i}')
-        elif ui_props.asset_type == 'SCENE':
-            library_info = getattr(bpy.types.Scene.hana3d[1]["type"], f'library_{i}')
-        elif ui_props.asset_type == 'MATERIAL':
-            library_info = getattr(bpy.types.Material.hana3d[1]["type"], f'library_{i}')
-
-        if current_value is True:
-            names.append(library_info[1]['name'])
-            ids.append(library_info[1]['id'])
-            for view_prop in library_info[1]['metadata']['view_props']:
-                name = f'{library_info[1]["name"]} {view_prop["name"]}'
-                if name not in props.custom_props:
-                    props.custom_props_info[name] = {
-                        'key': view_prop['slug'],
-                        'library_name': library_info[1]["name"],
-                        'library_id': library_info[1]['id']
-                    }
-                    props.custom_props[name] = ''
-        else:
-            for view_prop in library_info[1]['metadata']['view_props']:
-                name = f'{library_info[1]["name"]} {view_prop["name"]}'
-                if name in props.custom_props.keys():
-                    del props.custom_props[name]
-                    del props.custom_props_info[name]
-        i += 1
-
-    if len(names) > 0:
-        props.libraries_text = ','.join(names)
-    else:
-        props.libraries_text = 'Select libraries'
-    props.libraries = ','.join(ids)
-
-
-def update_libraries_list_upload(self, context):
-    ui_props = context.scene.Hana3DUI
-    if ui_props.asset_type == 'MODEL':
-        hana3d_class = bpy.types.Object.hana3d[1]["type"]
-    elif ui_props.asset_type == 'SCENE':
-        hana3d_class = bpy.types.Scene.hana3d[1]["type"]
-    elif ui_props.asset_type == 'MATERIAL':
-        hana3d_class = bpy.types.Material.hana3d[1]["type"]
-    i = 0
-    while hasattr(hana3d_class, f'library_{i}'):
-        exec(f'del hana3d_class.library_{i}')
-        i += 1
-    props = utils.get_upload_props()
-    current_workspace = props.workspace
-    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            i = 0
-            for library in workspace['libraries']:
-                if library['is_default'] == 1:
-                    props.default_library = library['id']
-                else:
-                    exec(f'hana3d_class.library_{i}=BoolProperty('
-                         'name=library["name"],'
-                         'default=False,'
-                         'update=update_selected_libraries_upload)')
-                    library_info = getattr(hana3d_class, f'library_{i}')
-                    library_info[1]["id"] = library["id"]
-                    library_info[1]["metadata"] = library["metadata"]
-                    i += 1
-
-
 def get_render_job_outputs(self, context):
     preview_collection = render.render_previews[self.view_id]
     if not hasattr(preview_collection, 'previews'):
@@ -622,6 +534,64 @@ def get_active_image(self, context):
 
 
 class Hana3DCommonUploadProps:
+    def update_selected_libraries_upload(self, context):
+        names = []
+        ids = []
+        i = 0
+        while hasattr(self, f'library_{i}'):
+            current_value = getattr(self, f'library_{i}')
+            library_info = getattr(type(self), f'library_{i}')
+
+            if current_value is True:
+                names.append(library_info[1]['name'])
+                ids.append(library_info[1]['id'])
+                for view_prop in library_info[1]['metadata']['view_props']:
+                    name = f'{library_info[1]["name"]} {view_prop["name"]}'
+                    if name not in self.custom_props:
+                        self.custom_props_info[name] = {
+                            'key': view_prop['slug'],
+                            'library_name': library_info[1]["name"],
+                            'library_id': library_info[1]['id']
+                        }
+                        self.custom_props[name] = ''
+            else:
+                for view_prop in library_info[1]['metadata']['view_props']:
+                    name = f'{library_info[1]["name"]} {view_prop["name"]}'
+                    if name in self.custom_props.keys():
+                        del self.custom_props[name]
+                        del self.custom_props_info[name]
+            i += 1
+
+        if len(names) > 0:
+            self.libraries_text = ','.join(names)
+        else:
+            self.libraries_text = 'Select libraries'
+        self.libraries = ','.join(ids)
+
+    def update_libraries_list_upload(self, context):
+        hana3d_class = type(self)
+        i = 0
+        while hasattr(hana3d_class, f'library_{i}'):
+            exec(f'del hana3d_class.library_{i}')
+            i += 1
+        current_workspace = self.workspace
+        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                i = 0
+                for library in workspace['libraries']:
+                    if library['is_default'] == 1:
+                        self.default_library = library['id']
+                    else:
+                        bool_prop = BoolProperty(  # noqa F841
+                            name=library["name"],
+                            default=False,
+                            update=Hana3DCommonUploadProps.update_selected_libraries_upload)
+                        exec(f'hana3d_class.library_{i}=bool_prop')
+                        library_info = getattr(hana3d_class, f'library_{i}')
+                        library_info[1]["id"] = library["id"]
+                        library_info[1]["metadata"] = library["metadata"]
+                        i += 1
+
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",

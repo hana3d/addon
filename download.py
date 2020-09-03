@@ -328,13 +328,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     download_renders(jobs)
 
     if 'libraries' in asset_data:
-        ui_props = bpy.context.scene.Hana3DUI
-        if ui_props.asset_type == 'MODEL':
-            hana3d_class = bpy.types.Object.hana3d[1]["type"]
-        elif ui_props.asset_type == 'SCENE':
-            hana3d_class = bpy.types.Scene.hana3d[1]["type"]
-        elif ui_props.asset_type == 'MATERIAL':
-            hana3d_class = bpy.types.Material.hana3d[1]["type"]
+        hana3d_class = type(parent.hana3d)
         for library in asset_data['libraries']:
             i = 0
             while hasattr(hana3d_class, f'library_{i}'):
