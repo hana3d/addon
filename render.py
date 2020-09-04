@@ -584,6 +584,7 @@ class UploadThread(UploadFileMixin, threading.Thread):
         url = paths.get_api_url('uploads')
         data = {
             'assetId': self.props.id,
+            'libraries': [],
             'originalFilename': os.path.basename(job['file_path']),
             'id_parent': self.props.view_id,
             'metadata': {
