@@ -308,6 +308,7 @@ def load_prefs():
             user_preferences.api_key_refresh = prefs.get('API_key_refresh', '')
             user_preferences.api_key_life = prefs.get('API_key_life', 3600)
             user_preferences.api_key_timeout = prefs.get('API_key_timeout', 0)
+            user_preferences.id_token = prefs.get('ID_Token', '')
 
 
 def save_prefs(self, context):
@@ -329,6 +330,7 @@ def save_prefs(self, context):
             'global_dir': user_preferences.global_dir,
             'API_key_life': user_preferences.api_key_life,
             'API_key_timeout': user_preferences.api_key_timeout,
+            'ID_Token': user_preferences.id_token,
         }
         try:
             fpath = paths.HANA3D_SETTINGS_FILENAME

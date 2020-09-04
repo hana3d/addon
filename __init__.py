@@ -149,6 +149,7 @@ class Hana3DAddonPreferences(AddonPreferences):
         name="Hana3D ID Token",
         default="",
         subtype="PASSWORD",
+        update=utils.save_prefs,
     )
 
     refresh_in_progress: BoolProperty(

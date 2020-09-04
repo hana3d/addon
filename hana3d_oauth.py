@@ -112,6 +112,7 @@ def reset_tokens():
     preferences.api_key = ''
     preferences.api_key_timeout = 0
     preferences.api_key_life = 3600
+    preferences.id_token = ''
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
     if 'hana3d profile' in bpy.context.window_manager.keys():
