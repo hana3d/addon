@@ -20,7 +20,6 @@ if 'bpy' in locals():
     from importlib import reload
 
     append_link = reload(append_link)
-    bg_blender = reload(bg_blender)
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)
@@ -42,6 +41,7 @@ from bpy.app.handlers import persistent
 from bpy.props import (
     BoolProperty,
     EnumProperty,
+    FloatProperty,
     FloatVectorProperty,
     IntProperty,
     StringProperty
@@ -327,23 +327,28 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     parent.hana3d.render_data['jobs'] = jobs
     download_renders(jobs)
 
-    if hasattr(parent.hana3d, 'custom_props') and 'metadata' in asset_data:
-        if 'product_info' in asset_data['metadata']:
-            product_info = asset_data['metadata'].pop('product_info')
-            clients = []
-            skus = []
-            for client_sku in product_info:
-                clients.append(client_sku['client'])
-                skus.append(client_sku['sku'])
-            if hasattr(parent.hana3d, 'client') and hasattr(parent.hana3d, 'sku'):
-                parent.hana3d.client = ','.join(clients)
-                parent.hana3d.sku = ','.join(skus)
-            else:
-                parent.hana3d.custom_props['client'] = ','.join(clients)
-                parent.hana3d.custom_props['sku'] = ','.join(skus)
+    if 'libraries' in asset_data:
+        hana3d_class = type(parent.hana3d)
+        for library in asset_data['libraries']:
+            for i in range(parent.hana3d.libraries_count):
+                library_entry = getattr(hana3d_class, f'library_{i}')
+                name = library_entry[1]['name']
+                library_info = parent.hana3d.libraries_info[name]
 
-        for key, value in asset_data['metadata'].items():
-            parent.hana3d.custom_props[key] = value
+                if library_info['id'] == library['library_id']:
+                    library_prop = getattr(parent.hana3d, f'library_{i}')
+                    library_prop = True  # noqa:F841
+                    break
+
+                if 'metadata' in library and library['metadata'] is not None:
+                    for view_prop in library['metadata']['view_props']:
+                        name = f'{library["name"]} {library_info["metadata"]["view_props"][key]}'
+                        parent.hana3d.custom_props_info[name] = {
+                            'key': view_prop['key'],
+                            'library_name': library["name"],
+                            'library_id': library['id_library']
+                        }
+                        parent.hana3d.custom_props[name] = view_prop['value']
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 
@@ -851,8 +856,65 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class Hana3DBatchDownloadOperator(bpy.types.Operator):
+    """Download and link all preview assets to scene."""
+
+    bl_idname = "scene.hana3d_batch_download"
+    bl_label = "Hana3D Batch Download"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    object_count: IntProperty(
+        name="Object Count",
+        description='number of objects imported to scene',
+        default=0,
+        options={'HIDDEN'}
+    )
+
+    grid_distance: FloatProperty(
+        name="Grid Distance",
+        description='distance between objects on the grid',
+        default=3
+    )
+
+    def _get_location(self):
+        x = y = 0
+        dx = 0
+        dy = -1
+        for i in range(self.object_count):
+            if x == y or (x < 0 and x == -y) or (x > 0 and x == 1 - y):
+                dx, dy = -dy, dx
+            x, y = x + dx, y + dy
+        self.object_count += 1
+        return (self.grid_distance * x, self.grid_distance * y, 0)
+
+    def execute(self, context):
+        self.object_count = 0
+        scene = context.scene
+        if 'search results' not in scene:
+            return {'CANCELLED'}
+        sr = scene['search results']
+
+        print('len: ', len(sr))
+
+        for result in sr:
+            asset_data = result.to_dict()
+            location = self._get_location()
+            kwargs = {
+                'cast_parent': "",
+                'target_object': "",
+                'material_target_slot': 0,
+                'model_location': tuple(location),
+                'model_rotation': tuple((0, 0, 0)),
+                'replace': False,
+            }
+
+            start_download(asset_data, **kwargs)
+        return {'FINISHED'}
+
+
 classes = (
     Hana3DDownloadOperator,
+    Hana3DBatchDownloadOperator,
     Hana3DKillDownloadOperator
 )
 

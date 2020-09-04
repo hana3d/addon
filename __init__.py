@@ -35,7 +35,6 @@ if 'bpy' in locals():
     asset_inspector = reload(asset_inspector)
     autothumb = reload(autothumb)
     bg_blender = reload(bg_blender)
-    custom_props = reload(custom_props)
     download = reload(download)
     hana3d_oauth = reload(hana3d_oauth)
     icons = reload(icons)
@@ -54,7 +53,6 @@ else:
         asset_inspector,
         autothumb,
         bg_blender,
-        custom_props,
         download,
         hana3d_oauth,
         icons,
@@ -299,7 +297,6 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 modules = (
     types,
-    custom_props,
     search,
     asset_inspector,
     download,
