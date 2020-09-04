@@ -202,6 +202,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         url = paths.get_api_url('uploads')
         data = {
             'assetId': self.props.id,
+            'libraries': [],
             'originalFilename': os.path.basename(self.filepath),
             'id_parent': self.props.view_id,
             'metadata': {
