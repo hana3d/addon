@@ -20,12 +20,10 @@ if 'bpy' in locals():
     from importlib import reload
 
     hana3d_oauth = reload(hana3d_oauth)
-    paths = reload(paths)
-    tasks_queue = reload(tasks_queue)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import hana3d_oauth, paths, tasks_queue, ui, utils
+    from hana3d import hana3d_oauth, ui, utils
 
 import bpy
 import requests
@@ -43,46 +41,25 @@ def rerequest(method, url, **kwargs):
     utils.p(method.upper(), url)
     utils.p(response.status_code)
 
-    if response.status_code == 401:
+    if not response.ok:
+        ui.add_report(f'{method} request failed ({response.status_code}): {response.text}')
         try:
-            rdata = response.json()
+            code = response.json()['code']
         except Exception:
-            rdata = {}
+            code = None
 
-        tasks_queue.add_task(
-            (ui.add_report, (method + ' request Failed.' + str(rdata.get('detail')),))
-        )
+        if response.status_code == 401 and code == 'token_expired':
+            utils.p('refreshing token')
+            ui.add_report('Refreshing token. If this fails, please login in Hana3D Login panel.', 10)  # noqa E501
 
-        if rdata.get('code') == 'token_expired':
-            user_preferences = bpy.context.preferences.addons['hana3d'].preferences
-            if user_preferences.api_key != '':
-                if user_preferences.api_key_refresh != '':
-                    tasks_queue.add_task(
-                        (ui.add_report, ('refreshing token. If this fails, please login in Hana3D Login panel.', 10,),)  # noqa E501
-                    )
-                    refresh_url = paths.get_hana3d_url()
-                    auth_token, refresh_token, oauth_response = hana3d_oauth.refresh_token(
-                        user_preferences.api_key_refresh,
-                        refresh_url
-                    )
-
-                    # utils.p(auth_token, refresh_token)
-                    if auth_token is not None:
-                        if immediate:
-                            # this can write tokens occasionally into prefs.
-                            # used e.g. in upload. Only possible in non-threaded tasks
-                            bpy.context.preferences.addons[
-                                'hana3d'
-                            ].preferences.api_key = auth_token
-                            bpy.context.preferences.addons[
-                                'hana3d'
-                            ].preferences.api_key_refresh = refresh_token
-
-                        kwargs['headers'].update(utils.get_headers())
-                        response = requests.request(method, url, **kwargs)
-                        utils.p('reresult', response.status_code)
-                        if response.status_code >= 400:
-                            utils.p('reresult', response.text)
+            preferences = bpy.context.preferences.addons['hana3d'].preferences
+            oauth_response = hana3d_oauth.refresh_token(
+                preferences.api_key_refresh,
+                immediate
+            )
+            updated_headers = utils.get_headers(api_key=oauth_response['access_token'])
+            kwargs['headers'].update(updated_headers)
+            response = requests.request(method, url, **kwargs)
     return response
 
 

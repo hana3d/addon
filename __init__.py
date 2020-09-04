@@ -143,6 +143,13 @@ class Hana3DAddonPreferences(AddonPreferences):
         update=utils.save_prefs,
     )
 
+    id_token: StringProperty(
+        name="Hana3D ID Token",
+        default="",
+        subtype="PASSWORD",
+        update=utils.save_prefs,
+    )
+
     refresh_in_progress: BoolProperty(
         name="Api key refresh in progress",
         description="Api key is currently being refreshed. Don't refresh it again.",

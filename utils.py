@@ -326,6 +326,7 @@ def load_prefs():
             user_preferences.api_key_refresh = prefs.get('API_key_refresh', '')
             user_preferences.api_key_life = prefs.get('API_key_life', 3600)
             user_preferences.api_key_timeout = prefs.get('API_key_timeout', 0)
+            user_preferences.id_token = prefs.get('ID_Token', '')
 
 
 def save_prefs(self, context):
@@ -347,6 +348,7 @@ def save_prefs(self, context):
             'global_dir': user_preferences.global_dir,
             'API_key_life': user_preferences.api_key_life,
             'API_key_timeout': user_preferences.api_key_timeout,
+            'ID_Token': user_preferences.id_token,
         }
         try:
             fpath = paths.HANA3D_SETTINGS_FILENAME
@@ -537,16 +539,24 @@ def get_dimensions(obs):
     return dim, bbmin, bbmax
 
 
-def get_headers(correlation_id: str = None) -> dict:
+def get_headers(
+        correlation_id: str = None,
+        api_key: str = None,
+        include_id_token: bool = False,
+) -> dict:
     headers = {
         'accept': 'application/json',
         'X-Request-Id': str(uuid.uuid4())
     }
     if correlation_id:
         headers['X-Correlation-Id'] = correlation_id
-    api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
+    if api_key is None:
+        api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
     if api_key != '':
         headers["Authorization"] = "Bearer %s" % api_key
+    if include_id_token:
+        id_token = bpy.context.preferences.addons['hana3d'].preferences.id_token
+        headers['X-ID-Token'] = id_token
     return headers
 
 
