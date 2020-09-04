@@ -29,6 +29,7 @@ else:
     from hana3d import autothumb, paths, render, search, utils
 
 import math
+import os
 from typing import Union
 
 import bpy
@@ -67,21 +68,24 @@ thumbnail_resolutions = (
 
 
 def switch_search_results(self, context):
-    s = bpy.context.scene
-    props = s.Hana3DUI
-    if props.asset_type == 'MODEL':
+    s = context.scene
+    if self.asset_type == 'MODEL':
         s['search results'] = s.get('hana3d model search')
         s['search results orig'] = s.get('hana3d model search orig')
-    elif props.asset_type == 'SCENE':
+    elif self.asset_type == 'SCENE':
         s['search results'] = s.get('hana3d scene search')
         s['search results orig'] = s.get('hana3d scene search orig')
-    elif props.asset_type == 'MATERIAL':
+    elif self.asset_type == 'MATERIAL':
         s['search results'] = s.get('hana3d material search')
         s['search results orig'] = s.get('hana3d material search orig')
-    elif props.asset_type == 'HDR':
+    elif self.asset_type == 'HDR':
         s['search results'] = s.get('hana3d hdr search')
         s['search results orig'] = s.get('hana3d hdr search orig')
     search.load_previews()
+
+
+def switch_active_asset_type(self, context):
+    self.asset_type = self.asset_type_render
 
 
 def asset_type_callback(self, context):
@@ -130,6 +134,21 @@ class Hana3DUIProps(PropertyGroup):
         description="Activate asset in UI",
         default=None,
         update=switch_search_results,
+    )
+    asset_type_render: EnumProperty(
+        name="Hana3D Active Asset Type",
+        items=(
+            (
+                'MODEL',
+                'Render Model',
+                'Create render representing a single model',
+                'OBJECT_DATAMODE',
+                0,
+            ),
+            ('SCENE', 'Render Scene', 'Create render representing whole scene', 'SCENE_DATA', 1),
+        ),
+        description="Activate asset in UI",
+        update=switch_active_asset_type,
     )
     # these aren't actually used ( by now, seems to better use globals in UI module:
     draw_tooltip: BoolProperty(name="Draw Tooltip", default=False)
@@ -223,6 +242,13 @@ def get_balance(self) -> str:
 
 
 class Hana3DRenderProps(PropertyGroup):
+    render_ui_mode: EnumProperty(
+        name='Render UI mode',
+        items=(
+            ('GENERATE', 'Generate', 'Generate new render', 'SCENE', 0),
+            ('UPLOAD', 'Upload', 'Upload render from computer', 'EXPORT', 1),
+        ),
+    )
     balance: StringProperty(
         name="Balance",
         description="",
@@ -313,6 +339,48 @@ class Hana3DTagItem(PropertyGroup):
 
 
 class Hana3DCommonSearchProps(object):
+    def update_selected_libraries_search(self, context):
+        names = []
+        ids = []
+        for i in range(self.libraries_count):
+            current_value = getattr(self, f'library_{i}')
+            library_entry = getattr(type(self), f'library_{i}')
+            name = library_entry[1]['name']
+            library_info = self.libraries_info[name]
+
+            if current_value is True:
+                names.append(name)
+                ids.append(library_info['id'])
+
+        if len(names) > 0:
+            self.libraries_text = ','.join(names)
+        else:
+            self.libraries_text = 'Select libraries'
+        self.libraries = ','.join(ids)
+
+    def update_libraries_list_search(self, context):
+        hana3d_class = type(self)   # noqa F841
+        for i in range(self.libraries_count):
+            exec(f'del hana3d_class.library_{i}')
+        current_workspace = self.workspace
+        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                i = 0
+                for library in workspace['libraries']:
+                    bool_prop = BoolProperty(  # noqa F841
+                        name=library["name"],
+                        default=False,
+                        update=Hana3DCommonSearchProps.update_selected_libraries_search)
+                    exec(f'hana3d_class.library_{i}=bool_prop')
+                    self.libraries_info[library['name']] = {
+                        'name': library['name'],
+                        'id': library['id'],
+                        'metadata': library['metadata']
+                    }
+                    i += 1
+            self.libraries_count = i
+        self.update_selected_libraries_search(context)
+
     # STATES
     search_keywords: StringProperty(
         name="Search",
@@ -370,6 +438,35 @@ class Hana3DCommonSearchProps(object):
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
+        update=update_libraries_list_search
+    )
+
+    default_library: StringProperty(
+        name="Default Library",
+        description="When no library is selected upload to this library",
+        default=""
+    )
+
+    libraries: StringProperty(
+        name="Libraries",
+        description="Libraries that the asset are linked to",
+        default=''
+    )
+
+    libraries_text: StringProperty(
+        name="Libraries",
+        description="Libraries that the asset are linked to",
+        default="Select libraries"
+    )
+
+    libraries_count: IntProperty(
+        name="Libraries Count",
+        description="Number of libraries",
+        default=0
+    )
+
+    libraries_info: PointerProperty(
+        type=PropertyGroup
     )
 
     tags_list: CollectionProperty(type=Hana3DTagItem)
@@ -420,24 +517,115 @@ def get_render_job_outputs(self, context):
         preview_collection.previews = []
 
     n_render_jobs = len(self.render_data['jobs']) if 'jobs' in self.render_data else 0
-    if len(preview_collection.previews) < n_render_jobs:
+    if len(preview_collection.previews) != n_render_jobs:
         # Sort jobs to avoid error when appending newer render jobs
         sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
+        available_previews = []
         for n, job in enumerate(sorted_jobs):
             job_id = job['id']
-            file_path = job['file_path']
-            try:
+            if job_id not in preview_collection:
+                file_path = job['file_path']
+                if not os.path.exists(file_path):
+                    continue
                 preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
-            except KeyError:
-                # Fail case when new render jobs are completed
-                continue
+            else:
+                preview_img = preview_collection[job_id]
+
             enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
-            preview_collection.previews.append(enum_item)
+            available_previews.append(enum_item)
+        preview_collection.previews = available_previews
+
+    return preview_collection.previews
+
+
+def get_active_image(self, context):
+    preview_collection = render.render_previews['active_images']
+    if not hasattr(preview_collection, 'previews'):
+        preview_collection.previews = []
+
+    active_images = [
+        img
+        for img in context.blend_data.images
+        if img.get('active') or img.has_data and img.users > 0
+    ]
+    if len(preview_collection.previews) != len(active_images):
+        available_previews = []
+        for n, img in enumerate(active_images):
+            if img.name not in preview_collection:
+                if img.filepath == '':
+                    preview_img = img.preview
+                else:
+                    preview_img = preview_collection.load(img.name, img.filepath, 'IMAGE')
+            else:
+                preview_img = preview_collection[img.name]
+
+            enum_item = (img.name, img.name or '', '', preview_img.icon_id, n)
+            available_previews.append(enum_item)
+        preview_collection.previews = available_previews
 
     return preview_collection.previews
 
 
 class Hana3DCommonUploadProps:
+    def update_selected_libraries_upload(self, context):
+        names = []
+        ids = []
+        for i in range(self.libraries_count):
+            current_value = getattr(self, f'library_{i}')
+            library_entry = getattr(type(self), f'library_{i}')
+            name = library_entry[1]['name']
+            library_info = self.libraries_info[name]
+
+            if current_value is True:
+                names.append(name)
+                ids.append(library_info['id'])
+                for view_prop in library_info['metadata']['view_props']:
+                    name = f'{name} {view_prop["name"]}'
+                    if name not in self.custom_props:
+                        self.custom_props_info[name] = {
+                            'key': view_prop['slug'],
+                            'library_name': library_info["name"],
+                            'library_id': library_info['id']
+                        }
+                        self.custom_props[name] = ''
+            else:
+                for view_prop in library_info['metadata']['view_props']:
+                    name = f'{name} {view_prop["name"]}'
+                    if name in self.custom_props.keys():
+                        del self.custom_props[name]
+                        del self.custom_props_info[name]
+
+        if len(names) > 0:
+            self.libraries_text = ','.join(names)
+        else:
+            self.libraries_text = 'Select libraries'
+        self.libraries = ','.join(ids)
+
+    def update_libraries_list_upload(self, context):
+        hana3d_class = type(self)   # noqa F841
+        for i in range(self.libraries_count):
+            exec(f'del hana3d_class.library_{i}')
+        current_workspace = self.workspace
+        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                i = 0
+                for library in workspace['libraries']:
+                    if library['is_default'] == 1:
+                        self.default_library = library['id']
+                    else:
+                        bool_prop = BoolProperty(  # noqa F841
+                            name=library["name"],
+                            default=False,
+                            update=Hana3DCommonUploadProps.update_selected_libraries_upload)
+                        exec(f'hana3d_class.library_{i}=bool_prop')
+                        self.libraries_info[library['name']] = {
+                            'name': library['name'],
+                            'id': library['id'],
+                            'metadata': library['metadata']
+                        }
+                        i += 1
+                self.libraries_count = i
+
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",
@@ -521,12 +709,49 @@ class Hana3DCommonUploadProps:
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
+        update=update_libraries_list_upload
+    )
+
+    default_library: StringProperty(
+        name="Default Library",
+        description="When no library is selected upload to this library",
+        default=""
+    )
+
+    libraries: StringProperty(
+        name="Libraries",
+        description="Libraries that the asset are linked to",
+        default=''
+    )
+
+    libraries_text: StringProperty(
+        name="Libraries",
+        description="Libraries that the asset are linked to",
+        default="Select libraries"
+    )
+
+    libraries_count: IntProperty(
+        name="Libraries Count",
+        description="Number of libraries",
+        default=0
+    )
+
+    libraries_info: PointerProperty(
+        type=PropertyGroup
     )
 
     publish_message: StringProperty(
         name="Publish Message",
         description="Changes from previous version",
         default=""
+    )
+
+    custom_props: PointerProperty(
+        type=PropertyGroup
+    )
+
+    custom_props_info: PointerProperty(
+        type=PropertyGroup
     )
 
     rendering: BoolProperty(
@@ -537,8 +762,15 @@ class Hana3DCommonUploadProps:
 
     render_state: StringProperty(
         name="Render Generating State",
-        description="",
-        default="Starting Render process"
+    )
+
+    upload_render_state: StringProperty(
+        name="Render Upload State",
+    )
+
+    uploading_render: BoolProperty(
+        name="Uploading Render",
+        default=False,
     )
 
     render_data: PointerProperty(
@@ -550,6 +782,12 @@ class Hana3DCommonUploadProps:
         name="Previous renders",
         description='Render name',
         items=get_render_job_outputs,
+    )
+
+    active_image: EnumProperty(
+        name="Local Images",
+        description='Images in .blend file',
+        items=get_active_image,
     )
 
     render_job_name: StringProperty(
@@ -660,10 +898,6 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
     )
     asset_type: StringProperty(default='material')
 
-    client: StringProperty(name="Client")
-    sku: StringProperty(name="SKU")
-    custom_props: PointerProperty(type=PropertyGroup)
-
 
 class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
     manufacturer: StringProperty(
@@ -772,10 +1006,6 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
     )
 
     asset_type: StringProperty(default='model')
-
-    client: StringProperty(name="Client")
-    sku: StringProperty(name="SKU")
-    custom_props: PointerProperty(type=PropertyGroup)
 
 
 class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
@@ -898,7 +1128,7 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
         name="How to Attach Scene",
         items=(('MERGE', 'Merge Scenes', ''), ('ADD', 'Add New Scene', ''),),
         description="choose if the scene will be merged or appended",
-        default="MERGE",
+        default="ADD",
     )
     import_world: BoolProperty(
         name='Import World',
@@ -908,6 +1138,11 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     import_render: BoolProperty(
         name='Import Render Settings',
         description="import render settings to current scene",
+        default=True,
+    )
+    import_compositing: BoolProperty(
+        name="Import Compositing",
+        description="Import compositing nodes",
         default=True,
     )
 

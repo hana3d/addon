@@ -25,7 +25,7 @@ else:
     from hana3d import download, utils
 
 import bpy
-from bpy.types import Panel
+from bpy.types import Panel, Operator
 
 
 from . import addon_updater_ops
@@ -90,10 +90,23 @@ def draw_panel_common_upload(layout, context):
     box = layout.box()
     box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
     box.prop(props, 'workspace', expand=False, text='Workspace')
+    row = box.row(align=True)
+    col = row.column()
+    col.scale_x = 0.7
+    col.label(text='Libraries:')
+    col = row.column()
+    col.scale_x = 1.24
+    col.operator(
+        "object.hana3d_list_libraries_upload",
+        text=props.libraries_text
+    )
+    for name in props.custom_props.keys():
+        box.prop(props.custom_props, f'["{name}"]')
 
     box = layout.box()
     box.label(text='Asset Info', icon='MESH_CUBE')
     prop_needed(box, props, 'name', props.name)
+
     col = box.column()
     if props.is_generating_thumbnail:
         col.enabled = False
@@ -159,6 +172,16 @@ def draw_panel_common_search(layout, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row = layout.row(align=True)
+    col = row.column()
+    col.scale_x = 0.7
+    col.label(text='Libraries:')
+    col = row.column()
+    col.scale_x = 1.24
+    col.operator(
+        "object.hana3d_list_libraries_search",
+        text=props.libraries_text
+    )
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
     layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
@@ -167,6 +190,7 @@ def draw_panel_common_search(layout, context):
         layout.separator()
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
+        layout.operator("scene.hana3d_batch_download", text='Import all preview files')
     elif asset_type == 'SCENE':
         layout.separator()
         layout.label(text='Import method:')
@@ -401,7 +425,7 @@ class VIEW3D_PT_UpdaterPanel(Panel):
 class VIEW3D_PT_hana3d_RenderPanel(Panel):
     """Render Farm operations panel"""
 
-    bl_label = "Render"
+    bl_label = "Manage renders"
     bl_idname = "VIEW3D_PT_hana3d_RenderPanel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -412,40 +436,78 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         return True
 
     def draw(self, context):
-        layout = self.layout
         render_props = context.scene.Hana3DRender
         asset_props = utils.get_upload_props()
         ui_props = context.scene.Hana3DUI
 
-        row = layout.row()
+        self.layout.prop(ui_props, 'asset_type_render', expand=False, text='')
+
+        if asset_props is None:
+            row = self.layout.row()
+            row.label(text='Select an asset')
+            return
+
+        self.draw_asset_name(ui_props, render_props)
+        self.layout.separator()
+
+        if asset_props.view_id == '':
+            row = self.layout.row()
+            row.label(text='Upload asset first')
+            return
+
+        self.draw_main_panel(render_props, asset_props)
+        self.layout.separator()
+
+        self.layout.prop(render_props, 'render_ui_mode', expand=True, icon_only=False)
+        self.layout.separator()
+
+        if render_props.render_ui_mode == 'GENERATE':
+            self.draw_generate_panel(context, render_props, asset_props)
+        elif render_props.render_ui_mode == 'UPLOAD':
+            self.draw_upload_panel(asset_props)
+
+    def draw_asset_name(self, ui_props, render_props):
+        if ui_props.asset_type == 'MODEL':
+            icon = 'OBJECT_DATAMODE'
+        elif ui_props.asset_type == 'SCENE':
+            icon = 'SCENE_DATA'
+        elif ui_props.asset_type == 'MATERIAL':
+            icon = 'MATERIAL'
+        row = self.layout.row()
+        row.prop(render_props, 'asset', text='Asset', icon=icon)
+
+    def draw_main_panel(self, render_props, asset_props):
+        if 'jobs' not in asset_props.render_data or len(asset_props.render_data['jobs']) == 0:
+            row = self.layout.row()
+            row.label(text='This asset has no saved renders in Hana3D')
+            return
+
+        box = self.layout.box()
+        row = box.row()
+        row.prop(asset_props, 'render_job_output', text='Render jobs')
+        row = box.row()
+        row.template_icon_view(
+            asset_props,
+            'render_job_output',
+            show_labels=True,
+            scale=10,
+            scale_popup=6,
+        )
+
+        row = box.row()
+        row.operator('hana3d.import_render', icon='IMPORT')
+        row = box.row()
+        row.operator('hana3d.remove_render', icon='CANCEL')
+
+    def draw_generate_panel(self, context, render_props, asset_props):
+        box = self.layout.box()
+
+        row = box.row()
         row.label(text='Balance')
         row.label(text=render_props.balance)
 
-        if asset_props is not None and asset_props.view_id != '':
-            box = layout.box()
-
-            if ui_props.asset_type == 'MODEL':
-                icon = 'OBJECT_DATAMODE'
-            elif ui_props.asset_type == 'SCENE':
-                icon = 'SCENE_DATA'
-            elif ui_props.asset_type == 'MATERIAL':
-                icon = 'MATERIAL'
-            box.prop(render_props, 'asset', text='Asset', icon=icon)
-
-            row = box.row()
-            row.prop(asset_props, 'render_job_output', text='Render jobs')
-            row = box.row()
-            row.template_icon_view(asset_props, 'render_job_output', show_labels=True)
-            row = box.row()
-            row.operator('hana3d.import_render', icon='IMPORT')
-            row.operator('hana3d.remove_render', icon='X')
-            row = box.row()
-            row.operator('hana3d.link_image_as_render', icon='EXPORT')
-
-        box = layout.box()
         box.label(text='Render Parameters', icon='PREFERENCES')
-        if asset_props is not None:
-            box.prop(asset_props, 'render_job_name', text='Name')
+        box.prop(asset_props, 'render_job_name', text='Name')
         box.prop(render_props, 'engine')
         row = box.row()
         row.label(text="Resolution X")
@@ -467,19 +529,81 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
             row = box.row()
             row.label(text="Frame End")
             row.prop(context.scene, "frame_end", text='')
-            # TODO: uncomment when in notRenderFarm
-            # row = box.row()
-            # row.label(text="Frame Step")
-            # row.prop(context.scene.render, "frame_step", text='')
 
         if asset_props is not None and asset_props.rendering:
-            row = layout.row(align=True)
-            row.label(text=asset_props.render_state)
-            op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-            op.process_type = 'RENDER'
-        row = layout.row()
+            self.draw_kill_job(asset_props)
+        row = self.layout.row()
         row.scale_y = 2.0
-        row.operator('hana3d.render_scene')
+        row.operator('hana3d.render_scene', icon='SCENE')
+
+    def draw_kill_job(self, asset_props):
+        row = self.layout.row(align=True)
+        row.label(text=asset_props.render_state)
+        op = row.operator('hana3d.cancel_render_job', text="", icon='CANCEL')
+        op.view_id = asset_props.view_id
+
+    def draw_upload_panel(self, asset_props):
+        box = self.layout.box()
+
+        row = box.row()
+        row.prop(asset_props, 'active_image', text='')
+        row.operator('hana3d.open_image', text='', icon='FILEBROWSER')
+
+        row = box.row()
+        row.prop(asset_props, 'render_job_name', text='Name')
+        row = box.row()
+        row.label(text=asset_props.upload_render_state)
+        row = box.row()
+        row.operator('hana3d.upload_render_image', icon='EXPORT')
+
+        # Only work in EDIT_IMAGE space
+        # box = self.layout.box()
+        # row = box.row()
+        # row.template_ID(bpy.context.space_data, 'image', open='image.open')
+
+
+class ListLibrariesSearch(Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries_search"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_search_props()
+        layout = self.layout
+        for i in range(props.libraries_count):
+            layout.prop(props, f'library_{i}')
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
+
+
+class ListLibrariesUpload(Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries_upload"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_upload_props()
+        layout = self.layout
+        for i in range(props.libraries_count):
+            layout.prop(props, f'library_{i}')
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
 
 
 classes = (
@@ -487,7 +611,9 @@ classes = (
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
     VIEW3D_PT_hana3d_downloads,
-    VIEW3D_PT_hana3d_RenderPanel
+    VIEW3D_PT_hana3d_RenderPanel,
+    ListLibrariesSearch,
+    ListLibrariesUpload
 )
 
 

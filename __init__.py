@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 5, 0),
+    "version": (0, 5, 1),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
     "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
@@ -35,7 +35,6 @@ if 'bpy' in locals():
     asset_inspector = reload(asset_inspector)
     autothumb = reload(autothumb)
     bg_blender = reload(bg_blender)
-    custom_props = reload(custom_props)
     download = reload(download)
     hana3d_oauth = reload(hana3d_oauth)
     icons = reload(icons)
@@ -54,7 +53,6 @@ else:
         asset_inspector,
         autothumb,
         bg_blender,
-        custom_props,
         download,
         hana3d_oauth,
         icons,
@@ -299,7 +297,6 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 modules = (
     types,
-    custom_props,
     search,
     asset_inspector,
     download,

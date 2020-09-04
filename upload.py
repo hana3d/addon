@@ -97,13 +97,6 @@ def camel_to_sub(content):
     return replaced
 
 
-def validate_upload_data(props):
-    list_clients = getattr(props, 'client', '').split(',')
-    list_skus = getattr(props, 'sku', '').split(',')
-
-    assert len(list_clients) == len(list_skus), 'Number of clients must be the same as number of SKUs'  # noqa E501
-
-
 def verification_status_change_thread(asset_id, state):
     upload_data = {"verificationStatus": state}
     url = paths.get_api_url('assets', asset_id)
@@ -168,8 +161,6 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
         props.view_id = ''
         props.id = ''
     export_data, upload_data, bg_process_params, props = utils.get_export_data(asset_type)
-    # We have to validate here as get_export_data() is called in other parts of the code
-    validate_upload_data(props)
 
     # weird array conversion only for upload, not for tooltips.
     upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
@@ -246,7 +237,6 @@ def start_upload(self, context, asset_type, reupload, upload_set, correlation_id
         'temp_dir': tempdir,
         'export_data': export_data,
         'upload_data': upload_data,
-        'debug_value': bpy.app.debug_value,
         'upload_set': upload_set,
         'correlation_id': correlation_id,
     }

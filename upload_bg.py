@@ -56,6 +56,7 @@ def upload_file(upload_data, f, correlation_id):
     bg_blender.progress('uploading %s' % f['type'])
     upload_info = {
         'assetId': upload_data['id'],
+        'libraries': upload_data['libraries'],
         'fileType': f['type'],
         'fileIndex': f['index'],
         'originalFilename': os.path.basename(f['file_path']),
@@ -151,7 +152,6 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
-        bpy.app.debug_value = data.get('debug_value', 0)
         export_data = data['export_data']
         upload_data = data['upload_data']
         correlation_id = data['correlation_id']

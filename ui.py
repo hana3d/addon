@@ -45,6 +45,7 @@ import time
 
 import bpy
 import mathutils
+from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
@@ -595,6 +596,11 @@ def draw_callback_2d_progress(self, context):
         elif thread.job_running:
             text = thread.props.render_state
             draw_progress(x, y - index * 30, text, int(thread.job_progress * 100))
+            index += 1
+    for thread in render.upload_threads:
+        if thread.props.uploading_render:
+            text = thread.props.upload_state
+            draw_progress(x, y - index * 30, text, int(thread.upload_progress * 100))
             index += 1
     global reports
     for report in reports:
@@ -1686,32 +1692,12 @@ class DefaultNamesOperator(bpy.types.Operator):
     def modal(self, context, event):
         # This is for case of closing the area or changing type:
         ui_props = context.scene.Hana3DUI
-        areas = []
-
-        if bpy.context.scene != self.scene:
-            return {'CANCELLED'}
-
-        for w in context.window_manager.windows:
-            areas.extend(w.screen.areas)
-
-        if (
-            self.area not in areas
-            or self.area.type != 'VIEW_3D'
-            or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
-        ):
-            return {'CANCELLED'}
 
         if ui_props.turn_off:
             return {'CANCELLED'}
 
-        if context.region != self.region:
-            # print(time.time(), 'pass through because of region')
-            # print(context.region.type, self.region.type)
-            return {'PASS_THROUGH'}
-
         draw_event = (
-            (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE') and event.value == 'RELEASE'
-            or event.type == 'ENTER'
+            event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE' or event.type == 'ENTER'
         )
         if not draw_event:
             return {'PASS_THROUGH'}
@@ -1721,8 +1707,16 @@ class DefaultNamesOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         props = asset.hana3d
-        if ui_props.down_up == 'UPLOAD' and props.name == '' and props.name != asset.name:
-            props.name = asset.name
+
+        if ui_props.down_up == 'UPLOAD':
+            if props.workspace != '' and props.default_library == '':
+                props.workspace = props.workspace
+            if props.name == '' and props.name != asset.name:
+                props.name = asset.name
+        elif ui_props.down_up == 'SEARCH':
+            search_props = utils.get_search_props()
+            if search_props.workspace != '' and search_props.default_library == '':
+                search_props.workspace = search_props.workspace
 
         if props.render_job_name == '':
             if 'jobs' not in props.render_data:
@@ -1739,24 +1733,7 @@ class DefaultNamesOperator(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
-        if context.area.type != 'VIEW_3D':
-            self.report({'WARNING'}, "View3D not found, cannot run operator")
-            return {'CANCELLED'}
-
-        self.window = context.window
-        self.area = context.area
-        self.scene = bpy.context.scene
-
-        self.has_quad_views = len(bpy.context.area.spaces[0].region_quadviews) > 0
-
-        for r in self.area.regions:
-            if r.type == 'WINDOW':
-                self.region = r
-
         context.window_manager.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
-
-    def execute(self, context):
         return {'RUNNING_MODAL'}
 
 
@@ -1827,7 +1804,6 @@ class RunAssetBarWithContext(bpy.types.Operator):
             keep_running=True,
             do_search=False
         )
-        bpy.ops.view3d.hana3d_default_name(C_dict, 'INVOKE_REGION_WIN')
         return {'FINISHED'}
 
 
@@ -1841,6 +1817,17 @@ classes = (
 
 # store keymap items here to access after registration
 addon_keymapitems = []
+
+
+@persistent
+def default_name_handler(dummy):
+    C_dict = bpy.context.copy()
+    C_dict.update(region='WINDOW')
+    if bpy.context.area is None or bpy.context.area.type != 'VIEW_3D':
+        w, a, r = get_largest_3dview()
+        override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
+        C_dict.update(override)
+    bpy.ops.view3d.hana3d_default_name(C_dict, 'INVOKE_REGION_WIN')
 
 
 # @persistent
@@ -1900,10 +1887,14 @@ def register():
     )
     addon_keymapitems.append(kmi)
 
+    bpy.app.handlers.load_post.append(default_name_handler)
+
 
 def unregister():
     global handler_2d, handler_3d
     pre_load(bpy.context)
+
+    bpy.app.handlers.load_post.remove(default_name_handler)
 
     bpy.types.SpaceView3D.draw_handler_remove(handler_2d, 'WINDOW')
     bpy.types.SpaceView3D.draw_handler_remove(handler_3d, 'WINDOW')
