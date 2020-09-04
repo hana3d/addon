@@ -25,7 +25,7 @@ else:
     from hana3d import download, utils
 
 import bpy
-from bpy.types import Panel
+from bpy.types import Panel, Operator
 
 
 from . import addon_updater_ops
@@ -88,13 +88,22 @@ def draw_panel_common_upload(layout, context):
     props = utils.get_upload_props()
 
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row = layout.row(align=True)
+    col = row.column()
+    col.scale_x = 0.7
+    col.label(text='Libraries:')
+    col = row.column()
+    col.scale_x = 1.24
+    col.operator(
+        "object.hana3d_list_libraries_upload",
+        text=props.libraries_text
+    )
+    for name in props.custom_props.keys():
+        layout.prop(props.custom_props, f'["{name}"]')
     prop_needed(layout, props, 'name', props.name)
     layout.prop(props, 'description')
     layout.prop(props, 'publish_message')
     layout.prop(props, 'tags')
-    if asset_type == 'MODEL':
-        layout.prop(props, 'client')
-        layout.prop(props, 'sku')
     layout.prop(props, 'is_public')
 
     col = layout.column()
@@ -163,6 +172,16 @@ def draw_panel_common_search(layout, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
     layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row = layout.row(align=True)
+    col = row.column()
+    col.scale_x = 0.7
+    col.label(text='Libraries:')
+    col = row.column()
+    col.scale_x = 1.24
+    col.operator(
+        "object.hana3d_list_libraries_search",
+        text=props.libraries_text
+    )
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
 
@@ -170,6 +189,7 @@ def draw_panel_common_search(layout, context):
         layout.separator()
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
+        layout.operator("scene.hana3d_batch_download", text='Import all preview files')
     elif asset_type == 'SCENE':
         layout.separator()
         layout.label(text='Import method:')
@@ -541,12 +561,58 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         # row.template_ID(bpy.context.space_data, 'image', open='image.open')
 
 
+class ListLibrariesSearch(Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries_search"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_search_props()
+        layout = self.layout
+        for i in range(props.libraries_count):
+            layout.prop(props, f'library_{i}')
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
+
+
+class ListLibrariesUpload(Operator):
+    """Libraries that the view will be assigned to.
+If no library is selected the view will be assigned to the default library."""
+
+    bl_idname = "object.hana3d_list_libraries_upload"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def draw(self, context):
+        props = utils.get_upload_props()
+        layout = self.layout
+        for i in range(props.libraries_count):
+            layout.prop(props, f'library_{i}')
+
+    def execute(self, context):
+        return {'INTERFACE'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self)
+
+
 classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
     VIEW3D_PT_hana3d_downloads,
     VIEW3D_PT_hana3d_RenderPanel,
+    ListLibrariesSearch,
+    ListLibrariesUpload
 )
 
 

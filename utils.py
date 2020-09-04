@@ -274,15 +274,33 @@ def get_export_data(
         upload_data['workspace'] = props.workspace
 
     metadata = {}
-    list_clients = getattr(props, 'client', '').split(',')
-    list_skus = getattr(props, 'sku', '').split(',')
-    product_info = [{'client': client, 'sku': sku} for client, sku in zip(list_clients, list_skus)]
-    if len(product_info) > 0:
-        metadata['product_info'] = product_info
     if hasattr(props, 'custom_props'):
         metadata.update(props.custom_props)
     if metadata:
         upload_data['metadata'] = metadata
+
+    upload_data['libraries'] = []
+    if props.libraries == '':
+        upload_data['libraries'].append({
+            'id': props.default_library
+        })
+    else:
+        libraries = comma2array(props.libraries)
+        for library_id in libraries:
+            library = {}
+            library.update({
+                'id': library_id
+            })
+            if props.custom_props.keys() != []:
+                custom_props = {}
+                for name in props.custom_props.keys():
+                    value = props.custom_props[name]
+                    key = props.custom_props_info[name]['key']
+                    prop_library_id = props.custom_props_info[name]['library_id']
+                    if prop_library_id == library_id:
+                        custom_props.update({key: value})
+                library.update({'metadata': {'view_props': custom_props}})
+            upload_data['libraries'].append(library)
 
     export_data['publish_message'] = props.publish_message
 
