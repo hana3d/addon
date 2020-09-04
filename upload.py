@@ -50,7 +50,7 @@ def write_to_report(props, text):
 
 def get_missing_data_model(props):
     props.report = ''
-    autothumb.update_upload_model_preview(None, None)
+    props.update_thumbnail()
 
     if props.name == '':
         write_to_report(props, 'Set model name')
@@ -66,7 +66,7 @@ def get_missing_data_model(props):
 
 def get_missing_data_scene(props):
     props.report = ''
-    autothumb.update_upload_scene_preview(None, None)
+    props.update_thumbnail()
 
     if props.name == '':
         write_to_report(props, 'Set scene name')
@@ -77,7 +77,7 @@ def get_missing_data_scene(props):
 
 def get_missing_data_material(props):
     props.report = ''
-    autothumb.update_upload_material_preview(None, None)
+    props.update_thumbnail()
     if props.name == '':
         write_to_report(props, 'Set material name')
     # if props.tags == '':

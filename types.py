@@ -601,22 +601,34 @@ class Hana3DCommonUploadProps:
                         i += 1
                 self.libraries_count = i
 
+    def update_thumbnail(self, context):
+        img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)
+        if img is not None:
+            self.has_thumbnail = True
+            self.thumbnail_generating_state = ''
+        else:
+            self.has_thumbnail = False
+            self.thumbnail_generating_state = 'No thumbnail or wrong file path\n'
+
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",
         default=""
     )
+
     view_id: StringProperty(
         name="View Id",
         description="Unique ID of asset's current revision (hidden)",
         default="",
     )
+
     name: StringProperty(
         name="Name",
         description="Main name of the asset",
         default="",
         update=name_update
     )
+
     # this is to store name for purpose of checking if name has changed.
     name_old: StringProperty(
         name="Old Name",
@@ -629,6 +641,7 @@ class Hana3DCommonUploadProps:
         description="Description of the asset",
         default=""
     )
+
     tags: StringProperty(
         name="Tags",
         description="List of tags, separated by commas (optional)",
@@ -652,12 +665,28 @@ class Hana3DCommonUploadProps:
         name="Uploading",
         description="True when background process is running",
         default=False,
-        update=autothumb.update_upload_material_preview,
+        update=update_thumbnail,
     )
+
     upload_state: StringProperty(
         name="State Of Upload",
         description="bg process reports for upload",
         default=''
+    )
+
+    thumbnail: StringProperty(
+        name="Thumbnail",
+        description="Path to the thumbnail - 512x512 .jpg image",
+        subtype='FILE_PATH',
+        default="",
+        update=update_thumbnail,
+    )
+
+    is_generating_thumbnail: BoolProperty(
+        name="Generating Thumbnail",
+        description="True when background process is running",
+        default=False,
+        update=update_thumbnail,
     )
 
     has_thumbnail: BoolProperty(
@@ -849,20 +878,6 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default="BALL",
     )
 
-    thumbnail: StringProperty(
-        name="Thumbnail",
-        description="Path to the thumbnail - 512x512 .jpg image",
-        subtype='FILE_PATH',
-        default="",
-        update=autothumb.update_upload_material_preview,
-    )
-
-    is_generating_thumbnail: BoolProperty(
-        name="Generating Thumbnail",
-        description="True when background process is running",
-        default=False,
-        update=autothumb.update_upload_material_preview,
-    )
     asset_type: StringProperty(default='material')
 
 
@@ -876,14 +891,6 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         name="Designer",
         description="Author of the original design piece depicted. Usually not you",
         default="",
-    )
-
-    thumbnail: StringProperty(
-        name="Thumbnail",
-        description="Path to the thumbnail - 512x512 .jpg image",
-        subtype='FILE_PATH',
-        default="",
-        update=autothumb.update_upload_model_preview,
     )
 
     thumbnail_background_lightness: FloatProperty(
@@ -958,14 +965,6 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=0,
     )
 
-    # THUMBNAIL STATES
-    is_generating_thumbnail: BoolProperty(
-        name="Generating Thumbnail",
-        description="True when background process is running",
-        default=False,
-        update=autothumb.update_upload_model_preview,
-    )
-
     has_autotags: BoolProperty(
         name="Has Autotagging Done",
         description="True when autotagging done",
@@ -976,14 +975,6 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
 
 
 class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    thumbnail: StringProperty(
-        name="Thumbnail",
-        description="Path to the thumbnail - 512x512 .jpg image",
-        subtype='FILE_PATH',
-        default="",
-        update=autothumb.update_upload_scene_preview,
-    )
-
     dimensions: FloatVectorProperty(
         name="Dimensions",
         description="dimensions of the whole asset hierarchy",
@@ -1011,14 +1002,6 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         name="Number of Objects",
         description="how many objects are in the asset, autofilled",
         default=0,
-    )
-
-    # THUMBNAIL STATES
-    is_generating_thumbnail: BoolProperty(
-        name="Generating Thumbnail",
-        description="True when background process is running",
-        default=False,
-        update=autothumb.update_upload_scene_preview,
     )
 
     has_autotags: BoolProperty(
