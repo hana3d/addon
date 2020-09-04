@@ -423,7 +423,6 @@ class Hana3DCommonSearchProps:
         items=workspace_items,
         name='User workspaces',
         description='User option to choose between workspaces',
-        default=None,
         options={'ANIMATABLE'},
         update=update_libraries_list_search
     )
@@ -458,11 +457,6 @@ class Hana3DCommonSearchProps:
 
 
 class Hana3DCommonUploadProps:
-    def name_update(self, context):
-        ''' checks for name change, because it decides if whole asset has to be re-uploaded.
-        Name is stored in the blend file and that's the reason.'''
-        utils.name_update()
-
     def update_tags(self, context):
         props = utils.get_upload_props()
         if props is None:
@@ -610,6 +604,15 @@ class Hana3DCommonUploadProps:
             self.has_thumbnail = False
             self.thumbnail_generating_state = 'No thumbnail or wrong file path\n'
 
+    def clear_data(self):
+        """Set all properties to their default values"""
+        for cls in self.__class__.mro():
+            if not hasattr(cls, '__annotations__'):
+                continue
+            for attr, (type_, kwargs) in cls.__annotations__.items():
+                if 'default' in kwargs:
+                    setattr(self, attr, kwargs['default'])
+
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",
@@ -626,7 +629,6 @@ class Hana3DCommonUploadProps:
         name="Name",
         description="Main name of the asset",
         default="",
-        update=name_update
     )
 
     # this is to store name for purpose of checking if name has changed.
@@ -711,7 +713,6 @@ class Hana3DCommonUploadProps:
         items=workspace_items,
         name='User workspaces',
         description='User option to choose between workspaces',
-        default=None,
         options={'ANIMATABLE'},
         update=update_libraries_list_upload
     )
@@ -766,10 +767,12 @@ class Hana3DCommonUploadProps:
 
     render_state: StringProperty(
         name="Render Generating State",
+        default="",
     )
 
     upload_render_state: StringProperty(
         name="Render Upload State",
+        default="",
     )
 
     uploading_render: BoolProperty(

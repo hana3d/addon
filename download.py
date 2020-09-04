@@ -311,6 +311,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     scene['assets used'] = scene.get('assets used', {})
     scene['assets used'][asset_data['view_id']] = asset_data.copy()
 
+    parent.hana3d.clear_data()
     parent['asset_data'] = asset_data
 
     set_thumbnail(asset_data, parent)
