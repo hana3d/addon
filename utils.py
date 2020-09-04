@@ -519,16 +519,24 @@ def get_dimensions(obs):
     return dim, bbmin, bbmax
 
 
-def get_headers(correlation_id: str = None) -> dict:
+def get_headers(
+        correlation_id: str = None,
+        api_key: str = None,
+        include_id_token: bool = False,
+) -> dict:
     headers = {
         'accept': 'application/json',
         'X-Request-Id': str(uuid.uuid4())
     }
     if correlation_id:
         headers['X-Correlation-Id'] = correlation_id
-    api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
+    if api_key is None:
+        api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
     if api_key != '':
         headers["Authorization"] = "Bearer %s" % api_key
+    if include_id_token:
+        id_token = bpy.context.preferences.addons['hana3d'].preferences.id_token
+        headers['X-ID-Token'] = id_token
     return headers
 
 

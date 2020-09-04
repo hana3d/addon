@@ -23,11 +23,10 @@ if 'bpy' in locals():
     oauth = reload(oauth)
     paths = reload(paths)
     search = reload(search)
-    tasks_queue = reload(tasks_queue)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import colors, oauth, paths, search, tasks_queue, ui, utils
+    from hana3d import colors, oauth, paths, search, ui, utils
 
 import threading
 import time
@@ -45,27 +44,10 @@ PORTS = [62485, 65425, 55428, 49452]
 active_authenticator = None
 
 
-def login_thread():
-    global active_authenticator
-    authenticator = oauth.SimpleOAuthAuthenticator(
-        auth0_url=AUTH_URL,
-        platform_url=PLATFORM_URL,
-        client_id=CLIENT_ID,
-        ports=PORTS,
-        audience=AUDIENCE,
-    )
-    # we store authenticator globally to be able to ping the server if connection fails.
-    active_authenticator = authenticator
-    thread = threading.Thread(target=login, args=([authenticator]), daemon=True)
-    thread.start()
-
-
-def login(authenticator):
-    auth_token, refresh_token, oauth_response = authenticator.get_new_token(
-        redirect_url=REDIRECT_URL
-    )
+def login(authenticator: oauth.OAuthAuthenticator):
+    oauth_response = authenticator.get_new_token(redirect_url=REDIRECT_URL)
     utils.p('tokens retrieved')
-    tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
+    write_tokens(oauth_response)
 
 
 def refresh_token_thread():
@@ -74,7 +56,7 @@ def refresh_token_thread():
         preferences.refresh_in_progress = True
         thread = threading.Thread(
             target=refresh_token,
-            args=([preferences.api_key_refresh]),
+            args=(preferences.api_key_refresh,),
             daemon=True
         )
         thread.start()
@@ -82,29 +64,39 @@ def refresh_token_thread():
         ui.add_report('Already Refreshing token, will be ready soon.')
 
 
-def refresh_token(api_key_refresh):
-    authenticator = oauth.SimpleOAuthAuthenticator(
+def refresh_token(api_key_refresh: str, immediate: bool) -> dict:
+    authenticator = oauth.OAuthAuthenticator(
         auth0_url=AUTH_URL,
         platform_url=PLATFORM_URL,
         client_id=CLIENT_ID,
         ports=PORTS,
         audience=AUDIENCE,
     )
-    auth_token, refresh_token, oauth_response = authenticator.get_refreshed_token(api_key_refresh)
-    if auth_token is not None and refresh_token is not None:
-        tasks_queue.add_task((write_tokens, (auth_token, refresh_token, oauth_response)))
+    oauth_response = authenticator.get_refreshed_token(api_key_refresh)
+    if oauth_response['access_token'] is not None and oauth_response['refresh_token'] is not None:
+        if immediate:
+            write_tokens(oauth_response)
+        else:
+            threading.Thread(target=write_tokens, args=(oauth_response,), daemon=True)
     else:
-        tasks_queue.add_task((fail_refresh, ()))
-    return auth_token, refresh_token, oauth_response
+        ui.add_report('Auto-Login failed, please login manually', color=colors.RED)
+        if immediate:
+            reset_tokens()
+        else:
+            threading.Thread(target=reset_tokens, daemon=True)
+    return oauth_response
 
 
-def write_tokens(auth_token, refresh_token, oauth_response):
+def write_tokens(oauth_response: dict):
     utils.p('writing tokens')
+    utils.p(oauth_response)
+
     preferences = bpy.context.preferences.addons['hana3d'].preferences
-    preferences.api_key_refresh = refresh_token
-    preferences.api_key = auth_token
+    preferences.api_key_refresh = oauth_response['refresh_token']
+    preferences.api_key = oauth_response['access_token']
     preferences.api_key_timeout = time.time() + oauth_response['expires_in']
     preferences.api_key_life = oauth_response['expires_in']
+    preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
     props = utils.get_search_props()
@@ -114,8 +106,7 @@ def write_tokens(auth_token, refresh_token, oauth_response):
     search.get_profile()
 
 
-def fail_refresh():
-    ui.add_report('Auto-Login failed, please login manually', color=colors.RED)
+def reset_tokens():
     preferences = bpy.context.preferences.addons['hana3d'].preferences
     preferences.api_key_refresh = ''
     preferences.api_key = ''
@@ -141,8 +132,23 @@ class RegisterLoginOnline(bpy.types.Operator):
     def execute(self, context):
         preferences = bpy.context.preferences.addons['hana3d'].preferences
         preferences.login_attempt = True
-        login_thread()
+        self.start_login_thread()
         return {'FINISHED'}
+
+    @staticmethod
+    def start_login_thread():
+        global active_authenticator
+        authenticator = oauth.OAuthAuthenticator(
+            auth0_url=AUTH_URL,
+            platform_url=PLATFORM_URL,
+            client_id=CLIENT_ID,
+            ports=PORTS,
+            audience=AUDIENCE,
+        )
+        # we store authenticator globally to be able to ping the server if connection fails.
+        active_authenticator = authenticator
+        thread = threading.Thread(target=login, args=(authenticator,), daemon=True)
+        thread.start()
 
 
 class Logout(bpy.types.Operator):
@@ -157,15 +163,7 @@ class Logout(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
-        preferences.api_key_refresh = ''
-        preferences.api_key = ''
-        preferences.api_key_timeout = 0
-        preferences.api_key_life = 3600
-        preferences.login_attempt = False
-        preferences.refresh_in_progress = False
-        if 'hana3d profile' in bpy.context.window_manager.keys():
-            del bpy.context.window_manager['hana3d profile']
+        reset_tokens()
         return {'FINISHED'}
 
 

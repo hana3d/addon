@@ -547,7 +547,7 @@ def write_profile(adata):
 
 def request_profile():
     a_url = paths.get_api_url('me')
-    headers = utils.get_headers()
+    headers = utils.get_headers(include_id_token=True)
     r = rerequests.get(a_url, headers=headers)
     adata = r.json()
     if adata.get('user') is None:

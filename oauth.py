@@ -18,9 +18,10 @@
 
 
 import json
+import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs, urlparse
+from typing import List
 
 import requests
 
@@ -42,106 +43,105 @@ import requests
 #     return m.digest()
 
 
-class SimpleOAuthAuthenticator(object):
-    def __init__(self, auth0_url, platform_url, client_id, ports, audience):
+class HTTPAuthRequestHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        if 'code' in self.path:
+            self.auth_code = self.path.split('=')[1]
+            if self.redirect_url:
+                redirect_header = f'''
+                    <head>
+                        <meta http-equiv="refresh" content="0;url={self.redirect_url}">
+                    </head>
+                    <script>
+                        window.location.href="{self.redirect_url}";
+                    </script>
+                '''
+            else:
+                redirect_header = ''
+            html_body = f'''
+                <html>
+                    {redirect_header}
+                    <h1>You may now close this window.</h1>
+                </html>
+            '''
+            self.wfile.write(html_body.encode('utf-8'))
+
+            parsed_url = urllib.parse.urlparse(self.path)
+            qs = urllib.parse.parse_qs(parsed_url.query)
+            self.server.authorization_code = qs['code'][0]
+        else:
+            self.wfile.write(b'<html><h1>Authorization failed.</h1></html>')
+
+
+class OAuthAuthenticator:
+    def __init__(
+            self,
+            auth0_url: str,
+            platform_url: str,
+            client_id: str,
+            ports: List[int],
+            audience: str):
         self.auth0_url = auth0_url
         self.platform_url = platform_url
         self.client_id = client_id
         self.ports = ports
         self.audience = audience
+        self.redirect_uri = ''
 
     def _get_tokens(
-        self,
-        authorization_code=None,
-        refresh_token=None,
-        grant_type='authorization_code'
-        # code_verifier=None, # TODO: Uncomment when using PKCE
-    ):
+            self,
+            authorization_code=None,
+            refresh_token=None,
+            grant_type='authorization_code'
+            # code_verifier=None, # TODO: Uncomment when using PKCE
+    ) -> dict:
         data = {'grant_type': grant_type, 'client_id': self.client_id, 'scopes': 'read write'}
-        if hasattr(self, 'redirect_uri'):
-            data['redirect_uri'] = self.redirect_uri
-        if authorization_code:
-            data['code'] = authorization_code
-        if refresh_token:
-            data['refresh_token'] = refresh_token
+        data['redirect_uri'] = self.redirect_uri
+        data['code'] = authorization_code
+        data['refresh_token'] = refresh_token
 
         # TODO: Uncomment when using PKCE
         # if code_verifier:
         #     data['code_verifier'] = code_verifier
 
         response = requests.post(f'{self.auth0_url}/oauth/token/', data=data)
-        if response.status_code != 200:
-            print(f'error retrieving refresh tokens {response.status_code}')
-            print(response.content)
-            return None, None, None
+        assert response.ok, \
+            f'error retrieving tokens ({response.status_code}), {response.text}'
 
-        response_json = json.loads(response.content)
-        refresh_token = response_json['refresh_token']
-        access_token = response_json['access_token']
-        return access_token, refresh_token, response_json
+        return json.loads(response.content)
 
-    def get_new_token(self, redirect_url=None):
-        class HTTPServerHandler(BaseHTTPRequestHandler):
-            html_template = '<html>%(head)s<h1>%(message)s</h1></html>'
-
-            def do_GET(self):
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                if 'code' in self.path:
-                    self.auth_code = self.path.split('=')[1]
-                    # Display to the user that they no longer need the browser window
-                    if redirect_url:
-                        redirect_string = (
-                            '<head><meta http-equiv="refresh" content="0;url=%(redirect_url)s"></head>'  # noqa E501
-                            '<script> window.location.href="%(redirect_url)s"; </script>' % {'redirect_url': redirect_url}  # noqa E501
-                        )
-                    else:
-                        redirect_string = ''
-                    self.wfile.write(
-                        bytes(
-                            self.html_template
-                            % {
-                                'head': redirect_string,
-                                'message': 'You may now close this window.',
-                            },
-                            'utf-8',
-                        )
-                    )
-                    qs = parse_qs(urlparse(self.path).query)
-                    self.server.authorization_code = qs['code'][0]
-                else:
-                    self.wfile.write(
-                        bytes(
-                            self.html_template % {'head': '', 'message': 'Authorization failed.'},
-                            'utf-8',
-                        )
-                    )
-
+    def get_new_token(self, redirect_url: str = None) -> str:
+        HTTPAuthRequestHandler.redirect_url = redirect_url
         for port in self.ports:
             try:
-                httpServer = HTTPServer(('localhost', port), HTTPServerHandler)
+                httpServer = HTTPServer(('localhost', port), HTTPAuthRequestHandler)
+                self.redirect_uri = f'http://localhost:{port}'
+                break
             except OSError:
                 continue
-            break
-
+        else:
+            raise Exception(f'Could not create callback endpoint for any ports in {self.ports}')
         # Extra layer of security recommended by auth0 in open source projects
         # TODO: Uncomment when using PKCE
         # key = secrets.token_bytes(32)
         # verifier = base64_URL_encode(key)
         # challenge = base64_URL_encode(sha256(verifier))
 
-        self.redirect_uri = f'http://localhost:{port}'
-        authorize_url = (
-            f'{self.platform_url}/login'
-            + '?response_type=code'
-            + '&scope=offline_access openid profile email'
-            + f'&client_id={self.client_id}'
-            + f'&redirect_uri={self.redirect_uri}'
-            + f'&audience={self.audience}'
-            # + f'&code_challenge={challenge}' # TODO: Uncomment when using PKCE
-            # + f'&code_challenge_method=S256'
-        )
+        query = {
+            'response_type': 'code',
+            'scope': 'offline_access openid profile email',
+            'client_id': self.client_id,
+            'redirect_uri': self.redirect_uri,
+            'audience': self.audience,
+            # TODO: Uncomment when using PKCE
+            # 'code_challenge': challenge,
+            # 'code_challenge_method': 'S256',
+        }
+        query_string = urllib.parse.urlencode(query)
+        authorize_url = f'{self.platform_url}/login?{query_string}'
         webbrowser.open_new(authorize_url)
 
         httpServer.handle_request()
@@ -149,5 +149,5 @@ class SimpleOAuthAuthenticator(object):
         # TODO: add code_verifier
         return self._get_tokens(authorization_code=authorization_code)
 
-    def get_refreshed_token(self, refresh_token):
+    def get_refreshed_token(self, refresh_token: str) -> dict:
         return self._get_tokens(refresh_token=refresh_token, grant_type='refresh_token')
