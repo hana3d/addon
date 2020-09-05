@@ -381,6 +381,15 @@ class Hana3DCommonSearchProps(object):
             self.libraries_count = i
         self.update_selected_libraries_search(context)
 
+    def update_tags_list_search(self, context):
+        for tag in context.window_manager['hana3d profile']['user']['tags']:
+            new_tag = self.tags_list.add()
+            new_tag['name'] = tag
+
+    def on_workspace_update(self, context):
+        self.update_libraries_list_search(context)
+        self.update_tags_list_search(context)
+
     # STATES
     search_keywords: StringProperty(
         name="Search",
@@ -438,7 +447,7 @@ class Hana3DCommonSearchProps(object):
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
-        update=update_libraries_list_search
+        update=on_workspace_update
     )
 
     default_library: StringProperty(
