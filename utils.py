@@ -802,3 +802,55 @@ def centralize(objects):
         bpy.data.objects.remove(obj)
 
     apply_translation(objects, translation)
+
+
+def check_meshprops(props, obs) -> Tuple[int, int]:
+    '''Return face count and render face count '''
+    fc = 0
+    fcr = 0
+
+    for ob in obs:
+        if ob.type == 'MESH' or ob.type == 'CURVE':
+            ob_eval = None
+            if ob.type == 'CURVE':
+                # depsgraph = bpy.context.evaluated_depsgraph_get()
+                # object_eval = ob.evaluated_get(depsgraph)
+                mesh = ob.to_mesh()
+            else:
+                mesh = ob.data
+            fco = len(mesh.polygons)
+            fc += fco
+            fcor = fco
+
+            for m in ob.modifiers:
+                if m.type == 'SUBSURF' or m.type == 'MULTIRES':
+                    fcor *= 4 ** m.render_levels
+                # this is rough estimate, not to waste time with evaluating all nonmanifold edges
+                if m.type == 'SOLIDIFY':
+                    fcor *= 2
+                if m.type == 'ARRAY':
+                    fcor *= m.count
+                if m.type == 'MIRROR':
+                    fcor *= 2
+                if m.type == 'DECIMATE':
+                    fcor *= m.ratio
+            fcr += fcor
+
+            if ob_eval:
+                ob_eval.to_mesh_clear()
+
+    return fc, frc
+
+
+def fill_object_metadata(obj: bpy.types.Object):
+    """ call all analysis functions """
+    obs = get_hierarchy(obj)
+    props = obj.hana3d
+
+    dim, bbox_min, bbox_max = get_dimensions(obs)
+    props.dimensions = dim
+    props.bbox_min = bbox_min
+    props.bbox_max = bbox_max
+
+    props.face_count, props.face_count_render = check_meshprops(props, obs)
+    props.object_count = len(obs)

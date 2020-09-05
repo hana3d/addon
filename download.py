@@ -314,6 +314,9 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     parent.hana3d.clear_data()
     parent['asset_data'] = asset_data
 
+    if asset_data['asset_type'] == 'model':  # TODO: read object metadata from server
+        utils.fill_object_metadata(parent)
+
     set_thumbnail(asset_data, parent)
 
     parent.hana3d.id = asset_data['id']

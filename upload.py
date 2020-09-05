@@ -127,13 +127,11 @@ def get_upload_location(props):
     return None
 
 
-def start_upload(self, context, asset_type, reupload, upload_set, correlation_id):
+def start_upload(self, context, props, asset_type, reupload, upload_set, correlation_id):
     '''start upload process, by processing data'''
 
     # fix the name first
     utils.name_update()
-
-    props = utils.get_upload_props()
 
     location = get_upload_location(props)
     props.upload_state = 'preparing upload'
@@ -329,7 +327,11 @@ class UploadOperator(Operator):
         return bpy.context.view_layer.objects.active is not None
 
     def execute(self, context):
-        bpy.ops.object.hana3d_auto_tags()
+        obj = utils.get_active_asset()
+        props = obj.hana3d
+
+        if self.asset_type == 'MODEL':
+            utils.fill_object_metadata(obj)
 
         upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
 
@@ -337,6 +339,7 @@ class UploadOperator(Operator):
         result = start_upload(
             self,
             context,
+            props,
             self.asset_type,
             self.reupload,
             upload_set,
