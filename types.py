@@ -595,7 +595,7 @@ class Hana3DCommonUploadProps:
                         i += 1
                 self.libraries_count = i
 
-    def update_thumbnail(self, context):
+    def update_thumbnail(self, context=None):
         img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)
         if img is not None:
             self.has_thumbnail = True

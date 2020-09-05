@@ -634,8 +634,9 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
 
 def name_update():
-    props = get_upload_props()
-    if props is None:
+    asset = get_active_asset()
+    props = asset.hana3d
+    if asset is None:
         return
     if props.name_old != props.name:
         props.name_changed = True
@@ -652,7 +653,6 @@ def name_update():
     fname = props.name
     fname = fname.replace('\'', '')
     fname = fname.replace('\"', '')
-    asset = get_active_asset()
     asset.name = fname
 
 
@@ -839,7 +839,7 @@ def check_meshprops(props, obs) -> Tuple[int, int]:
             if ob_eval:
                 ob_eval.to_mesh_clear()
 
-    return fc, frc
+    return fc, fcr
 
 
 def fill_object_metadata(obj: bpy.types.Object):
