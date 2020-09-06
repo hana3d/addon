@@ -43,7 +43,7 @@ from bpy.props import (
     PointerProperty,
     StringProperty
 )
-from bpy.types import PropertyGroup
+from bpy.types import PropertyGroup, Operator
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -1168,6 +1168,31 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     )
 
 
+class Hana3DAddTag(Operator):
+    """Add Tag"""
+
+    bl_idname = "object.hana3d_add_tag"
+    bl_label = "Add new tag"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    tag: StringProperty(name='New Tag', default='')
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'tag')
+
+    def execute(self, context):
+        props = utils.get_upload_props()
+        new_tag = props.tags_list.add()
+        new_tag['name'] = self.tag
+        new_tag.selected = True
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+
 Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
 
 
@@ -1181,6 +1206,7 @@ classes = (
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
     Hana3DMaterialSearchProps,
+    Hana3DAddTag
 )
 
 

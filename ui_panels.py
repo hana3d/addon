@@ -82,10 +82,18 @@ def draw_not_logged_in(source):
 
 
 def draw_selected_tags(layout, props, operator):
+    row = layout.row()
+    row.scale_y = 0.9
+    tag_counter = 0
     for tag in props.tags_list.keys():
         if props.tags_list[tag].selected is True:
-            op = layout.operator(operator, text=tag, icon='X')
+            op = row.operator(operator, text=tag, icon='X')
             op.tag = tag
+            tag_counter += 1
+        if tag_counter == 3:
+            row = layout.row()
+            row.scale_y = 0.9
+            tag_counter = 0
 
 
 def draw_panel_common_upload(layout, context):
@@ -137,7 +145,9 @@ def draw_panel_common_upload(layout, context):
 
     box = layout.box()
     box.label(text='Tags', icon='COLOR')
-    box.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
+    row = box.row(align=True)
+    row.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
+    op = row.operator('object.hana3d_add_tag', text='', icon='ADD')
     draw_selected_tags(box, props, "object.hana3d_remove_tag_upload")
 
     layout.prop(props, 'publish_message')
