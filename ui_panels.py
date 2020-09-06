@@ -121,7 +121,6 @@ def draw_panel_common_upload(layout, context):
     box = layout.box()
     box.label(text='Asset Info', icon='MESH_CUBE')
     prop_needed(box, props, 'name', props.name)
-
     col = box.column()
     if props.is_generating_thumbnail:
         col.enabled = False
@@ -150,7 +149,7 @@ def draw_panel_common_upload(layout, context):
     op = row.operator('object.hana3d_add_tag', text='', icon='ADD')
     draw_selected_tags(box, props, "object.hana3d_remove_tag_upload")
 
-    layout.prop(props, 'publish_message')
+    prop_needed(layout, props, 'publish_message', props.publish_message)
 
     if props.upload_state != '':
         label_multiline(layout, text=props.upload_state, width=context.region.width)
