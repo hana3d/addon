@@ -350,6 +350,10 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                         }
                         parent.hana3d.custom_props[name] = view_prop['value']
 
+    if 'tags' in asset_data:
+        for tag in asset_data['tags']:
+            parent.hana3d.tags_list[tag].selected = True
+
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 
 

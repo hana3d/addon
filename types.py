@@ -325,17 +325,9 @@ def search_update(self, context):
     search.search()
 
 
-def tags_update(self, context):
-    print('TAGS UPDATE')
-    new_tag = self.tags_selected.add()
-    new_tag.name = self.tags_input
-    new_tag.value = self.tags_input
-    print(self.tags_input)
-
-
 class Hana3DTagItem(PropertyGroup):
-    name: StringProperty(name="Test Property", default="Unknown")
-    value: StringProperty(name="Test Property", default="")
+    name: StringProperty(name="Tag Name", default="Unknown")
+    selected: BoolProperty(name="Tag Selected", default=False)
 
 
 class Hana3DCommonSearchProps(object):
@@ -381,14 +373,19 @@ class Hana3DCommonSearchProps(object):
             self.libraries_count = i
         self.update_selected_libraries_search(context)
 
-    def update_tags_list_search(self, context):
+    def update_tags_list(self, context):
         for tag in context.window_manager['hana3d profile']['user']['tags']:
             new_tag = self.tags_list.add()
             new_tag['name'] = tag
 
     def on_workspace_update(self, context):
         self.update_libraries_list_search(context)
-        self.update_tags_list_search(context)
+        if len(self.tags_list) == 0:
+            self.update_tags_list(context)
+
+    def update_tags_input(self, context):
+        if self.tags_input != '':
+            self.tags_list[self.tags_input].selected = True
 
     # STATES
     search_keywords: StringProperty(
@@ -481,7 +478,7 @@ class Hana3DCommonSearchProps(object):
     tags_list: CollectionProperty(type=Hana3DTagItem)
 
     tags_input: StringProperty(
-        name="Tags", description="Asset Tags", default="", update=tags_update)
+        name="Tags", description="Asset Tags", default="", update=update_tags_input)
 
     # tags_selected: CollectionProperty(
     #     type=StringProperty, name="Selected Tags", description="All selected tags")
@@ -635,6 +632,20 @@ class Hana3DCommonUploadProps:
                         i += 1
                 self.libraries_count = i
 
+    def update_tags_list(self, context):
+        for tag in context.window_manager['hana3d profile']['user']['tags']:
+            new_tag = self.tags_list.add()
+            new_tag['name'] = tag
+
+    def on_workspace_update(self, context):
+        self.update_libraries_list_upload(context)
+        if len(self.tags_list) == 0:
+            self.update_tags_list(context)
+
+    def update_tags_input(self, context):
+        if self.tags_input != '':
+            self.tags_list[self.tags_input].selected = True
+
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",
@@ -718,7 +729,7 @@ class Hana3DCommonUploadProps:
         description='User option to choose between workspaces',
         default=None,
         options={'ANIMATABLE'},
-        update=update_libraries_list_upload
+        update=on_workspace_update
     )
 
     default_library: StringProperty(
@@ -808,10 +819,11 @@ class Hana3DCommonUploadProps:
     tags_list: CollectionProperty(type=Hana3DTagItem)
 
     tags_input: StringProperty(
-        name="Tags", description="Asset Tags", default="", update=tags_update)
+        name="Tags", description="Asset Tags", default="", update=update_tags_input)
 
-    # tags_selected: CollectionProperty(
-    #     type=StringProperty, name="Selected Tags", description="All selected tags")
+    tags_selected: PointerProperty(
+        type=PropertyGroup
+    )
 
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):

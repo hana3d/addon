@@ -265,7 +265,6 @@ def get_export_data(
 
     upload_data["name"] = props.name
     upload_data["description"] = props.description
-    upload_data["tags"] = comma2array(props.tags)
 
     upload_data['parameters'] = upload_params
 
@@ -301,6 +300,11 @@ def get_export_data(
                         custom_props.update({key: value})
                 library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
+
+    upload_data['tags'] = []
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            upload_data["tags"].append(tag)
 
     export_data['publish_message'] = props.publish_message
 

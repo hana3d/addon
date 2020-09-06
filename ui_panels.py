@@ -81,6 +81,13 @@ def draw_not_logged_in(source):
     bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
 
 
+def draw_selected_tags(layout, props, operator):
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            op = layout.operator(operator, text=tag, icon='X')
+            op.tag = tag
+
+
 def draw_panel_common_upload(layout, context):
     scene = bpy.context.scene
     uiprops = scene.Hana3DUI
@@ -131,6 +138,7 @@ def draw_panel_common_upload(layout, context):
     box = layout.box()
     box.label(text='Tags', icon='COLOR')
     box.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
+    draw_selected_tags(box, props, "object.hana3d_remove_tag_upload")
 
     layout.prop(props, 'publish_message')
 
@@ -185,6 +193,7 @@ def draw_panel_common_search(layout, context):
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
     layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
+    draw_selected_tags(layout, props, "object.hana3d_remove_tag_search")
 
     if asset_type == 'MODEL':
         layout.separator()
@@ -606,6 +615,36 @@ If no library is selected the view will be assigned to the default library."""
         return wm.invoke_popup(self)
 
 
+class RemoveTagSearch(Operator):
+    """Remove Tag"""
+
+    bl_idname = "object.hana3d_remove_tag_search"
+    bl_label = "Hana3D List Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    tag: bpy.props.StringProperty(name='Tag', default='')
+
+    def execute(self, context):
+        props = utils.get_search_props()
+        props.tags_list[self.tag].selected = False
+        return {'INTERFACE'}
+
+
+class RemoveTagUpload(Operator):
+    """Remove Tag"""
+
+    bl_idname = "object.hana3d_remove_tag_upload"
+    bl_label = "Hana3D Remove Tag"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    tag: bpy.props.StringProperty(name='Tag', default='')
+
+    def execute(self, context):
+        props = utils.get_upload_props()
+        props.tags_list[self.tag].selected = False
+        return {'INTERFACE'}
+
+
 classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
@@ -613,7 +652,9 @@ classes = (
     VIEW3D_PT_hana3d_downloads,
     VIEW3D_PT_hana3d_RenderPanel,
     ListLibrariesSearch,
-    ListLibrariesUpload
+    ListLibrariesUpload,
+    RemoveTagSearch,
+    RemoveTagUpload
 )
 
 
