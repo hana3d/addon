@@ -64,7 +64,7 @@ def refresh_token_thread():
         ui.add_report('Already Refreshing token, will be ready soon.')
 
 
-def refresh_token(api_key_refresh: str, immediate: bool) -> dict:
+def refresh_token(api_key_refresh: str, immediate: bool = False) -> dict:
     authenticator = oauth.OAuthAuthenticator(
         auth0_url=AUTH_URL,
         platform_url=PLATFORM_URL,
