@@ -35,57 +35,6 @@ import bpy
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
-def check_thumbnail(props, imgpath):
-    img = utils.get_hidden_image(imgpath, 'upload_preview', force_reload=True)
-    if img is not None:  # and img.size[0] == img.size[1] and img.size[0] >= 512 and (
-        # img.file_format == 'JPEG' or img.file_format == 'PNG'):
-        props.has_thumbnail = True
-        props.thumbnail_generating_state = ''
-        return
-    else:
-        props.has_thumbnail = False
-    output = ''
-    if img is None or img.size[0] == 0 or img.filepath.find('thumbnail_notready.jpg') > -1:
-        output += 'No thumbnail or wrong file path\n'
-    else:
-        pass
-        # this is causing problems on some platforms, don't know why..
-        # if img.size[0] != img.size[1]:
-        #     output += 'image not a square\n'
-        # if img.size[0] < 512:
-        #     output += 'image too small, should be at least 512x512\n'
-        # if img.file_format != 'JPEG' or img.file_format != 'PNG':
-        #     output += 'image has to be a jpeg or png'
-    props.thumbnail_generating_state = output
-
-
-def update_upload_model_preview(self, context):
-    ob = utils.get_active_model()
-    if ob is not None:
-        props = ob.hana3d
-        imgpath = props.thumbnail
-        check_thumbnail(props, imgpath)
-
-
-def update_upload_scene_preview(self, context):
-    s = bpy.context.scene
-    props = s.hana3d
-    imgpath = props.thumbnail
-    check_thumbnail(props, imgpath)
-
-
-def update_upload_material_preview(self, context):
-    if (
-        hasattr(bpy.context, 'active_object')
-        and bpy.context.view_layer.objects.active is not None
-        and bpy.context.active_object.active_material is not None
-    ):
-        mat = bpy.context.active_object.active_material
-        props = mat.hana3d
-        imgpath = props.thumbnail
-        check_thumbnail(props, imgpath)
-
-
 def start_thumbnailer(self, context):
     # Prepare to save the file
     mainmodel = utils.get_active_model()
