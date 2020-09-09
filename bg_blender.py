@@ -20,6 +20,7 @@ import os
 import re
 import sys
 import threading
+import time
 
 import bpy
 from bpy.props import EnumProperty
@@ -153,6 +154,12 @@ def bg_update():
             if 'finished successfully' in tcom.lasttext:
                 bg_processes.remove(p)
                 exec(f'{tcom.eval_path_computing} = False')
+                thread = threading.Thread(
+                    target=clear_state_after_delay,
+                    args=(tcom.eval_path_state,),
+                    daemon=True
+                )
+                thread.start()
             else:
                 readthread = threading.Thread(target=threadread, args=(tcom,), daemon=True)
                 readthread.start()
@@ -162,6 +169,11 @@ def bg_update():
     if len(bg_processes) > 0:
         return 0.3
     return 1.0
+
+
+def clear_state_after_delay(state: str, delay: int = 5):
+    time.sleep(delay)
+    exec(f'{state} = ""')
 
 
 process_types = (

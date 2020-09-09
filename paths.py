@@ -140,6 +140,7 @@ def get_temp_dir(subdir=None):
 def get_download_dirs(asset_type):
     ''' get directories where assets will be downloaded'''
     subdmapping = {'model': 'models', 'scene': 'scenes', 'material': 'materials'}
+    asset_type = asset_type.lower()
 
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     dirs = []

@@ -72,6 +72,7 @@ class UploadFileMixin:
         self.props: types.Props
         self.filepath: str
         self.log_state_name: str
+        self.add_report: bool
 
         self._upload_progress_bytes = 0
         self.uploading = False
@@ -84,7 +85,8 @@ class UploadFileMixin:
     def log(self, text: str, error: bool = False):
         self.props.render_state = text
         color = colors.RED if error else colors.GREEN
-        ui.add_report(text, color=color)
+        if self.add_report:
+            ui.add_report(text, color=color)
         print(text)
 
     @property
@@ -140,29 +142,37 @@ class RenderThread(UploadFileMixin, threading.Thread):
             props: types.Props,
             engine: str,
             frame_start: int,
-            frame_end: int):
+            frame_end: int,
+            is_thumbnail: bool = False):
         super().__init__(daemon=True)
         self.props = props
         self.engine = engine
         self.frame_start = frame_start
         self.frame_end = frame_end
+        self.is_thumbnail = is_thumbnail
 
-        # Save job name on thread to avoid erros when changing asset name before job completes
-        self.render_job_name = props.render_job_name
-        self.log_state_name = 'render_state'
+        if is_thumbnail:
+            self.render_job_name = 'thumbnail_' + self.props.name
+            self.log_state_name = 'thumbnail_generating_state'
+            self.add_report = False
+        else:
+            self.render_job_name = props.render_job_name
+            self.log_state_name = 'render_state'
+            self.add_report = True
 
         self.tempdir = tempfile.mkdtemp()
         self.filepath = os.path.join(self.tempdir, 'export_render.blend')
-        bpy.ops.wm.save_as_mainfile(filepath=self.filepath, compress=False, copy=True)
-        self.file_size = os.path.getsize(self.filepath)
 
         self.job_progress = 0.0
         self.job_running = False
         self.cancelled = False
 
     def run(self):
-        self.props.rendering = True
+        self._set_running_flag(True)
         try:
+            if self.is_thumbnail:
+                self._wait_for_upload_complete()
+            self._save_render_scene()
             render_scene_id, upload_url = self._create_render_view()
 
             if self.cancelled:
@@ -174,7 +184,13 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 return
             job_id = self._create_job(render_scene_id)
             nrf_output = self._pool_job(job_id)
-            if nrf_output:
+            if not nrf_output:
+                raise Exception('notrenderfarm returned no output')
+            if self.is_thumbnail:
+                thumbnail_url = nrf_output[0]
+                self._post_new_thumbnail(render_scene_id, thumbnail_url)
+                self._import_thumbnail(thumbnail_url)
+            else:
                 jobs_data = self._post_completed_job(render_scene_id, nrf_output)
                 self._import_renders(jobs_data)
         except Exception as e:
@@ -185,9 +201,41 @@ class RenderThread(UploadFileMixin, threading.Thread):
             if not self.cancelled:
                 self.log('Job finished successfully')
         finally:
-            self.props.rendering = False
+            self._set_running_flag(False)
             time.sleep(5)
-            self.props.render_state = ''
+            setattr(self.props, self.log_state_name, '')
+
+    def _set_running_flag(self, flag: bool):
+        if self.is_thumbnail:
+            self.props.is_generating_thumbnail = flag
+        else:
+            self.props.rendering = flag
+
+    def _wait_for_upload_complete(self):
+        while self.props.uploading:
+            time.sleep(5)
+        self.props.upload_state = ''
+
+    def _save_render_scene(self):
+        if self.is_thumbnail:
+            if self.props.asset_type == 'MODEL':
+                thumbnailer = bpy.ops.object.hana3d_thumbnail
+            elif self.props.asset_type == 'MATERIAL':
+                thumbnailer = bpy.ops.material.hana3d_thumbnail
+            elif self.props.asset_type == 'SCENE':
+                thumbnailer = bpy.ops.scene.hana3d_thumbnail
+            else:
+                raise TypeError(f'Unexpected asset_type={self.props.asset_type}')
+
+            self.props.is_generating_thumbnail = True
+            thumbnailer('EXEC_DEFAULT', save_only=True, blend_filepath=self.filepath)
+
+            # thumbnailer may run asynchronously, so we have to wait for it to finish
+            while self.props.is_generating_thumbnail:
+                time.sleep(5)
+        else:
+            bpy.ops.wm.save_as_mainfile(filepath=self.filepath, compress=True, copy=True)
+        self.file_size = os.path.getsize(self.filepath)
 
     def _create_render_view(self) -> Tuple[str, str]:
         url = paths.get_api_url('uploads')
@@ -200,6 +248,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 'render': {
                     'file_type': 'scene',
                     'job_name': self.render_job_name,
+                    'is_thumbnail': self.is_thumbnail,
                 }
             }
         }
@@ -317,6 +366,26 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self.props.render_data['jobs'] = jobs_data
         else:
             self.props.render_data['jobs'] += jobs_data
+
+    def _post_new_thumbnail(self, render_scene_id: str, thumbnail_url: str) -> str:
+        url = paths.get_api_url('assets')
+        data = {
+            'assetId': self.props.id,
+            'thumbnail_url': thumbnail_url,
+        }
+        response = rerequests.post(url, json=data, headers=self.headers)
+        assert response.ok, response.text
+
+    def _import_thumbnail(self, thumbnail_url: str):
+        filename = paths.extract_filename_from_url(thumbnail_url)
+        download_dir = paths.get_download_dirs(self.props.asset_type)[0]
+        file_path = os.path.join(download_dir, filename)
+
+        response = requests.get(thumbnail_url, stream=True)
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
+
+        self.props.thumbnail = file_path
 
 
 class RenderScene(Operator):
@@ -522,6 +591,7 @@ class UploadThread(UploadFileMixin, threading.Thread):
         self.props = props
         self.context = context
         self.log_state_name = 'upload_render_state'
+        self.add_report = True
 
     def run(self):
         self.props.uploading_render = True

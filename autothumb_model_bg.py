@@ -74,10 +74,6 @@ def center_obs_for_thumbnail(obs):
     bpy.context.view_layer.update()
 
 
-def render_thumbnails():
-    bpy.ops.render.render(write_still=True, animation=False)
-
-
 if __name__ == "__main__":
     try:
         with open(HANA3D_EXPORT_DATA, 'r') as s:
@@ -103,7 +99,6 @@ if __name__ == "__main__":
 
         bpy.context.scene.camera = bpy.data.objects[camdict[data['thumbnail_snap_to']]]
         center_obs_for_thumbnail(allobs)
-        bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
         if user_preferences.thumbnail_use_gpu:
             bpy.context.scene.cycles.device = 'GPU'
 
@@ -149,9 +144,12 @@ if __name__ == "__main__":
         bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
-        bg_blender.progress('rendering thumbnail')
-        render_thumbnails()
-        fpath = HANA3D_THUMBNAIL_PATH + '0001.jpg'
+        if data['save_only']:
+            bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
+        else:
+            bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
+            bg_blender.progress('rendering thumbnail')
+            bpy.ops.render.render(write_still=True, animation=False)
         bg_blender.progress('background autothumbnailer finished successfully')
 
     except Exception:

@@ -106,28 +106,29 @@ def draw_panel_common_upload(layout, context):
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
         if asset_type == 'MODEL':
             col.operator(
-                "object.hana3d_generate_thumbnail",
+                "object.hana3d_thumbnail",
                 text='Generate thumbnail',
                 icon='IMAGE_DATA'
             )
         elif asset_type == 'SCENE':
             col.operator(
-                "object.hana3d_scene_thumbnail",
+                "scene.hana3d_thumbnail",
                 text='Generate thumbnail',
                 icon='IMAGE_DATA'
             )
         elif asset_type == 'MATERIAL':
             col.operator(
-                "object.hana3d_material_thumbnail",
+                "material.hana3d_thumbnail",
                 text='Generate thumbnail',
                 icon='IMAGE_DATA'
             )
-    if props.is_generating_thumbnail:
+    if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
         row = layout.row(align=True)
         row.label(text=props.thumbnail_generating_state)
-        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-        op.process_source = asset_type
-        op.process_type = 'THUMBNAILER'
+        if props.is_generating_thumbnail:
+            op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
+            op.process_source = asset_type
+            op.process_type = 'THUMBNAILER'
 
     if props.upload_state != '':
         label_multiline(layout, text=props.upload_state, width=context.region.width)

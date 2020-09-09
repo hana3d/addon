@@ -30,10 +30,6 @@ HANA3D_EXPORT_FILE_INPUT = sys.argv[-3]
 HANA3D_EXPORT_DATA = sys.argv[-4]
 
 
-def render_thumbnails():
-    bpy.ops.render.render(write_still=True, animation=False)
-
-
 def unhide_collection(cname):
     collection = bpy.context.scene.collection.children[cname]
     collection.hide_viewport = False
@@ -116,9 +112,12 @@ if __name__ == "__main__":
         bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
-        bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
-        bg_blender.progress('rendering thumbnail')
-        render_thumbnails()
+        if data['save_only']:
+            bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
+        else:
+            bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
+            bg_blender.progress('rendering thumbnail')
+            bpy.ops.render.render(write_still=True, animation=False)
         bg_blender.progress('background autothumbnailer finished successfully')
 
     except Exception as e:

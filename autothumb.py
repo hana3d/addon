@@ -22,16 +22,30 @@ import subprocess
 import tempfile
 
 import bpy
+from bpy.props import BoolProperty, StringProperty
 
 from hana3d import bg_blender, paths, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
-class GenerateThumbnailOperator(bpy.types.Operator):
+class LocalRenderProperties:
+    save_only: BoolProperty(
+        default=False,
+        description="Save render scene instead of generating final render",
+    )
+
+    blend_filepath: StringProperty(
+        description="Filepath to .blend scene to be rendered when only saving",
+        subtype='FILE_PATH',
+        options={'HIDDEN', 'SKIP_SAVE'},
+    )
+
+
+class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
 
-    bl_idname = "object.hana3d_generate_thumbnail"
+    bl_idname = "object.hana3d_thumbnail"
     bl_label = "Hana3D Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -58,7 +72,6 @@ class GenerateThumbnailOperator(bpy.types.Operator):
     def execute(self, context):
         mainmodel = utils.get_active_model()
         mainmodel.hana3d.is_generating_thumbnail = True
-        mainmodel.hana3d.remote_thumbnail = False
         mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
 
         binary_path = bpy.app.binary_path
@@ -108,6 +121,8 @@ class GenerateThumbnailOperator(bpy.types.Operator):
                         "thumbnail_resolution": hana3d.thumbnail_resolution,
                         "thumbnail_samples": hana3d.thumbnail_samples,
                         "thumbnail_denoising": hana3d.thumbnail_denoising,
+                        "save_only": self.save_only,
+                        "blend_filepath": self.blend_filepath,
                     },
                     s,
                 )
@@ -144,7 +159,8 @@ class GenerateThumbnailOperator(bpy.types.Operator):
                 process=proc,
             )
 
-            mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
+            if not self.save_only:
+                mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
             mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
 
             if autopack is True:
@@ -152,17 +168,18 @@ class GenerateThumbnailOperator(bpy.types.Operator):
 
         except Exception as e:
             self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
-            return {'FINISHED'}
+            return {'CANCELLED'}
+        return {'FINISHED'}
 
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
 
-class GenerateMaterialThumbnailOperator(bpy.types.Operator):
-    """Tooltip"""
+class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
+    """Generate Cycles thumbnail for materials"""
 
-    bl_idname = "object.hana3d_material_thumbnail"
+    bl_idname = "material.hana3d_thumbnail"
     bl_label = "Hana3D Material Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -236,6 +253,8 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
                         "thumbnail_denoising": hana3d.thumbnail_denoising,
                         "adaptive_subdivision": hana3d.adaptive_subdivision,
                         "texture_size_meters": hana3d.texture_size_meters,
+                        "save_only": self.save_only,
+                        "blend_filepath": self.blend_filepath,
                     },
                     s,
                 )
@@ -260,8 +279,8 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
                 creationflags=utils.get_process_flags(),
             )
 
-            eval_path_computing = "bpy.data.materials['%s'].hana3d.is_generating_thumbnail" % mat.name
-            eval_path_state = "bpy.data.materials['%s'].hana3d.thumbnail_generating_state" % mat.name
+            eval_path_computing = "bpy.data.materials['%s'].hana3d.is_generating_thumbnail" % mat.name  # noqa: E501
+            eval_path_state = "bpy.data.materials['%s'].hana3d.thumbnail_generating_state" % mat.name  # noqa: E501
             eval_path = "bpy.data.materials['%s']" % mat.name
 
             bg_blender.add_bg_process(
@@ -272,21 +291,23 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
                 process=proc,
             )
 
-            mat.hana3d.thumbnail = rel_thumb_path + '.png'
+            if not self.save_only:
+                mat.hana3d.thumbnail = rel_thumb_path + '.png'
             mat.hana3d.thumbnail_generating_state = 'Saving .blend file'
         except Exception as e:
             self.report({'WARNING'}, "Error while packing file: %s" % str(e))
-            return {'FINISHED'}
+            return {'CANCELLED'}
+        return {'FINISHED'}
 
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
 
-class GenerateSceneThumbnailOperator(bpy.types.Operator):
+class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
     """Generate Cycles thumbnail for scene"""
 
-    bl_idname = "object.hana3d_scene_thumbnail"
+    bl_idname = "scene.hana3d_thumbnail"
     bl_label = "Hana3D Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -307,7 +328,6 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         s = bpy.context.scene
         props = s.hana3d
         props.is_generating_thumbnail = True
-        props.remote_thumbnail = False
         props.thumbnail_generating_state = 'starting blender instance'
 
         basename, ext = os.path.splitext(bpy.data.filepath)
@@ -330,7 +350,6 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         try:
             user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
-            bpy.context.scene.render.filepath = thumb_path + '.png'
             if user_preferences.thumbnail_use_gpu:
                 bpy.context.scene.cycles.device = 'GPU'
 
@@ -343,19 +362,24 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
             bpy.context.scene.render.resolution_x = int(props.thumbnail_resolution)
             bpy.context.scene.render.resolution_y = int(props.thumbnail_resolution)
 
-            bpy.ops.render.render(write_still=True, animation=False)
+            if self.save_only:
+                bpy.ops.wm.save_as_mainfile(filepath=self.blend_filepath, compress=True, copy=True)
+            else:
+                bpy.context.scene.render.filepath = thumb_path + '.png'
+                bpy.ops.render.render(write_still=True, animation=False)
+                props.thumbnail = rel_thumb_path + '.png'
 
             bpy.context.scene.render.resolution_x = x
             bpy.context.scene.render.resolution_y = y
 
-            props.thumbnail = rel_thumb_path + '.png'
             props.thumbnail_generating_state = 'Finished'
             props.is_generating_thumbnail = False
 
         except Exception as e:
             props.is_generating_thumbnail = False
             self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
-            return {'FINISHED'}
+            return {'CANCELLED'}
+        return {'FINISHED'}
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -367,13 +391,13 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
                 self.layout.label(text=message)
 
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
-            return {'FINISHED'}
+            return {'CANCELLED'}
 
         return wm.invoke_props_dialog(self)
 
 
 classes = (
-    GenerateThumbnailOperator,
+    GenerateModelThumbnailOperator,
     GenerateMaterialThumbnailOperator,
     GenerateSceneThumbnailOperator,
 )

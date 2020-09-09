@@ -30,49 +30,18 @@ import requests
 from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import Operator
 
-from hana3d import bg_blender, paths, rerequests, types, ui, utils, version
+from hana3d import (
+    bg_blender,
+    paths,
+    render,
+    rerequests,
+    types,
+    ui,
+    utils,
+    version
+)
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
-
-
-def write_to_report(props, text):
-    props.report = props.report + text + '\n'
-
-
-def get_missing_data_model(props):
-    props.report = ''
-
-    if props.name == '':
-        write_to_report(props, 'Set model name')
-    # if props.tags == '':
-    #     write_to_report(props, 'Write at least 3 tags')
-    if not props.has_thumbnail:
-        write_to_report(props, 'Add thumbnail:')
-
-        props.report += props.thumbnail_generating_state + '\n'
-    if not any(props.dimensions):
-        write_to_report(props, 'Run autotags operator or fill in dimensions manually')
-
-
-def get_missing_data_scene(props):
-    props.report = ''
-
-    if props.name == '':
-        write_to_report(props, 'Set scene name')
-    if not props.has_thumbnail:
-        write_to_report(props, 'Add thumbnail:')
-        props.report += props.thumbnail_generating_state + '\n'
-
-
-def get_missing_data_material(props):
-    props.report = ''
-    if props.name == '':
-        write_to_report(props, 'Set material name')
-    # if props.tags == '':
-    #     write_to_report(props, 'Write at least 3 tags')
-    if not props.has_thumbnail:
-        write_to_report(props, 'Add thumbnail:')
-        props.report += props.thumbnail_generating_state
 
 
 def sub_to_camel(content):
@@ -303,7 +272,7 @@ class UploadOperator(Operator):
             utils.fill_object_metadata(obj)
 
         upload_set = ['METADATA', 'MAINFILE']
-        if not props.has_thumbnail:
+        if props.has_thumbnail:
             upload_set.append('THUMBNAIL')
         else:
             props.remote_thumbnail = True
@@ -334,20 +303,6 @@ class UploadOperator(Operator):
         props.tags = props.tags[:]
         if 'jobs' not in props.render_data:
             props.render_data['jobs'] = []
-
-        props.name = props.name.strip()
-        # TODO  move this to separate function
-        # check for missing metadata
-        if self.asset_type == 'MODEL':
-            get_missing_data_model(props)
-        elif self.asset_type == 'SCENE':
-            get_missing_data_scene(props)
-        elif self.asset_type == 'MATERIAL':
-            get_missing_data_material(props)
-
-        if props.report != '':
-            self.report({'ERROR_INVALID_INPUT'}, props.report)
-            return {'CANCELLED'}
 
         if not self.reupload:
             props.view_id = ''
@@ -473,6 +428,17 @@ class UploadOperator(Operator):
             props.uploading = False
             print(e)
             return {'CANCELLED'}
+
+        if props.remote_thumbnail:
+            thread = render.RenderThread(
+                props,
+                engine='CYCLES',
+                frame_start=1,
+                frame_end=1,
+                is_thumbnail=True,
+            )
+            thread.start()
+            render.render_threads.append(thread)
 
         return {'FINISHED'}
 

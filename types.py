@@ -696,7 +696,7 @@ class Hana3DCommonUploadProps:
     thumbnail_generating_state: StringProperty(
         name="Thumbnail Generating State",
         description="bg process reports for thumbnail generation",
-        default='Please add thumbnail(jpg, at least 512x512)',
+        default='',
     )
 
     report: StringProperty(
