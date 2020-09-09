@@ -162,149 +162,6 @@ def add_version(data):
     data["addonVersion"] = addon_version
 
 
-def comma2array(text):
-    commasep = text.split(',')
-    ar = []
-    for i, s in enumerate(commasep):
-        s = s.strip()
-        if s != '':
-            ar.append(s)
-    return ar
-
-
-def get_export_data(
-        asset_type: str,
-        path_computing: str = 'uploading',
-        path_state: str = 'upload_state'):
-    export_data = {
-        "type": asset_type,
-    }
-    upload_params = {}
-    if asset_type == 'MODEL':
-        # Prepare to save the file
-        mainmodel = get_active_model()
-
-        props = mainmodel.hana3d
-
-        obs = get_hierarchy(mainmodel)
-        obnames = []
-        for ob in obs:
-            obnames.append(ob.name)
-        export_data["models"] = obnames
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path = f"bpy.data.objects['{mainmodel.name}']"
-
-        upload_data = {
-            "assetType": 'model',
-        }
-        upload_params = {
-            "dimensionX": round(props.dimensions[0], 4),
-            "dimensionY": round(props.dimensions[1], 4),
-            "dimensionZ": round(props.dimensions[2], 4),
-            "boundBoxMinX": round(props.bbox_min[0], 4),
-            "boundBoxMinY": round(props.bbox_min[1], 4),
-            "boundBoxMinZ": round(props.bbox_min[2], 4),
-            "boundBoxMaxX": round(props.bbox_max[0], 4),
-            "boundBoxMaxY": round(props.bbox_max[1], 4),
-            "boundBoxMaxZ": round(props.bbox_max[2], 4),
-            "faceCount": props.face_count,
-            "faceCountRender": props.face_count_render,
-            "objectCount": props.object_count,
-        }
-
-    elif asset_type == 'SCENE':
-        # Prepare to save the file
-        s = bpy.context.scene
-
-        props = s.hana3d
-
-        export_data["scene"] = s.name
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path = f"bpy.data.scenes['{s.name}']"
-
-        upload_data = {
-            "assetType": 'scene',
-        }
-        upload_params = {
-            # TODO add values
-            # "faceCount": 1,  # props.face_count,
-            # "faceCountRender": 1,  # props.face_count_render,
-            # "objectCount": 1,  # props.object_count,
-        }
-
-    elif asset_type == 'MATERIAL':
-        mat = bpy.context.active_object.active_material
-        props = mat.hana3d
-
-        # props.name = mat.name
-
-        export_data["material"] = str(mat.name)
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path = f"bpy.data.materials['{mat.name}']"
-
-        upload_data = {
-            "assetType": 'material',
-        }
-
-        upload_params = {}
-    else:
-        raise Exception(f'Unexpected asset_type={asset_type}')
-
-    bg_process_params = {
-        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
-        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
-        'eval_path': eval_path,
-    }
-
-    add_version(upload_data)
-
-    upload_data["name"] = props.name
-    upload_data["description"] = props.description
-    upload_data["tags"] = comma2array(props.tags)
-
-    upload_data['parameters'] = upload_params
-
-    upload_data["is_public"] = props.is_public
-    if props.workspace != '' and not props.is_public:
-        upload_data['workspace'] = props.workspace
-
-    metadata = {}
-    if hasattr(props, 'custom_props'):
-        metadata.update(props.custom_props)
-    if metadata:
-        upload_data['metadata'] = metadata
-
-    upload_data['libraries'] = []
-    if props.libraries == '':
-        upload_data['libraries'].append({
-            'id': props.default_library
-        })
-    else:
-        libraries = comma2array(props.libraries)
-        for library_id in libraries:
-            library = {}
-            library.update({
-                'id': library_id
-            })
-            if props.custom_props.keys() != []:
-                custom_props = {}
-                for name in props.custom_props.keys():
-                    value = props.custom_props[name]
-                    key = props.custom_props_info[name]['key']
-                    prop_library_id = props.custom_props_info[name]['library_id']
-                    if prop_library_id == library_id:
-                        custom_props.update({key: value})
-                library.update({'metadata': {'view_props': custom_props}})
-            upload_data['libraries'].append(library)
-
-    export_data['publish_message'] = props.publish_message
-
-    return export_data, upload_data, bg_process_params, props
-
-
 def previmg_name(index, fullsize=False):
     if not fullsize:
         return '.hana3d_preview_' + str(index).zfill(2)
@@ -846,3 +703,61 @@ def fill_object_metadata(obj: bpy.types.Object):
 
     props.face_count, props.face_count_render = check_meshprops(props, obs)
     props.object_count = len(obs)
+
+
+def split_text(
+        text: str,
+        threshold: int = 40,
+        separators: List[str] = None):
+    """Split text into multiple lines of maximum length of threshold"""
+    assert threshold > 0
+    separators = separators or [' ', ',', '.', ';', ':']
+    text = text.rstrip().replace('\r\n', '\n')
+    lines = []
+
+    while len(text) > threshold:
+        limit = text.find('\n')
+        if limit == 0:
+            lines.append('')
+            text = text[1:]
+            continue
+        if limit == -1:
+            limit = max(text.rfind(sep, 0, threshold) for sep in separators)
+            if limit in (-1, 0):
+                limit = threshold
+        lines.append(text[:limit])
+        text = text[limit:]
+    lines.append(text)
+    return lines
+
+
+def writeblock(text, width=40):
+    dlines = split_text(text, threshold=width)
+    return '\n'.join(dlines) + '\n'
+
+
+def generate_tooltip(
+        name: str,
+        description: str = '',
+        dimensions: Tuple[float, float, float] = None,
+        face_count: int = None,
+        face_count_render: int = None,
+        object_count: int = None,
+) -> str:
+
+    col_w = 40
+
+    t = ''
+    t += writeblock(name, width=col_w)
+    t += writeblock(description, width=col_w)
+
+    if dimensions is not None:
+        t += 'size: {:.2f}m, {:.2f}m, {:.2f}m\n'.format(*dimensions)
+
+    if face_count is not None and face_count_render is not None:
+        t += f'face count: {face_count}, render: {face_count_render}\n'
+
+    if object_count is not None:
+        t += f'object_count: {object_count}\n'
+
+    return t[:-1]

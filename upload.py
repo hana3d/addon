@@ -24,8 +24,9 @@ if 'bpy' in locals():
     rerequests = reload(rerequests)
     ui = reload(ui)
     utils = reload(utils)
+    types = reload(types)
 else:
-    from hana3d import bg_blender, paths, rerequests, ui, utils
+    from hana3d import bg_blender, paths, rerequests, ui, utils, types
 
 import json
 import os
@@ -34,6 +35,7 @@ import subprocess
 import tempfile
 import threading
 import uuid
+from typing import List
 
 import bpy
 import requests
@@ -123,10 +125,158 @@ def get_upload_location(props):
     return None
 
 
-def start_upload(self, context, props, asset_type, reupload, upload_set, correlation_id):
-    '''start upload process, by processing data'''
+def comma2array(text):
+    commasep = text.split(',')
+    ar = []
+    for i, s in enumerate(commasep):
+        s = s.strip()
+        if s != '':
+            ar.append(s)
+    return ar
 
-    # fix the name first
+
+def get_export_data(
+        asset_type: str,
+        path_computing: str = 'uploading',
+        path_state: str = 'upload_state'):
+    export_data = {
+        "type": asset_type,
+    }
+    upload_params = {}
+    if asset_type == 'MODEL':
+        # Prepare to save the file
+        mainmodel = utils.get_active_model()
+
+        props = mainmodel.hana3d
+
+        obs = utils.get_hierarchy(mainmodel)
+        obnames = []
+        for ob in obs:
+            obnames.append(ob.name)
+        export_data["models"] = obnames
+        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
+
+        eval_path = f"bpy.data.objects['{mainmodel.name}']"
+
+        upload_data = {
+            "assetType": 'model',
+        }
+        upload_params = {
+            "dimensionX": round(props.dimensions[0], 4),
+            "dimensionY": round(props.dimensions[1], 4),
+            "dimensionZ": round(props.dimensions[2], 4),
+            "boundBoxMinX": round(props.bbox_min[0], 4),
+            "boundBoxMinY": round(props.bbox_min[1], 4),
+            "boundBoxMinZ": round(props.bbox_min[2], 4),
+            "boundBoxMaxX": round(props.bbox_max[0], 4),
+            "boundBoxMaxY": round(props.bbox_max[1], 4),
+            "boundBoxMaxZ": round(props.bbox_max[2], 4),
+            "faceCount": props.face_count,
+            "faceCountRender": props.face_count_render,
+            "objectCount": props.object_count,
+        }
+
+    elif asset_type == 'SCENE':
+        # Prepare to save the file
+        s = bpy.context.scene
+
+        props = s.hana3d
+
+        export_data["scene"] = s.name
+        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
+
+        eval_path = f"bpy.data.scenes['{s.name}']"
+
+        upload_data = {
+            "assetType": 'scene',
+        }
+        upload_params = {
+            # TODO add values
+            # "faceCount": 1,  # props.face_count,
+            # "faceCountRender": 1,  # props.face_count_render,
+            # "objectCount": 1,  # props.object_count,
+        }
+
+    elif asset_type == 'MATERIAL':
+        mat = bpy.context.active_object.active_material
+        props = mat.hana3d
+
+        # props.name = mat.name
+
+        export_data["material"] = str(mat.name)
+        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
+
+        eval_path = f"bpy.data.materials['{mat.name}']"
+
+        upload_data = {
+            "assetType": 'material',
+        }
+
+        upload_params = {}
+    else:
+        raise Exception(f'Unexpected asset_type={asset_type}')
+
+    bg_process_params = {
+        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
+        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
+        'eval_path': eval_path,
+    }
+
+    add_version(upload_data)
+
+    upload_data["name"] = props.name
+    upload_data["description"] = props.description
+    upload_data["tags"] = comma2array(props.tags)
+
+    upload_data['parameters'] = upload_params
+
+    upload_data["is_public"] = props.is_public
+    if props.workspace != '' and not props.is_public:
+        upload_data['workspace'] = props.workspace
+
+    metadata = {}
+    if hasattr(props, 'custom_props'):
+        metadata.update(props.custom_props)
+    if metadata:
+        upload_data['metadata'] = metadata
+
+    upload_data['libraries'] = []
+    if props.libraries == '':
+        upload_data['libraries'].append({
+            'id': props.default_library
+        })
+    else:
+        libraries = comma2array(props.libraries)
+        for library_id in libraries:
+            library = {}
+            library.update({
+                'id': library_id
+            })
+            if props.custom_props.keys() != []:
+                custom_props = {}
+                for name in props.custom_props.keys():
+                    value = props.custom_props[name]
+                    key = props.custom_props_info[name]['key']
+                    prop_library_id = props.custom_props_info[name]['library_id']
+                    if prop_library_id == library_id:
+                        custom_props.update({key: value})
+                library.update({'metadata': {'view_props': custom_props}})
+            upload_data['libraries'].append(library)
+
+    export_data['publish_message'] = props.publish_message
+
+    return export_data, upload_data, bg_process_params, props
+
+
+def start_upload(
+        self,
+        context,
+        props: types.Props,
+        asset_type: str,
+        reupload: bool,
+        upload_set: List[str],
+        remote_thumbnail: bool,
+        correlation_id: str):
     utils.name_update()
 
     location = get_upload_location(props)
@@ -154,7 +304,7 @@ def start_upload(self, context, props, asset_type, reupload, upload_set, correla
     if not reupload:
         props.view_id = ''
         props.id = ''
-    export_data, upload_data, bg_process_params, props = utils.get_export_data(asset_type)
+    export_data, upload_data, bg_process_params, props = get_export_data(asset_type)
 
     # weird array conversion only for upload, not for tooltips.
     upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
@@ -328,7 +478,9 @@ class UploadOperator(Operator):
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(obj)
 
-        upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
+        upload_set = ['METADATA', 'MAINFILE']
+        if not props.remote_thumbnail:
+            upload_set.append('THUMBNAIL')
 
         correlation_id = str(uuid.uuid4())
         result = start_upload(
@@ -338,7 +490,8 @@ class UploadOperator(Operator):
             self.asset_type,
             self.reupload,
             upload_set,
-            correlation_id
+            props.remote_thumbnail,
+            correlation_id,
         )
 
         return result

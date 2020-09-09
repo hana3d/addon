@@ -231,19 +231,6 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
             ui_bgl.draw_rect_3d(r, color)
 
 
-def draw_text_block(x=0, y=0, width=40, font_size=10, line_height=15, text='', color=colors.TEXT):
-    lines = text.split('\n')
-    nlines = []
-    for line in lines:
-        nlines.extend(search.split_subs(line,))
-
-    column_lines = 0
-    for line in nlines:
-        ytext = y - column_lines * line_height
-        column_lines += 1
-        ui_bgl.draw_text(line, x, ytext, font_size, color)
-
-
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
@@ -1195,8 +1182,16 @@ class AssetBarOperator(bpy.types.Operator):
                     and ao is not None
                     and ao.active_material is not None
                 ):
-                    upload_data = utils.get_export_data(ui_props.asset_type)[1]
-                    ui_props.tooltip = search.generate_tooltip(upload_data)
+                    props = utils.get_upload_props()
+                    asset_data = {
+                        'name': props.name,
+                        'description': props.description,
+                        'dimensions': getattr(props, 'dimensions', None),
+                        'face_count': getattr(props, 'face_count', None),
+                        'face_count_render': getattr(props, 'face_count_render', None),
+                        'object_count': getattr(props, 'object_count', None),
+                    }
+                    ui_props.tooltip = utils.generate_tooltip(**asset_data)
 
             return {'PASS_THROUGH'}
 

@@ -194,7 +194,10 @@ def timer_update():
                             if durl and tname:
                                 # Check for assetBaseId for backwards compatibility
                                 view_id = r.get('viewId') or r.get('assetBaseId') or ''
-                                tooltip = generate_tooltip(r)
+                                tooltip = utils.generate_tooltip(
+                                    r['name'],
+                                    r['description'],
+                                )
                                 asset_data = {
                                     'thumbnail': tname,
                                     'thumbnail_small': small_tname,
@@ -310,130 +313,6 @@ def load_previews():
     # print('previews loaded')
 
 
-#  line splitting for longer texts...
-def split_subs(text, threshold=40):
-    if text == '':
-        return []
-    # temporarily disable this, to be able to do this in drawing code
-
-    text = text.rstrip()
-    text = text.replace('\r\n', '\n')
-
-    lines = []
-
-    while len(text) > threshold:
-        # first handle if there's an \n line ending
-        i_rn = text.find('\n')
-        if 1 < i_rn < threshold:
-            i = i_rn
-            text = text.replace('\n', '', 1)
-        else:
-            i = text.rfind(' ', 0, threshold)
-            i1 = text.rfind(',', 0, threshold)
-            i2 = text.rfind('.', 0, threshold)
-            i = max(i, i1, i2)
-            if i <= 0:
-                i = threshold
-        lines.append(text[:i])
-        text = text[i:]
-    lines.append(text)
-    return lines
-
-
-def list_to_str(input):
-    output = ''
-    for i, text in enumerate(input):
-        output += text
-        if i < len(input) - 1:
-            output += ', '
-    return output
-
-
-def writeblock(t, input, width=40):  # for longer texts
-    dlines = split_subs(input, threshold=width)
-    for i, l in enumerate(dlines):
-        t += '%s\n' % l
-    return t
-
-
-def writeblockm(tooltip, mdata, key='', pretext=None, width=40):  # for longer texts
-    if mdata.get(key) is None:
-        return tooltip
-    else:
-        intext = mdata[key]
-        if type(intext) == list:
-            intext = list_to_str(intext)
-        if type(intext) == float:
-            intext = round(intext, 3)
-        intext = str(intext)
-        if intext.rstrip() == '':
-            return tooltip
-        if pretext is None:
-            pretext = key
-        if pretext != '':
-            pretext = pretext + ': '
-        text = pretext + intext
-        dlines = split_subs(text, threshold=width)
-        for i, l in enumerate(dlines):
-            tooltip += '%s\n' % l
-
-    return tooltip
-
-
-def fmt_length(prop):
-    prop = str(round(prop, 2)) + 'm'
-    return prop
-
-
-def has(mdata, prop):
-    if mdata.get(prop) is not None and mdata[prop] is not None and mdata[prop] is not False:
-        return True
-    else:
-        return False
-
-
-def generate_tooltip(mdata):
-    col_w = 40
-    if type(mdata['parameters']) == list:
-        mparams = utils.params_to_dict(mdata['parameters'])
-    else:
-        mparams = mdata['parameters']
-    t = ''
-    t = writeblock(t, mdata['name'], width=col_w)
-    t += '\n'
-
-    t = writeblockm(t, mdata, key='description', pretext='', width=col_w)
-    if mdata['description'] != '':
-        t += '\n'
-    # t = writeblockm(t, mdata, key='tags', width = col_w)
-
-    if has(mparams, 'dimensionX'):
-        t += 'size: %s, %s, %s\n' % (
-            fmt_length(mparams['dimensionX']),
-            fmt_length(mparams['dimensionY']),
-            fmt_length(mparams['dimensionZ']),
-        )
-    if has(mparams, 'faceCount'):
-        t += 'face count: %s, render: %s\n' % (mparams['faceCount'], mparams['faceCountRender'])
-
-    # t = writeblockm(t, mparams, key='objectCount', pretext='nubmber of objects', width = col_w)
-
-    if has(mparams, 'thumbnailScale'):
-        t = writeblockm(t, mparams, key='thumbnailScale', pretext='preview scale', width=col_w)
-
-    # generator is for both upload preview and search, this is only after search
-    # if mdata.get('versionNumber'):
-    #     # t = writeblockm(t, mdata, key='versionNumber', pretext='version', width = col_w)
-    #     a_id = mdata['author'].get('id')
-    #     if a_id is not None:
-    #         adata = bpy.context.window_manager['hana3d authors'].get(str(a_id))
-    #         if adata is not None:
-    #             t += generate_author_textblock(adata)
-
-    # t += '\n'
-    return t
-
-
 def generate_author_textblock(adata):
     t = '\n\n\n'
 
@@ -476,67 +355,6 @@ class ThumbDownloader(threading.Thread):
             # with open(path, 'wb') as f:
             #     for chunk in r.iter_content(1048576*4):
             #         f.write(chunk)
-
-
-def write_gravatar(a_id, gravatar_path):
-    '''
-    Write down gravatar path, as a result of thread-based gravatar image download.
-    This should happen on timer in queue.
-    '''
-    # print('write author', a_id, type(a_id))
-    authors = bpy.context.window_manager['hana3d authors']
-    if authors.get(a_id) is not None:
-        adata = authors.get(a_id)
-        adata['gravatarImg'] = gravatar_path
-
-
-def fetch_gravatar(adata):
-    utils.p('fetch gravatar')
-    if adata.get('gravatarHash') is not None:
-        gravatar_url = adata['gravatarHash']
-        gravatar_hash = gravatar_url.split('/')[-1].split('.')[0]
-        gravatar_path = paths.get_temp_dir(subdir='g/') + gravatar_hash + '.jpg'
-
-        if os.path.exists(gravatar_path):
-            tasks_queue.add_task((write_gravatar, (adata['id'], gravatar_path)))
-            return
-
-        # url = "https://www.gravatar.com/avatar/" + adata['gravatarHash'] + '?d=404'
-        r = rerequests.get(gravatar_url, stream=False)
-        if r.status_code == 200:
-            with open(gravatar_path, 'wb') as f:
-                f.write(r.content)
-            tasks_queue.add_task((write_gravatar, (adata['id'], gravatar_path)))
-        elif r.status_code == '404':
-            adata['gravatarHash'] = None
-            utils.p('gravatar for author not available.')
-
-
-fetching_gravatars = {}
-
-
-def get_author(r):
-    ''' Writes author info (now from search results) and fetches gravatar if needed.'''
-    global fetching_gravatars
-
-    a_id = str(r['author']['id'])
-    authors = bpy.context.window_manager.get('hana3d authors', {})
-    if authors == {}:
-        bpy.context.window_manager['hana3d authors'] = authors
-    a = authors.get(a_id)
-    # or a is '' or (a.get('gravatarHash') is not None and a.get('gravatarImg') is None):
-    if a is None:
-        a = r['author']
-        a['id'] = a_id
-        a['tooltip'] = generate_author_textblock(a)
-
-        authors[a_id] = a
-        if fetching_gravatars.get(a['id']) is None:
-            fetching_gravatars[a['id']] = True
-
-        thread = threading.Thread(target=fetch_gravatar, args=(a.copy(),), daemon=True)
-        thread.start()
-    return a
 
 
 def write_profile(adata):
@@ -651,9 +469,6 @@ class Searcher(threading.Thread):
         thumb_full_filepaths = []
         # END OF PARSING
         for d in rdata.get('results', []):
-
-            get_author(d)
-
             for f in d['files']:
                 # TODO move validation of published assets to server, too manmy checks here.
                 if (
