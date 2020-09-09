@@ -16,52 +16,31 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    autothumb = reload(autothumb)
-    bg_blender = reload(bg_blender)
-    download = reload(download)
-    hana3d_oauth = reload(hana3d_oauth)
-    icons = reload(icons)
-    paths = reload(paths)
-    render = reload(render)
-    search = reload(search)
-    tasks_queue = reload(tasks_queue)
-    types = reload(types)
-    ui = reload(ui)
-    ui_panels = reload(ui_panels)
-    upload = reload(upload)
-    utils = reload(utils)
-else:
-    from . import (
-        append_link,
-        autothumb,
-        bg_blender,
-        download,
-        hana3d_oauth,
-        icons,
-        paths,
-        render,
-        search,
-        tasks_queue,
-        types,
-        ui,
-        ui_panels,
-        upload,
-        utils,
-        version,
-    )
-
 import bpy
 import bpy.utils.previews
 from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
-
-from . import addon_updater_ops
+from . import (
+    addon_updater_ops,
+    append_link,
+    autothumb,
+    bg_blender,
+    download,
+    hana3d_oauth,
+    icons,
+    paths,
+    render,
+    search,
+    tasks_queue,
+    types,
+    ui,
+    ui_panels,
+    upload,
+    utils,
+    version
+)
 
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
@@ -95,7 +74,7 @@ def check_timers_timer():
         bpy.app.timers.register(search.timer_update)
     if not bpy.app.timers.is_registered(download.timer_update):
         bpy.app.timers.register(download.timer_update)
-    if not (bpy.app.timers.is_registered(tasks_queue.queue_worker)):
+    if not bpy.app.timers.is_registered(tasks_queue.queue_worker):
         bpy.app.timers.register(tasks_queue.queue_worker)
     if not bpy.app.timers.is_registered(bg_blender.bg_update):
         bpy.app.timers.register(bg_blender.bg_update)

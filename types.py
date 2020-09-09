@@ -16,17 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if 'bpy' in locals():
-    from importlib import reload
-
-    paths = reload(paths)
-    render = reload(render)
-    search = reload(search)
-    utils = reload(utils)
-else:
-    from hana3d import paths, render, search, utils
-
 import math
 import os
 from typing import Union
@@ -42,6 +31,8 @@ from bpy.props import (
     StringProperty
 )
 from bpy.types import PropertyGroup
+
+from hana3d import paths, render, search, utils
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -123,7 +114,7 @@ class Hana3DUIProps(PropertyGroup):
     down_up: EnumProperty(
         name="Download vs Upload",
         items=(
-            ('SEARCH', 'Search', 'Sctivate searching', 'VIEWZOOM', 0),
+            ('SEARCH', 'Search', 'Activate searching', 'VIEWZOOM', 0),
             ('UPLOAD', 'Upload', 'Activate uploading', 'COPYDOWN', 1),
         ),
         description="hana3d",

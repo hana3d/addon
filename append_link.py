@@ -16,15 +16,9 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    utils = reload(utils)
-    render_settings = reload(render_settings)
-else:
-    from hana3d import utils, render_settings
-
 import bpy
+
+from hana3d import render_settings, utils
 
 
 def append_material(file_name, matname=None, link=False, fake_user=True):

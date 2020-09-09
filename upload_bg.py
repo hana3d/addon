@@ -16,17 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    bg_blender = reload(bg_blender)
-    paths = reload(paths)
-    rerequests = reload(rerequests)
-    utils = reload(utils)
-else:
-    from hana3d import append_link, bg_blender, paths, rerequests, utils
-
 import json
 import logging
 import os
@@ -35,6 +24,8 @@ import time
 
 import bpy
 import requests
+
+from hana3d import append_link, bg_blender, paths, rerequests, utils
 
 HANA3D_EXPORT_DATA = sys.argv[-1]
 

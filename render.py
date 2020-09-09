@@ -16,18 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    colors = reload(colors)
-    paths = reload(paths)
-    rerequests = reload(rerequests)
-    types = reload(types)
-    ui = reload(ui)
-    utils = reload(utils)
-else:
-    from hana3d import colors, paths, rerequests, types, ui, utils
-
 import os
 import shutil
 import tempfile
@@ -45,6 +33,8 @@ import requests
 from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
+
+from hana3d import colors, paths, rerequests, types, ui, utils
 
 render_threads = []
 upload_threads = []

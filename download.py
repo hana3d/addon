@@ -16,18 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    colors = reload(colors)
-    paths = reload(paths)
-    rerequests = reload(rerequests)
-    ui = reload(ui)
-    utils = reload(utils)
-else:
-    from hana3d import append_link, colors, paths, rerequests, ui, utils
-
 import copy
 import os
 import shutil
@@ -46,6 +34,9 @@ from bpy.props import (
     IntProperty,
     StringProperty
 )
+
+from hana3d import append_link, colors, paths, rerequests, ui, utils
+
 download_threads = []
 
 
