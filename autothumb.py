@@ -39,6 +39,7 @@ def start_thumbnailer(self, context):
     # Prepare to save the file
     mainmodel = utils.get_active_model()
     mainmodel.hana3d.is_generating_thumbnail = True
+    mainmodel.hana3d.remote_thumbnail = False
     mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
@@ -139,6 +140,7 @@ def start_material_thumbnailer(self, context):
     # Prepare to save the file
     mat = bpy.context.active_object.active_material
     mat.hana3d.is_generating_thumbnail = True
+    mat.hana3d.remote_thumbnail = False
     mat.hana3d.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
@@ -231,6 +233,7 @@ def start_scene_thumbnailer(self, context):
     s = bpy.context.scene
     props = s.hana3d
     props.is_generating_thumbnail = True
+    props.remote_thumbnail = False
     props.thumbnail_generating_state = 'starting blender instance'
 
     basename, ext = os.path.splitext(bpy.data.filepath)

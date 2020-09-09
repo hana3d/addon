@@ -611,14 +611,28 @@ def draw_callback_2d_progress(self, context):
 
 def draw_callback_2d_upload_preview(self, context):
     ui_props = context.scene.Hana3DUI
-
     props = utils.get_upload_props()
-    if props is not None and ui_props.draw_tooltip:
 
+    if props is not None and ui_props.draw_tooltip:
         ui_props.thumbnail_image = props.thumbnail
 
-        img = utils.get_hidden_image(ui_props.thumbnail_image, 'upload_preview')
+        if props.force_preview_reload:
+            force_reload = True
+            props.force_preview_reload = False
+        else:
+            force_reload = False
 
+        if props.remote_thumbnail:
+            default_image = 'thumbnail-in-progress.png'
+        else:
+            default_image = 'thumbnail_notready.jpg'
+
+        img = utils.get_hidden_image(
+            ui_props.thumbnail_image,
+            'upload_preview',
+            force_reload,
+            default_image,
+        )
         draw_tooltip(ui_props.bar_x, ui_props.bar_y, text=ui_props.tooltip, img=img)
 
 

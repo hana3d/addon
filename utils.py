@@ -360,35 +360,29 @@ def save_prefs(self, context):
             print(e)
 
 
-def get_hidden_image(tpath, bdata_name, force_reload=False):
-    hidden_name = '.%s' % bdata_name
+def get_hidden_image(
+        thumbnail_path: str,
+        image_name: str,
+        force_reload: bool = False,
+        default_image: str = 'thumbnail_notready.jpg'):
+    if thumbnail_path.startswith('//'):
+        thumbnail_path = bpy.path.abspath(thumbnail_path)
+    if not os.path.exists(thumbnail_path) or thumbnail_path == '':
+        thumbnail_path = paths.get_addon_thumbnail_path(default_image)
+
+    hidden_name = f'.{image_name}'
     img = bpy.data.images.get(hidden_name)
 
-    if tpath.startswith('//'):
-        tpath = bpy.path.abspath(tpath)
-
-    if img is None or (img.filepath != tpath):
-        if tpath.startswith('//'):
-            tpath = bpy.path.abspath(tpath)
-        if not os.path.exists(tpath) or tpath == '':
-            tpath = paths.get_addon_thumbnail_path('thumbnail_notready.jpg')
-
-        if img is None:
-            img = bpy.data.images.load(tpath)
-            img.name = hidden_name
-        else:
-            if img.filepath != tpath:
-                if img.packed_file is not None:
-                    img.unpack(method='USE_ORIGINAL')
-
-                img.filepath = tpath
-                img.reload()
+    if img is None:
+        img = bpy.data.images.load(thumbnail_path)
+        img.name = hidden_name
         img.colorspace_settings.name = 'Linear'
-    elif force_reload:
+    if img.filepath != thumbnail_path or force_reload:
         if img.packed_file is not None:
             img.unpack(method='USE_ORIGINAL')
+
+        img.filepath = thumbnail_path
         img.reload()
-        img.colorspace_settings.name = 'Linear'
     return img
 
 

@@ -20,13 +20,12 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    autothumb = reload(autothumb)
     paths = reload(paths)
     render = reload(render)
     search = reload(search)
     utils = reload(utils)
 else:
-    from hana3d import autothumb, paths, render, search, utils
+    from hana3d import paths, render, search, utils
 
 import math
 import os
@@ -595,14 +594,9 @@ class Hana3DCommonUploadProps:
                         i += 1
                 self.libraries_count = i
 
-    def update_thumbnail(self, context=None):
-        img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)
-        if img is not None:
-            self.has_thumbnail = True
-            self.thumbnail_generating_state = ''
-        else:
-            self.has_thumbnail = False
-            self.thumbnail_generating_state = 'No thumbnail or wrong file path\n'
+    def update_preview(self, context=None):
+        """Mark upload preview to be updated by draw calllback"""
+        self.force_preview_reload = True
 
     def clear_data(self):
         """Set all properties to their default values"""
@@ -667,7 +661,6 @@ class Hana3DCommonUploadProps:
         name="Uploading",
         description="True when background process is running",
         default=False,
-        update=update_thumbnail,
     )
 
     upload_state: StringProperty(
@@ -681,14 +674,25 @@ class Hana3DCommonUploadProps:
         description="Path to the thumbnail - 512x512 .jpg image",
         subtype='FILE_PATH',
         default="",
-        update=update_thumbnail,
+        update=update_preview,
+    )
+
+    force_preview_reload: BoolProperty(
+        description="True if upload preview image should be updated",
+        default=True,
     )
 
     is_generating_thumbnail: BoolProperty(
         name="Generating Thumbnail",
         description="True when background process is running",
         default=False,
-        update=update_thumbnail,
+        update=update_preview,
+    )
+
+    remote_thumbnail: BoolProperty(
+        name="Generating thumbnail on notrenderfarm",
+        default=False,
+        update=update_preview,
     )
 
     has_thumbnail: BoolProperty(

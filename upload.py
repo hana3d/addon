@@ -19,14 +19,13 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    autothumb = reload(autothumb)
     bg_blender = reload(bg_blender)
     paths = reload(paths)
     rerequests = reload(rerequests)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
+    from hana3d import bg_blender, paths, rerequests, ui, utils
 
 import json
 import os
@@ -50,7 +49,6 @@ def write_to_report(props, text):
 
 def get_missing_data_model(props):
     props.report = ''
-    props.update_thumbnail()
 
     if props.name == '':
         write_to_report(props, 'Set model name')
@@ -66,7 +64,6 @@ def get_missing_data_model(props):
 
 def get_missing_data_scene(props):
     props.report = ''
-    props.update_thumbnail()
 
     if props.name == '':
         write_to_report(props, 'Set scene name')
@@ -77,7 +74,6 @@ def get_missing_data_scene(props):
 
 def get_missing_data_material(props):
     props.report = ''
-    props.update_thumbnail()
     if props.name == '':
         write_to_report(props, 'Set material name')
     # if props.tags == '':
@@ -176,8 +172,7 @@ def start_upload(self, context, props, asset_type, reupload, upload_set, correla
     # check if thumbnail exists:
     if 'THUMBNAIL' in upload_set:
         if not os.path.exists(export_data["thumbnail_path"]):
-            props.upload_state = 'Thumbnail not found'
-            props.uploading = False
+            props.remote_thumbnail = True
             return {'CANCELLED'}
 
     headers = utils.get_headers(correlation_id)
