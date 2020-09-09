@@ -597,6 +597,7 @@ class Hana3DCommonUploadProps:
     def update_preview(self, context=None):
         """Mark upload preview to be updated by draw calllback"""
         self.force_preview_reload = True
+        self.has_thumbnail = self.thumbnail != ''
 
     def clear_data(self):
         """Set all properties to their default values"""
