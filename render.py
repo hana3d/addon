@@ -103,7 +103,8 @@ class UploadFileMixin:
             assert upload_response.ok
             self.log(f'Uploaded {log_arg}')
         except Exception as e:
-            self.log(f'Error when uploading {log_arg} ({e!r})', error=True)
+            msg = f'Error when uploading {log_arg} ({e!r})'
+            self.log(msg, error=True)
             raise Exception(msg)
         finally:
             self.uploading = False
@@ -266,6 +267,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             frame = self.frame_start + n
             data = {
                 'assetId': self.props.id,
+                'libraries': [],
                 'originalFilename': render_url.rpartition('/')[2],
                 'id_parent': render_scene_id,
                 'url': render_url,
