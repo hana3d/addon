@@ -738,7 +738,7 @@ def writeblock(text, width=40):
 
 def generate_tooltip(
         name: str,
-        description: str = '',
+        description: str = None,
         dimensions: Tuple[float, float, float] = None,
         face_count: int = None,
         face_count_render: int = None,
@@ -749,7 +749,8 @@ def generate_tooltip(
 
     t = ''
     t += writeblock(name, width=col_w)
-    t += writeblock(description, width=col_w)
+    if description is not None:
+        t += writeblock(description, width=col_w)
 
     if dimensions is not None:
         t += 'size: {:.2f}m, {:.2f}m, {:.2f}m\n'.format(*dimensions)
