@@ -405,9 +405,6 @@ def generate_tooltip(mdata):
     t = writeblockm(t, mdata, key='description', pretext='', width=col_w)
     if mdata['description'] != '':
         t += '\n'
-
-    t = writeblockm(t, mparams, key='designer', pretext='designer', width=col_w)
-    t = writeblockm(t, mparams, key='manufacturer', pretext='manufacturer', width=col_w)
     # t = writeblockm(t, mdata, key='tags', width = col_w)
 
     if has(mparams, 'dimensionX'):

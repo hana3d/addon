@@ -889,17 +889,6 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
 
 
 class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    manufacturer: StringProperty(
-        name="Manufacturer",
-        description="Manufacturer, company making a design peace or product. Not you",
-        default="",
-    )
-    designer: StringProperty(
-        name="Designer",
-        description="Author of the original design piece depicted. Usually not you",
-        default="",
-    )
-
     thumbnail_background_lightness: FloatProperty(
         name="Thumbnail Background Lightness",
         description="set to make your material stand out",

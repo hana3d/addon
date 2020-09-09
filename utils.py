@@ -211,8 +211,6 @@ def get_export_data(
             "faceCount": props.face_count,
             "faceCountRender": props.face_count_render,
             "objectCount": props.object_count,
-            "manufacturer": props.manufacturer,
-            "designer": props.designer,
         }
 
     elif asset_type == 'SCENE':
