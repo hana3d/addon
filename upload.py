@@ -25,8 +25,9 @@ if 'bpy' in locals():
     ui = reload(ui)
     utils = reload(utils)
     types = reload(types)
+    version = reload(version)
 else:
-    from hana3d import bg_blender, paths, rerequests, ui, utils, types
+    from hana3d import bg_blender, paths, rerequests, ui, utils, types, version
 
 import json
 import os
@@ -41,6 +42,7 @@ import bpy
 import requests
 from bpy.props import BoolProperty, EnumProperty, StringProperty
 from bpy.types import Operator
+
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
@@ -222,7 +224,9 @@ def get_export_data(
         'eval_path': eval_path,
     }
 
-    add_version(upload_data)
+    data["sourceAppName"] = "blender"
+    data["sourceAppVersion"] = '{}.{}.{}'.format(*version.blender_current_version)
+    data["addonVersion"] = '{}.{}.{}'.format(*version.addon_version)
 
     upload_data["name"] = props.name
     upload_data["description"] = props.description

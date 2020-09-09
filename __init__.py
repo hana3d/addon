@@ -16,18 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-bl_info = {
-    "name": "Hana3D - BlenderKit Fork",
-    "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 5, 1),
-    "blender": (2, 83, 0),
-    "location": "View3D > Properties > hana3d",
-    "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
-    "warning": "",
-    # "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/hana3d.html",
-    "category": "3D View",
-}
-
 if 'bpy' in locals():
     from importlib import reload
 
@@ -62,7 +50,8 @@ else:
         ui,
         ui_panels,
         upload,
-        utils
+        utils,
+        version,
     )
 
 import bpy
@@ -73,6 +62,17 @@ from bpy.types import AddonPreferences
 
 
 from . import addon_updater_ops
+
+bl_info = {
+    "name": "Hana3D - BlenderKit Fork",
+    "author": "Vilem Duha, Petr Dlouhy, Real2U",
+    "version": version.addon_version,
+    "blender": version.blender_required_version,
+    "location": "View3D > Properties > hana3d",
+    "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
+    "warning": "",
+    "category": "3D View",
+}
 
 
 @persistent

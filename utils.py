@@ -20,9 +20,8 @@ if 'bpy' in locals():
     from importlib import reload
 
     paths = reload(paths)
-    version_checker = reload(version_checker)
 else:
-    from hana3d import paths, version_checker
+    from hana3d import paths
 
 import json
 import os
@@ -147,19 +146,6 @@ def get_upload_props():
     if active_asset is None:
         return None
     return active_asset.hana3d
-
-
-def get_app_version():
-    ver = bpy.app.version
-    return '%i.%i.%i' % (ver[0], ver[1], ver[2])
-
-
-def add_version(data):
-    app_version = get_app_version()
-    addon_version = version_checker.get_addon_version()
-    data["sourceAppName"] = "blender"
-    data["sourceAppVersion"] = app_version
-    data["addonVersion"] = addon_version
 
 
 def previmg_name(index, fullsize=False):
