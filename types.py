@@ -877,7 +877,7 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default="BALL",
     )
 
-    asset_type: StringProperty(default='material')
+    asset_type: StringProperty(default='MATERIAL')
 
 
 class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
@@ -959,7 +959,7 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=False
     )
 
-    asset_type: StringProperty(default='model')
+    asset_type: StringProperty(default='MODEL')
 
 
 class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
@@ -1016,7 +1016,7 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         min=5,
         max=5000
     )
-    asset_type: StringProperty(default='scene')
+    asset_type: StringProperty(default='SCENE')
 
 
 class Hana3DModelSearchProps(PropertyGroup, Hana3DCommonSearchProps):

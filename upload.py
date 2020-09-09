@@ -126,18 +126,16 @@ def comma2array(text):
 
 
 def get_export_data(
-        asset_type: str,
+        props: types.Props,
         path_computing: str = 'uploading',
         path_state: str = 'upload_state'):
     export_data = {
-        "type": asset_type,
+        "type": props.asset_type,
     }
     upload_params = {}
-    if asset_type == 'MODEL':
+    if props.asset_type == 'MODEL':
         # Prepare to save the file
         mainmodel = utils.get_active_model()
-
-        props = mainmodel.hana3d
 
         obs = utils.get_hierarchy(mainmodel)
         obnames = []
@@ -166,16 +164,14 @@ def get_export_data(
             "objectCount": props.object_count,
         }
 
-    elif asset_type == 'SCENE':
+    elif props.asset_type == 'SCENE':
         # Prepare to save the file
-        s = bpy.context.scene
+        name = bpy.context.scene.name
 
-        props = s.hana3d
-
-        export_data["scene"] = s.name
+        export_data["scene"] = name
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
-        eval_path = f"bpy.data.scenes['{s.name}']"
+        eval_path = f"bpy.data.scenes['{name}']"
 
         upload_data = {
             "assetType": 'scene',
@@ -187,11 +183,8 @@ def get_export_data(
             # "objectCount": 1,  # props.object_count,
         }
 
-    elif asset_type == 'MATERIAL':
+    elif props.asset_type == 'MATERIAL':
         mat = bpy.context.active_object.active_material
-        props = mat.hana3d
-
-        # props.name = mat.name
 
         export_data["material"] = str(mat.name)
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
@@ -204,7 +197,7 @@ def get_export_data(
 
         upload_params = {}
     else:
-        raise Exception(f'Unexpected asset_type={asset_type}')
+        raise Exception(f'Unexpected asset_type={props.asset_type}')
 
     bg_process_params = {
         'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
@@ -257,7 +250,7 @@ def get_export_data(
 
     export_data['publish_message'] = props.publish_message
 
-    return export_data, upload_data, bg_process_params, props
+    return export_data, upload_data, bg_process_params
 
 
 asset_types = (
@@ -310,12 +303,12 @@ class UploadOperator(Operator):
             utils.fill_object_metadata(obj)
 
         upload_set = ['METADATA', 'MAINFILE']
-        if not props.remote_thumbnail:
+        if not props.has_thumbnail:
             upload_set.append('THUMBNAIL')
+        else:
+            props.remote_thumbnail = True
 
-        result = self.start_upload(context, props, upload_set)
-
-        return result
+        return self.start_upload(context, props, upload_set)
 
     def draw(self, context):
         props = utils.get_upload_props()
@@ -359,7 +352,7 @@ class UploadOperator(Operator):
         if not self.reupload:
             props.view_id = ''
             props.id = ''
-        export_data, upload_data, bg_process_params, props = get_export_data(self.asset_type)
+        export_data, upload_data, bg_process_params = get_export_data(props)
 
         # weird array conversion only for upload, not for tooltips.
         upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
@@ -374,11 +367,10 @@ class UploadOperator(Operator):
         tempdir = tempfile.mkdtemp()
         datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
-        # check if thumbnail exists:
-        if 'THUMBNAIL' in upload_set:
-            if not os.path.exists(export_data["thumbnail_path"]):
-                props.remote_thumbnail = True
-                return {'CANCELLED'}
+        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
+            props.upload_state = 'Thumbnail not found'
+            props.uploading = False
+            return {'CANCELLED'}
 
         correlation_id = str(uuid.uuid4())
         headers = utils.get_headers(correlation_id)
