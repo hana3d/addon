@@ -733,13 +733,13 @@ def generate_tooltip(
     if description is not None:
         t += writeblock(description, width=col_w)
 
-    if dimensions is not None:
+    if dimensions is not None and sum(dimensions) > 0:
         t += 'size: {:.2f}m, {:.2f}m, {:.2f}m\n'.format(*dimensions)
 
-    if face_count is not None and face_count_render is not None:
-        t += f'face count: {face_count}, render: {face_count_render}\n'
+    if face_count and face_count_render:
+        t += f'face count: {face_count}, render (incl. modifiers): {face_count_render}\n'
 
-    if object_count is not None:
-        t += f'object_count: {object_count}\n'
+    if object_count:
+        t += f'object count: {object_count}\n'
 
     return t[:-1]
