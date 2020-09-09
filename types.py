@@ -374,14 +374,17 @@ class Hana3DCommonSearchProps(object):
         self.update_selected_libraries_search(context)
 
     def update_tags_list(self, context):
-        for tag in context.window_manager['hana3d profile']['user']['tags']:
-            new_tag = self.tags_list.add()
-            new_tag['name'] = tag
+        self.tags_list.clear()
+        current_workspace = self.workspace
+        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                for tag in workspace['tags']:
+                    new_tag = self.tags_list.add()
+                    new_tag['name'] = tag
 
     def on_workspace_update(self, context):
         self.update_libraries_list_search(context)
-        if len(self.tags_list) == 0:
-            self.update_tags_list(context)
+        self.update_tags_list(context)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
@@ -633,14 +636,17 @@ class Hana3DCommonUploadProps:
                 self.libraries_count = i
 
     def update_tags_list(self, context):
-        for tag in context.window_manager['hana3d profile']['user']['tags']:
-            new_tag = self.tags_list.add()
-            new_tag['name'] = tag
+        self.tags_list.clear()
+        current_workspace = self.workspace
+        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                for tag in workspace['tags']:
+                    new_tag = self.tags_list.add()
+                    new_tag['name'] = tag
 
     def on_workspace_update(self, context):
         self.update_libraries_list_upload(context)
-        if len(self.tags_list) == 0:
-            self.update_tags_list(context)
+        self.update_tags_list(context)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
