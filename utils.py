@@ -62,13 +62,18 @@ def selection_set(sel):
         ob.select_set(True)
 
 
-def get_active_model():
-    if bpy.context.view_layer.objects.active is not None:
-        ob = bpy.context.view_layer.objects.active
+def get_active_model(context):
+    if context.view_layer.objects.active is not None:
+        ob = context.view_layer.objects.active
         while ob.parent is not None:
             ob = ob.parent
         return ob
     return None
+
+
+def get_active_material(context):
+    active_object = get_active_model(context)
+    return active_object.active_material
 
 
 def get_selected_models():
@@ -123,7 +128,7 @@ def get_active_asset():
     ui_props = scene.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
-            ob = get_active_model()
+            ob = get_active_model(bpy.context)
             return ob
     if ui_props.asset_type == 'SCENE':
         return bpy.context.scene

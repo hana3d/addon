@@ -139,12 +139,14 @@ class _read_in_chunks:
 class RenderThread(UploadFileMixin, threading.Thread):
     def __init__(
             self,
+            context,
             props: types.Props,
             engine: str,
             frame_start: int,
             frame_end: int,
             is_thumbnail: bool = False):
         super().__init__(daemon=True)
+        self.context = context
         self.props = props
         self.engine = engine
         self.frame_start = frame_start
@@ -188,7 +190,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 raise Exception('notrenderfarm returned no output')
             if self.is_thumbnail:
                 thumbnail_url = nrf_output[0]
-                self._post_new_thumbnail(render_scene_id, thumbnail_url)
+                self._put_new_thumbnail(render_scene_id, thumbnail_url)
                 self._import_thumbnail(thumbnail_url)
             else:
                 jobs_data = self._post_completed_job(render_scene_id, nrf_output)
@@ -229,7 +231,12 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 raise TypeError(f'Unexpected asset_type={self.props.asset_type}')
 
             self.props.is_generating_thumbnail = True
-            thumbnailer('EXEC_DEFAULT', save_only=True, blend_filepath=self.filepath)
+            override_context = self.context.copy()
+            thumbnailer(
+                override_context,
+                save_only=True,
+                blend_filepath=self.filepath
+            )
 
             # thumbnailer may run asynchronously, so we have to wait for it to finish
             while self.props.is_generating_thumbnail:
@@ -368,13 +375,13 @@ class RenderThread(UploadFileMixin, threading.Thread):
         else:
             self.props.render_data['jobs'] += jobs_data
 
-    def _post_new_thumbnail(self, render_scene_id: str, thumbnail_url: str) -> str:
+    def _put_new_thumbnail(self, render_scene_id: str, thumbnail_url: str) -> str:
         url = paths.get_api_url('assets')
         data = {
             'assetId': self.props.id,
             'thumbnail_url': thumbnail_url,
         }
-        response = rerequests.post(url, json=data, headers=self.headers)
+        response = rerequests.put(url, json=data, headers=self.headers)
         assert response.ok, response.text
 
     def _import_thumbnail(self, thumbnail_url: str):
@@ -423,7 +430,7 @@ class RenderScene(Operator):
             frame_start = context.scene.frame_start
             frame_end = context.scene.frame_end
 
-        thread = RenderThread(props, render_props.engine, frame_start, frame_end)
+        thread = RenderThread(context, props, render_props.engine, frame_start, frame_end)
         thread.start()
         render_threads.append(thread)
 

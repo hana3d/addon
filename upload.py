@@ -41,19 +41,19 @@ from hana3d import (
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
-def get_upload_location(props):
+def get_upload_location(props, context):
     if props.asset_type == 'MODEL':
-        if bpy.context.view_layer.objects.active is not None:
-            ob = utils.get_active_model()
+        if context.view_layer.objects.active is not None:
+            ob = utils.get_active_model(context)
             return ob.location
     if props.asset_type == 'SCENE':
         return None
     elif props.asset_type == 'MATERIAL':
         if (
-            bpy.context.view_layer.objects.active is not None
-            and bpy.context.active_object.active_material is not None
+            context.view_layer.objects.active is not None
+            and context.active_object.active_material is not None
         ):
-            return bpy.context.active_object.location
+            return context.active_object.location
     return None
 
 
@@ -77,7 +77,7 @@ def get_export_data(
     upload_params = {}
     if props.asset_type == 'MODEL':
         # Prepare to save the file
-        mainmodel = utils.get_active_model()
+        mainmodel = utils.get_active_model(bpy.context)
 
         obs = utils.get_hierarchy(mainmodel)
         obnames = []
@@ -269,7 +269,7 @@ class UploadOperator(Operator):
     def start_upload(self, context, props: types.Props, upload_set: List[str]):
         utils.name_update()
 
-        location = get_upload_location(props)
+        location = get_upload_location(props, context)
         props.upload_state = 'preparing upload'
 
         # do this for fixing long tags in some upload cases
@@ -404,6 +404,7 @@ class UploadOperator(Operator):
 
         if props.remote_thumbnail:
             thread = render.RenderThread(
+                context.copy(),
                 props,
                 engine='CYCLES',
                 frame_start=1,

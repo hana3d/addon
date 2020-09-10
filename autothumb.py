@@ -70,7 +70,7 @@ class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
-        mainmodel = utils.get_active_model()
+        mainmodel = utils.get_active_model(context)
         mainmodel.hana3d.is_generating_thumbnail = True
         mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
 
@@ -192,7 +192,8 @@ class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operato
 
     def draw(self, context):
         layout = self.layout
-        props = bpy.context.active_object.active_material.hana3d
+        active_object = utils.get_active_model(context)
+        props = active_object.active_material.hana3d
         layout.prop(props, 'thumbnail_generator_type')
         layout.prop(props, 'thumbnail_scale')
         layout.prop(props, 'thumbnail_background')
@@ -202,13 +203,12 @@ class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operato
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_denoising')
         layout.prop(props, 'adaptive_subdivision')
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = context.preferences.addons['hana3d'].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
-        mat = bpy.context.active_object.active_material
+        mat = utils.get_active_material(context)
         mat.hana3d.is_generating_thumbnail = True
-        mat.hana3d.remote_thumbnail = False
         mat.hana3d.thumbnail_generating_state = 'starting blender instance'
 
         binary_path = bpy.app.binary_path
@@ -325,7 +325,7 @@ class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
-        s = bpy.context.scene
+        s = context.scene
         props = s.hana3d
         props.is_generating_thumbnail = True
         props.thumbnail_generating_state = 'starting blender instance'
@@ -348,29 +348,29 @@ class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
             i += 1
 
         try:
-            user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+            user_preferences = context.preferences.addons['hana3d'].preferences
 
             if user_preferences.thumbnail_use_gpu:
-                bpy.context.scene.cycles.device = 'GPU'
+                context.scene.cycles.device = 'GPU'
 
-            bpy.context.scene.cycles.samples = props.thumbnail_samples
-            bpy.context.view_layer.cycles.use_denoising = props.thumbnail_denoising
+            context.scene.cycles.samples = props.thumbnail_samples
+            context.view_layer.cycles.use_denoising = props.thumbnail_denoising
 
-            x = bpy.context.scene.render.resolution_x
-            y = bpy.context.scene.render.resolution_y
+            x = context.scene.render.resolution_x
+            y = context.scene.render.resolution_y
 
-            bpy.context.scene.render.resolution_x = int(props.thumbnail_resolution)
-            bpy.context.scene.render.resolution_y = int(props.thumbnail_resolution)
+            context.scene.render.resolution_x = int(props.thumbnail_resolution)
+            context.scene.render.resolution_y = int(props.thumbnail_resolution)
 
             if self.save_only:
                 bpy.ops.wm.save_as_mainfile(filepath=self.blend_filepath, compress=True, copy=True)
             else:
-                bpy.context.scene.render.filepath = thumb_path + '.png'
+                context.scene.render.filepath = thumb_path + '.png'
                 bpy.ops.render.render(write_still=True, animation=False)
                 props.thumbnail = rel_thumb_path + '.png'
 
-            bpy.context.scene.render.resolution_x = x
-            bpy.context.scene.render.resolution_y = y
+            context.scene.render.resolution_x = x
+            context.scene.render.resolution_y = y
 
             props.thumbnail_generating_state = 'Finished'
             props.is_generating_thumbnail = False
