@@ -19,13 +19,14 @@
 import json
 import os
 import sys
+import threading
 import uuid
 from typing import List, Tuple
 
 import bpy
 from mathutils import Vector
 
-from hana3d import paths
+from hana3d import paths, rerequests
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -194,6 +195,21 @@ def save_prefs(self, context):
                 json.dump(prefs, s)
         except Exception as e:
             print(e)
+
+
+def update_profile():
+    p('update_profile')
+    url = paths.get_api_url('me')
+    headers = get_headers(include_id_token=True)
+
+    r = rerequests.get(url, headers=headers)
+    assert r.ok, f'Failed to get profile data: {r.text}'
+
+    bpy.context.window_manager['hana3d profile'] = r.json()
+
+
+def update_profile_async():
+    threading.Thread(target=update_profile, daemon=True).start()
 
 
 def get_hidden_image(

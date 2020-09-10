@@ -22,7 +22,7 @@ import time
 import bpy
 import requests
 
-from hana3d import colors, oauth, paths, search, ui, utils
+from hana3d import colors, oauth, paths, ui, utils
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -93,7 +93,7 @@ def write_tokens(oauth_response: dict):
     if props is not None:
         props.report = ''
     ui.add_report('Hana3D Re-Login success')
-    search.get_profile()
+    utils.update_profile_async()
 
 
 def reset_tokens():

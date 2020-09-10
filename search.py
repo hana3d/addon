@@ -78,7 +78,7 @@ def fetch_server_data():
         ):
             hana3d_oauth.refresh_token_thread()
         if api_key != '' and bpy.context.window_manager.get('hana3d profile') is None:
-            get_profile()
+            utils.update_profile_async()
 
 
 first_time = True
@@ -345,40 +345,6 @@ class ThumbDownloader(threading.Thread):
             # with open(path, 'wb') as f:
             #     for chunk in r.iter_content(1048576*4):
             #         f.write(chunk)
-
-
-def write_profile(adata):
-    utils.p('writing profile')
-    bpy.context.window_manager['hana3d profile'] = adata
-
-
-def request_profile():
-    a_url = paths.get_api_url('me')
-    headers = utils.get_headers(include_id_token=True)
-    r = rerequests.get(a_url, headers=headers)
-    adata = r.json()
-    if adata.get('user') is None:
-        utils.p(adata)
-        utils.p('getting profile failed')
-        return None
-    return adata
-
-
-def fetch_profile():
-    utils.p('fetch profile')
-    try:
-        adata = request_profile()
-        if adata is not None:
-            tasks_queue.add_task((write_profile, (adata,)))
-    except Exception as e:
-        utils.p(e)
-
-
-def get_profile():
-    a = bpy.context.window_manager.get('hana3d profile')
-    thread = threading.Thread(target=fetch_profile, args=(), daemon=True)
-    thread.start()
-    return a
 
 
 class Searcher(threading.Thread):
