@@ -278,6 +278,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         job_url = paths.get_api_url('render_jobs')
 
         data = {
+            'job_name': self.render_job_name,
             'render_scene_id': render_scene_id,
             'engine': self.engine,
             'frame_start': self.frame_start,
