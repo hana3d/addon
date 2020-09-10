@@ -32,7 +32,6 @@ if 'bpy' in locals():
     from importlib import reload
 
     append_link = reload(append_link)
-    asset_inspector = reload(asset_inspector)
     autothumb = reload(autothumb)
     bg_blender = reload(bg_blender)
     download = reload(download)
@@ -50,7 +49,6 @@ if 'bpy' in locals():
 else:
     from . import (
         append_link,
-        asset_inspector,
         autothumb,
         bg_blender,
         download,
@@ -140,6 +138,13 @@ class Hana3DAddonPreferences(AddonPreferences):
         name='api key life time',
         description='maximum lifetime of the api key, in seconds',
         default=3600,
+        update=utils.save_prefs,
+    )
+
+    id_token: StringProperty(
+        name="Hana3D ID Token",
+        default="",
+        subtype="PASSWORD",
         update=utils.save_prefs,
     )
 
@@ -298,7 +303,6 @@ class Hana3DAddonPreferences(AddonPreferences):
 modules = (
     types,
     search,
-    asset_inspector,
     download,
     upload,
     autothumb,

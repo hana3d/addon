@@ -330,6 +330,7 @@ def load_prefs():
             user_preferences.api_key_refresh = prefs.get('API_key_refresh', '')
             user_preferences.api_key_life = prefs.get('API_key_life', 3600)
             user_preferences.api_key_timeout = prefs.get('API_key_timeout', 0)
+            user_preferences.id_token = prefs.get('ID_Token', '')
 
 
 def save_prefs(self, context):
@@ -351,6 +352,7 @@ def save_prefs(self, context):
             'global_dir': user_preferences.global_dir,
             'API_key_life': user_preferences.api_key_life,
             'API_key_timeout': user_preferences.api_key_timeout,
+            'ID_Token': user_preferences.id_token,
         }
         try:
             fpath = paths.HANA3D_SETTINGS_FILENAME
@@ -541,16 +543,24 @@ def get_dimensions(obs):
     return dim, bbmin, bbmax
 
 
-def get_headers(correlation_id: str = None) -> dict:
+def get_headers(
+        correlation_id: str = None,
+        api_key: str = None,
+        include_id_token: bool = False,
+) -> dict:
     headers = {
         'accept': 'application/json',
         'X-Request-Id': str(uuid.uuid4())
     }
     if correlation_id:
         headers['X-Correlation-Id'] = correlation_id
-    api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
+    if api_key is None:
+        api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
     if api_key != '':
         headers["Authorization"] = "Bearer %s" % api_key
+    if include_id_token:
+        id_token = bpy.context.preferences.addons['hana3d'].preferences.id_token
+        headers['X-ID-Token'] = id_token
     return headers
 
 
@@ -628,8 +638,9 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
 
 def name_update():
-    props = get_upload_props()
-    if props is None:
+    asset = get_active_asset()
+    props = asset.hana3d
+    if asset is None:
         return
     if props.name_old != props.name:
         props.name_changed = True
@@ -646,7 +657,6 @@ def name_update():
     fname = props.name
     fname = fname.replace('\'', '')
     fname = fname.replace('\"', '')
-    asset = get_active_asset()
     asset.name = fname
 
 
@@ -796,3 +806,55 @@ def centralize(objects):
         bpy.data.objects.remove(obj)
 
     apply_translation(objects, translation)
+
+
+def check_meshprops(props, obs) -> Tuple[int, int]:
+    '''Return face count and render face count '''
+    fc = 0
+    fcr = 0
+
+    for ob in obs:
+        if ob.type == 'MESH' or ob.type == 'CURVE':
+            ob_eval = None
+            if ob.type == 'CURVE':
+                # depsgraph = bpy.context.evaluated_depsgraph_get()
+                # object_eval = ob.evaluated_get(depsgraph)
+                mesh = ob.to_mesh()
+            else:
+                mesh = ob.data
+            fco = len(mesh.polygons)
+            fc += fco
+            fcor = fco
+
+            for m in ob.modifiers:
+                if m.type == 'SUBSURF' or m.type == 'MULTIRES':
+                    fcor *= 4 ** m.render_levels
+                # this is rough estimate, not to waste time with evaluating all nonmanifold edges
+                if m.type == 'SOLIDIFY':
+                    fcor *= 2
+                if m.type == 'ARRAY':
+                    fcor *= m.count
+                if m.type == 'MIRROR':
+                    fcor *= 2
+                if m.type == 'DECIMATE':
+                    fcor *= m.ratio
+            fcr += fcor
+
+            if ob_eval:
+                ob_eval.to_mesh_clear()
+
+    return fc, fcr
+
+
+def fill_object_metadata(obj: bpy.types.Object):
+    """ call all analysis functions """
+    obs = get_hierarchy(obj)
+    props = obj.hana3d
+
+    dim, bbox_min, bbox_max = get_dimensions(obs)
+    props.dimensions = dim
+    props.bbox_min = bbox_min
+    props.bbox_max = bbox_max
+
+    props.face_count, props.face_count_render = check_meshprops(props, obs)
+    props.object_count = len(obs)

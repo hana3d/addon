@@ -67,58 +67,61 @@ thumbnail_resolutions = (
 )
 
 
-def switch_search_results(self, context):
-    s = context.scene
-    if self.asset_type == 'MODEL':
-        s['search results'] = s.get('hana3d model search')
-        s['search results orig'] = s.get('hana3d model search orig')
-    elif self.asset_type == 'SCENE':
-        s['search results'] = s.get('hana3d scene search')
-        s['search results orig'] = s.get('hana3d scene search orig')
-    elif self.asset_type == 'MATERIAL':
-        s['search results'] = s.get('hana3d material search')
-        s['search results orig'] = s.get('hana3d material search orig')
-    elif self.asset_type == 'HDR':
-        s['search results'] = s.get('hana3d hdr search')
-        s['search results orig'] = s.get('hana3d hdr search orig')
-    search.load_previews()
-
-
-def switch_active_asset_type(self, context):
-    self.asset_type = self.asset_type_render
-
-
-def asset_type_callback(self, context):
-    if self.down_up == 'SEARCH':
-        items = (
-            (
-                'MODEL',
-                'Find Models',
-                'Find models in the Hana3D online database',
-                'OBJECT_DATAMODE',
-                0,
-            ),
-            ('SCENE', 'Find Scenes', 'Find scenes in the Hana3D online database', 'SCENE_DATA', 1),
-            (
-                'MATERIAL',
-                'Find Materials',
-                'Find materials in the Hana3D online database',
-                'MATERIAL',
-                2,
-            ),
-            # ('HDR', 'Find HDRs', 'Find HDRs in the Hana3D online database', 'WORLD_DATA', 3),
-        )
-    else:
-        items = (
-            ('MODEL', 'Upload Model', 'Upload a model to Hana3D', 'OBJECT_DATAMODE', 0),
-            ('SCENE', 'Upload Scene', 'Upload a scene to Hana3D', 'SCENE_DATA', 1),
-            ('MATERIAL', 'Upload Material', 'Upload a material to Hana3D', 'MATERIAL', 2),
-            # ('HDR', 'Upload HDR', 'Upload a HDR to Hana3D', 'WORLD_DATA', 3),
-        )
-    return items
-
-
 class Hana3DUIProps(PropertyGroup):
+    def switch_search_results(self, context):
+        s = context.scene
+        if self.asset_type == 'MODEL':
+            s['search results'] = s.get('hana3d model search')
+            s['search results orig'] = s.get('hana3d model search orig')
+        elif self.asset_type == 'SCENE':
+            s['search results'] = s.get('hana3d scene search')
+            s['search results orig'] = s.get('hana3d scene search orig')
+        elif self.asset_type == 'MATERIAL':
+            s['search results'] = s.get('hana3d material search')
+            s['search results orig'] = s.get('hana3d material search orig')
+        elif self.asset_type == 'HDR':
+            s['search results'] = s.get('hana3d hdr search')
+            s['search results orig'] = s.get('hana3d hdr search orig')
+        search.load_previews()
+
+    def switch_active_asset_type(self, context):
+        self.asset_type = self.asset_type_render
+
+    def asset_type_callback(self, context):
+        if self.down_up == 'SEARCH':
+            items = (
+                (
+                    'MODEL',
+                    'Find Models',
+                    'Find models in the Hana3D online database',
+                    'OBJECT_DATAMODE',
+                    0,
+                ),
+                (
+                    'SCENE',
+                    'Find Scenes',
+                    'Find scenes in the Hana3D online database',
+                    'SCENE_DATA',
+                    1,
+                ),
+                (
+                    'MATERIAL',
+                    'Find Materials',
+                    'Find materials in the Hana3D online database',
+                    'MATERIAL',
+                    2,
+                ),
+                # ('HDR', 'Find HDRs', 'Find HDRs in the Hana3D online database', 'WORLD_DATA', 3),
+            )
+        else:
+            items = (
+                ('MODEL', 'Upload Model', 'Upload a model to Hana3D', 'OBJECT_DATAMODE', 0),
+                ('SCENE', 'Upload Scene', 'Upload a scene to Hana3D', 'SCENE_DATA', 1),
+                ('MATERIAL', 'Upload Material', 'Upload a material to Hana3D', 'MATERIAL', 2),
+                # ('HDR', 'Upload HDR', 'Upload a HDR to Hana3D', 'WORLD_DATA', 3),
+            )
+        return items
+
     down_up: EnumProperty(
         name="Download vs Upload",
         items=(
@@ -224,24 +227,22 @@ class Hana3DUIProps(PropertyGroup):
     )
 
 
-def get_render_asset_name(self):
-    props = utils.get_upload_props()
-    if props is not None:
-        return props.name
-    return ''
-
-
-def get_balance(self) -> str:
-    profile = bpy.context.window_manager.get('hana3d profile')
-    if not profile:
-        return 'N/A'
-    balance = profile['user'].get('nrf_balance')
-    if balance is None:
-        return 'N/A'
-    return f'${balance:.2f}'
-
-
 class Hana3DRenderProps(PropertyGroup):
+    def get_render_asset_name(self) -> str:
+        props = utils.get_upload_props()
+        if props is not None:
+            return props.name
+        return ''
+
+    def get_balance(self) -> str:
+        profile = bpy.context.window_manager.get('hana3d profile')
+        if not profile:
+            return 'N/A'
+        balance = profile['user'].get('nrf_balance')
+        if balance is None:
+            return 'N/A'
+        return f'${balance:.2f}'
+
     render_ui_mode: EnumProperty(
         name='Render UI mode',
         items=(
@@ -340,7 +341,7 @@ class Hana3DTagItem(PropertyGroup):
     selected: BoolProperty(name="Tag Selected", default=False)
 
 
-class Hana3DCommonSearchProps(object):
+class Hana3DCommonSearchProps:
     def update_selected_libraries_search(self, context):
         names = []
         ids = []
@@ -446,7 +447,6 @@ class Hana3DCommonSearchProps(object):
         items=workspace_items,
         name='User workspaces',
         description='User option to choose between workspaces',
-        default=None,
         options={'ANIMATABLE'},
         update=on_workspace_update
     )
@@ -485,95 +485,86 @@ class Hana3DCommonSearchProps(object):
         name="Tags", description="Asset Tags", default="", update=update_tags_input)
 
 
-def name_update(self, context):
-    ''' checks for name change, because it decides if whole asset has to be re-uploaded.
-     Name is stored in the blend file and that's the reason.'''
-    utils.name_update()
-
-
-def update_tags(self, context):
-    props = utils.get_upload_props()
-    if props is None:
-        return
-
-    commasep = props.tags.split(',')
-    ntags = []
-    for tag in commasep:
-        if len(tag) > 19:
-            short_tags = tag.split(' ')
-            for short_tag in short_tags:
-                if len(short_tag) > 19:
-                    short_tag = short_tag[:18]
-                ntags.append(short_tag)
-        else:
-            ntags.append(tag)
-    if len(ntags) == 1:
-        ntags = ntags[0].split(' ')
-    ns = ''
-    for t in ntags:
-        if t != '':
-            ns += t + ','
-    ns = ns[:-1]
-    if props.tags != ns:
-        props.tags = ns
-
-
-def get_render_job_outputs(self, context):
-    preview_collection = render.render_previews[self.view_id]
-    if not hasattr(preview_collection, 'previews'):
-        preview_collection.previews = []
-
-    n_render_jobs = len(self.render_data['jobs']) if 'jobs' in self.render_data else 0
-    if len(preview_collection.previews) != n_render_jobs:
-        # Sort jobs to avoid error when appending newer render jobs
-        sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
-        available_previews = []
-        for n, job in enumerate(sorted_jobs):
-            job_id = job['id']
-            if job_id not in preview_collection:
-                file_path = job['file_path']
-                if not os.path.exists(file_path):
-                    continue
-                preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
-            else:
-                preview_img = preview_collection[job_id]
-
-            enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
-            available_previews.append(enum_item)
-        preview_collection.previews = available_previews
-
-    return preview_collection.previews
-
-
-def get_active_image(self, context):
-    preview_collection = render.render_previews['active_images']
-    if not hasattr(preview_collection, 'previews'):
-        preview_collection.previews = []
-
-    active_images = [
-        img
-        for img in context.blend_data.images
-        if img.get('active') or img.has_data and img.users > 0
-    ]
-    if len(preview_collection.previews) != len(active_images):
-        available_previews = []
-        for n, img in enumerate(active_images):
-            if img.name not in preview_collection:
-                if img.filepath == '':
-                    preview_img = img.preview
-                else:
-                    preview_img = preview_collection.load(img.name, img.filepath, 'IMAGE')
-            else:
-                preview_img = preview_collection[img.name]
-
-            enum_item = (img.name, img.name or '', '', preview_img.icon_id, n)
-            available_previews.append(enum_item)
-        preview_collection.previews = available_previews
-
-    return preview_collection.previews
-
-
 class Hana3DCommonUploadProps:
+    def update_tags(self, context):
+        props = utils.get_upload_props()
+        if props is None:
+            return
+
+        commasep = props.tags.split(',')
+        ntags = []
+        for tag in commasep:
+            if len(tag) > 19:
+                short_tags = tag.split(' ')
+                for short_tag in short_tags:
+                    if len(short_tag) > 19:
+                        short_tag = short_tag[:18]
+                    ntags.append(short_tag)
+            else:
+                ntags.append(tag)
+        if len(ntags) == 1:
+            ntags = ntags[0].split(' ')
+        ns = ''
+        for t in ntags:
+            if t != '':
+                ns += t + ','
+        ns = ns[:-1]
+        if props.tags != ns:
+            props.tags = ns
+
+    def get_render_job_outputs(self, context):
+        preview_collection = render.render_previews[self.view_id]
+        if not hasattr(preview_collection, 'previews'):
+            preview_collection.previews = []
+
+        n_render_jobs = len(self.render_data['jobs']) if 'jobs' in self.render_data else 0
+        if len(preview_collection.previews) != n_render_jobs:
+            # Sort jobs to avoid error when appending newer render jobs
+            sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
+            available_previews = []
+            for n, job in enumerate(sorted_jobs):
+                job_id = job['id']
+                if job_id not in preview_collection:
+                    file_path = job['file_path']
+                    if not os.path.exists(file_path):
+                        continue
+                    preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
+                else:
+                    preview_img = preview_collection[job_id]
+
+                enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
+                available_previews.append(enum_item)
+            preview_collection.previews = available_previews
+
+        return preview_collection.previews
+
+    def get_active_image(self, context):
+        preview_collection = render.render_previews['active_images']
+        if not hasattr(preview_collection, 'previews'):
+            preview_collection.previews = []
+
+        active_images = [
+            img
+            for img in context.blend_data.images
+            if img.get('active') or img.has_data and img.users > 0
+        ]
+        if len(preview_collection.previews) != len(active_images):
+            available_previews = []
+            for n, img in enumerate(active_images):
+                if img.name not in preview_collection:
+                    if img.filepath == '':
+                        preview_img = img.preview
+                    else:
+                        preview_img = preview_collection.load(img.name, img.filepath, 'IMAGE')
+                else:
+                    preview_img = preview_collection[img.name]
+
+                enum_item = (img.name, img.name or '', '', preview_img.icon_id, n)
+                available_previews.append(enum_item)
+            preview_collection.previews = available_previews
+
+        return preview_collection.previews
+
     def update_selected_libraries_upload(self, context):
         names = []
         ids = []
@@ -641,22 +632,42 @@ class Hana3DCommonUploadProps:
         if self.tags_input != '':
             self.tags_list[self.tags_input].selected = True
 
+    def update_thumbnail(self, context=None):
+        img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)
+        if img is not None:
+            self.has_thumbnail = True
+            self.thumbnail_generating_state = ''
+        else:
+            self.has_thumbnail = False
+            self.thumbnail_generating_state = 'No thumbnail or wrong file path\n'
+
+    def clear_data(self):
+        """Set all properties to their default values"""
+        for cls in self.__class__.mro():
+            if not hasattr(cls, '__annotations__'):
+                continue
+            for attr, (type_, kwargs) in cls.__annotations__.items():
+                if 'default' in kwargs:
+                    setattr(self, attr, kwargs['default'])
+
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",
         default=""
     )
+
     view_id: StringProperty(
         name="View Id",
         description="Unique ID of asset's current revision (hidden)",
         default="",
     )
+
     name: StringProperty(
         name="Name",
         description="Main name of the asset",
         default="",
-        update=name_update
     )
+
     # this is to store name for purpose of checking if name has changed.
     name_old: StringProperty(
         name="Old Name",
@@ -669,6 +680,7 @@ class Hana3DCommonUploadProps:
         description="Description of the asset",
         default=""
     )
+
     tags: StringProperty(
         name="Tags",
         description="List of tags, separated by commas (optional)",
@@ -692,12 +704,28 @@ class Hana3DCommonUploadProps:
         name="Uploading",
         description="True when background process is running",
         default=False,
-        update=autothumb.update_upload_material_preview,
+        update=update_thumbnail,
     )
+
     upload_state: StringProperty(
         name="State Of Upload",
         description="bg process reports for upload",
         default=''
+    )
+
+    thumbnail: StringProperty(
+        name="Thumbnail",
+        description="Path to the thumbnail - 512x512 .jpg image",
+        subtype='FILE_PATH',
+        default="",
+        update=update_thumbnail,
+    )
+
+    is_generating_thumbnail: BoolProperty(
+        name="Generating Thumbnail",
+        description="True when background process is running",
+        default=False,
+        update=update_thumbnail,
     )
 
     has_thumbnail: BoolProperty(
@@ -722,7 +750,6 @@ class Hana3DCommonUploadProps:
         items=workspace_items,
         name='User workspaces',
         description='User option to choose between workspaces',
-        default=None,
         options={'ANIMATABLE'},
         update=on_workspace_update
     )
@@ -777,10 +804,12 @@ class Hana3DCommonUploadProps:
 
     render_state: StringProperty(
         name="Render Generating State",
+        default="",
     )
 
     upload_render_state: StringProperty(
         name="Render Upload State",
+        default="",
     )
 
     uploading_render: BoolProperty(
@@ -894,20 +923,6 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default="BALL",
     )
 
-    thumbnail: StringProperty(
-        name="Thumbnail",
-        description="Path to the thumbnail - 512x512 .jpg image",
-        subtype='FILE_PATH',
-        default="",
-        update=autothumb.update_upload_material_preview,
-    )
-
-    is_generating_thumbnail: BoolProperty(
-        name="Generating Thumbnail",
-        description="True when background process is running",
-        default=False,
-        update=autothumb.update_upload_material_preview,
-    )
     asset_type: StringProperty(default='material')
 
 
@@ -921,14 +936,6 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         name="Designer",
         description="Author of the original design piece depicted. Usually not you",
         default="",
-    )
-
-    thumbnail: StringProperty(
-        name="Thumbnail",
-        description="Path to the thumbnail - 512x512 .jpg image",
-        subtype='FILE_PATH',
-        default="",
-        update=autothumb.update_upload_model_preview,
     )
 
     thumbnail_background_lightness: FloatProperty(
@@ -1003,14 +1010,6 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=0,
     )
 
-    # THUMBNAIL STATES
-    is_generating_thumbnail: BoolProperty(
-        name="Generating Thumbnail",
-        description="True when background process is running",
-        default=False,
-        update=autothumb.update_upload_model_preview,
-    )
-
     has_autotags: BoolProperty(
         name="Has Autotagging Done",
         description="True when autotagging done",
@@ -1021,14 +1020,6 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
 
 
 class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    thumbnail: StringProperty(
-        name="Thumbnail",
-        description="Path to the thumbnail - 512x512 .jpg image",
-        subtype='FILE_PATH',
-        default="",
-        update=autothumb.update_upload_scene_preview,
-    )
-
     dimensions: FloatVectorProperty(
         name="Dimensions",
         description="dimensions of the whole asset hierarchy",
@@ -1056,14 +1047,6 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         name="Number of Objects",
         description="how many objects are in the asset, autofilled",
         default=0,
-    )
-
-    # THUMBNAIL STATES
-    is_generating_thumbnail: BoolProperty(
-        name="Generating Thumbnail",
-        description="True when background process is running",
-        default=False,
-        update=autothumb.update_upload_scene_preview,
     )
 
     has_autotags: BoolProperty(

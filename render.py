@@ -22,11 +22,12 @@ if 'bpy' in locals():
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)
+    search = reload(search)
     types = reload(types)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import colors, paths, rerequests, types, ui, utils
+    from hana3d import colors, paths, rerequests, search, types, ui, utils
 
 import os
 import shutil
@@ -197,11 +198,13 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self.props.rendering = False
             time.sleep(5)
             self.props.render_state = ''
+            search.get_profile()
 
     def _create_render_view(self) -> Tuple[str, str]:
         url = paths.get_api_url('uploads')
         data = {
             'assetId': self.props.id,
+            'libraries': [],
             'originalFilename': os.path.basename(self.filepath),
             'id_parent': self.props.view_id,
             'metadata': {
@@ -233,6 +236,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             'engine': self.engine,
             'frame_start': self.frame_start,
             'frame_end': self.frame_end,
+            'extension': '.blend',
         }
         response = rerequests.post(job_url, json=data, headers=self.headers)
         assert response.ok, f'Error when creating job: {response.text}'
@@ -275,6 +279,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             frame = self.frame_start + n
             data = {
                 'assetId': self.props.id,
+                'libraries': [],
                 'originalFilename': render_url.rpartition('/')[2],
                 'id_parent': render_scene_id,
                 'url': render_url,
@@ -583,6 +588,7 @@ class UploadThread(UploadFileMixin, threading.Thread):
         url = paths.get_api_url('uploads')
         data = {
             'assetId': self.props.id,
+            'libraries': [],
             'originalFilename': os.path.basename(job['file_path']),
             'id_parent': self.props.view_id,
             'metadata': {
