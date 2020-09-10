@@ -484,9 +484,6 @@ class Hana3DCommonSearchProps(object):
     tags_input: StringProperty(
         name="Tags", description="Asset Tags", default="", update=update_tags_input)
 
-    # tags_selected: CollectionProperty(
-    #     type=StringProperty, name="Selected Tags", description="All selected tags")
-
 
 def name_update(self, context):
     ''' checks for name change, because it decides if whole asset has to be re-uploaded.
@@ -818,10 +815,6 @@ class Hana3DCommonUploadProps:
 
     tags_input: StringProperty(
         name="Tags", description="Asset Tags", default="", update=update_tags_input)
-
-    tags_selected: PointerProperty(
-        type=PropertyGroup
-    )
 
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
