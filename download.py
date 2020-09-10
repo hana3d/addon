@@ -23,10 +23,11 @@ if 'bpy' in locals():
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)
+    types = reload(types)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import append_link, colors, paths, rerequests, ui, utils
+    from hana3d import append_link, colors, paths, rerequests, types, ui, utils
 
 import copy
 import os
@@ -351,6 +352,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
                         parent.hana3d.custom_props[name] = view_prop['value']
 
     if 'tags' in asset_data:
+        types.update_tags_list(parent.hana3d, bpy.context)
         for tag in asset_data['tags']:
             parent.hana3d.tags_list[tag].selected = True
 

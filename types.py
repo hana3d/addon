@@ -325,6 +325,16 @@ def search_update(self, context):
     search.search()
 
 
+def update_tags_list(props, context):
+    props.tags_list.clear()
+    current_workspace = props.workspace
+    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+        if current_workspace == workspace['id']:
+            for tag in workspace['tags']:
+                new_tag = props.tags_list.add()
+                new_tag['name'] = tag
+
+
 class Hana3DTagItem(PropertyGroup):
     name: StringProperty(name="Tag Name", default="Unknown")
     selected: BoolProperty(name="Tag Selected", default=False)
@@ -370,21 +380,12 @@ class Hana3DCommonSearchProps(object):
                         'metadata': library['metadata']
                     }
                     i += 1
-            self.libraries_count = i
+                self.libraries_count = i
         self.update_selected_libraries_search(context)
-
-    def update_tags_list(self, context):
-        self.tags_list.clear()
-        current_workspace = self.workspace
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-            if current_workspace == workspace['id']:
-                for tag in workspace['tags']:
-                    new_tag = self.tags_list.add()
-                    new_tag['name'] = tag
 
     def on_workspace_update(self, context):
         self.update_libraries_list_search(context)
-        self.update_tags_list(context)
+        update_tags_list(self, context)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
@@ -635,18 +636,9 @@ class Hana3DCommonUploadProps:
                         i += 1
                 self.libraries_count = i
 
-    def update_tags_list(self, context):
-        self.tags_list.clear()
-        current_workspace = self.workspace
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-            if current_workspace == workspace['id']:
-                for tag in workspace['tags']:
-                    new_tag = self.tags_list.add()
-                    new_tag['name'] = tag
-
     def on_workspace_update(self, context):
         self.update_libraries_list_upload(context)
-        self.update_tags_list(context)
+        update_tags_list(self, context)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
