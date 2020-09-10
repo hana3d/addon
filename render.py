@@ -278,6 +278,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             frame = self.frame_start + n
             data = {
                 'assetId': self.props.id,
+                'libraries': [],
                 'originalFilename': render_url.rpartition('/')[2],
                 'id_parent': render_scene_id,
                 'url': render_url,
