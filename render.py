@@ -22,11 +22,12 @@ if 'bpy' in locals():
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)
+    search = reload(search)
     types = reload(types)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import colors, paths, rerequests, types, ui, utils
+    from hana3d import colors, paths, rerequests, search, types, ui, utils
 
 import os
 import shutil
@@ -197,6 +198,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self.props.rendering = False
             time.sleep(5)
             self.props.render_state = ''
+            search.get_profile()
 
     def _create_render_view(self) -> Tuple[str, str]:
         url = paths.get_api_url('uploads')
