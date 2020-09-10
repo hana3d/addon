@@ -282,6 +282,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             'engine': self.engine,
             'frame_start': self.frame_start,
             'frame_end': self.frame_end,
+            'extension': '.blend',
         }
         response = rerequests.post(job_url, json=data, headers=self.headers)
         assert response.ok, f'Error when creating job: {response.text}'
