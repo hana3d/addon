@@ -18,16 +18,13 @@
 
 import json
 import os
-import re
 import subprocess
 import tempfile
-import threading
 import uuid
 from typing import List
 
 import bpy
-import requests
-from bpy.props import BoolProperty, EnumProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
 from hana3d import (
@@ -44,38 +41,14 @@ from hana3d import (
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
-def sub_to_camel(content):
-    replaced = re.sub(r"_.", lambda m: m.group(0)[1].upper(), content)
-    return replaced
-
-
-def camel_to_sub(content):
-    replaced = re.sub(r"[A-Z]", lambda m: '_' + m.group(0).lower(), content)
-    return replaced
-
-
-def verification_status_change_thread(asset_id, state):
-    upload_data = {"verificationStatus": state}
-    url = paths.get_api_url('assets', asset_id)
-    headers = utils.get_headers()
-    try:
-        rerequests.patch(url, json=upload_data, headers=headers)
-    except requests.exceptions.RequestException as e:
-        print(e)
-        return {'CANCELLED'}
-    return {'FINISHED'}
-
-
 def get_upload_location(props):
-    scene = bpy.context.scene
-    ui_props = scene.Hana3DUI
-    if ui_props.asset_type == 'MODEL':
+    if props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = utils.get_active_model()
             return ob.location
-    if ui_props.asset_type == 'SCENE':
+    if props.asset_type == 'SCENE':
         return None
-    elif ui_props.asset_type == 'MATERIAL':
+    elif props.asset_type == 'MATERIAL':
         if (
             bpy.context.view_layer.objects.active is not None
             and bpy.context.active_object.active_material is not None
@@ -443,58 +416,8 @@ class UploadOperator(Operator):
         return {'FINISHED'}
 
 
-class AssetVerificationStatusChange(Operator):
-    """Change verification status"""
-
-    bl_idname = "object.hana3d_change_status"
-    bl_description = "Change asset ststus"
-    bl_label = "Change verification status"
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    # type of upload - model, material, textures, e.t.c.
-    asset_id: StringProperty(name="asset id",)
-
-    state: StringProperty(name="verification_status", default='uploaded')
-
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def draw(self, context):
-        layout = self.layout
-        # if self.state == 'deleted':
-        layout.label(text='Really delete asset from hana3d online storage?')
-        # layout.prop(self, 'state')
-
-    def execute(self, context):
-        # update status in search results for validator's clarity
-        sr = bpy.context.scene['search results']
-        sro = bpy.context.scene['search results orig']['results']
-
-        for r in sr:
-            if r['id'] == self.asset_id:
-                r['verification_status'] = self.state
-        for r in sro:
-            if r['id'] == self.asset_id:
-                r['verificationStatus'] = self.state
-
-        thread = threading.Thread(
-            target=verification_status_change_thread,
-            args=(self.asset_id, self.state)
-        )
-        thread.start()
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        print(self.state)
-        if self.state == 'deleted':
-            wm = context.window_manager
-            return wm.invoke_props_dialog(self)
-
-
 classes = (
     UploadOperator,
-    AssetVerificationStatusChange,
 )
 
 
