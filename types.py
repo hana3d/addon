@@ -1157,9 +1157,19 @@ class Hana3DAddTag(Operator):
 
     def execute(self, context):
         props = utils.get_upload_props()
+        current_workspace = props.workspace
+
         new_tag = props.tags_list.add()
         new_tag['name'] = self.tag
         new_tag.selected = True
+
+        search_props = utils.get_search_props()
+        new_tag = search_props.tags_list.add()
+        new_tag['name'] = self.tag
+
+        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                workspace['tags'] = workspace['tags'].__add__([self.tag])
         return {'FINISHED'}
 
     def invoke(self, context, event):
