@@ -325,11 +325,11 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     parent.hana3d.tags = ','.join(asset_data['tags'])
     parent.hana3d.description = asset_data['description']
 
-    # jobs = get_render_jobs(asset_data['view_id'])
-    # download_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
-    # add_file_paths(jobs, download_dir)
-    # parent.hana3d.render_data['jobs'] = jobs
-    # download_renders(jobs)
+    jobs = get_render_jobs(asset_data['view_id'])
+    download_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
+    add_file_paths(jobs, download_dir)
+    parent.hana3d.render_data['jobs'] = jobs
+    download_renders(jobs)
 
     if 'libraries' in asset_data:
         hana3d_class = type(parent.hana3d)
@@ -905,9 +905,6 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
             return {'CANCELLED'}
         sr = scene['search results']
 
-        print('len: ', len(sr))
-
-        # for result in sr:
         for index, result in zip(range(10), sr[self.object_count:]):
             asset_data = result.to_dict()
             location = self._get_location()
