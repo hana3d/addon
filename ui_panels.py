@@ -96,6 +96,21 @@ def draw_selected_tags(layout, props, operator):
             tag_counter = 0
 
 
+def draw_selected_libraries(layout, props, operator):
+    row = layout.row()
+    row.scale_y = 0.9
+    library_counter = 0
+    for library in props.libraries_list.keys():
+        if props.libraries_list[library].selected is True:
+            op = row.operator(operator, text=library, icon='X')
+            op.library = library
+            library_counter += 1
+        if library_counter == 3:
+            row = layout.row()
+            row.scale_y = 0.9
+            library_counter = 0
+
+
 def draw_panel_common_upload(layout, context):
     scene = bpy.context.scene
     uiprops = scene.Hana3DUI
@@ -105,16 +120,18 @@ def draw_panel_common_upload(layout, context):
     box = layout.box()
     box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
     box.prop(props, 'workspace', expand=False, text='Workspace')
-    row = box.row(align=True)
-    col = row.column()
-    col.scale_x = 0.7
-    col.label(text='Libraries:')
-    col = row.column()
-    col.scale_x = 1.24
-    col.operator(
-        "object.hana3d_list_libraries_upload",
-        text=props.libraries_text
-    )
+    # row = box.row(align=True)
+    # col = row.column()
+    # col.scale_x = 0.7
+    # col.label(text='Libraries:')
+    # col = row.column()
+    # col.scale_x = 1.24
+    # col.operator(
+    #     "object.hana3d_list_libraries_upload",
+    #     text=props.libraries_text
+    # )
+    box.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    draw_selected_libraries(box, props, "object.hana3d_remove_library_upload")
     for name in props.custom_props.keys():
         box.prop(props.custom_props, f'["{name}"]')
 
@@ -189,16 +206,18 @@ def draw_panel_common_search(layout, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
     layout.prop(props, 'workspace', expand=False, text='Workspace')
-    row = layout.row(align=True)
-    col = row.column()
-    col.scale_x = 0.7
-    col.label(text='Libraries:')
-    col = row.column()
-    col.scale_x = 1.24
-    col.operator(
-        "object.hana3d_list_libraries_search",
-        text=props.libraries_text
-    )
+    # row = layout.row(align=True)
+    # col = row.column()
+    # col.scale_x = 0.7
+    # col.label(text='Libraries:')
+    # col = row.column()
+    # col.scale_x = 1.24
+    # col.operator(
+    #     "object.hana3d_list_libraries_search",
+    #     text=props.libraries_text
+    # )
+    layout.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    draw_selected_libraries(layout, props, "object.hana3d_remove_library_search")
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
     layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
@@ -654,6 +673,36 @@ class RemoveTagUpload(Operator):
         return {'INTERFACE'}
 
 
+class RemoveLibrarySearch(Operator):
+    """Remove Library"""
+
+    bl_idname = "object.hana3d_remove_library_search"
+    bl_label = "Hana3D Remove Library"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    library: bpy.props.StringProperty(name='Library', default='')
+
+    def execute(self, context):
+        props = utils.get_search_props()
+        props.libraries_list[self.library].selected = False
+        return {'INTERFACE'}
+
+
+class RemoveLibraryUpload(Operator):
+    """Remove Library"""
+
+    bl_idname = "object.hana3d_remove_library_upload"
+    bl_label = "Hana3D Remove Library"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    library: bpy.props.StringProperty(name='Library', default='')
+
+    def execute(self, context):
+        props = utils.get_upload_props()
+        props.libraries_list[self.library].selected = False
+        return {'INTERFACE'}
+
+
 classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
@@ -663,7 +712,9 @@ classes = (
     ListLibrariesSearch,
     ListLibrariesUpload,
     RemoveTagSearch,
-    RemoveTagUpload
+    RemoveTagUpload,
+    RemoveLibrarySearch,
+    RemoveLibraryUpload
 )
 
 

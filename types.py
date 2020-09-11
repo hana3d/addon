@@ -20,13 +20,12 @@
 if 'bpy' in locals():
     from importlib import reload
 
-    autothumb = reload(autothumb)
     paths = reload(paths)
     render = reload(render)
     search = reload(search)
     utils = reload(utils)
 else:
-    from hana3d import autothumb, paths, render, search, utils
+    from hana3d import paths, render, search, utils
 
 import math
 import os
@@ -336,61 +335,39 @@ def update_tags_list(props, context):
                 new_tag['name'] = tag
 
 
+def update_libraries_list(props, context):
+    props.libraries_list.clear()
+    current_workspace = props.workspace
+    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+        if current_workspace == workspace['id']:
+            for library in workspace['libraries']:
+                new_library = props.libraries_list.add()
+                new_library['name'] = library['name']
+
+
 class Hana3DTagItem(PropertyGroup):
     name: StringProperty(name="Tag Name", default="Unknown")
     selected: BoolProperty(name="Tag Selected", default=False)
 
 
+class Hana3DLibraryItem(PropertyGroup):
+    name: StringProperty(name="Library Name", default="Unknown")
+    selected: BoolProperty(name="Library Selected", default=False)
+
+
 class Hana3DCommonSearchProps:
-    def update_selected_libraries_search(self, context):
-        names = []
-        ids = []
-        for i in range(self.libraries_count):
-            current_value = getattr(self, f'library_{i}')
-            library_entry = getattr(type(self), f'library_{i}')
-            name = library_entry[1]['name']
-            library_info = self.libraries_info[name]
-
-            if current_value is True:
-                names.append(name)
-                ids.append(library_info['id'])
-
-        if len(names) > 0:
-            self.libraries_text = ','.join(names)
-        else:
-            self.libraries_text = 'Select libraries'
-        self.libraries = ','.join(ids)
-
-    def update_libraries_list_search(self, context):
-        hana3d_class = type(self)   # noqa F841
-        for i in range(self.libraries_count):
-            exec(f'del hana3d_class.library_{i}')
-        current_workspace = self.workspace
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-            if current_workspace == workspace['id']:
-                i = 0
-                for library in workspace['libraries']:
-                    bool_prop = BoolProperty(  # noqa F841
-                        name=library["name"],
-                        default=False,
-                        update=Hana3DCommonSearchProps.update_selected_libraries_search)
-                    exec(f'hana3d_class.library_{i}=bool_prop')
-                    self.libraries_info[library['name']] = {
-                        'name': library['name'],
-                        'id': library['id'],
-                        'metadata': library['metadata']
-                    }
-                    i += 1
-                self.libraries_count = i
-        self.update_selected_libraries_search(context)
-
     def on_workspace_update(self, context):
-        self.update_libraries_list_search(context)
+        # self.update_libraries_list_search(context)
+        update_libraries_list(self, context)
         update_tags_list(self, context)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
             self.tags_list[self.tags_input].selected = True
+
+    def update_libraries_input(self, context):
+        if self.libraries_input != '':
+            self.libraries_list[self.libraries_input].selected = True
 
     # STATES
     search_keywords: StringProperty(
@@ -483,6 +460,15 @@ class Hana3DCommonSearchProps:
 
     tags_input: StringProperty(
         name="Tags", description="Asset Tags", default="", update=update_tags_input)
+
+    libraries_list: CollectionProperty(type=Hana3DLibraryItem)
+
+    libraries_input: StringProperty(
+        name="Libraries",
+        description="Libraries to search",
+        default="",
+        update=update_libraries_input
+    )
 
 
 class Hana3DCommonUploadProps:
@@ -625,12 +611,17 @@ class Hana3DCommonUploadProps:
                 self.libraries_count = i
 
     def on_workspace_update(self, context):
-        self.update_libraries_list_upload(context)
+        # self.update_libraries_list_upload(context)
+        update_libraries_list(self, context)
         update_tags_list(self, context)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
             self.tags_list[self.tags_input].selected = True
+
+    def update_libraries_input(self, context):
+        if self.libraries_input != '':
+            self.libraries_list[self.libraries_input].selected = True
 
     def update_thumbnail(self, context=None):
         img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)
@@ -844,6 +835,15 @@ class Hana3DCommonUploadProps:
 
     tags_input: StringProperty(
         name="Tags", description="Asset Tags", default="", update=update_tags_input)
+
+    libraries_list: CollectionProperty(type=Hana3DLibraryItem)
+
+    libraries_input: StringProperty(
+        name="Libraries",
+        description="Upload to libraries",
+        default="",
+        update=update_libraries_input
+    )
 
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
@@ -1172,6 +1172,7 @@ Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUplo
 
 classes = (
     Hana3DTagItem,
+    Hana3DLibraryItem,
     Hana3DUIProps,
     Hana3DRenderProps,
     Hana3DModelSearchProps,
