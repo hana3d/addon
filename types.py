@@ -343,6 +343,7 @@ def update_libraries_list(props, context):
             for library in workspace['libraries']:
                 new_library = props.libraries_list.add()
                 new_library['name'] = library['name']
+                new_library.id_ = library['id']
 
 
 class Hana3DTagItem(PropertyGroup):
@@ -351,6 +352,7 @@ class Hana3DTagItem(PropertyGroup):
 
 
 class Hana3DLibraryItem(PropertyGroup):
+    id_: StringProperty(name="Library ID", default="Unknown")
     name: StringProperty(name="Library Name", default="Unknown")
     selected: BoolProperty(name="Library Selected", default=False)
 

@@ -878,7 +878,7 @@ def search(get_next=False, author_id=''):
     libraries = []
     for library in props.libraries_list.keys():
         if props.libraries_list[library].selected is True:
-            libraries.append(library)
+            libraries.append(props.libraries_list[library].id_)
     query['libraries'] = ','.join(libraries)
 
     props.is_searching = True
