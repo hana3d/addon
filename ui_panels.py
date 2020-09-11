@@ -184,14 +184,14 @@ def draw_panel_common_search(layout, context):
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
         layout.operator("scene.hana3d_batch_download", text='Import all preview files')
-    elif asset_type == 'SCENE':
-        layout.separator()
-        layout.label(text='Import method:')
-        layout.prop(props, 'merge_add', expand=True, icon_only=False)
-        if props.merge_add == 'MERGE':
-            layout.prop(props, 'import_world')
-            layout.prop(props, 'import_render')
-            layout.prop(props, 'import_compositing')
+    # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge
+    #     layout.separator()
+    #     layout.label(text='Import method:')
+    #     layout.prop(props, 'merge_add', expand=True, icon_only=False)
+    #     if props.merge_add == 'MERGE':
+    #         layout.prop(props, 'import_world')
+    #         layout.prop(props, 'import_render')
+    #         layout.prop(props, 'import_compositing')
 
 
 def draw_assetbar_show_hide(layout, props):
