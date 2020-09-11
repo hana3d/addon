@@ -326,39 +326,44 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
     parent.hana3d.tags = ','.join(asset_data['tags'])
     parent.hana3d.description = asset_data['description']
 
-    jobs = get_render_jobs(asset_data['view_id'])
-    download_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
-    add_file_paths(jobs, download_dir)
-    parent.hana3d.render_data['jobs'] = jobs
-    download_renders(jobs)
+    # jobs = get_render_jobs(asset_data['view_id'])
+    # download_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
+    # add_file_paths(jobs, download_dir)
+    # parent.hana3d.render_data['jobs'] = jobs
+    # download_renders(jobs)
 
-    if 'libraries' in asset_data:
-        hana3d_class = type(parent.hana3d)
-        for library in asset_data['libraries']:
-            for i in range(parent.hana3d.libraries_count):
-                library_entry = getattr(hana3d_class, f'library_{i}')
-                name = library_entry[1]['name']
-                library_info = parent.hana3d.libraries_info[name]
+    # if 'libraries' in asset_data:
+    #     hana3d_class = type(parent.hana3d)
+    #     for library in asset_data['libraries']:
+    #         for i in range(parent.hana3d.libraries_count):
+    #             library_entry = getattr(hana3d_class, f'library_{i}')
+    #             name = library_entry[1]['name']
+    #             library_info = parent.hana3d.libraries_info[name]
 
-                if library_info['id'] == library['library_id']:
-                    library_prop = getattr(parent.hana3d, f'library_{i}')
-                    library_prop = True  # noqa:F841
-                    break
+    #             if library_info['id'] == library['library_id']:
+    #                 library_prop = getattr(parent.hana3d, f'library_{i}')
+    #                 library_prop = True  # noqa:F841
+    #                 break
 
-                if 'metadata' in library and library['metadata'] is not None:
-                    for view_prop in library['metadata']['view_props']:
-                        name = f'{library["name"]} {library_info["metadata"]["view_props"][key]}'
-                        parent.hana3d.custom_props_info[name] = {
-                            'key': view_prop['key'],
-                            'library_name': library["name"],
-                            'library_id': library['id_library']
-                        }
-                        parent.hana3d.custom_props[name] = view_prop['value']
+    #             if 'metadata' in library and library['metadata'] is not None:
+    #                 for view_prop in library['metadata']['view_props']:
+    #                     name = f'{library["name"]} {library_info["metadata"]["view_props"][key]}'
+    #                     parent.hana3d.custom_props_info[name] = {
+    #                         'key': view_prop['key'],
+    #                         'library_name': library["name"],
+    #                         'library_id': library['id_library']
+    #                     }
+    #                     parent.hana3d.custom_props[name] = view_prop['value']
 
     if 'tags' in asset_data:
         types.update_tags_list(parent.hana3d, bpy.context)
         for tag in asset_data['tags']:
             parent.hana3d.tags_list[tag].selected = True
+
+    if 'libraries' in asset_data:
+        types.update_libraries_list(parent.hana3d, bpy.context)
+        for library in asset_data['libraries']:
+            parent.hana3d.libraries_list[library["name"]].selected = True
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 

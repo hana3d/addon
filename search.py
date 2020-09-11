@@ -867,8 +867,6 @@ def search(get_next=False, author_id=''):
     if props.workspace != '' and not props.public_only:
         query['workspace'] = props.workspace
 
-    # query['libraries'] = props.libraries
-
     tags = []
     for tag in props.tags_list.keys():
         if props.tags_list[tag].selected is True:
