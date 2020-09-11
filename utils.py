@@ -309,7 +309,13 @@ def get_export_data(
     upload_data['libraries'] = []
     for library in props.libraries_list.keys():
         if props.libraries_list[library].selected is True:
-            upload_data["libraries"].append(props.libraries_list[library].id_)
+            upload_data["libraries"].append({
+                'id': props.libraries_list[library].id_
+            })
+    if len(upload_data['libraries']) == 0:
+        upload_data['libraries'].append({
+            'id': props.default_library
+        })
 
     export_data['publish_message'] = props.publish_message
 

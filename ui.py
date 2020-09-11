@@ -1717,7 +1717,6 @@ class DefaultNamesOperator(bpy.types.Operator):
             search_props = utils.get_search_props()
             if (
                 search_props.workspace != ''
-                and search_props.default_library == ''
                 and len(search_props.tags_list) == 0
             ):
                 search_props.workspace = search_props.workspace

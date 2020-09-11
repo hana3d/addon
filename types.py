@@ -344,6 +344,9 @@ def update_libraries_list(props, context):
                 new_library = props.libraries_list.add()
                 new_library['name'] = library['name']
                 new_library.id_ = library['id']
+                if library['metadata'] is not None:
+                    new_library.metadata['library_props'] = library['metadata']['library_props']
+                    new_library.metadata['view_props'] = library['metadata']['view_props']
 
 
 class Hana3DTagItem(PropertyGroup):
@@ -355,6 +358,7 @@ class Hana3DLibraryItem(PropertyGroup):
     id_: StringProperty(name="Library ID", default="Unknown")
     name: StringProperty(name="Library Name", default="Unknown")
     selected: BoolProperty(name="Library Selected", default=False)
+    metadata: PointerProperty(type=PropertyGroup)
 
 
 class Hana3DCommonSearchProps:
@@ -368,8 +372,19 @@ class Hana3DCommonSearchProps:
             self.tags_list[self.tags_input].selected = True
 
     def update_libraries_input(self, context):
-        if self.libraries_input != '':
-            self.libraries_list[self.libraries_input].selected = True
+        if self.libraries_input == '':
+            return
+
+        self.libraries_list[self.libraries_input].selected = True
+        for view_prop in self.libraries_list[self.libraries_input].metadata['view_props']:
+            name = f'{self.libraries_list[self.libraries_input].name} {view_prop["name"]}'
+            if name not in self.custom_props:
+                self.custom_props_info[name] = {
+                    'key': view_prop['slug'],
+                    'library_name': library_info["name"],
+                    'library_id': library_info['id']
+                }
+                self.custom_props[name] = ''
 
     # STATES
     search_keywords: StringProperty(
@@ -430,34 +445,6 @@ class Hana3DCommonSearchProps:
         update=on_workspace_update
     )
 
-    default_library: StringProperty(
-        name="Default Library",
-        description="When no library is selected upload to this library",
-        default=""
-    )
-
-    libraries: StringProperty(
-        name="Libraries",
-        description="Libraries that the asset are linked to",
-        default=''
-    )
-
-    libraries_text: StringProperty(
-        name="Libraries",
-        description="Libraries that the asset are linked to",
-        default="Select libraries"
-    )
-
-    libraries_count: IntProperty(
-        name="Libraries Count",
-        description="Number of libraries",
-        default=0
-    )
-
-    libraries_info: PointerProperty(
-        type=PropertyGroup
-    )
-
     tags_list: CollectionProperty(type=Hana3DTagItem)
 
     tags_input: StringProperty(
@@ -474,32 +461,6 @@ class Hana3DCommonSearchProps:
 
 
 class Hana3DCommonUploadProps:
-    def update_tags(self, context):
-        props = utils.get_upload_props()
-        if props is None:
-            return
-
-        commasep = props.tags.split(',')
-        ntags = []
-        for tag in commasep:
-            if len(tag) > 19:
-                short_tags = tag.split(' ')
-                for short_tag in short_tags:
-                    if len(short_tag) > 19:
-                        short_tag = short_tag[:18]
-                    ntags.append(short_tag)
-            else:
-                ntags.append(tag)
-        if len(ntags) == 1:
-            ntags = ntags[0].split(' ')
-        ns = ''
-        for t in ntags:
-            if t != '':
-                ns += t + ','
-        ns = ns[:-1]
-        if props.tags != ns:
-            props.tags = ns
-
     def get_render_job_outputs(self, context):
         preview_collection = render.render_previews[self.view_id]
         if not hasattr(preview_collection, 'previews'):
@@ -674,13 +635,6 @@ class Hana3DCommonUploadProps:
         default=""
     )
 
-    tags: StringProperty(
-        name="Tags",
-        description="List of tags, separated by commas (optional)",
-        default="",
-        update=update_tags,
-    )
-
     name_changed: BoolProperty(
         name="Name Changed",
         description="Name has changed, the asset has to be re-uploaded with all data",
@@ -747,46 +701,10 @@ class Hana3DCommonUploadProps:
         update=on_workspace_update
     )
 
-    default_library: StringProperty(
-        name="Default Library",
-        description="When no library is selected upload to this library",
-        default=""
-    )
-
-    libraries: StringProperty(
-        name="Libraries",
-        description="Libraries that the asset are linked to",
-        default=''
-    )
-
-    libraries_text: StringProperty(
-        name="Libraries",
-        description="Libraries that the asset are linked to",
-        default="Select libraries"
-    )
-
-    libraries_count: IntProperty(
-        name="Libraries Count",
-        description="Number of libraries",
-        default=0
-    )
-
-    libraries_info: PointerProperty(
-        type=PropertyGroup
-    )
-
     publish_message: StringProperty(
         name="Publish Message",
         description="Changes from previous version",
         default=""
-    )
-
-    custom_props: PointerProperty(
-        type=PropertyGroup
-    )
-
-    custom_props_info: PointerProperty(
-        type=PropertyGroup
     )
 
     rendering: BoolProperty(
@@ -845,6 +763,20 @@ class Hana3DCommonUploadProps:
         description="Upload to libraries",
         default="",
         update=update_libraries_input
+    )
+
+    default_library: StringProperty(
+        name="Default Library",
+        description="When no library is selected upload to this library",
+        default=""
+    )
+
+    custom_props: PointerProperty(
+        type=PropertyGroup
+    )
+
+    custom_props_info: PointerProperty(
+        type=PropertyGroup
     )
 
 
