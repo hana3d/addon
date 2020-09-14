@@ -37,9 +37,11 @@ if 'bpy' in locals():
     download = reload(download)
     hana3d_oauth = reload(hana3d_oauth)
     icons = reload(icons)
+    libraries = reload(libraries)
     paths = reload(paths)
     render = reload(render)
     search = reload(search)
+    tags = reload(tags)
     tasks_queue = reload(tasks_queue)
     types = reload(types)
     ui = reload(ui)
@@ -54,9 +56,11 @@ else:
         download,
         hana3d_oauth,
         icons,
+        libraries,
         paths,
         render,
         search,
+        tags,
         tasks_queue,
         types,
         ui,
@@ -302,6 +306,8 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 modules = (
     types,
+    tags,
+    libraries,
     search,
     download,
     upload,
