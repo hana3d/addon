@@ -120,16 +120,6 @@ def draw_panel_common_upload(layout, context):
     box = layout.box()
     box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
     box.prop(props, 'workspace', expand=False, text='Workspace')
-    # row = box.row(align=True)
-    # col = row.column()
-    # col.scale_x = 0.7
-    # col.label(text='Libraries:')
-    # col = row.column()
-    # col.scale_x = 1.24
-    # col.operator(
-    #     "object.hana3d_list_libraries_upload",
-    #     text=props.libraries_text
-    # )
     box.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
     draw_selected_libraries(box, props, "object.hana3d_remove_library_upload")
     for name in props.custom_props.keys():
@@ -206,16 +196,6 @@ def draw_panel_common_search(layout, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
     layout.prop(props, 'workspace', expand=False, text='Workspace')
-    # row = layout.row(align=True)
-    # col = row.column()
-    # col.scale_x = 0.7
-    # col.label(text='Libraries:')
-    # col = row.column()
-    # col.scale_x = 1.24
-    # col.operator(
-    #     "object.hana3d_list_libraries_search",
-    #     text=props.libraries_text
-    # )
     layout.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
     draw_selected_libraries(layout, props, "object.hana3d_remove_library_search")
     layout.prop(props, "public_only")

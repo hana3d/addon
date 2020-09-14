@@ -363,7 +363,6 @@ class Hana3DLibraryItem(PropertyGroup):
 
 class Hana3DCommonSearchProps:
     def on_workspace_update(self, context):
-        # self.update_libraries_list_search(context)
         update_libraries_list(self, context)
         update_tags_list(self, context)
 
@@ -372,19 +371,8 @@ class Hana3DCommonSearchProps:
             self.tags_list[self.tags_input].selected = True
 
     def update_libraries_input(self, context):
-        if self.libraries_input == '':
-            return
-
-        self.libraries_list[self.libraries_input].selected = True
-        # for view_prop in self.libraries_list[self.libraries_input].metadata['view_props']:
-        #     name = f'{self.libraries_list[self.libraries_input].name} {view_prop["name"]}'
-        #     if name not in self.custom_props:
-        #         self.custom_props_info[name] = {
-        #             'key': view_prop['slug'],
-        #             'library_name': library_info["name"],
-        #             'library_id': library_info['id']
-        #         }
-        #         self.custom_props[name] = ''
+        if self.libraries_input != '':
+            self.libraries_list[self.libraries_input].selected = True
 
     # STATES
     search_keywords: StringProperty(
@@ -515,7 +503,6 @@ class Hana3DCommonUploadProps:
         return preview_collection.previews
 
     def on_workspace_update(self, context):
-        # self.update_libraries_list_upload(context)
         update_libraries_list(self, context)
         update_tags_list(self, context)
 
