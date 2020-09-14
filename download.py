@@ -341,7 +341,6 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
         libraries_list = parent.hana3d.libraries_list
         types.update_libraries_list(parent.hana3d, bpy.context)
         for library in asset_data['libraries']:
-            print(library)
             libraries_list[library["name"]].selected = True
             if 'metadata' in library and library['metadata'] is not None:
                 for view_prop in libraries_list[library["name"]].metadata['view_props']:
