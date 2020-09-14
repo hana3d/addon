@@ -25,7 +25,7 @@ else:
     from hana3d import download, utils
 
 import bpy
-from bpy.types import Panel, Operator
+from bpy.types import Panel
 
 
 from . import addon_updater_ops
@@ -584,90 +584,12 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         # row.template_ID(bpy.context.space_data, 'image', open='image.open')
 
 
-class ListLibrariesSearch(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_search"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_search_props()
-        layout = self.layout
-        for i in range(props.libraries_count):
-            layout.prop(props, f'library_{i}')
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
-class ListLibrariesUpload(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_upload"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_upload_props()
-        layout = self.layout
-        for i in range(props.libraries_count):
-            layout.prop(props, f'library_{i}')
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
-class RemoveTagSearch(Operator):
-    """Remove Tag"""
-
-    bl_idname = "object.hana3d_remove_tag_search"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    tag: bpy.props.StringProperty(name='Tag', default='')
-
-    def execute(self, context):
-        props = utils.get_search_props()
-        props.tags_list[self.tag].selected = False
-        return {'INTERFACE'}
-
-
-class RemoveTagUpload(Operator):
-    """Remove Tag"""
-
-    bl_idname = "object.hana3d_remove_tag_upload"
-    bl_label = "Hana3D Remove Tag"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    tag: bpy.props.StringProperty(name='Tag', default='')
-
-    def execute(self, context):
-        props = utils.get_upload_props()
-        props.tags_list[self.tag].selected = False
-        return {'INTERFACE'}
-
-
 classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
     VIEW3D_PT_hana3d_downloads,
-    VIEW3D_PT_hana3d_RenderPanel,
-    ListLibrariesSearch,
-    ListLibrariesUpload,
-    RemoveTagSearch,
-    RemoveTagUpload
+    VIEW3D_PT_hana3d_RenderPanel
 )
 
 

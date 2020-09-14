@@ -26,7 +26,7 @@ if 'bpy' in locals():
     search = reload(search)
     utils = reload(utils)
 else:
-    from hana3d import autothumb, paths, render, search, utils
+    from hana3d import paths, render, search, utils
 
 import math
 import os
@@ -43,7 +43,7 @@ from bpy.props import (
     PointerProperty,
     StringProperty
 )
-from bpy.types import PropertyGroup, Operator
+from bpy.types import PropertyGroup
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -1142,41 +1142,6 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     )
 
 
-class Hana3DAddTag(Operator):
-    """Add Tag"""
-
-    bl_idname = "object.hana3d_add_tag"
-    bl_label = "Add new tag"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    tag: StringProperty(name='New Tag', default='')
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, 'tag')
-
-    def execute(self, context):
-        props = utils.get_upload_props()
-        current_workspace = props.workspace
-
-        new_tag = props.tags_list.add()
-        new_tag['name'] = self.tag
-        new_tag.selected = True
-
-        search_props = utils.get_search_props()
-        new_tag = search_props.tags_list.add()
-        new_tag['name'] = self.tag
-
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-            if current_workspace == workspace['id']:
-                workspace['tags'] = workspace['tags'].__add__([self.tag])
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-
-
 Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
 
 
@@ -1189,8 +1154,7 @@ classes = (
     Hana3DSceneSearchProps,
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
-    Hana3DMaterialSearchProps,
-    Hana3DAddTag
+    Hana3DMaterialSearchProps
 )
 
 
