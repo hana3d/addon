@@ -376,15 +376,15 @@ class Hana3DCommonSearchProps:
             return
 
         self.libraries_list[self.libraries_input].selected = True
-        for view_prop in self.libraries_list[self.libraries_input].metadata['view_props']:
-            name = f'{self.libraries_list[self.libraries_input].name} {view_prop["name"]}'
-            if name not in self.custom_props:
-                self.custom_props_info[name] = {
-                    'key': view_prop['slug'],
-                    'library_name': library_info["name"],
-                    'library_id': library_info['id']
-                }
-                self.custom_props[name] = ''
+        # for view_prop in self.libraries_list[self.libraries_input].metadata['view_props']:
+        #     name = f'{self.libraries_list[self.libraries_input].name} {view_prop["name"]}'
+        #     if name not in self.custom_props:
+        #         self.custom_props_info[name] = {
+        #             'key': view_prop['slug'],
+        #             'library_name': library_info["name"],
+        #             'library_id': library_info['id']
+        #         }
+        #         self.custom_props[name] = ''
 
     # STATES
     search_keywords: StringProperty(
@@ -514,65 +514,6 @@ class Hana3DCommonUploadProps:
 
         return preview_collection.previews
 
-    def update_selected_libraries_upload(self, context):
-        names = []
-        ids = []
-        for i in range(self.libraries_count):
-            current_value = getattr(self, f'library_{i}')
-            library_entry = getattr(type(self), f'library_{i}')
-            name = library_entry[1]['name']
-            library_info = self.libraries_info[name]
-
-            if current_value is True:
-                names.append(name)
-                ids.append(library_info['id'])
-                for view_prop in library_info['metadata']['view_props']:
-                    name = f'{name} {view_prop["name"]}'
-                    if name not in self.custom_props:
-                        self.custom_props_info[name] = {
-                            'key': view_prop['slug'],
-                            'library_name': library_info["name"],
-                            'library_id': library_info['id']
-                        }
-                        self.custom_props[name] = ''
-            else:
-                for view_prop in library_info['metadata']['view_props']:
-                    name = f'{name} {view_prop["name"]}'
-                    if name in self.custom_props.keys():
-                        del self.custom_props[name]
-                        del self.custom_props_info[name]
-
-        if len(names) > 0:
-            self.libraries_text = ','.join(names)
-        else:
-            self.libraries_text = 'Select libraries'
-        self.libraries = ','.join(ids)
-
-    def update_libraries_list_upload(self, context):
-        hana3d_class = type(self)   # noqa F841
-        for i in range(self.libraries_count):
-            exec(f'del hana3d_class.library_{i}')
-        current_workspace = self.workspace
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-            if current_workspace == workspace['id']:
-                i = 0
-                for library in workspace['libraries']:
-                    if library['is_default'] == 1:
-                        self.default_library = library['id']
-                    else:
-                        bool_prop = BoolProperty(  # noqa F841
-                            name=library["name"],
-                            default=False,
-                            update=Hana3DCommonUploadProps.update_selected_libraries_upload)
-                        exec(f'hana3d_class.library_{i}=bool_prop')
-                        self.libraries_info[library['name']] = {
-                            'name': library['name'],
-                            'id': library['id'],
-                            'metadata': library['metadata']
-                        }
-                        i += 1
-                self.libraries_count = i
-
     def on_workspace_update(self, context):
         # self.update_libraries_list_upload(context)
         update_libraries_list(self, context)
@@ -583,8 +524,19 @@ class Hana3DCommonUploadProps:
             self.tags_list[self.tags_input].selected = True
 
     def update_libraries_input(self, context):
-        if self.libraries_input != '':
-            self.libraries_list[self.libraries_input].selected = True
+        if self.libraries_input == '':
+            return
+
+        self.libraries_list[self.libraries_input].selected = True
+        for view_prop in self.libraries_list[self.libraries_input].metadata['view_props']:
+            name = f'{self.libraries_list[self.libraries_input].name} {view_prop["name"]}'
+            if name not in self.custom_props:
+                self.custom_props_info[name] = {
+                    'slug': view_prop['slug'],
+                    'library_name': self.libraries_list[self.libraries_input].name,
+                    'library_id': self.libraries_list[self.libraries_input].id_
+                }
+                self.custom_props[name] = ''
 
     def update_thumbnail(self, context=None):
         img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)

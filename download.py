@@ -361,9 +361,28 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
             parent.hana3d.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
+        libraries_list = parent.hana3d.libraries_list
         types.update_libraries_list(parent.hana3d, bpy.context)
         for library in asset_data['libraries']:
-            parent.hana3d.libraries_list[library["name"]].selected = True
+            print(library)
+            libraries_list[library["name"]].selected = True
+            if 'metadata' in library and library['metadata'] is not None:
+                for view_prop in libraries_list[library["name"]].metadata['view_props']:
+                    name = f'{libraries_list[library["name"]].name} {view_prop["name"]}'
+                    slug = view_prop['slug']
+                    if name not in parent.hana3d.custom_props:
+                        parent.hana3d.custom_props_info[name] = {
+                            'slug': slug,
+                            'library_name': libraries_list[library["name"]].name,
+                            'library_id': libraries_list[library["name"]].id_
+                        }
+                    if (
+                        'view_props' in library['metadata']
+                        and slug in library['metadata']['view_props']
+                    ):
+                        parent.hana3d.custom_props[name] = library['metadata']['view_props'][slug]
+                    else:
+                        parent.hana3d.custom_props[name] = ''
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
 

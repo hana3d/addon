@@ -28,50 +28,6 @@ from bpy.props import StringProperty
 from bpy.types import Operator
 
 
-class ListLibrariesSearch(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_search"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_search_props()
-        layout = self.layout
-        for i in range(props.libraries_count):
-            layout.prop(props, f'library_{i}')
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
-class ListLibrariesUpload(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_upload"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_upload_props()
-        layout = self.layout
-        for i in range(props.libraries_count):
-            layout.prop(props, f'library_{i}')
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
 class RemoveLibrarySearch(Operator):
     """Remove Library"""
 
@@ -99,12 +55,18 @@ class RemoveLibraryUpload(Operator):
     def execute(self, context):
         props = utils.get_upload_props()
         props.libraries_list[self.library].selected = False
+
+        if 'view_props' in props.libraries_list[self.library].metadata:
+            for view_prop in props.libraries_list[self.library].metadata['view_props']:
+                name = f'{props.libraries_list[self.library].name} {view_prop["name"]}'
+                if name in props.custom_props.keys():
+                    del props.custom_props[name]
+                    del props.custom_props_info[name]
+
         return {'INTERFACE'}
 
 
 classes = (
-    ListLibrariesSearch,
-    ListLibrariesUpload,
     RemoveLibrarySearch,
     RemoveLibraryUpload
 )
