@@ -211,7 +211,8 @@ def draw_panel_common_search(layout, context):
         row = layout.row(align=True)
         op = row.operator("scene.hana3d_batch_download", text='Import preview files')
         op.reset = True
-        op = row.operator("scene.hana3d_batch_download", text='Import Next 10')
+        batch_size = op.batch_size
+        op = row.operator("scene.hana3d_batch_download", text=f'Import next {batch_size}')
         op.reset = False
     # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge
     #     layout.separator()
