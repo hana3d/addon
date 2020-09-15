@@ -346,55 +346,54 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                     if asset_data['view_id'] == r.get('view_id'):
                         r['downloaded'] = tcom.progress
 
-        if not thread.is_alive():
-            if tcom.error:
-                sprops = utils.get_search_props()
-                sprops.report = tcom.report
-                download_threads.remove(thread)
-                return
-            file_names = paths.get_download_filenames(asset_data)
+        if tcom.error:
+            sprops = utils.get_search_props()
+            sprops.report = tcom.report
+            download_threads.remove(thread)
+            return
+        file_names = paths.get_download_filenames(asset_data)
 
-            at = asset_data['asset_type']
-            # don't do this stuff in editmode and other modes, just wait...
-            if (
-                (
-                    bpy.context.mode == 'OBJECT'
-                    and (at == 'model' or at == 'material')
-                )
-                or at == 'scene'
-            ):
-                download_threads.remove(thread)
+        at = asset_data['asset_type']
+        # don't do this stuff in editmode and other modes, just wait...
+        if (
+            (
+                bpy.context.mode == 'OBJECT'
+                and (at == 'model' or at == 'material')
+            )
+            or at == 'scene'
+        ):
+            download_threads.remove(thread)
 
-                # duplicate file if the global and subdir are used in prefs
-                # todo this should try to check if both files exist and are ok.
-                if len(file_names) == 2:
-                    shutil.copyfile(file_names[0], file_names[1])
+            # duplicate file if the global and subdir are used in prefs
+            # todo this should try to check if both files exist and are ok.
+            if len(file_names) == 2:
+                shutil.copyfile(file_names[0], file_names[1])
 
-                utils.p('appending asset')
-                # progress bars:
+            utils.p('appending asset')
+            # progress bars:
 
-                # we need to check if mouse isn't down, which means an operator can be running.
+            # we need to check if mouse isn't down, which means an operator can be running.
 
-                if tcom.passargs.get('redownload'):
-                    # handle lost libraries here:
-                    for library in bpy.data.libraries:
-                        if (
-                            library.get('asset_data') is not None
-                            and library['asset_data']['view_id'] == asset_data['view_id']
-                        ):
-                            library.filepath = file_names[-1]
-                            library.reload()
-                else:
-                    done = try_finished_append(asset_data, **tcom.passargs)
-                    if not done:
-                        tcom.passargs['retry_counter'] = tcom.passargs.get('retry_counter', 0) + 1
-                        download(asset_data, **tcom.passargs)
-                    if bpy.context.scene['search results'] is not None and done:
-                        for sres in bpy.context.scene['search results']:
-                            if asset_data['view_id'] == sres['view_id']:
-                                sres['downloaded'] = 100
+            if tcom.passargs.get('redownload'):
+                # handle lost libraries here:
+                for library in bpy.data.libraries:
+                    if (
+                        library.get('asset_data') is not None
+                        and library['asset_data']['view_id'] == asset_data['view_id']
+                    ):
+                        library.filepath = file_names[-1]
+                        library.reload()
+            else:
+                done = try_finished_append(asset_data, **tcom.passargs)
+                if not done:
+                    tcom.passargs['retry_counter'] = tcom.passargs.get('retry_counter', 0) + 1
+                    download(asset_data, **tcom.passargs)
+                if bpy.context.scene['search results'] is not None and done:
+                    for sres in bpy.context.scene['search results']:
+                        if asset_data['view_id'] == sres['view_id']:
+                            sres['downloaded'] = 100
 
-                utils.p('finished download thread')
+            utils.p('finished download thread')
     return 0.5
 
 
