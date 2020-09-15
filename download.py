@@ -598,47 +598,6 @@ def check_asset_in_scene(asset_data):
     return ''
 
 
-def fprint(text):
-    print('###################################################################################')
-    print('\n\n\n')
-    print(text)
-    print('\n\n\n')
-    print('###################################################################################')
-
-
-def get_download_url(asset_data, tcom=None):
-    ''''retrieves the download url. The server checks if user can download the item.'''
-    headers = utils.get_headers()
-
-    r = None
-
-    try:
-        r = rerequests.get(asset_data['download_url'], headers=headers)
-    except Exception as e:
-        print(e)
-        if tcom is not None:
-            tcom.error = True
-    if r is None:
-        if tcom is not None:
-            tcom.report = 'Connection Error'
-            tcom.error = True
-        return 'Connection Error'
-
-    if r.status_code < 400:
-        data = r.json()
-        url = data['filePath']
-        asset_data['download_url'] = url
-        asset_data['file_name'] = paths.extract_filename_from_url(url)
-        return True
-
-    elif r.status_code >= 500:
-        utils.p(r.text)
-        if tcom is not None:
-            tcom.report = 'Server error'
-            tcom.error = True
-    return False
-
-
 def start_download(asset_data, **kwargs):
     '''
     check if file isn't downloading or doesn't exist, then start new download

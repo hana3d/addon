@@ -1570,34 +1570,6 @@ class AssetBarOperator(bpy.types.Operator):
                     return {'RUNNING_MODAL'}
             else:
                 return {'RUNNING_MODAL'}
-
-        if event.type == 'W' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
-            asset_data = sr[ui_props.active_index]
-            a = bpy.context.window_manager['hana3d authors'].get(asset_data['author_id'])
-            if a is not None:
-                utils.p('author:', a)
-                if a.get('aboutMeUrl') is not None:
-                    bpy.ops.wm.url_open(url=a['aboutMeUrl'])
-            return {'RUNNING_MODAL'}
-        if event.type == 'A' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
-            asset_data = sr[ui_props.active_index]
-            a = asset_data['author_id']
-            if a is not None:
-                sprops = utils.get_search_props()
-                sprops.search_keywords = ''
-                utils.p('author:', a)
-                search.search(author_id=a)
-            return {'RUNNING_MODAL'}
-        if event.type == 'X' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
-            asset_data = sr[ui_props.active_index]
-            print(asset_data['name'])
-            print('delete')
-            paths.delete_asset_debug(asset_data)
-            asset_data['downloaded'] = 0
-            return {'RUNNING_MODAL'}
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
