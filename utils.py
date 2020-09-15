@@ -103,7 +103,7 @@ def get_selected_models():
 
 
 def get_search_props():
-    scene = bpy.context.scene
+    scene = bpy.context.window_manager
     if scene is None:
         return
     uiprops = scene.Hana3DUI
@@ -124,8 +124,7 @@ def get_search_props():
 
 
 def get_active_asset():
-    scene = bpy.context.scene
-    ui_props = scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model()

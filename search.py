@@ -278,9 +278,8 @@ def load_previews():
         'SCENE': 'scene',
         'MATERIAL': 'material',
     }
-    scene = bpy.context.scene
     # FIRST START SEARCH
-    props = scene.Hana3DUI
+    props = bpy.context.window_manager.Hana3DUI
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
     s = bpy.context.scene

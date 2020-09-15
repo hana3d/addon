@@ -78,7 +78,7 @@ from . import addon_updater_ops
 @persistent
 def scene_load(context):
     search.load_previews()
-    ui_props = bpy.context.scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
     ui_props.assetbar_on = False
     ui_props.turn_off = False
     preferences = bpy.context.preferences.addons['hana3d'].preferences

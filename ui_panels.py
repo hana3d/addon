@@ -82,8 +82,7 @@ def draw_not_logged_in(source):
 
 
 def draw_panel_common_upload(layout, context):
-    scene = bpy.context.scene
-    uiprops = scene.Hana3DUI
+    uiprops = bpy.context.window_manager.Hana3DUI
     asset_type = uiprops.asset_type
     props = utils.get_upload_props()
 
@@ -163,8 +162,7 @@ def draw_panel_common_upload(layout, context):
 
 
 def draw_panel_common_search(layout, context):
-    scene = bpy.context.scene
-    uiprops = scene.Hana3DUI
+    uiprops = bpy.context.window_manager.Hana3DUI
     asset_type = uiprops.asset_type
     props = utils.get_search_props()
 
@@ -205,8 +203,8 @@ def draw_panel_common_search(layout, context):
 
 
 def draw_assetbar_show_hide(layout, props):
-    s = bpy.context.scene
-    ui_props = s.Hana3DUI
+    wm = bpy.context.window_manager
+    ui_props = wm.Hana3DUI
 
     if ui_props.assetbar_on:
         icon = 'HIDE_OFF'
@@ -275,7 +273,8 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
     def draw(self, context):
         s = context.scene
-        ui_props = s.Hana3DUI
+        wm = context.window_manager
+        ui_props = wm.Hana3DUI
         user_preferences = bpy.context.preferences.addons['hana3d'].preferences
         layout = self.layout
 
@@ -377,17 +376,17 @@ def header_search_draw(self, context):
     if not utils.guard_from_crash():
         return
 
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = context.preferences.addons['hana3d'].preferences
     if preferences.search_in_header:
         layout = self.layout
-        s = bpy.context.scene
-        ui_props = s.Hana3DUI
+        wm = context.window_manager
+        ui_props = wm.Hana3DUI
         if ui_props.asset_type == 'MODEL':
-            props = s.hana3d_models
+            props = wm.hana3d_models
         if ui_props.asset_type == 'MATERIAL':
-            props = s.hana3d_mat
+            props = wm.hana3d_mat
         if ui_props.asset_type == 'SCENE':
-            props = s.hana3d_scene
+            props = wm.hana3d_scene
         # if ui_props.asset_type == 'HDR':
         #     props = s.hana3d_hdr
 
@@ -441,7 +440,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
     def draw(self, context):
         render_props = context.scene.Hana3DRender
         asset_props = utils.get_upload_props()
-        ui_props = context.scene.Hana3DUI
+        ui_props = context.window_manager.Hana3DUI
 
         self.layout.prop(ui_props, 'asset_type_render', expand=False, text='')
 

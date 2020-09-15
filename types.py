@@ -26,7 +26,7 @@ if 'bpy' in locals():
     search = reload(search)
     utils = reload(utils)
 else:
-    from hana3d import autothumb, paths, render, search, utils
+    from hana3d import paths, render, search, utils
 
 import math
 import os
@@ -1119,19 +1119,19 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.Scene.Hana3DUI = PointerProperty(type=Hana3DUIProps)
+    bpy.types.WindowManager.Hana3DUI = PointerProperty(type=Hana3DUIProps)
     bpy.types.Scene.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
 
     # MODELS
-    bpy.types.Scene.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
+    bpy.types.WindowManager.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
     bpy.types.Object.hana3d = PointerProperty(type=Hana3DModelUploadProps)
 
     # SCENES
-    bpy.types.Scene.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
+    bpy.types.WindowManager.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
     bpy.types.Scene.hana3d = PointerProperty(type=Hana3DSceneUploadProps)
 
     # MATERIALS
-    bpy.types.Scene.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
+    bpy.types.WindowManager.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
     bpy.types.Material.hana3d = PointerProperty(type=Hana3DMaterialUploadProps)
 
 

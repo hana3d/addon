@@ -547,7 +547,7 @@ def draw_callback_3d_progress(self, context):
 
 
 def draw_callback_2d_progress(self, context):
-    ui = bpy.context.scene.Hana3DUI
+    ui = bpy.context.window_manager.Hana3DUI
 
     x = ui.reports_x
     y = ui.reports_y
@@ -1691,7 +1691,7 @@ class DefaultNamesOperator(bpy.types.Operator):
 
     def modal(self, context, event):
         # This is for case of closing the area or changing type:
-        ui_props = context.scene.Hana3DUI
+        ui_props = context.window_manager.Hana3DUI
 
         if ui_props.turn_off:
             return {'CANCELLED'}
