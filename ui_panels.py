@@ -352,11 +352,12 @@ class VIEW3D_PT_hana3d_downloads(Panel):
 
     def draw(self, context):
         layout = self.layout
-        for thread in download.download_threads:
+        for view_id, thread in download.download_threads.items():
             row = layout.row()
             row.label(text=thread.asset_data['name'])
             row.label(text=str(int(thread.tcom.progress)) + ' %')
-            row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
+            op = row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
+            op.view_id = view_id
 
 
 def header_search_draw(self, context):

@@ -531,17 +531,16 @@ def draw_progress(x, y, text='', percent=None, color=colors.GREEN):
 
 def draw_callback_3d_progress(self, context):
     # 'star trek' mode gets here, blocked by now ;)
-    for thread in download.download_threads:
-        if thread.tcom.passargs.get('downloaders'):
-            for d in thread.tcom.passargs['downloaders']:
-                if thread.asset_data['asset_type'] == 'model':
-                    draw_bbox(
-                        d['location'],
-                        d['rotation'],
-                        thread.asset_data['bbox_min'],
-                        thread.asset_data['bbox_max'],
-                        progress=thread.tcom.progress,
-                    )
+    for thread in download.download_threads.values():
+        if thread.asset_data['asset_type'] == 'model':
+            for param in thread.tcom.passargs.get('import_params', []):
+                draw_bbox(
+                    param['location'],
+                    param['rotation'],
+                    thread.asset_data['bbox_min'],
+                    thread.asset_data['bbox_max'],
+                    progress=thread.tcom.progress,
+                )
 
 
 def draw_callback_2d_progress(self, context):
@@ -550,7 +549,7 @@ def draw_callback_2d_progress(self, context):
     x = ui.reports_x
     y = ui.reports_y
     index = 0
-    for thread in download.download_threads:
+    for thread in download.download_threads.values():
         asset_data = thread.asset_data
         tcom = thread.tcom
 
@@ -558,13 +557,12 @@ def draw_callback_2d_progress(self, context):
         tpath = os.path.join(directory, asset_data['thumbnail_small'])
         img = utils.get_hidden_image(tpath, asset_data['id'])
 
-        if tcom.passargs.get('downloaders'):
-            for d in tcom.passargs['downloaders']:
-
+        if tcom.passargs.get('import_params'):
+            for param in tcom.passargs['import_params']:
                 loc = view3d_utils.location_3d_to_region_2d(
                     bpy.context.region,
                     bpy.context.space_data.region_3d,
-                    d['location']
+                    param['location']
                 )
                 if loc is not None:
                     if asset_data['asset_type'] == 'model':
