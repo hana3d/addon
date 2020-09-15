@@ -302,10 +302,6 @@ def get_export_data(
                         custom_props.update({slug: value})
                 library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
-    if len(upload_data['libraries']) == 0:
-        upload_data['libraries'].append({
-            'id': props.default_library
-        })
 
     export_data['publish_message'] = props.publish_message
 
