@@ -24,7 +24,7 @@ import tempfile
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
-from hana3d import bg_blender, paths, utils
+from hana3d import bg_blender, colors, paths, ui, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
@@ -40,6 +40,132 @@ class LocalRenderProperties:
         subtype='FILE_PATH',
         options={'HIDDEN', 'SKIP_SAVE'},
     )
+
+    view_id: StringProperty(
+        description="view_id of asset. Overrides current context's active object",
+        default="",
+    )
+
+
+def generate_model_thumbnail(
+        save_only: bool = False,
+        blend_filepath: str = '',
+        view_id: str = '',
+        context=None):
+    mainmodel = utils.get_active_model(context, view_id)
+    mainmodel.hana3d.is_generating_thumbnail = True
+    mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
+
+    binary_path = bpy.app.binary_path
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    basename, ext = os.path.splitext(bpy.data.filepath)
+    if not basename:
+        basename = os.path.join(basename, "temp")
+    if not ext:
+        ext = ".blend"
+    asset_name = mainmodel.name
+    tempdir = tempfile.mkdtemp()
+
+    file_dir = os.path.dirname(bpy.data.filepath)
+    thumb_path = os.path.join(file_dir, asset_name)
+    rel_thumb_path = os.path.join('//', asset_name)
+
+    i = 0
+    while os.path.isfile(thumb_path + '.jpg'):
+        thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
+        rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
+        i += 1
+
+    filepath = os.path.join(tempdir, "thumbnailer_hana3d" + ext)
+    tfpath = paths.get_thumbnailer_filepath()
+    datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
+
+    autopack = False
+    if bpy.data.use_autopack is True:
+        autopack = True
+        bpy.ops.file.autopack_toggle()
+    # save a copy of actual scene but don't interfere with the users models
+    bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
+
+    obs = utils.get_hierarchy(mainmodel)
+    obnames = []
+    for ob in obs:
+        obnames.append(ob.name)
+    with open(datafile, 'w') as s:
+        hana3d = mainmodel.hana3d
+        json.dump(
+            {
+                "type": "model",
+                "models": str(obnames),
+                "thumbnail_angle": hana3d.thumbnail_angle,
+                "thumbnail_snap_to": hana3d.thumbnail_snap_to,
+                "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
+                "thumbnail_resolution": hana3d.thumbnail_resolution,
+                "thumbnail_samples": hana3d.thumbnail_samples,
+                "thumbnail_denoising": hana3d.thumbnail_denoising,
+                "save_only": save_only,
+                "blend_filepath": blend_filepath,
+            },
+            s,
+        )
+    print('START PROCESS')
+    print('CMD', [
+        binary_path,
+        "--background",
+        "-noaudio",
+        tfpath,
+        "--python",
+        os.path.join(script_path, "autothumb_model_bg.py"),
+        "--",
+        datafile,
+        filepath,
+        thumb_path,
+        tempdir,
+    ])
+    proc = subprocess.Popen(
+        [
+            binary_path,
+            "--background",
+            "-noaudio",
+            tfpath,
+            "--python",
+            os.path.join(script_path, "autothumb_model_bg.py"),
+            "--",
+            datafile,
+            filepath,
+            thumb_path,
+            tempdir,
+        ],
+        bufsize=1,
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        creationflags=utils.get_process_flags(),
+    )
+
+    eval_path_computing = "bpy.data.objects['%s'].hana3d.is_generating_thumbnail" % mainmodel.name  # noqa E501
+    eval_path_state = "bpy.data.objects['%s'].hana3d.thumbnail_generating_state" % mainmodel.name  # noqa E501
+    eval_path = "bpy.data.objects['%s']" % mainmodel.name
+
+    print('ADD BG_PROCESS')
+    bg_blender.add_bg_process(
+        eval_path_computing=eval_path_computing,
+        eval_path_state=eval_path_state,
+        eval_path=eval_path,
+        process_type='THUMBNAILER',
+        process=proc,
+    )
+
+    if not save_only:
+        mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
+    print('CHANGE GENERATING STATE')
+    mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
+    print('GENERATING STATE CHANGED')
+
+    if autopack is True:
+        print('AUTOPACKING TOGGLE')
+        bpy.ops.file.autopack_toggle()
+        print('AUTOPACKING TOGGLE DONE')
+    print('RETURNING')
 
 
 class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
@@ -70,104 +196,10 @@ class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
-        mainmodel = utils.get_active_model(context)
-        mainmodel.hana3d.is_generating_thumbnail = True
-        mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
-
-        binary_path = bpy.app.binary_path
-        script_path = os.path.dirname(os.path.realpath(__file__))
-        basename, ext = os.path.splitext(bpy.data.filepath)
-        if not basename:
-            basename = os.path.join(basename, "temp")
-        if not ext:
-            ext = ".blend"
-        asset_name = mainmodel.name
-        tempdir = tempfile.mkdtemp()
-
-        file_dir = os.path.dirname(bpy.data.filepath)
-        thumb_path = os.path.join(file_dir, asset_name)
-        rel_thumb_path = os.path.join('//', asset_name)
-
-        i = 0
-        while os.path.isfile(thumb_path + '.jpg'):
-            thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
-            rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
-            i += 1
-
-        filepath = os.path.join(tempdir, "thumbnailer_hana3d" + ext)
-        tfpath = paths.get_thumbnailer_filepath()
-        datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
         try:
-            autopack = False
-            if bpy.data.use_autopack is True:
-                autopack = True
-                bpy.ops.file.autopack_toggle()
-            # save a copy of actual scene but don't interfere with the users models
-            bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
-
-            obs = utils.get_hierarchy(mainmodel)
-            obnames = []
-            for ob in obs:
-                obnames.append(ob.name)
-            with open(datafile, 'w') as s:
-                hana3d = mainmodel.hana3d
-                json.dump(
-                    {
-                        "type": "model",
-                        "models": str(obnames),
-                        "thumbnail_angle": hana3d.thumbnail_angle,
-                        "thumbnail_snap_to": hana3d.thumbnail_snap_to,
-                        "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
-                        "thumbnail_resolution": hana3d.thumbnail_resolution,
-                        "thumbnail_samples": hana3d.thumbnail_samples,
-                        "thumbnail_denoising": hana3d.thumbnail_denoising,
-                        "save_only": self.save_only,
-                        "blend_filepath": self.blend_filepath,
-                    },
-                    s,
-                )
-
-            proc = subprocess.Popen(
-                [
-                    binary_path,
-                    "--background",
-                    "-noaudio",
-                    tfpath,
-                    "--python",
-                    os.path.join(script_path, "autothumb_model_bg.py"),
-                    "--",
-                    datafile,
-                    filepath,
-                    thumb_path,
-                    tempdir,
-                ],
-                bufsize=1,
-                stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-                creationflags=utils.get_process_flags(),
-            )
-
-            eval_path_computing = "bpy.data.objects['%s'].hana3d.is_generating_thumbnail" % mainmodel.name  # noqa E501
-            eval_path_state = "bpy.data.objects['%s'].hana3d.thumbnail_generating_state" % mainmodel.name  # noqa E501
-            eval_path = "bpy.data.objects['%s']" % mainmodel.name
-
-            bg_blender.add_bg_process(
-                eval_path_computing=eval_path_computing,
-                eval_path_state=eval_path_state,
-                eval_path=eval_path,
-                process_type='THUMBNAILER',
-                process=proc,
-            )
-
-            if not self.save_only:
-                mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
-            mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
-
-            if autopack is True:
-                bpy.ops.file.autopack_toggle()
-
+            generate_model_thumbnail(self.save_only, self.blend_filepath, self.view_id, context)
         except Exception as e:
-            self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
+            ui.add_report(f'Error in thumbnailer: {e}', color=colors.RED)
             return {'CANCELLED'}
         return {'FINISHED'}
 
@@ -207,7 +239,7 @@ class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operato
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
-        mat = utils.get_active_material(context)
+        mat = self.get_active_material(context)
         mat.hana3d.is_generating_thumbnail = True
         mat.hana3d.thumbnail_generating_state = 'starting blender instance'
 
@@ -303,6 +335,18 @@ class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operato
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
+    def get_active_material(self, context):
+        context = context or bpy.context
+        if not self.view_id:
+            return utils.get_active_material(context)
+        materials = [
+            mat
+            for mat in context.blend_data.materials
+            if mat.hana3d.view_id == self.view_id
+        ]
+        assert len(materials) == 1
+        return materials[0]
+
 
 class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
     """Generate Cycles thumbnail for scene"""
@@ -325,7 +369,7 @@ class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
         layout.prop(preferences, "thumbnail_use_gpu")
 
     def execute(self, context):
-        s = context.scene
+        s = self.get_active_scene(context)
         props = s.hana3d
         props.is_generating_thumbnail = True
         props.thumbnail_generating_state = 'starting blender instance'
@@ -394,6 +438,15 @@ class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
             return {'CANCELLED'}
 
         return wm.invoke_props_dialog(self)
+
+    def get_active_scene(self, context=None):
+        context = context or bpy.context
+        if not self.view_id:
+            return context.scene
+        scenes = [s for s in context.blend_data.scenes if s.view_id == self.view_id]
+        assert len(scenes) == 1
+
+        return scenes[0]
 
 
 classes = (

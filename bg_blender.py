@@ -65,23 +65,28 @@ class threadCom:  # object passed to threads to read background process stdout i
 def threadread(tcom: threadCom):
     '''reads stdout of background process, done this way to have it non-blocking.
     this threads basically waits for a stdout line to come in, fills the data, dies.'''
-    while True:
-        line = tcom.proc.stdout.readline()
-        line = str(line)
-        start = line.find('progress{')
-        if start > -1:
-            end = line.rfind('}')
-            tcom.progress_msg = line[start + 9: end]
-            if tcom.progress_msg.find('%') > -1:
-                tcom.progress = float(re.findall(r'\d+\.\d+|\d+', tcom.progress_msg)[0])
-            break
-        start = line.find('write_output{')
-        if start > -1:
-            end = line.rfind('}')
-            tcom.output_msg = line[start + 13: end]
-            break
-        if len(line) > 3:
-            print(line, len(line))
+    from datetime import datetime
+    with open('/tmp/hana3d.log', 'ab') as f:
+        f.write(b'\n\n' + b'-' * 80 + b'\n')
+        f.write(datetime.isoformat(datetime.utcnow()).encode() + b'\n\n')
+        while True:
+            line = tcom.proc.stdout.readline()
+            f.write(line)
+            line = str(line)
+            start = line.find('progress{')
+            if start > -1:
+                end = line.rfind('}')
+                tcom.progress_msg = line[start + 9: end]
+                if tcom.progress_msg.find('%') > -1:
+                    tcom.progress = float(re.findall(r'\d+\.\d+|\d+', tcom.progress_msg)[0])
+                break
+            start = line.find('write_output{')
+            if start > -1:
+                end = line.rfind('}')
+                tcom.output_msg = line[start + 13: end]
+                break
+            if len(line) > 3:
+                print(line, len(line))
 
 
 class upload_in_chunks:

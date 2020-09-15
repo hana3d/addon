@@ -35,7 +35,6 @@ from hana3d import (
     types,
     ui,
     utils,
-    version
 )
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
@@ -148,8 +147,8 @@ def get_export_data(
     }
 
     upload_data["sourceAppName"] = "blender"
-    upload_data["sourceAppVersion"] = '{}.{}.{}'.format(*version.blender_current_version)
-    upload_data["addonVersion"] = '{}.{}.{}'.format(*version.addon_version)
+    upload_data["sourceAppVersion"] = '{}.{}.{}'.format(*utils.get_addon_version())
+    upload_data["addonVersion"] = '{}.{}.{}'.format(*utils.get_addon_blender_version())
 
     upload_data["name"] = props.name
     upload_data["description"] = props.description
@@ -403,14 +402,15 @@ class UploadOperator(Operator):
             return {'CANCELLED'}
 
         if props.remote_thumbnail:
+            print('CREATE THREAD')
             thread = render.RenderThread(
-                context.copy(),
                 props,
                 engine='CYCLES',
                 frame_start=1,
                 frame_end=1,
                 is_thumbnail=True,
             )
+            print('START THREAD')
             thread.start()
             render.render_threads.append(thread)
 

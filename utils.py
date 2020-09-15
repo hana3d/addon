@@ -62,17 +62,26 @@ def selection_set(sel):
         ob.select_set(True)
 
 
-def get_active_model(context):
-    if context.view_layer.objects.active is not None:
+def get_active_model(context=None, view_id=None):
+    context = context or bpy.context
+    if not view_id:
+        if context.view_layer.objects.active is None:
+            return
         ob = context.view_layer.objects.active
         while ob.parent is not None:
             ob = ob.parent
         return ob
-    return None
+    models = [
+        ob
+        for ob in context.blend_data.objects
+        if ob.hana3d.view_id == view_id
+    ]
+    assert len(models) == 1
+    return models[0]
 
 
-def get_active_material(context):
-    active_object = get_active_model(context)
+def get_active_material(context=None, view_id=None):
+    active_object = get_active_model(context, view_id)
     return active_object.active_material
 
 
@@ -750,7 +759,7 @@ def generate_tooltip(
     col_w = 40
 
     t = ''
-    t += writeblock(name, width=col_w)
+    t += writeblock(name, width=col_w) + '\n'
     if description is not None:
         t += writeblock(description, width=col_w)
 
@@ -764,3 +773,13 @@ def generate_tooltip(
         t += f'object count: {object_count}\n'
 
     return t[:-1]
+
+
+def get_addon_version():
+    import hana3d
+    return hana3d.bl_info['version']
+
+
+def get_addon_blender_version():
+    import hana3d
+    return hana3d.bl_info['blender']

@@ -34,7 +34,7 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from hana3d import colors, paths, rerequests, types, ui, utils
+from hana3d import autothumb, colors, paths, rerequests, types, ui, utils
 
 render_threads = []
 upload_threads = []
@@ -139,14 +139,12 @@ class _read_in_chunks:
 class RenderThread(UploadFileMixin, threading.Thread):
     def __init__(
             self,
-            context,
             props: types.Props,
             engine: str,
             frame_start: int,
             frame_end: int,
             is_thumbnail: bool = False):
         super().__init__(daemon=True)
-        self.context = context
         self.props = props
         self.engine = engine
         self.frame_start = frame_start
@@ -184,6 +182,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
 
             if self.cancelled:
                 return
+            raise
             job_id = self._create_job(render_scene_id)
             nrf_output = self._pool_job(job_id)
             if not nrf_output:
@@ -221,8 +220,9 @@ class RenderThread(UploadFileMixin, threading.Thread):
 
     def _save_render_scene(self):
         if self.is_thumbnail:
+            # Workaround to avoid segmentation fault erros when calling operators within threads
             if self.props.asset_type == 'MODEL':
-                thumbnailer = bpy.ops.object.hana3d_thumbnail
+                thumbnailer = autothumb.generate_model_thumbnail
             elif self.props.asset_type == 'MATERIAL':
                 thumbnailer = bpy.ops.material.hana3d_thumbnail
             elif self.props.asset_type == 'SCENE':
@@ -231,11 +231,12 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 raise TypeError(f'Unexpected asset_type={self.props.asset_type}')
 
             self.props.is_generating_thumbnail = True
-            override_context = self.context.copy()
+            print(f'RUN THUMBNAILER {thumbnailer}')
+
             thumbnailer(
-                override_context,
                 save_only=True,
-                blend_filepath=self.filepath
+                blend_filepath=self.filepath,
+                view_id=self.props.view_id
             )
 
             # thumbnailer may run asynchronously, so we have to wait for it to finish
@@ -378,11 +379,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self.props.render_data['jobs'] += jobs_data
 
     def _put_new_thumbnail(self, render_scene_id: str, thumbnail_url: str) -> str:
-        url = paths.get_api_url('assets')
-        data = {
-            'assetId': self.props.id,
-            'thumbnail_url': thumbnail_url,
-        }
+        url = paths.get_api_url('assets', self.props.id)
+        data = {'thumbnail_url': thumbnail_url}
         response = rerequests.put(url, json=data, headers=self.headers)
         assert response.ok, response.text
 
@@ -432,7 +430,7 @@ class RenderScene(Operator):
             frame_start = context.scene.frame_start
             frame_end = context.scene.frame_end
 
-        thread = RenderThread(context, props, render_props.engine, frame_start, frame_end)
+        thread = RenderThread(props, render_props.engine, frame_start, frame_end)
         thread.start()
         render_threads.append(thread)
 

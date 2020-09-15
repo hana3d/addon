@@ -43,10 +43,12 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
             # append_material(file_name, matname = None, link = False, fake_user = True)
+        link = True if data['save_only'] else False
+
         mat = append_link.append_material(
             file_name=HANA3D_EXPORT_FILE_INPUT,
             matname=data["material"],
-            link=True,
+            link=link,
             fake_user=False
         )
 
