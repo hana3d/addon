@@ -123,7 +123,7 @@ def scene_load(context):
     check_missing()
 
 
-def download_single_file(file_path: str, url: str) -> str:
+def download_file(file_path: str, url: str) -> str:
     response = requests.get(url, stream=True)
 
     # Write to temp file and then rename to avoid reading errors as file is being downloaded
@@ -138,7 +138,7 @@ def download_renders(jobs: List[dict]):
     for job in jobs:
         if not os.path.exists(job['file_path']):
             thread = threading.Thread(
-                target=download_single_file,
+                target=download_file,
                 args=(job['file_path'], job['file_url']),
                 daemon=True,
             )
@@ -396,34 +396,6 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
 
                 utils.p('finished download thread')
     return 0.5
-
-
-def download_file(asset_data):
-    # this is a simple non-threaded way to download files for background resolution genenration tool
-    file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
-
-    if check_existing(asset_data):
-        # this sends the thread for processing,
-        # where another check should occur,
-        # since the file might be corrupted.
-        utils.p('not downloading, already in db')
-        return file_name
-
-    with open(file_name, "wb") as f:
-        print("Downloading %s" % file_name)
-
-        response = requests.get(asset_data['download_url'], stream=True)
-        total_length = response.headers.get('Content-Length')
-
-        if total_length is None:  # no content length header
-            f.write(response.content)
-        else:
-            dl = 0
-            for data in response.iter_content(chunk_size=4096):
-                dl += len(data)
-                print(dl)
-                f.write(data)
-    return file_name
 
 
 class ThreadCom:  # object passed to threads to read background process stdout info
