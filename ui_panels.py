@@ -352,17 +352,15 @@ class VIEW3D_PT_hana3d_downloads(Panel):
 
     def draw(self, context):
         layout = self.layout
-        for threaddata in download.download_threads:
-            tcom = threaddata[2]
-            asset_data = threaddata[1]
+        for thread in download.download_threads:
             row = layout.row()
-            row.label(text=asset_data['name'])
-            row.label(text=str(int(tcom.progress)) + ' %')
+            row.label(text=thread.asset_data['name'])
+            row.label(text=str(int(thread.tcom.progress)) + ' %')
             row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
-            if tcom.passargs.get('retry_counter', 0) > 0:
+            if thread.tcom.passargs.get('retry_counter', 0) > 0:
                 row = layout.row()
                 row.label(text='failed. retrying ... ', icon='ERROR')
-                row.label(text=str(tcom.passargs["retry_counter"]))
+                row.label(text=str(thread.tcom.passargs["retry_counter"]))
 
                 layout.separator()
 

@@ -46,7 +46,9 @@ from bpy.props import (
     IntProperty,
     StringProperty
 )
+
 download_threads = []
+append_threads = []
 
 
 def check_missing():
@@ -118,46 +120,7 @@ def scene_load(context):
     global download_threads
     download_threads = []
 
-    # commenting this out - old restore broken download on scene start.
-    # Might come back if downloads get recorded in scene
-    # reset_asset_ids = {}
-    # reset_obs = {}
-    # for ob in bpy.context.scene.collection.objects:
-    #     if ob.name[:12] == 'downloading ':
-    #         obn = ob.name
-    #
-    #         asset_data = ob['asset_data']
-    #
-    #         # obn.replace('#', '')
-    #         # if asset_data['id'] not in reset_asset_ids:
-    #
-    #         if reset_obs.get(asset_data['id']) is None:
-    #             reset_obs[asset_data['id']] = [obn]
-    #             reset_asset_ids[asset_data['id']] = asset_data
-    #         else:
-    #             reset_obs[asset_data['id']].append(obn)
-    # for asset_id in reset_asset_ids:
-    #     asset_data = reset_asset_ids[asset_id]
-    #     done = False
-    #     if check_existing(asset_data):
-    #         for obname in reset_obs[asset_id]:
-    #             downloader = s.collection.objects[obname]
-    #             done = try_finished_append(asset_data,
-    #                                        model_location=downloader.location,
-    #                                        model_rotation=downloader.rotation_euler)
-    #
-    #     if not done:
-    #         downloading = check_downloading(asset_data)
-    #         if not downloading:
-    #             print('redownloading %s' % asset_data['name'])
-    #             download(asset_data, downloaders=reset_obs[asset_id], delete=True)
-
-    # check for group users that have been deleted, remove the groups /files from the file...
-    # TODO scenes fixing part... download the assets not present on drive,
-    # and erase from scene linked files that aren't used in the scene.
-    # print('continue downlaods ', time.time() - t)
     check_missing()
-    # print('missing check', time.time() - t)
 
 
 def download_single_file(file_path: str, url: str) -> str:
@@ -370,26 +333,24 @@ def set_thumbnail(asset_data, asset):
 # @bpy.app.handlers.persistent
 def timer_update():  # TODO might get moved to handle all hana3d stuff, not to slow down.
     '''check for running and finished downloads and react. write progressbars too.'''
-    global download_threads
     if len(download_threads) == 0:
         return 1.0
-    for threaddata in download_threads:
-        t = threaddata[0]
-        asset_data = threaddata[1]
-        tcom = threaddata[2]
+    for thread in download_threads:
+        asset_data = thread.asset_data
+        tcom = thread.tcom
 
-        if t.is_alive():  # set downloader size
+        if thread.is_alive():  # set downloader size
             sr = bpy.context.scene.get('search results')
             if sr is not None:
                 for r in sr:
                     if asset_data['view_id'] == r.get('view_id'):
                         r['downloaded'] = tcom.progress
 
-        if not t.is_alive():
+        if not thread.is_alive():
             if tcom.error:
                 sprops = utils.get_search_props()
                 sprops.report = tcom.report
-                download_threads.remove(threaddata)
+                download_threads.remove(thread)
                 return
             file_names = paths.get_download_filenames(asset_data)
 
@@ -402,7 +363,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                 )
                 or at == 'scene'
             ):
-                download_threads.remove(threaddata)
+                download_threads.remove(thread)
 
                 # duplicate file if the global and subdir are used in prefs
                 # todo this should try to check if both files exist and are ok.
@@ -466,7 +427,7 @@ def download_file(asset_data):
 
 
 class Downloader(threading.Thread):
-    def __init__(self, asset_data, tcom):
+    def __init__(self, asset_data: dict, tcom: ThreadCom):
         super(Downloader, self).__init__()
         self.asset_data = asset_data
         self.tcom = tcom
@@ -560,30 +521,26 @@ def download(asset_data, **kwargs):
         asset_data = copy.deepcopy(asset_data)
     else:
         asset_data = asset_data.to_dict()
-    readthread = Downloader(asset_data, tcom)
-    readthread.start()
+    thread = Downloader(asset_data, tcom)
+    thread.start()
 
-    global download_threads
-    download_threads.append([readthread, asset_data, tcom])
+    download_threads.append(thread)
 
 
 def check_downloading(asset_data, **kwargs):
     ''' check if an asset is already downloading, if yes,
     just make a progress bar with downloader object.'''
-    global download_threads
-
     downloading = False
 
-    for p in download_threads:
-        p_asset_data = p[1]
-        if p_asset_data['view_id'] == asset_data['view_id']:
+    for thread in download_threads:
+        if thread.asset_data['view_id'] == asset_data['view_id']:
             at = asset_data['asset_type']
             if at in ('model', 'material'):
                 downloader = {
                     'location': kwargs['model_location'],
                     'rotation': kwargs['model_rotation'],
                 }
-                p[2].passargs['downloaders'].append(downloader)
+                thread.tcom.passargs['downloaders'].append(downloader)
             downloading = True
 
     return downloading
@@ -760,7 +717,6 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
     )
 
     def execute(self, context):
-        global download_threads
         td = download_threads[self.thread_index]
         download_threads.remove(td)
         td[0].stop()
@@ -808,17 +764,12 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
     cast_parent: StringProperty(name="Particles Target Object", description="", default="")
 
-    # @classmethod
-    # def poll(cls, context):
-    #     return bpy.context.window_manager.Hana3DModelThumbnails is not ''
-
     def execute(self, context):
         s = bpy.context.scene
         sr = s['search results']
 
-        asset_data = sr[
-            self.asset_index
-        ].to_dict()  # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
+        # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
+        asset_data = sr[self.asset_index].to_dict()
         au = s.get('assets used')
         if au is None:
             s['assets used'] = {}

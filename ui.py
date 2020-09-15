@@ -531,18 +531,16 @@ def draw_progress(x, y, text='', percent=None, color=colors.GREEN):
 
 def draw_callback_3d_progress(self, context):
     # 'star trek' mode gets here, blocked by now ;)
-    for threaddata in download.download_threads:
-        asset_data = threaddata[1]
-        tcom = threaddata[2]
-        if tcom.passargs.get('downloaders'):
-            for d in tcom.passargs['downloaders']:
-                if asset_data['asset_type'] == 'model':
+    for thread in download.download_threads:
+        if thread.tcom.passargs.get('downloaders'):
+            for d in thread.tcom.passargs['downloaders']:
+                if thread.asset_data['asset_type'] == 'model':
                     draw_bbox(
                         d['location'],
                         d['rotation'],
-                        asset_data['bbox_min'],
-                        asset_data['bbox_max'],
-                        progress=tcom.progress,
+                        thread.asset_data['bbox_min'],
+                        thread.asset_data['bbox_max'],
+                        progress=thread.tcom.progress,
                     )
 
 
@@ -552,9 +550,9 @@ def draw_callback_2d_progress(self, context):
     x = ui.reports_x
     y = ui.reports_y
     index = 0
-    for threaddata in download.download_threads:
-        asset_data = threaddata[1]
-        tcom = threaddata[2]
+    for thread in download.download_threads:
+        asset_data = thread.asset_data
+        tcom = thread.tcom
 
         directory = paths.get_temp_dir('%s_search' % asset_data['asset_type'])
         tpath = os.path.join(directory, asset_data['thumbnail_small'])
