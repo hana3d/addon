@@ -426,6 +426,17 @@ def download_file(asset_data):
     return file_name
 
 
+class ThreadCom:  # object passed to threads to read background process stdout info
+    def __init__(self):
+        self.file_size = 1000000000000000  # property that gets written to.
+        self.downloaded = 0
+        self.lasttext = ''
+        self.error = False
+        self.report = ''
+        self.progress = 0.0
+        self.passargs = {}
+
+
 class Downloader(threading.Thread):
     def __init__(self, asset_data: dict, tcom: ThreadCom):
         super(Downloader, self).__init__()
@@ -487,17 +498,6 @@ class Downloader(threading.Thread):
                         f.close()
                         os.remove(file_name)
                         return
-
-
-class ThreadCom:  # object passed to threads to read background process stdout info
-    def __init__(self):
-        self.file_size = 1000000000000000  # property that gets written to.
-        self.downloaded = 0
-        self.lasttext = ''
-        self.error = False
-        self.report = ''
-        self.progress = 0.0
-        self.passargs = {}
 
 
 def download(asset_data, **kwargs):
@@ -601,7 +601,6 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
             except Exception:
                 e = sys.exc_info()[0]
                 print(e)
-                pass
         return False
 
 
