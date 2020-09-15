@@ -23,10 +23,11 @@ if 'bpy' in locals():
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)
+    types = reload(types)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import append_link, colors, paths, rerequests, ui, utils
+    from hana3d import append_link, colors, paths, rerequests, types, ui, utils
 
 import copy
 import os
@@ -709,6 +710,12 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         default=3
     )
 
+    reset: BoolProperty(
+        name="Reset Count",
+        description='reset counter and download previews from zero',
+        default=False
+    )
+
     def _get_location(self):
         x = y = 0
         dx = 0
@@ -721,15 +728,14 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         return (self.grid_distance * x, self.grid_distance * y, 0)
 
     def execute(self, context):
-        self.object_count = 0
+        if self.reset is True:
+            self.object_count = 0
         scene = context.scene
         if 'search results' not in scene:
             return {'CANCELLED'}
         sr = scene['search results']
 
-        print('len: ', len(sr))
-
-        for result in sr:
+        for index, result in zip(range(10), sr[self.object_count:]):
             asset_data = result.to_dict()
             location = self._get_location()
             kwargs = {
@@ -742,6 +748,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
             }
 
             start_download(asset_data, **kwargs)
+        self.reset = False
         return {'FINISHED'}
 
 

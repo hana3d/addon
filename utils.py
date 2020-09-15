@@ -31,6 +31,7 @@ import uuid
 from typing import List, Tuple
 
 import bpy
+from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
@@ -265,7 +266,6 @@ def get_export_data(
 
     upload_data["name"] = props.name
     upload_data["description"] = props.description
-    upload_data["tags"] = comma2array(props.tags)
 
     upload_data['parameters'] = upload_params
 
@@ -301,6 +301,11 @@ def get_export_data(
                         custom_props.update({key: value})
                 library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
+
+    upload_data['tags'] = []
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            upload_data["tags"].append(tag)
 
     export_data['publish_message'] = props.publish_message
 
@@ -854,3 +859,11 @@ def fill_object_metadata(obj: bpy.types.Object):
 
     props.face_count, props.face_count_render = check_meshprops(props, obs)
     props.object_count = len(obs)
+
+
+def append_array_inside_prop(prop: IDPropertyGroup, list_name: str, item: any):
+    if len(prop[list_name]) == 0:
+        prop[list_name] = [item]
+    else:
+        prop[list_name] = prop[list_name].__add__([item])
+    return prop[list_name]
