@@ -330,6 +330,17 @@ def set_thumbnail(asset_data, asset):
     asset.hana3d.thumbnail = asset_thumb_path
 
 
+def update_downloaded_progress(view_id: str, progress: int):
+    sr = bpy.context.scene.get('search results')
+    if sr is None:
+        utils.p('search results not found')
+        return
+    for r in sr:
+        if asset_data['view_id'] == r.get('view_id'):
+            r['downloaded'] = tcom.progress
+            return
+
+
 # @bpy.app.handlers.persistent
 def timer_update():  # TODO might get moved to handle all hana3d stuff, not to slow down.
     '''check for running and finished downloads and react. write progressbars too.'''
@@ -339,61 +350,41 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         asset_data = thread.asset_data
         tcom = thread.tcom
 
-        if thread.is_alive():  # set downloader size
-            sr = bpy.context.scene.get('search results')
-            if sr is not None:
-                for r in sr:
-                    if asset_data['view_id'] == r.get('view_id'):
-                        r['downloaded'] = tcom.progress
+        if thread.is_alive():
+            update_downloaded_progress(asset_data['view_id'], tcom.progress)
+            continue
 
         if tcom.error:
             sprops = utils.get_search_props()
             sprops.report = tcom.report
             download_threads.remove(thread)
-            return
+            continue
+
+        if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
+            continue
+
+        utils.p('appending asset')
+        download_threads.remove(thread)
+
         file_names = paths.get_download_filenames(asset_data)
+        # duplicate file if the global and subdir are used in prefs
+        # todo this should try to check if both files exist and are ok.
+        if len(file_names) == 2:
+            shutil.copyfile(file_names[0], file_names[1])
 
-        at = asset_data['asset_type']
-        # don't do this stuff in editmode and other modes, just wait...
-        if (
-            (
-                bpy.context.mode == 'OBJECT'
-                and (at == 'model' or at == 'material')
-            )
-            or at == 'scene'
-        ):
-            download_threads.remove(thread)
-
-            # duplicate file if the global and subdir are used in prefs
-            # todo this should try to check if both files exist and are ok.
-            if len(file_names) == 2:
-                shutil.copyfile(file_names[0], file_names[1])
-
-            utils.p('appending asset')
-            # progress bars:
-
-            # we need to check if mouse isn't down, which means an operator can be running.
-
-            if tcom.passargs.get('redownload'):
-                # handle lost libraries here:
-                for library in bpy.data.libraries:
-                    if (
-                        library.get('asset_data') is not None
-                        and library['asset_data']['view_id'] == asset_data['view_id']
-                    ):
-                        library.filepath = file_names[-1]
-                        library.reload()
-            else:
-                done = try_finished_append(asset_data, **tcom.passargs)
-                if not done:
-                    tcom.passargs['retry_counter'] = tcom.passargs.get('retry_counter', 0) + 1
-                    download(asset_data, **tcom.passargs)
-                if bpy.context.scene['search results'] is not None and done:
-                    for sres in bpy.context.scene['search results']:
-                        if asset_data['view_id'] == sres['view_id']:
-                            sres['downloaded'] = 100
-
-            utils.p('finished download thread')
+        if tcom.passargs.get('redownload'):
+            # handle lost libraries here:
+            for library in bpy.data.libraries:
+                if (
+                    library.get('asset_data') is not None
+                    and library['asset_data']['view_id'] == asset_data['view_id']
+                ):
+                    library.filepath = file_names[-1]
+                    library.reload()
+        else:
+            try_finished_append(asset_data, **tcom.passargs)
+            update_downloaded_progress(asset_data['view_id'], 100)
+        utils.p('finished download thread')
     return 0.5
 
 
@@ -476,15 +467,6 @@ def download(asset_data, **kwargs):
 
     tcom = ThreadCom()
     tcom.passargs = kwargs
-
-    if kwargs.get('retry_counter', 0) > 3:
-        sprops = utils.get_search_props()
-        report = f"Maximum retries exceeded for {asset_data['name']}"
-        sprops.report = report
-        ui.add_report(report, 5, colors.RED)
-
-        utils.p(sprops.report)
-        return
 
     # incoming data can be either directly dict from python, or blender id property
     # (recovering failed downloads on reload)
@@ -646,9 +628,9 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
     )
 
     def execute(self, context):
-        td = download_threads[self.thread_index]
-        download_threads.remove(td)
-        td[0].stop()
+        thread = download_threads[self.thread_index]
+        download_threads.remove(thread)
+        thread.stop()
         return {'FINISHED'}
 
 

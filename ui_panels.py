@@ -357,12 +357,6 @@ class VIEW3D_PT_hana3d_downloads(Panel):
             row.label(text=thread.asset_data['name'])
             row.label(text=str(int(thread.tcom.progress)) + ' %')
             row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
-            if thread.tcom.passargs.get('retry_counter', 0) > 0:
-                row = layout.row()
-                row.label(text='failed. retrying ... ', icon='ERROR')
-                row.label(text=str(thread.tcom.passargs["retry_counter"]))
-
-                layout.separator()
 
 
 def header_search_draw(self, context):
