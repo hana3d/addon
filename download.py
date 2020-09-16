@@ -805,6 +805,10 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         self.object_count += 1
         return (self.grid_distance * x, self.grid_distance * y, 0)
 
+    @classmethod
+    def poll(cls, context):
+        return len(download_threads) == 0
+
     def execute(self, context):
         if self.reset is True:
             self.object_count = 0
