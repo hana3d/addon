@@ -1836,7 +1836,7 @@ def default_name_handler(dummy):
 
 # @persistent
 def pre_load(context):
-    ui_props = bpy.context.scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
     ui_props.assetbar_on = False
     ui_props.turn_off = True
     preferences = bpy.context.preferences.addons['hana3d'].preferences
