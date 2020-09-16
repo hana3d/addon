@@ -457,7 +457,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         return True
 
     def draw(self, context):
-        render_props = context.scene.Hana3DRender
+        render_props = context.window_manager.Hana3DRender
         asset_props = utils.get_upload_props()
         ui_props = context.window_manager.Hana3DUI
 

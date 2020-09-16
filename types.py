@@ -1163,7 +1163,7 @@ def register():
         bpy.utils.register_class(cls)
 
     bpy.types.WindowManager.Hana3DUI = PointerProperty(type=Hana3DUIProps)
-    bpy.types.Scene.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
+    bpy.types.WindowManager.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
 
     # MODELS
     bpy.types.WindowManager.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
@@ -1180,16 +1180,16 @@ def register():
 
 def unregister():
     del bpy.types.Material.hana3d
-    del bpy.types.Scene.hana3d_mat
+    del bpy.types.WindowManager.hana3d_mat
 
     del bpy.types.Scene.hana3d
-    del bpy.types.Scene.hana3d_scene
+    del bpy.types.WindowManager.hana3d_scene
 
     del bpy.types.Object.hana3d
-    del bpy.types.Scene.hana3d_models
+    del bpy.types.WindowManager.hana3d_models
 
-    del bpy.types.Scene.Hana3DRender
-    del bpy.types.Scene.Hana3DUI
+    del bpy.types.WindowManager.Hana3DRender
+    del bpy.types.WindowManager.Hana3DUI
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
