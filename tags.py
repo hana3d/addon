@@ -24,9 +24,7 @@ else:
     from hana3d import utils
 
 import bpy
-from bpy.props import (
-    StringProperty
-)
+from bpy.props import StringProperty
 from bpy.types import Operator
 
 
