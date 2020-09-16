@@ -208,7 +208,7 @@ def draw_panel_common_search(layout, context):
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
         row = layout.row(align=True)
-        op = row.operator("scene.hana3d_batch_download", text='Import preview files')
+        op = row.operator("scene.hana3d_batch_download", text='Import first 20')
         op.reset = True
         batch_size = op.batch_size
         op = row.operator("scene.hana3d_batch_download", text=f'Import next {batch_size}')
