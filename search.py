@@ -867,6 +867,12 @@ def search(get_next=False, author_id=''):
 
     query['libraries'] = props.libraries
 
+    tags = []
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            tags.append(tag)
+    query['tags'] = ','.join(tags)
+
     props.is_searching = True
 
     params = {'get_next': get_next}

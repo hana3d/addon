@@ -25,7 +25,7 @@ else:
     from hana3d import download, utils
 
 import bpy
-from bpy.types import Panel, Operator
+from bpy.types import Panel
 
 
 from . import addon_updater_ops
@@ -81,13 +81,30 @@ def draw_not_logged_in(source):
     bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
 
 
+def draw_selected_tags(layout, props, operator):
+    row = layout.row()
+    row.scale_y = 0.9
+    tag_counter = 0
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            op = row.operator(operator, text=tag, icon='X')
+            op.tag = tag
+            tag_counter += 1
+        if tag_counter == 3:
+            row = layout.row()
+            row.scale_y = 0.9
+            tag_counter = 0
+
+
 def draw_panel_common_upload(layout, context):
     uiprops = bpy.context.window_manager.Hana3DUI
     asset_type = uiprops.asset_type
     props = utils.get_upload_props()
 
-    layout.prop(props, 'workspace', expand=False, text='Workspace')
-    row = layout.row(align=True)
+    box = layout.box()
+    box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
+    box.prop(props, 'workspace', expand=False, text='Workspace')
+    row = box.row(align=True)
     col = row.column()
     col.scale_x = 0.7
     col.label(text='Libraries:')
@@ -98,42 +115,40 @@ def draw_panel_common_upload(layout, context):
         text=props.libraries_text
     )
     for name in props.custom_props.keys():
-        layout.prop(props.custom_props, f'["{name}"]')
-    prop_needed(layout, props, 'name', props.name)
-    layout.prop(props, 'description')
-    layout.prop(props, 'publish_message')
-    layout.prop(props, 'tags')
-    layout.prop(props, 'is_public')
+        box.prop(props.custom_props, f'["{name}"]')
 
-    col = layout.column()
+    box = layout.box()
+    box.label(text='Asset Info', icon='MESH_CUBE')
+    prop_needed(box, props, 'name', props.name)
+    col = box.column()
     if props.is_generating_thumbnail:
         col.enabled = False
-    prop_needed(col, props, 'thumbnail', props.has_thumbnail, False)
+    row = col.row(align=True)
+    prop_needed(row, props, 'thumbnail', props.has_thumbnail, False)
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
         if asset_type == 'MODEL':
-            col.operator(
-                "object.hana3d_generate_thumbnail",
-                text='Generate thumbnail',
-                icon='IMAGE_DATA'
-            )
+            row.operator('object.hana3d_generate_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'SCENE':
-            col.operator(
-                "object.hana3d_scene_thumbnail",
-                text='Generate thumbnail',
-                icon='IMAGE_DATA'
-            )
+            row.operator('object.hana3d_scene_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'MATERIAL':
-            col.operator(
-                "object.hana3d_material_thumbnail",
-                text='Generate thumbnail',
-                icon='IMAGE_DATA'
-            )
+            row.operator('object.hana3d_material_thumbnail', text='', icon='IMAGE_DATA')
     if props.is_generating_thumbnail:
-        row = layout.row(align=True)
+        row = box.row(align=True)
         row.label(text=props.thumbnail_generating_state)
         op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
         op.process_source = asset_type
         op.process_type = 'THUMBNAILER'
+    box.prop(props, 'description')
+    box.prop(props, 'is_public')
+
+    box = layout.box()
+    box.label(text='Tags', icon='COLOR')
+    row = box.row(align=True)
+    row.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
+    op = row.operator('object.hana3d_add_tag', text='', icon='ADD')
+    draw_selected_tags(box, props, "object.hana3d_remove_tag_upload")
+
+    prop_needed(layout, props, 'publish_message', props.publish_message)
 
     if props.upload_state != '':
         label_multiline(layout, text=props.upload_state, width=context.region.width)
@@ -141,20 +156,22 @@ def draw_panel_common_upload(layout, context):
         op = layout.operator('object.kill_bg_process', text="", icon='CANCEL')
         op.process_source = asset_type
         op.process_type = 'UPLOAD'
-        layout = layout.column()
-        layout.enabled = False
+        box = box.column()
+        box.enabled = False
 
+    row = layout.row()
+    row.scale_y = 2.0
     if props.view_id == '':
         optext = 'Upload %s' % asset_type.lower()
-        op = layout.operator("object.hana3d_upload", text=optext, icon='EXPORT')
+        op = row.operator("object.hana3d_upload", text=optext, icon='EXPORT')
         op.asset_type = asset_type
 
     if props.view_id != '':
-        op = layout.operator("object.hana3d_upload", text='Reupload asset', icon='EXPORT')
+        op = row.operator("object.hana3d_upload", text='Reupload asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = True
 
-        op = layout.operator("object.hana3d_upload", text='Upload as new asset', icon='EXPORT')
+        op = row.operator("object.hana3d_upload", text='Upload as new asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = False
 
@@ -182,6 +199,8 @@ def draw_panel_common_search(layout, context):
     )
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
+    layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
+    draw_selected_tags(layout, props, "object.hana3d_remove_tag_search")
 
     if asset_type == 'MODEL':
         layout.separator()
@@ -564,58 +583,12 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         # row.template_ID(bpy.context.space_data, 'image', open='image.open')
 
 
-class ListLibrariesSearch(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_search"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_search_props()
-        layout = self.layout
-        for i in range(props.libraries_count):
-            layout.prop(props, f'library_{i}')
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
-class ListLibrariesUpload(Operator):
-    """Libraries that the view will be assigned to.
-If no library is selected the view will be assigned to the default library."""
-
-    bl_idname = "object.hana3d_list_libraries_upload"
-    bl_label = "Hana3D List Libraries"
-    bl_options = {'REGISTER', 'INTERNAL'}
-
-    def draw(self, context):
-        props = utils.get_upload_props()
-        layout = self.layout
-        for i in range(props.libraries_count):
-            layout.prop(props, f'library_{i}')
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-
 classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
     VIEW3D_PT_hana3d_downloads,
-    VIEW3D_PT_hana3d_RenderPanel,
-    ListLibrariesSearch,
-    ListLibrariesUpload
+    VIEW3D_PT_hana3d_RenderPanel
 )
 
 

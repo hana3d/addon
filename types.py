@@ -35,6 +35,7 @@ from typing import Union
 import bpy
 from bpy.props import (
     BoolProperty,
+    CollectionProperty,
     EnumProperty,
     FloatProperty,
     FloatVectorProperty,
@@ -325,6 +326,21 @@ def search_update(self, context):
     search.search()
 
 
+def update_tags_list(props, context):
+    props.tags_list.clear()
+    current_workspace = props.workspace
+    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+        if current_workspace == workspace['id']:
+            for tag in workspace['tags']:
+                new_tag = props.tags_list.add()
+                new_tag['name'] = tag
+
+
+class Hana3DTagItem(PropertyGroup):
+    name: StringProperty(name="Tag Name", default="Unknown")
+    selected: BoolProperty(name="Tag Selected", default=False)
+
+
 class Hana3DCommonSearchProps:
     def update_selected_libraries_search(self, context):
         names = []
@@ -365,8 +381,16 @@ class Hana3DCommonSearchProps:
                         'metadata': library['metadata']
                     }
                     i += 1
-            self.libraries_count = i
+                self.libraries_count = i
         self.update_selected_libraries_search(context)
+
+    def on_workspace_update(self, context):
+        self.update_libraries_list_search(context)
+        update_tags_list(self, context)
+
+    def update_tags_input(self, context):
+        if self.tags_input != '':
+            self.tags_list[self.tags_input].selected = True
 
     # STATES
     search_keywords: StringProperty(
@@ -424,7 +448,7 @@ class Hana3DCommonSearchProps:
         name='User workspaces',
         description='User option to choose between workspaces',
         options={'ANIMATABLE'},
-        update=update_libraries_list_search
+        update=on_workspace_update
     )
 
     default_library: StringProperty(
@@ -454,6 +478,11 @@ class Hana3DCommonSearchProps:
     libraries_info: PointerProperty(
         type=PropertyGroup
     )
+
+    tags_list: CollectionProperty(type=Hana3DTagItem)
+
+    tags_input: StringProperty(
+        name="Tags", description="Asset Tags", default="", update=update_tags_input)
 
 
 class Hana3DCommonUploadProps:
@@ -595,6 +624,14 @@ class Hana3DCommonUploadProps:
                         i += 1
                 self.libraries_count = i
 
+    def on_workspace_update(self, context):
+        self.update_libraries_list_upload(context)
+        update_tags_list(self, context)
+
+    def update_tags_input(self, context):
+        if self.tags_input != '':
+            self.tags_list[self.tags_input].selected = True
+
     def update_thumbnail(self, context=None):
         img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)
         if img is not None:
@@ -714,7 +751,7 @@ class Hana3DCommonUploadProps:
         name='User workspaces',
         description='User option to choose between workspaces',
         options={'ANIMATABLE'},
-        update=update_libraries_list_upload
+        update=on_workspace_update
     )
 
     default_library: StringProperty(
@@ -802,6 +839,11 @@ class Hana3DCommonUploadProps:
         description="Name of render job",
         default=""
     )
+
+    tags_list: CollectionProperty(type=Hana3DTagItem)
+
+    tags_input: StringProperty(
+        name="Tags", description="Asset Tags", default="", update=update_tags_input)
 
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
@@ -1104,6 +1146,7 @@ Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUplo
 
 
 classes = (
+    Hana3DTagItem,
     Hana3DUIProps,
     Hana3DRenderProps,
     Hana3DModelSearchProps,
@@ -1111,7 +1154,7 @@ classes = (
     Hana3DSceneSearchProps,
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
-    Hana3DMaterialSearchProps,
+    Hana3DMaterialSearchProps
 )
 
 
