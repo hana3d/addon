@@ -24,6 +24,7 @@ import uuid
 from typing import List, Tuple
 
 import bpy
+from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
 from hana3d import paths, rerequests
@@ -783,3 +784,11 @@ def get_addon_version():
 def get_addon_blender_version():
     import hana3d
     return hana3d.bl_info['blender']
+
+
+def append_array_inside_prop(prop: IDPropertyGroup, list_name: str, item: any):
+    if len(prop[list_name]) == 0:
+        prop[list_name] = [item]
+    else:
+        prop[list_name] = prop[list_name].__add__([item])
+    return prop[list_name]

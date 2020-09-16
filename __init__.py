@@ -280,6 +280,8 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 modules = (
     types,
+    tags,
+    libraries,
     search,
     download,
     upload,

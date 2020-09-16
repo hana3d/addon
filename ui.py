@@ -506,19 +506,16 @@ def draw_progress(x, y, text='', percent=None, color=colors.GREEN):
 
 def draw_callback_3d_progress(self, context):
     # 'star trek' mode gets here, blocked by now ;)
-    for threaddata in download.download_threads:
-        asset_data = threaddata[1]
-        tcom = threaddata[2]
-        if tcom.passargs.get('downloaders'):
-            for d in tcom.passargs['downloaders']:
-                if asset_data['asset_type'] == 'model':
-                    draw_bbox(
-                        d['location'],
-                        d['rotation'],
-                        asset_data['bbox_min'],
-                        asset_data['bbox_max'],
-                        progress=tcom.progress,
-                    )
+    for thread in download.download_threads.values():
+        if thread.asset_data['asset_type'] == 'model':
+            for param in thread.tcom.passargs.get('import_params', []):
+                draw_bbox(
+                    param['location'],
+                    param['rotation'],
+                    thread.asset_data['bbox_min'],
+                    thread.asset_data['bbox_max'],
+                    progress=thread.tcom.progress,
+                )
 
 
 def draw_callback_2d_progress(self, context):
@@ -527,21 +524,20 @@ def draw_callback_2d_progress(self, context):
     x = ui.reports_x
     y = ui.reports_y
     index = 0
-    for threaddata in download.download_threads:
-        asset_data = threaddata[1]
-        tcom = threaddata[2]
+    for thread in download.download_threads.values():
+        asset_data = thread.asset_data
+        tcom = thread.tcom
 
         directory = paths.get_temp_dir('%s_search' % asset_data['asset_type'])
         tpath = os.path.join(directory, asset_data['thumbnail_small'])
         img = utils.get_hidden_image(tpath, asset_data['id'])
 
-        if tcom.passargs.get('downloaders'):
-            for d in tcom.passargs['downloaders']:
-
+        if tcom.passargs.get('import_params'):
+            for param in tcom.passargs['import_params']:
                 loc = view3d_utils.location_3d_to_region_2d(
                     bpy.context.region,
                     bpy.context.space_data.region_3d,
-                    d['location']
+                    param['location']
                 )
                 if loc is not None:
                     if asset_data['asset_type'] == 'model':
@@ -1569,34 +1565,6 @@ class AssetBarOperator(bpy.types.Operator):
                     return {'RUNNING_MODAL'}
             else:
                 return {'RUNNING_MODAL'}
-
-        if event.type == 'W' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
-            asset_data = sr[ui_props.active_index]
-            a = bpy.context.window_manager['hana3d authors'].get(asset_data['author_id'])
-            if a is not None:
-                utils.p('author:', a)
-                if a.get('aboutMeUrl') is not None:
-                    bpy.ops.wm.url_open(url=a['aboutMeUrl'])
-            return {'RUNNING_MODAL'}
-        if event.type == 'A' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
-            asset_data = sr[ui_props.active_index]
-            a = asset_data['author_id']
-            if a is not None:
-                sprops = utils.get_search_props()
-                sprops.search_keywords = ''
-                utils.p('author:', a)
-                search.search(author_id=a)
-            return {'RUNNING_MODAL'}
-        if event.type == 'X' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
-            asset_data = sr[ui_props.active_index]
-            print(asset_data['name'])
-            print('delete')
-            paths.delete_asset_debug(asset_data)
-            asset_data['downloaded'] = 0
-            return {'RUNNING_MODAL'}
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
@@ -1706,13 +1674,16 @@ class DefaultNamesOperator(bpy.types.Operator):
         props = asset.hana3d
 
         if ui_props.down_up == 'UPLOAD':
-            if props.workspace != '' and props.default_library == '':
+            if props.workspace != '' and len(props.tags_list) == 0:
                 props.workspace = props.workspace
             if props.name == '' and props.name != asset.name:
                 props.name = asset.name
         elif ui_props.down_up == 'SEARCH':
             search_props = utils.get_search_props()
-            if search_props.workspace != '' and search_props.default_library == '':
+            if (
+                search_props.workspace != ''
+                and len(search_props.tags_list) == 0
+            ):
                 search_props.workspace = search_props.workspace
 
         if props.render_job_name == '':

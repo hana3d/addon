@@ -23,6 +23,7 @@ from typing import Union
 import bpy
 from bpy.props import (
     BoolProperty,
+    CollectionProperty,
     EnumProperty,
     FloatProperty,
     FloatVectorProperty,
@@ -315,48 +316,54 @@ def search_update(self, context):
     search.search()
 
 
+def update_tags_list(props, context):
+    props.tags_list.clear()
+    current_workspace = props.workspace
+    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+        if current_workspace == workspace['id']:
+            for tag in workspace['tags']:
+                new_tag = props.tags_list.add()
+                new_tag['name'] = tag
+
+
+def update_libraries_list(props, context):
+    props.libraries_list.clear()
+    current_workspace = props.workspace
+    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+        if current_workspace == workspace['id']:
+            for library in workspace['libraries']:
+                new_library = props.libraries_list.add()
+                new_library['name'] = library['name']
+                new_library.id_ = library['id']
+                if library['metadata'] is not None:
+                    new_library.metadata['library_props'] = library['metadata']['library_props']
+                    new_library.metadata['view_props'] = library['metadata']['view_props']
+
+
+class Hana3DTagItem(PropertyGroup):
+    name: StringProperty(name="Tag Name", default="Unknown")
+    selected: BoolProperty(name="Tag Selected", default=False)
+
+
+class Hana3DLibraryItem(PropertyGroup):
+    id_: StringProperty(name="Library ID", default="Unknown")
+    name: StringProperty(name="Library Name", default="Unknown")
+    selected: BoolProperty(name="Library Selected", default=False)
+    metadata: PointerProperty(type=PropertyGroup)
+
+
 class Hana3DCommonSearchProps:
-    def update_selected_libraries_search(self, context):
-        names = []
-        ids = []
-        for i in range(self.libraries_count):
-            current_value = getattr(self, f'library_{i}')
-            library_entry = getattr(type(self), f'library_{i}')
-            name = library_entry[1]['name']
-            library_info = self.libraries_info[name]
+    def on_workspace_update(self, context):
+        update_libraries_list(self, context)
+        update_tags_list(self, context)
 
-            if current_value is True:
-                names.append(name)
-                ids.append(library_info['id'])
+    def update_tags_input(self, context):
+        if self.tags_input != '':
+            self.tags_list[self.tags_input].selected = True
 
-        if len(names) > 0:
-            self.libraries_text = ','.join(names)
-        else:
-            self.libraries_text = 'Select libraries'
-        self.libraries = ','.join(ids)
-
-    def update_libraries_list_search(self, context):
-        hana3d_class = type(self)   # noqa F841
-        for i in range(self.libraries_count):
-            exec(f'del hana3d_class.library_{i}')
-        current_workspace = self.workspace
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-            if current_workspace == workspace['id']:
-                i = 0
-                for library in workspace['libraries']:
-                    bool_prop = BoolProperty(  # noqa F841
-                        name=library["name"],
-                        default=False,
-                        update=Hana3DCommonSearchProps.update_selected_libraries_search)
-                    exec(f'hana3d_class.library_{i}=bool_prop')
-                    self.libraries_info[library['name']] = {
-                        'name': library['name'],
-                        'id': library['id'],
-                        'metadata': library['metadata']
-                    }
-                    i += 1
-            self.libraries_count = i
-        self.update_selected_libraries_search(context)
+    def update_libraries_input(self, context):
+        if self.libraries_input != '':
+            self.libraries_list[self.libraries_input].selected = True
 
     # STATES
     search_keywords: StringProperty(
@@ -414,65 +421,25 @@ class Hana3DCommonSearchProps:
         name='User workspaces',
         description='User option to choose between workspaces',
         options={'ANIMATABLE'},
-        update=update_libraries_list_search
+        update=on_workspace_update
     )
 
-    default_library: StringProperty(
-        name="Default Library",
-        description="When no library is selected upload to this library",
-        default=""
-    )
+    tags_list: CollectionProperty(type=Hana3DTagItem)
 
-    libraries: StringProperty(
+    tags_input: StringProperty(
+        name="Tags", description="Asset Tags", default="", update=update_tags_input)
+
+    libraries_list: CollectionProperty(type=Hana3DLibraryItem)
+
+    libraries_input: StringProperty(
         name="Libraries",
-        description="Libraries that the asset are linked to",
-        default=''
-    )
-
-    libraries_text: StringProperty(
-        name="Libraries",
-        description="Libraries that the asset are linked to",
-        default="Select libraries"
-    )
-
-    libraries_count: IntProperty(
-        name="Libraries Count",
-        description="Number of libraries",
-        default=0
-    )
-
-    libraries_info: PointerProperty(
-        type=PropertyGroup
+        description="Libraries to search",
+        default="",
+        update=update_libraries_input
     )
 
 
 class Hana3DCommonUploadProps:
-    def update_tags(self, context):
-        props = utils.get_upload_props()
-        if props is None:
-            return
-
-        commasep = props.tags.split(',')
-        ntags = []
-        for tag in commasep:
-            if len(tag) > 19:
-                short_tags = tag.split(' ')
-                for short_tag in short_tags:
-                    if len(short_tag) > 19:
-                        short_tag = short_tag[:18]
-                    ntags.append(short_tag)
-            else:
-                ntags.append(tag)
-        if len(ntags) == 1:
-            ntags = ntags[0].split(' ')
-        ns = ''
-        for t in ntags:
-            if t != '':
-                ns += t + ','
-        ns = ns[:-1]
-        if props.tags != ns:
-            props.tags = ns
-
     def get_render_job_outputs(self, context):
         preview_collection = render.render_previews[self.view_id]
         if not hasattr(preview_collection, 'previews'):
@@ -526,64 +493,28 @@ class Hana3DCommonUploadProps:
 
         return preview_collection.previews
 
-    def update_selected_libraries_upload(self, context):
-        names = []
-        ids = []
-        for i in range(self.libraries_count):
-            current_value = getattr(self, f'library_{i}')
-            library_entry = getattr(type(self), f'library_{i}')
-            name = library_entry[1]['name']
-            library_info = self.libraries_info[name]
+    def on_workspace_update(self, context):
+        update_libraries_list(self, context)
+        update_tags_list(self, context)
 
-            if current_value is True:
-                names.append(name)
-                ids.append(library_info['id'])
-                for view_prop in library_info['metadata']['view_props']:
-                    name = f'{name} {view_prop["name"]}'
-                    if name not in self.custom_props:
-                        self.custom_props_info[name] = {
-                            'key': view_prop['slug'],
-                            'library_name': library_info["name"],
-                            'library_id': library_info['id']
-                        }
-                        self.custom_props[name] = ''
-            else:
-                for view_prop in library_info['metadata']['view_props']:
-                    name = f'{name} {view_prop["name"]}'
-                    if name in self.custom_props.keys():
-                        del self.custom_props[name]
-                        del self.custom_props_info[name]
+    def update_tags_input(self, context):
+        if self.tags_input != '':
+            self.tags_list[self.tags_input].selected = True
 
-        if len(names) > 0:
-            self.libraries_text = ','.join(names)
-        else:
-            self.libraries_text = 'Select libraries'
-        self.libraries = ','.join(ids)
+    def update_libraries_input(self, context):
+        if self.libraries_input == '':
+            return
 
-    def update_libraries_list_upload(self, context):
-        hana3d_class = type(self)   # noqa F841
-        for i in range(self.libraries_count):
-            exec(f'del hana3d_class.library_{i}')
-        current_workspace = self.workspace
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
-            if current_workspace == workspace['id']:
-                i = 0
-                for library in workspace['libraries']:
-                    if library['is_default'] == 1:
-                        self.default_library = library['id']
-                    else:
-                        bool_prop = BoolProperty(  # noqa F841
-                            name=library["name"],
-                            default=False,
-                            update=Hana3DCommonUploadProps.update_selected_libraries_upload)
-                        exec(f'hana3d_class.library_{i}=bool_prop')
-                        self.libraries_info[library['name']] = {
-                            'name': library['name'],
-                            'id': library['id'],
-                            'metadata': library['metadata']
-                        }
-                        i += 1
-                self.libraries_count = i
+        self.libraries_list[self.libraries_input].selected = True
+        for view_prop in self.libraries_list[self.libraries_input].metadata['view_props']:
+            name = f'{self.libraries_list[self.libraries_input].name} {view_prop["name"]}'
+            if name not in self.custom_props:
+                self.custom_props_info[name] = {
+                    'slug': view_prop['slug'],
+                    'library_name': self.libraries_list[self.libraries_input].name,
+                    'library_id': self.libraries_list[self.libraries_input].id_
+                }
+                self.custom_props[name] = ''
 
     def update_preview(self, context=None):
         """Mark upload preview to be updated by draw calllback"""
@@ -628,13 +559,6 @@ class Hana3DCommonUploadProps:
         name="Description",
         description="Description of the asset",
         default=""
-    )
-
-    tags: StringProperty(
-        name="Tags",
-        description="List of tags, separated by commas (optional)",
-        default="",
-        update=update_tags,
     )
 
     name_changed: BoolProperty(
@@ -710,49 +634,13 @@ class Hana3DCommonUploadProps:
         name='User workspaces',
         description='User option to choose between workspaces',
         options={'ANIMATABLE'},
-        update=update_libraries_list_upload
-    )
-
-    default_library: StringProperty(
-        name="Default Library",
-        description="When no library is selected upload to this library",
-        default=""
-    )
-
-    libraries: StringProperty(
-        name="Libraries",
-        description="Libraries that the asset are linked to",
-        default=''
-    )
-
-    libraries_text: StringProperty(
-        name="Libraries",
-        description="Libraries that the asset are linked to",
-        default="Select libraries"
-    )
-
-    libraries_count: IntProperty(
-        name="Libraries Count",
-        description="Number of libraries",
-        default=0
-    )
-
-    libraries_info: PointerProperty(
-        type=PropertyGroup
+        update=on_workspace_update
     )
 
     publish_message: StringProperty(
         name="Publish Message",
         description="Changes from previous version",
         default=""
-    )
-
-    custom_props: PointerProperty(
-        type=PropertyGroup
-    )
-
-    custom_props_info: PointerProperty(
-        type=PropertyGroup
     )
 
     rendering: BoolProperty(
@@ -797,6 +685,28 @@ class Hana3DCommonUploadProps:
         name="Name",
         description="Name of render job",
         default=""
+    )
+
+    tags_list: CollectionProperty(type=Hana3DTagItem)
+
+    tags_input: StringProperty(
+        name="Tags", description="Asset Tags", default="", update=update_tags_input)
+
+    libraries_list: CollectionProperty(type=Hana3DLibraryItem)
+
+    libraries_input: StringProperty(
+        name="Libraries",
+        description="Upload to libraries",
+        default="",
+        update=update_libraries_input
+    )
+
+    custom_props: PointerProperty(
+        type=PropertyGroup
+    )
+
+    custom_props_info: PointerProperty(
+        type=PropertyGroup
     )
 
 
@@ -1089,6 +999,8 @@ Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUplo
 
 
 classes = (
+    Hana3DTagItem,
+    Hana3DLibraryItem,
     Hana3DUIProps,
     Hana3DRenderProps,
     Hana3DModelSearchProps,
@@ -1096,7 +1008,7 @@ classes = (
     Hana3DSceneSearchProps,
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
-    Hana3DMaterialSearchProps,
+    Hana3DMaterialSearchProps
 )
 
 
