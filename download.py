@@ -23,17 +23,17 @@ if 'bpy' in locals():
     colors = reload(colors)
     paths = reload(paths)
     rerequests = reload(rerequests)
-    types = reload(types)
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import append_link, colors, paths, rerequests, types, ui, utils
+    from hana3d import append_link, colors, paths, rerequests, ui, utils
 
 import copy
+import functools
 import os
 import shutil
-import sys
 import threading
+from queue import Queue
 from typing import List
 
 import bpy
@@ -49,7 +49,7 @@ from bpy.props import (
 )
 
 download_threads = {}
-append_threads = {}
+append_tasks_queue = Queue()
 
 
 class ThreadCom:  # object passed to threads to read background process stdout info
@@ -70,6 +70,7 @@ class Downloader(threading.Thread):
         self.tcom = tcom
         self._stop_event = threading.Event()
         self._remove_event = threading.Event()
+        self._finish_event = threading.Event()
 
     def stop(self):
         self._stop_event.set()
@@ -83,6 +84,13 @@ class Downloader(threading.Thread):
     @property
     def marked_remove(self):
         return self._remove_event.is_set()
+
+    def finish(self):
+        self._finish_event.set()
+
+    @property
+    def finished(self):
+        return self._finish_event.is_set()
 
     # def main_download_thread(asset_data, tcom):
     def run(self):
@@ -111,7 +119,8 @@ class Downloader(threading.Thread):
             utils.p('stopping download: ' + asset_data['name'])
             return
 
-        with open(file_name, "wb") as f:
+        tmp_file = file_name + '_tmp'
+        with open(tmp_file, "wb") as f:
             print("Downloading %s" % file_name)
 
             response = requests.get(asset_data['download_url'], stream=True)
@@ -130,8 +139,9 @@ class Downloader(threading.Thread):
                     if self.stopped():
                         utils.p('stopping download: ' + asset_data['name'])
                         f.close()
-                        os.remove(file_name)
+                        os.remove(tmp_file)
                         return
+        os.rename(tmp_file, file_name)
 
 
 def check_missing():
@@ -255,19 +265,25 @@ def set_thumbnail(asset_data, asset):
     asset.hana3d.thumbnail = asset_thumb_path
 
 
-def update_downloaded_progress(view_id: str, progress: int):
+def update_downloaded_progress(downloader: Downloader):
     sr = bpy.context.scene.get('search results')
     if sr is None:
         utils.p('search results not found')
         return
     for r in sr:
-        if r.get('view_id') == view_id:
-            r['downloaded'] = progress
+        if r.get('view_id') == downloader.asset_data['view_id']:
+            r['downloaded'] = downloader.tcom.progress
             return
 
 
+def remove_file(filepath):
+    try:
+        os.remove(filepath)
+    except Exception as e:
+        utils.p(f'Error when removing {filepath}: {e}')
+
+
 def process_finished_thread(downloader: Downloader):
-    downloader.mark_remove()
     asset_data = downloader.asset_data
     tcom = downloader.tcom
 
@@ -288,13 +304,14 @@ def process_finished_thread(downloader: Downloader):
                 library.reload()
         return
     try:
-        append_asset(asset_data, **tcom.passargs)
-        update_downloaded_progress(asset_data['view_id'], 100)
+        append_asset_safe(asset_data, **tcom.passargs)
     except Exception as e:
-        ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}')
+        for f in file_names:
+            remove_file(f)
+        ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
 
 
-def remove_finished_threads():
+def cleanup_threads():
     global download_threads
     download_threads = {
         view_id: downloader
@@ -303,29 +320,48 @@ def remove_finished_threads():
     }
 
 
+def execute_append_tasks():
+    if append_tasks_queue.empty():
+        return 2.0
+    if any(thread.is_alive() for thread in download_threads.values()):
+        return 0.5
+
+    task = append_tasks_queue.get()
+    task()
+    append_tasks_queue.task_done()
+    return 0.01
+
+
 # @bpy.app.handlers.persistent
 def timer_update():  # TODO might get moved to handle all hana3d stuff, not to slow down.
     '''check for running and finished downloads and react. write progressbars too.'''
     if len(download_threads) == 0:
         return 1.0
     for view_id, downloader in download_threads.items():
+        if downloader.finished:
+            # Ignore download theads that are finished but the asset was not appended
+            continue
+        asset_data = downloader.asset_data
         if downloader.is_alive():
-            update_downloaded_progress(view_id, downloader.tcom.progress)
+            update_downloaded_progress(downloader)
             continue
 
         if downloader.tcom.error:
             sprops = utils.get_search_props()
             sprops.report = downloader.tcom.report
             downloader.mark_remove()
-            ui.add_report(f'Error when downloading {downloader.asset_data["name"]}')
+            ui.add_report(f'Error when downloading {asset_data["name"]}', color=colors.RED)
             continue
 
-        if bpy.context.mode == 'EDIT' and downloader.asset_data['asset_type'] in ('model', 'material'):
+        if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
             continue
 
+        downloader.tcom.progress = 100
+        update_downloaded_progress(downloader)
         process_finished_thread(downloader)
+        downloader.finish()
 
-    remove_finished_threads()
+    cleanup_threads()
 
     return 0.5
 
@@ -361,7 +397,6 @@ def check_existing(asset_data):
     ''' check if the object exists on the hard drive'''
     file_names = paths.get_download_filenames(asset_data)
 
-    utils.p('check if file already exists')
     if len(file_names) == 2:
         # TODO this should check also for failed or running downloads.
         # If download is running, assign just the running thread.
@@ -411,7 +446,7 @@ def import_model(scene, asset_data: dict, file_names: list, **kwargs):
     if kwargs.get('import_params'):
         for param in kwargs['import_params']:
             if link is True:
-                obj, newobs = append_link.link_collection(
+                parent, newobs = append_link.link_collection(
                     file_names[-1],
                     location=param['location'],
                     rotation=param['rotation'],
@@ -420,7 +455,7 @@ def import_model(scene, asset_data: dict, file_names: list, **kwargs):
                     parent=kwargs.get('parent'),
                 )
             else:
-                obj, newobs = append_link.append_objects(
+                parent, newobs = append_link.append_objects(
                     file_names[-1],
                     location=param['location'],
                     rotation=param['rotation'],
@@ -429,18 +464,18 @@ def import_model(scene, asset_data: dict, file_names: list, **kwargs):
                     parent=kwargs.get('parent'),
                 )
 
-            if obj.type == 'EMPTY' and link:
+            if parent.type == 'EMPTY' and link:
                 bmin = asset_data['bbox_min']
                 bmax = asset_data['bbox_max']
                 size_min = min(
                     1.0,
                     (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3
                 )
-                obj.empty_display_size = size_min
+                parent.empty_display_size = size_min
 
     elif kwargs.get('model_location') is not None:
         if link is True:
-            obj, newobs = append_link.link_collection(
+            parent, newobs = append_link.link_collection(
                 file_names[-1],
                 location=kwargs['model_location'],
                 rotation=kwargs['model_rotation'],
@@ -449,27 +484,27 @@ def import_model(scene, asset_data: dict, file_names: list, **kwargs):
                 parent=kwargs.get('parent'),
             )
         else:
-            obj, newobs = append_link.append_objects(
+            parent, newobs = append_link.append_objects(
                 file_names[-1],
                 location=kwargs['model_location'],
                 rotation=kwargs['model_rotation'],
                 link=link,
                 parent=kwargs.get('parent'),
             )
-        if obj.type == 'EMPTY' and link:
+        if parent.type == 'EMPTY' and link:
             bmin = asset_data['bbox_min']
             bmax = asset_data['bbox_max']
             size_min = min(1.0, (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3)
-            obj.empty_display_size = size_min
+            parent.empty_display_size = size_min
 
     if link:
-        group = obj.instance_collection
+        group = parent.instance_collection
 
         lib = group.library
         lib['asset_data'] = asset_data
 
-    utils.fill_object_metadata(obj)
-    return obj
+    utils.fill_object_metadata(parent)
+    return parent
 
 
 def import_material(asset_data: dict, file_names: list, **kwargs):
@@ -534,7 +569,7 @@ def set_asset_props(asset, asset_data):
                         asset.hana3d.custom_props[name] = view_prop['value']
 
 
-def append_asset(asset_data, **kwargs):
+def append_asset(asset_data: dict, **kwargs):
     asset_name = asset_data['name']
     utils.p(f'appending asset {asset_name}')
 
@@ -543,8 +578,6 @@ def append_asset(asset_data, **kwargs):
         raise FileNotFoundError(f'Could not find file for asset {asset_name}')
 
     kwargs['name'] = asset_data['name']
-
-    file_names = paths.get_download_filenames(asset_data)
     scene = bpy.context.scene
 
     if asset_data['asset_type'] == 'scene':
@@ -558,8 +591,15 @@ def append_asset(asset_data, **kwargs):
     scene['assets used'][asset_data['view_id']] = asset_data.copy()
 
     set_asset_props(asset, asset_data)
+    if asset_data['view_id'] in download_threads:
+        download_threads.pop(asset_data['view_id'])
 
     bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
+
+
+def append_asset_safe(asset_data: dict, **kwargs):
+    task = functools.partial(append_asset, asset_data, **kwargs)
+    append_tasks_queue.put(task)
 
 
 def check_asset_in_scene(asset_data):
@@ -588,9 +628,10 @@ def start_download(asset_data, **kwargs):
     '''
     check if file isn't downloading or doesn't exist, then start new download
     '''
-    if asset_data['view_id'] in download_threads:
+    view_id = asset_data['view_id']
+    if view_id in download_threads and download_threads[view_id].is_alive():
         if asset_data['asset_type'] in ('model', 'material'):
-            thread = download_threads[asset_data['view_id']]
+            thread = download_threads[view_id]
             add_import_params(thread, kwargs['model_location'], kwargs['model_rotation'])
         return
 
@@ -598,7 +639,7 @@ def start_download(asset_data, **kwargs):
     asset_in_scene = check_asset_in_scene(asset_data)
 
     if fexists and asset_in_scene:
-        append_asset(asset_data, **kwargs)
+        append_asset_safe(asset_data, **kwargs)
         return
 
     if asset_data['asset_type'] in ('model', 'material'):
@@ -804,9 +845,12 @@ def register():
     bpy.app.handlers.save_pre.append(scene_save)
 
     bpy.app.timers.register(timer_update)
+    bpy.app.timers.register(execute_append_tasks)
 
 
 def unregister():
+    if bpy.app.timers.is_registered(execute_append_tasks):
+        bpy.app.timers.unregister(execute_append_tasks)
     if bpy.app.timers.is_registered(timer_update):
         bpy.app.timers.unregister(timer_update)
 
