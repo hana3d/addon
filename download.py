@@ -675,6 +675,16 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
     def execute(self, context):
         thread = download_threads.pop(self.view_id)
         thread.stop()
+
+        tasks = []
+        while not append_tasks_queue.empty():
+            task = append_tasks_queue.get()
+            if task.args[0]['view_id'] == self.view_id:
+                del task
+                break
+            tasks.append(task)
+        for task in tasks:
+            append_tasks_queue.put(task)
         return {'FINISHED'}
 
 
