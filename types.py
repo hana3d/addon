@@ -68,19 +68,19 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        s = context.scene
+        wm = context.window_manager
         if self.asset_type == 'MODEL':
-            s['search results'] = s.get('hana3d model search')
-            s['search results orig'] = s.get('hana3d model search orig')
+            wm['search results'] = wm.get('hana3d model search')
+            wm['search results orig'] = wm.get('hana3d model search orig')
         elif self.asset_type == 'SCENE':
-            s['search results'] = s.get('hana3d scene search')
-            s['search results orig'] = s.get('hana3d scene search orig')
+            wm['search results'] = wm.get('hana3d scene search')
+            wm['search results orig'] = wm.get('hana3d scene search orig')
         elif self.asset_type == 'MATERIAL':
-            s['search results'] = s.get('hana3d material search')
-            s['search results orig'] = s.get('hana3d material search orig')
+            wm['search results'] = wm.get('hana3d material search')
+            wm['search results orig'] = wm.get('hana3d material search orig')
         elif self.asset_type == 'HDR':
-            s['search results'] = s.get('hana3d hdr search')
-            s['search results orig'] = s.get('hana3d hdr search orig')
+            wm['search results'] = wm.get('hana3d hdr search')
+            wm['search results orig'] = wm.get('hana3d hdr search orig')
         search.load_previews()
 
     def switch_active_asset_type(self, context):
@@ -291,7 +291,7 @@ def workspace_items(self, context):
 def search_update(self, context):
     utils.p('search updater')
     # if self.search_keywords != '':
-    ui_props = bpy.context.scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
 

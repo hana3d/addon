@@ -133,29 +133,28 @@ def timer_update():
     global search_threads
     if len(search_threads) == 0:
         return 1.0
-    if bpy.context.scene.Hana3DUI.dragging:
+    if bpy.context.window_manager.Hana3DUI.dragging:
         return 0.5
     for thread in search_threads:
         if not thread[0].is_alive():
             search_threads.remove(thread)  #
             icons_dir = thread[1]
-            scene = bpy.context.scene
-            s = bpy.context.scene
+            wm = bpy.context.window_manager
             asset_type = thread[2]
             if asset_type == 'model':
-                props = scene.hana3d_models
+                props = wm.hana3d_models
                 json_filepath = os.path.join(icons_dir, 'model_searchresult.json')
                 search_name = 'hana3d model search'
             if asset_type == 'scene':
-                props = scene.hana3d_scene
+                props = wm.hana3d_scene
                 json_filepath = os.path.join(icons_dir, 'scene_searchresult.json')
                 search_name = 'hana3d scene search'
             if asset_type == 'material':
-                props = scene.hana3d_mat
+                props = wm.hana3d_mat
                 json_filepath = os.path.join(icons_dir, 'material_searchresult.json')
                 search_name = 'hana3d material search'
 
-            s[search_name] = []
+            wm[search_name] = []
 
             global reports
             if reports != '':
@@ -244,23 +243,23 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if view_id in scene.get('assets used', {}).keys():
+                                if view_id in wm.get('assets used', {}).keys():
                                     asset_data['downloaded'] = 100
 
                                 result_field.append(asset_data)
 
-                s[search_name] = result_field
-                s['search results'] = result_field
-                s[search_name + ' orig'] = rdata
-                s['search results orig'] = rdata
+                wm[search_name] = result_field
+                wm['search results'] = result_field
+                wm[search_name + ' orig'] = rdata
+                wm['search results orig'] = rdata
                 load_previews()
-                ui_props = bpy.context.scene.Hana3DUI
+                ui_props = bpy.context.window_manager.Hana3DUI
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (s['search results orig']['count'])
-                if len(s['search results']) == 0:
+                props.report = 'Found %i results. ' % (wm['search results orig']['count'])
+                if len(wm['search results']) == 0:
                     tasks_queue.add_task((ui.add_report, ('No matching results found.',)))
 
             else:
@@ -282,8 +281,8 @@ def load_previews():
     props = bpy.context.window_manager.Hana3DUI
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
-    s = bpy.context.scene
-    results = s.get('search results')
+    wm = bpy.context.window_manager
+    results = wm.get('search results')
     #
     if results is not None:
         i = 0
@@ -772,7 +771,7 @@ def build_query_common(query, props):
 def build_query_model():
     '''use all search input to request results from server'''
 
-    props = bpy.context.scene.hana3d_models
+    props = bpy.context.window_manager.hana3d_models
     query = {
         "asset_type": 'model',
     }
@@ -785,7 +784,7 @@ def build_query_model():
 def build_query_scene():
     '''use all search input to request results from server'''
 
-    props = bpy.context.scene.hana3d_scene
+    props = bpy.context.window_manager.hana3d_scene
     query = {
         "asset_type": 'scene',
     }
@@ -794,7 +793,7 @@ def build_query_scene():
 
 
 def build_query_material():
-    props = bpy.context.scene.hana3d_mat
+    props = bpy.context.window_manager.hana3d_mat
     query = {
         "asset_type": 'material',
     }
@@ -836,25 +835,25 @@ def search(get_next=False, author_id=''):
 
     search_start_time = time.time()
     # mt('start')
-    scene = bpy.context.scene
-    uiprops = scene.Hana3DUI
+    wm = bpy.context.window_manager
+    uiprops = wm.Hana3DUI
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'hana3d'):
+        if not hasattr(wm, 'hana3d_models'):
             return
-        props = scene.hana3d_models
+        props = wm.hana3d_models
         query = build_query_model()
 
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'hana3d_scene'):
+        if not hasattr(wm, 'hana3d_scene'):
             return
-        props = scene.hana3d_scene
+        props = wm.hana3d_scene
         query = build_query_scene()
 
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'hana3d_mat'):
+        if not hasattr(wm, 'hana3d_mat'):
             return
-        props = scene.hana3d_mat
+        props = wm.hana3d_mat
         query = build_query_material()
 
     if props.is_searching and get_next:

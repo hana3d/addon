@@ -144,10 +144,10 @@ class Report:
 
 
 def get_asset_under_mouse(mousex, mousey):
-    s = bpy.context.scene
-    ui_props = bpy.context.scene.Hana3DUI
+    wm = bpy.context.window_manager
+    ui_props = bpy.context.window_manager.Hana3DUI
 
-    search_results = s.get('search results')
+    search_results = wm.get('search results')
     if search_results is not None:
 
         h_draw = min(ui_props.hcount, math.ceil(len(search_results) / ui_props.wcount))
@@ -510,7 +510,7 @@ def draw_callback_2d(self, context):
         go = False
     if go and a == a1 and w == w1:
 
-        props = context.scene.Hana3DUI
+        props = context.window_manager.Hana3DUI
         if props.down_up == 'SEARCH':
             draw_callback_2d_search(self, context)
         elif props.down_up == 'UPLOAD':
@@ -610,7 +610,7 @@ def draw_callback_2d_progress(self, context):
 
 
 def draw_callback_2d_upload_preview(self, context):
-    ui_props = context.scene.Hana3DUI
+    ui_props = context.window_manager.Hana3DUI
 
     props = utils.get_upload_props()
     if props is not None and ui_props.draw_tooltip:
@@ -623,8 +623,8 @@ def draw_callback_2d_upload_preview(self, context):
 
 
 def draw_callback_2d_search(self, context):
-    s = bpy.context.scene
-    ui_props = context.scene.Hana3DUI
+    wm = context.window_manager
+    ui_props = wm.Hana3DUI
 
     r = self.region
     # hc = bpy.context.preferences.themes[0].view_3d.space.header
@@ -638,8 +638,8 @@ def draw_callback_2d_search(self, context):
     # highlight = (1, 1, 1, 0.8)
     # background of asset bar
     if not ui_props.dragging:
-        search_results = s.get('search results')
-        search_results_orig = s.get('search results orig')
+        search_results = wm.get('search results')
+        search_results_orig = wm.get('search results orig')
         if search_results is None:
             return
         h_draw = min(ui_props.hcount, math.ceil(len(search_results) / ui_props.wcount))
@@ -769,19 +769,18 @@ def draw_callback_2d_search(self, context):
             #     report = 'hana3d - No matching results found.'
             #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
             #                      ui_props.bar_y - 25 - ui_props.margin, 15)
-        s = bpy.context.scene
         props = utils.get_search_props()
         # if props.report != '' and props.is_searching or props.search_error:
         #     ui_bgl.draw_text(props.report, ui_props.bar_x,
         #                      ui_props.bar_y - 15 - ui_props.margin - ui_props.bar_height, 15)
 
-        props = s.Hana3DUI
+        props = wm.Hana3DUI
         if props.draw_tooltip:
             # TODO move this lazy loading into a function and don't duplicate through the code
             iname = utils.previmg_name(ui_props.active_index, fullsize=True)
 
             directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
-            sr = s.get('search results')
+            sr = wm.get('search results')
             if sr is not None and -1 < ui_props.active_index < len(sr):
                 r = sr[ui_props.active_index]
                 tpath = os.path.join(directory, r['thumbnail'])
@@ -857,7 +856,7 @@ def draw_callback_3d(self, context):
     if not utils.guard_from_crash():
         return
 
-    ui = context.scene.Hana3DUI
+    ui = context.window_manager.Hana3DUI
 
     if ui.dragging and ui.asset_type == 'MODEL':
         if ui.draw_snapped_bounds:
@@ -895,7 +894,7 @@ def mouse_raycast(context, mx, my):
     if has_hit:
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
         up = Vector((0, 0, 1))
-        props = bpy.context.scene.hana3d_models
+        props = bpy.context.window_manager.hana3d_models
         if snapped_normal.angle(up) < math.radians(10.0):
             randoffset = props.offset_rotation_amount + math.pi
         else:
@@ -947,7 +946,7 @@ def floor_raycast(context, mx, my):
         object = None
         matrix = None
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
-        props = bpy.context.scene.hana3d_models
+        props = bpy.context.window_manager.hana3d_models
         randoffset = props.offset_rotation_amount + math.pi
         snapped_rotation.rotate_axis('Z', randoffset)
 
@@ -962,7 +961,7 @@ def mouse_in_area(mx, my, x, y, w, h):
 
 
 def mouse_in_asset_bar(mx, my):
-    ui_props = bpy.context.scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
 
     if (
         ui_props.bar_y - ui_props.bar_height < my < ui_props.bar_y
@@ -982,7 +981,7 @@ def mouse_in_region(r, mx, my):
 
 
 def update_ui_size(area, region):
-    ui = bpy.context.scene.Hana3DUI
+    ui = bpy.context.window_manager.Hana3DUI
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     ui_scale = bpy.context.preferences.view.ui_scale
 
@@ -1002,7 +1001,7 @@ def update_ui_size(area, region):
     ui.bar_width = region.width - ui.bar_x - ui.bar_end
     ui.wcount = math.floor((ui.bar_width - 2 * ui.drawoffset) / (ui.thumb_size + ui.margin))
 
-    search_results = bpy.context.scene.get('search results')
+    search_results = bpy.context.window_manager.get('search results')
     if search_results is not None and ui.wcount > 0:
         ui.hcount = min(
             user_preferences.max_assetbar_rows,
@@ -1069,7 +1068,7 @@ class AssetBarOperator(bpy.types.Operator):
         return properties.tooltip
 
     def search_more(self):
-        sro = bpy.context.scene.get('search results orig')
+        sro = bpy.context.window_manager.get('search results orig')
         if sro is not None and sro.get('next') is not None:
             search.search(get_next=True)
 
@@ -1079,7 +1078,7 @@ class AssetBarOperator(bpy.types.Operator):
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d, 'WINDOW')
         except Exception:
             pass
-        ui_props = bpy.context.scene.Hana3DUI
+        ui_props = bpy.context.window_manager.Hana3DUI
 
         ui_props.dragging = False
         ui_props.tooltip = ''
@@ -1091,7 +1090,7 @@ class AssetBarOperator(bpy.types.Operator):
 
     def modal(self, context, event):
         # This is for case of closing the area or changing type:
-        ui_props = context.scene.Hana3DUI
+        ui_props = context.window_manager.Hana3DUI
         areas = []
 
         if bpy.context.scene != self.scene:
@@ -1189,8 +1188,9 @@ class AssetBarOperator(bpy.types.Operator):
         # TODO add one more condition here to take less performance.
         r = self.region
         s = bpy.context.scene
-        sr = s.get('search results')
-        search_results_orig = s.get('search results orig')
+        wm = context.window_manager
+        sr = wm.get('search results')
+        search_results_orig = wm.get('search results orig')
         # If there aren't any results, we need no interaction(yet)
         if sr is None:
             return {'PASS_THROUGH'}
@@ -1208,7 +1208,7 @@ class AssetBarOperator(bpy.types.Operator):
             if ui_props.dragging and not mouse_in_asset_bar(mx, my):
                 # and my < r.height - ui_props.bar_height \
                 # and mx > 0 and mx < r.width and my > 0:
-                sprops = bpy.context.scene.hana3d_models
+                sprops = wm.hana3d_models
                 if event.type == 'WHEELUPMOUSE':
                     sprops.offset_rotation_amount += sprops.offset_rotation_step
                 elif event.type == 'WHEELDOWNMOUSE':
@@ -1294,7 +1294,7 @@ class AssetBarOperator(bpy.types.Operator):
                 bpy.context.window.cursor_set("DEFAULT")
                 return {'PASS_THROUGH'}
 
-            sr = bpy.context.scene['search results']
+            sr = bpy.context.window_manager['search results']
 
             if not ui_props.dragging:
                 bpy.context.window.cursor_set("DEFAULT")
@@ -1377,7 +1377,7 @@ class AssetBarOperator(bpy.types.Operator):
             mx = event.mouse_x - r.x
             my = event.mouse_y - r.y
 
-            ui_props = context.scene.Hana3DUI
+            ui_props = context.window_manager.Hana3DUI
             if event.value == 'PRESS' and ui_props.active_index > -1:
                 if ui_props.asset_type == 'MODEL' or ui_props.asset_type == 'MATERIAL':
                     # check if asset is locked and let the user know in that case
@@ -1389,10 +1389,10 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.draw_tooltip = False
                     ui_props.drag_length = 0
                 elif ui_props.asset_type == 'SCENE':
-                    context.scene.Hana3DUI.drag_init = True
+                    context.window_manager.Hana3DUI.drag_init = True
                     bpy.context.window.cursor_set("NONE")
-                    context.scene.Hana3DUI.draw_tooltip = False
-                    context.scene.Hana3DUI.drag_length = 0
+                    context.window_manager.Hana3DUI.draw_tooltip = False
+                    context.window_manager.Hana3DUI.drag_length = 0
 
             if not ui_props.dragging and not mouse_in_asset_bar(mx, my):
                 return {'PASS_THROUGH'}
@@ -1574,7 +1574,7 @@ class AssetBarOperator(bpy.types.Operator):
                 return {'RUNNING_MODAL'}
 
         if event.type == 'W' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
+            sr = bpy.context.window_manager['search results']
             asset_data = sr[ui_props.active_index]
             a = bpy.context.window_manager['hana3d authors'].get(asset_data['author_id'])
             if a is not None:
@@ -1583,7 +1583,7 @@ class AssetBarOperator(bpy.types.Operator):
                     bpy.ops.wm.url_open(url=a['aboutMeUrl'])
             return {'RUNNING_MODAL'}
         if event.type == 'A' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
+            sr = bpy.context.window_manager['search results']
             asset_data = sr[ui_props.active_index]
             a = asset_data['author_id']
             if a is not None:
@@ -1593,7 +1593,7 @@ class AssetBarOperator(bpy.types.Operator):
                 search.search(author_id=a)
             return {'RUNNING_MODAL'}
         if event.type == 'X' and ui_props.active_index > -1:
-            sr = bpy.context.scene['search results']
+            sr = bpy.context.window_manager['search results']
             asset_data = sr[ui_props.active_index]
             print(asset_data['name'])
             print('delete')
@@ -1604,7 +1604,7 @@ class AssetBarOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         # FIRST START SEARCH
-        ui_props = context.scene.Hana3DUI
+        ui_props = context.window_manager.Hana3DUI
 
         if self.do_search:
             search.search()
@@ -1633,9 +1633,9 @@ class AssetBarOperator(bpy.types.Operator):
         ui_props.assetbar_on = True
         ui_props.turn_off = False
 
-        sr = bpy.context.scene.get('search results')
+        sr = bpy.context.window_manager.get('search results')
         if sr is None:
-            bpy.context.scene['search results'] = []
+            bpy.context.window_manager['search results'] = []
 
         if context.area.type != 'VIEW_3D':
             self.report({'WARNING'}, "View3D not found, cannot run operator")

@@ -204,6 +204,7 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
     file_names = paths.get_download_filenames(asset_data)
     scene = bpy.context.scene
+    wm = bpy.context.window_manager
 
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
@@ -215,10 +216,8 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
         parent = scene
 
     if asset_data['asset_type'] == 'model':
-        s = bpy.context.scene
         downloaders = kwargs.get('downloaders')
-        s = bpy.context.scene
-        sprops = s.hana3d_models
+        sprops = bpy.context.window_manager.hana3d_models
         if sprops.append_method == 'LINK_COLLECTION':
             sprops.append_link = 'LINK'
             sprops.import_as = 'GROUP'
@@ -308,8 +307,8 @@ def append_asset(asset_data, **kwargs):  # downloaders=[], location=None,
 
         parent = material
 
-    scene['assets used'] = scene.get('assets used', {})
-    scene['assets used'][asset_data['view_id']] = asset_data.copy()
+    wm['assets used'] = wm.get('assets used', {})
+    wm['assets used'][asset_data['view_id']] = asset_data.copy()
 
     parent.hana3d.clear_data()
     parent['asset_data'] = asset_data
@@ -379,7 +378,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         tcom = threaddata[2]
 
         if t.is_alive():  # set downloader size
-            sr = bpy.context.scene.get('search results')
+            sr = bpy.context.window_manager.get('search results')
             if sr is not None:
                 for r in sr:
                     if asset_data['view_id'] == r.get('view_id'):
@@ -428,8 +427,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
                     if not done:
                         tcom.passargs['retry_counter'] = tcom.passargs.get('retry_counter', 0) + 1
                         download(asset_data, **tcom.passargs)
-                    if bpy.context.scene['search results'] is not None and done:
-                        for sres in bpy.context.scene['search results']:
+                    if bpy.context.window_manager['search results'] is not None and done:
+                        for sres in bpy.context.window_manager['search results']:
                             if asset_data['view_id'] == sres['view_id']:
                                 sres['downloaded'] = 100
 
@@ -632,7 +631,7 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
     try:
         append_asset(asset_data, **kwargs)
         if asset_data['asset_type'] == 'scene':
-            if bpy.context.scene.hana3d_scene.merge_add == 'ADD':
+            if bpy.context.window_manager.hana3d_scene.merge_add == 'ADD':
                 for window in bpy.context.window_manager.windows:
                     window.scene = bpy.data.scenes[asset_data['name']]
         return True
@@ -651,8 +650,8 @@ def try_finished_append(asset_data, **kwargs):  # location=None, material_target
 def check_asset_in_scene(asset_data):
     '''checks if the asset is already in scene. If yes,
     modifies asset data so the asset can be reached again.'''
-    scene = bpy.context.scene
-    au = scene.get('assets used', {})
+    wm = bpy.context.window_manager
+    au = wm.get('assets used', {})
 
     id = asset_data.get('view_id')
     if id in au.keys():
@@ -813,15 +812,15 @@ class Hana3DDownloadOperator(bpy.types.Operator):
     #     return bpy.context.window_manager.Hana3DModelThumbnails is not ''
 
     def execute(self, context):
-        s = bpy.context.scene
-        sr = s['search results']
+        wm = context.window_manager
+        sr = wm['search results']
 
         asset_data = sr[
             self.asset_index
         ].to_dict()  # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
-        au = s.get('assets used')
+        au = wm.get('assets used')
         if au is None:
-            s['assets used'] = {}
+            wm['assets used'] = {}
 
         atype = asset_data['asset_type']
         if (
@@ -900,10 +899,10 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     def execute(self, context):
         if self.reset is True:
             self.object_count = 0
-        scene = context.scene
-        if 'search results' not in scene:
+        wm = context.window_manager
+        if 'search results' not in wm:
             return {'CANCELLED'}
-        sr = scene['search results']
+        sr = wm['search results']
 
         for index, result in zip(range(10), sr[self.object_count:]):
             asset_data = result.to_dict()
