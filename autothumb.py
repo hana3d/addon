@@ -108,20 +108,6 @@ def generate_model_thumbnail(
             },
             s,
         )
-    print('START PROCESS')
-    print('CMD', [
-        binary_path,
-        "--background",
-        "-noaudio",
-        tfpath,
-        "--python",
-        os.path.join(script_path, "autothumb_model_bg.py"),
-        "--",
-        datafile,
-        filepath,
-        thumb_path,
-        tempdir,
-    ])
     proc = subprocess.Popen(
         [
             binary_path,
@@ -146,7 +132,6 @@ def generate_model_thumbnail(
     eval_path_state = "bpy.data.objects['%s'].hana3d.thumbnail_generating_state" % mainmodel.name  # noqa E501
     eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
-    print('ADD BG_PROCESS')
     bg_blender.add_bg_process(
         eval_path_computing=eval_path_computing,
         eval_path_state=eval_path_state,
@@ -157,15 +142,10 @@ def generate_model_thumbnail(
 
     if not save_only:
         mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
-    print('CHANGE GENERATING STATE')
     mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
-    print('GENERATING STATE CHANGED')
 
     if autopack is True:
-        print('AUTOPACKING TOGGLE')
         bpy.ops.file.autopack_toggle()
-        print('AUTOPACKING TOGGLE DONE')
-    print('RETURNING')
 
 
 class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):

@@ -38,10 +38,6 @@ def start_logging():
     requests_log.propagate = True
 
 
-def print_gap():
-    print('\n\n\n\n')
-
-
 def upload_file(upload_data, f, correlation_id):
     headers = utils.get_headers(correlation_id)
     bg_blender.progress('uploading %s' % f['type'])

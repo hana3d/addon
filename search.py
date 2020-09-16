@@ -300,25 +300,6 @@ def load_previews():
                     img.reload()
                 img.colorspace_settings.name = 'Linear'
             i += 1
-    # print('previews loaded')
-
-
-def generate_author_textblock(adata):
-    t = '\n\n\n'
-
-    if adata not in (None, ''):
-        col_w = 40
-        if len(adata['firstName'] + adata['lastName']) > 0:
-            t = 'Author:\n'
-            t += '%s %s\n' % (adata['firstName'], adata['lastName'])
-            t += '\n'
-            if adata.get('aboutMeUrl') is not None:
-                t = writeblockm(t, adata, key='aboutMeUrl', pretext='', width=col_w)
-                t += '\n'
-            if adata.get('aboutMe') is not None:
-                t = writeblockm(t, adata, key='aboutMe', pretext='', width=col_w)
-                t += '\n'
-    return t
 
 
 class ThumbDownloader(threading.Thread):
@@ -393,9 +374,7 @@ class Searcher(threading.Thread):
         try:
             utils.p(urlquery)
             r = rerequests.get(urlquery, headers=headers)
-            # print(r.url)
             reports = ''
-            # utils.p(r.text)
         except requests.exceptions.RequestException as e:
             print(e)
             reports = e
@@ -411,7 +390,6 @@ class Searcher(threading.Thread):
 
         mt('data parsed ')
 
-        # print('number of results: ', len(rdata.get('results', [])))
         if self.stopped():
             utils.p('stopping search : ' + str(query))
             return

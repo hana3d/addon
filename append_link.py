@@ -33,7 +33,6 @@ def append_material(file_name, matname=None, link=False, fake_user=True):
         for m in data_from.materials:
             if m == matname or matname is None:
                 data_to.materials = [m]
-                # print(m, type(m))
                 matname = m
                 break
 

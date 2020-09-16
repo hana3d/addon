@@ -80,22 +80,17 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
-        from pprint import pprint; pprint(data)
         user_preferences = bpy.context.preferences.addons['hana3d'].preferences
 
         bg_blender.progress('preparing thumbnail scene')
         obnames = get_obnames()
-        print('APPENDING OBJECTS')
         link = not data['save_only']
         main_object, allobs = append_link.append_objects(
             file_name=HANA3D_EXPORT_FILE_INPUT,
             obnames=obnames,
             link=link,
         )
-        print('OBJECTS APPENDED')
-        print('UPDATING VIEW_LAYER')
         bpy.context.view_layer.update()
-        print('VIEW_LAYER UPDATED')
 
         camdict = {
             'GROUND': 'camera ground',
@@ -154,7 +149,6 @@ if __name__ == "__main__":
         if data['save_only']:
             print(f'SAVING {data["blend_filepath"]}')
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
-            import shutil; shutil.copyfile(data["blend_filepath"], '/home/fabio/Downloads/export.blend')
         else:
             bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
             bg_blender.progress('rendering thumbnail')

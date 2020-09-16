@@ -231,8 +231,6 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 raise TypeError(f'Unexpected asset_type={self.props.asset_type}')
 
             self.props.is_generating_thumbnail = True
-            print(f'RUN THUMBNAILER {thumbnailer}')
-
             thumbnailer(
                 save_only=True,
                 blend_filepath=self.filepath,

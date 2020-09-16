@@ -24,18 +24,11 @@ import uuid
 from typing import List
 
 import bpy
+import requests
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from hana3d import (
-    bg_blender,
-    paths,
-    render,
-    rerequests,
-    types,
-    ui,
-    utils,
-)
+from hana3d import bg_blender, paths, render, rerequests, types, ui, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
@@ -402,7 +395,6 @@ class UploadOperator(Operator):
             return {'CANCELLED'}
 
         if props.remote_thumbnail:
-            print('CREATE THREAD')
             thread = render.RenderThread(
                 props,
                 engine='CYCLES',
@@ -410,7 +402,6 @@ class UploadOperator(Operator):
                 frame_end=1,
                 is_thumbnail=True,
             )
-            print('START THREAD')
             thread.start()
             render.render_threads.append(thread)
 

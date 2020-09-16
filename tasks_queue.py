@@ -78,7 +78,6 @@ def queue_worker():
     # second round, execute or put back waiting tasks.
     back_to_queue = []
     while not q.empty():
-        # print('window manager', bpy.context.window_manager)
         task = q.get()
 
         if task.wait > 0:

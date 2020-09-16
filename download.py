@@ -146,8 +146,6 @@ def check_missing():
         if not os.path.exists(fp) and library.get('asset_data') is not None:
             missing.append(library)
 
-    # print('missing libraries', missing)
-
     for library in missing:
         asset_data = library['asset_data']
         downloaded = check_existing(asset_data)

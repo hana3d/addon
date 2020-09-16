@@ -475,8 +475,6 @@ def draw_callback_2d(self, context):
         w1 = self.window
         go = True
         if len(a.spaces[0].region_quadviews) > 0:
-            # print(dir(bpy.context.region_data))
-            # print('quad', a.spaces[0].region_3d, a.spaces[0].region_quadviews[0])
             if a.spaces[0].region_3d != context.region_data:
                 go = False
     except Exception:
