@@ -303,12 +303,7 @@ def process_finished_thread(downloader: Downloader):
                 library.filepath = file_names[-1]
                 library.reload()
         return
-    try:
-        append_asset_safe(asset_data, **tcom.passargs)
-    except Exception as e:
-        for f in file_names:
-            remove_file(f)
-        ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
+    append_asset_safe(asset_data, **tcom.passargs)
 
 
 def cleanup_threads():
@@ -327,8 +322,15 @@ def execute_append_tasks():
         return 0.5
 
     task = append_tasks_queue.get()
-    task()
-    append_tasks_queue.task_done()
+    try:
+        task()
+        append_tasks_queue.task_done()
+    except Exception as e:
+        asset_data, = task.args
+        file_names = file_names = paths.get_download_filenames(asset_data)
+        for f in file_names:
+            remove_file(f)
+        ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
     return 0.01
 
 
