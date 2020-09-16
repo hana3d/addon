@@ -546,29 +546,33 @@ def set_asset_props(asset, asset_data):
     asset.hana3d.render_data['jobs'] = jobs
     download_renders(jobs)
 
+    if 'tags' in asset_data:
+        types.update_tags_list(asset.hana3d, bpy.context)
+        for tag in asset_data['tags']:
+            asset.hana3d.tags_list[tag].selected = True
+
     if 'libraries' in asset_data:
-        hana3d_class = type(asset.hana3d)
+        libraries_list = asset.hana3d.libraries_list
+        types.update_libraries_list(asset.hana3d, bpy.context)
         for library in asset_data['libraries']:
-            for i in range(asset.hana3d.libraries_count):
-                library_entry = getattr(hana3d_class, f'library_{i}')
-                name = library_entry[1]['name']
-                library_info = asset.hana3d.libraries_info[name]
-
-                if library_info['id'] == library['library_id']:
-                    library_prop = getattr(asset.hana3d, f'library_{i}')
-                    library_prop = True  # noqa:F841
-                    break
-
-                if 'metadata' in library and library['metadata'] is not None:
-                    for view_prop in library['metadata']['view_props']:
-                        key = view_prop['key']
-                        name = f'{library["name"]} {library_info["metadata"]["view_props"][key]}'
+            libraries_list[library["name"]].selected = True
+            if 'metadata' in library and library['metadata'] is not None:
+                for view_prop in libraries_list[library["name"]].metadata['view_props']:
+                    name = f'{libraries_list[library["name"]].name} {view_prop["name"]}'
+                    slug = view_prop['slug']
+                    if name not in asset.hana3d.custom_props:
                         asset.hana3d.custom_props_info[name] = {
-                            'key': view_prop['key'],
-                            'library_name': library["name"],
-                            'library_id': library['id_library']
+                            'slug': slug,
+                            'library_name': libraries_list[library["name"]].name,
+                            'library_id': libraries_list[library["name"]].id_
                         }
-                        asset.hana3d.custom_props[name] = view_prop['value']
+                    if (
+                        'view_props' in library['metadata']
+                        and slug in library['metadata']['view_props']
+                    ):
+                        asset.hana3d.custom_props[name] = library['metadata']['view_props'][slug]
+                    else:
+                        asset.hana3d.custom_props[name] = ''
 
 
 def append_asset(asset_data: dict, **kwargs):
