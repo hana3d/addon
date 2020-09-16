@@ -149,6 +149,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self,
             props: types.Props,
             engine: str,
+            cameras: List[str],
             frame_start: int,
             frame_end: int):
         super().__init__(daemon=True)
@@ -156,6 +157,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         self.engine = engine
         self.frame_start = frame_start
         self.frame_end = frame_end
+        self.cameras = cameras
 
         # Save job name on thread to avoid erros when changing asset name before job completes
         self.render_job_name = props.render_job_name
@@ -234,6 +236,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         data = {
             'render_scene_id': render_scene_id,
             'engine': self.engine,
+            'cameras': self.cameras,
             'frame_start': self.frame_start,
             'frame_end': self.frame_end,
             'extension': '.blend',
@@ -355,14 +358,24 @@ class RenderScene(Operator):
             return {'FINISHED'}
 
         render_props = context.scene.Hana3DRender
-        if render_props.frame_animation == 'FRAME':
+        if render_props.cameras == 'VISIBLE_CAMERAS':
+            cameras = [ob.name_full for ob in context.scene.objects if ob.type == 'CAMERA' and ob.visible_get()]
+            frame_start = context.scene.frame_current
+            frame_end = context.scene.frame_current
+        elif render_props.cameras == 'ALL_CAMERAS':
+            cameras = [ob.name_full for ob in context.scene.objects if ob.type == 'CAMERA']
+            frame_start = context.scene.frame_current
+            frame_end = context.scene.frame_current
+        elif render_props.frame_animation == 'FRAME':
+            cameras = render_props.cameras
             frame_start = context.scene.frame_current
             frame_end = context.scene.frame_current
         elif render_props.frame_animation == 'ANIMATION':
+            cameras = render_props.cameras
             frame_start = context.scene.frame_start
             frame_end = context.scene.frame_end
 
-        thread = RenderThread(props, render_props.engine, frame_start, frame_end)
+        thread = RenderThread(props, render_props.engine, cameras, frame_start, frame_end)
         thread.start()
         render_threads.append(thread)
 

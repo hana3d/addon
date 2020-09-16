@@ -242,6 +242,20 @@ class Hana3DRenderProps(PropertyGroup):
         if balance is None:
             return 'N/A'
         return f'${balance:.2f}'
+    
+    def get_cameras(self, context) -> tuple:
+        cameras = [ob for ob in context.scene.objects if ob.type == 'CAMERA']
+        camera_list = []
+        for camera in cameras:
+            desc = f'Render with only {camera.name_full}'
+            camera_list.append((camera.name_full, camera.name_full, desc))
+        camera_list.append(("VISIBLE_CAMERAS", "Visible cameras", "Render with visible cameras"))
+        camera_list.append(("ALL_CAMERAS", "All cameras", "Render with all cameras"))
+        return camera_list
+
+    def update_cameras(self, context):
+        if self.cameras in ('ALL_CAMERAS', 'VISIBLE_CAMERAS'):
+            self.frame_animation = 'FRAME'
 
     render_ui_mode: EnumProperty(
         name='Render UI mode',
@@ -273,7 +287,12 @@ class Hana3DRenderProps(PropertyGroup):
             ("ANIMATION", "Animation", "Render a range of frames", "RENDER_ANIMATION", 1),
         ),
         description="",
-        default="FRAME",
+    )
+    cameras: EnumProperty(
+        name="Cameras",
+        items=get_cameras,
+        description="",
+        update=update_cameras,
     )
 
 
