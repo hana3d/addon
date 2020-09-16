@@ -704,12 +704,6 @@ class Hana3DCommonUploadProps:
         update=update_libraries_input
     )
 
-    default_library: StringProperty(
-        name="Default Library",
-        description="When no library is selected upload to this library",
-        default=""
-    )
-
     custom_props: PointerProperty(
         type=PropertyGroup
     )
