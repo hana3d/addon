@@ -552,9 +552,6 @@ def set_asset_props(asset, asset_data):
         for tag in asset_data['tags']:
             asset.hana3d.tags_list[tag].selected = True
 
-    print('SET ASSET PROPS')
-    print(asset_data['name'])
-    print(asset_data['libraries'])
     if 'libraries' in asset_data:
         libraries_list = asset.hana3d.libraries_list
         types.update_libraries_list(asset.hana3d, bpy.context)
