@@ -208,9 +208,10 @@ def draw_panel_common_search(layout, context):
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
         row = layout.row(align=True)
-        op = row.operator("scene.hana3d_batch_download", text='Import preview files')
+        op = row.operator("scene.hana3d_batch_download", text='Import first 20')
         op.reset = True
-        op = row.operator("scene.hana3d_batch_download", text='Import Next 10')
+        batch_size = op.batch_size
+        op = row.operator("scene.hana3d_batch_download", text=f'Import next {batch_size}')
         op.reset = False
     # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge
     #     layout.separator()
@@ -374,19 +375,12 @@ class VIEW3D_PT_hana3d_downloads(Panel):
 
     def draw(self, context):
         layout = self.layout
-        for threaddata in download.download_threads:
-            tcom = threaddata[2]
-            asset_data = threaddata[1]
+        for view_id, thread in download.download_threads.items():
             row = layout.row()
-            row.label(text=asset_data['name'])
-            row.label(text=str(int(tcom.progress)) + ' %')
-            row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
-            if tcom.passargs.get('retry_counter', 0) > 0:
-                row = layout.row()
-                row.label(text='failed. retrying ... ', icon='ERROR')
-                row.label(text=str(tcom.passargs["retry_counter"]))
-
-                layout.separator()
+            row.label(text=thread.asset_data['name'])
+            row.label(text=str(int(thread.tcom.progress)) + ' %')
+            op = row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
+            op.view_id = view_id
 
 
 def header_search_draw(self, context):
