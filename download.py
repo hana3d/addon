@@ -525,7 +525,6 @@ def set_asset_props(asset, asset_data):
     asset.hana3d.id = asset_data['id']
     asset.hana3d.view_id = asset_data['view_id']
     asset.hana3d.name = asset_data['name']
-    asset.hana3d.tags = ','.join(asset_data['tags'])
     asset.hana3d.description = asset_data['description']
 
     jobs = get_render_jobs(asset_data['view_id'])
