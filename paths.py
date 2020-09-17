@@ -17,7 +17,6 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import os
-import sys
 import urllib.parse
 
 import bpy
@@ -225,23 +224,6 @@ def get_download_filenames(asset_data):
             file_name = os.path.join(d, fn)
             file_names.append(file_name)
     return file_names
-
-
-def delete_asset_debug(asset_data):
-    from hana3d import download
-
-    download.get_download_url(asset_data)
-
-    file_names = get_download_filenames(asset_data)
-    for f in file_names:
-        if os.path.isfile(f):
-            try:
-                print(f)
-                os.remove(f)
-            except Exception:
-                e = sys.exc_info()[0]
-                print(e)
-                pass
 
 
 def get_clean_filepath():

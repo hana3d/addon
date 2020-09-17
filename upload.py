@@ -26,7 +26,7 @@ if 'bpy' in locals():
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
+    from hana3d import bg_blender, paths, rerequests, ui, utils
 
 import json
 import os
@@ -137,7 +137,6 @@ def start_upload(self, context, props, asset_type, reupload, upload_set, correla
     props.upload_state = 'preparing upload'
 
     # do this for fixing long tags in some upload cases
-    props.tags = props.tags[:]
     if 'jobs' not in props.render_data:
         props.render_data['jobs'] = []
 

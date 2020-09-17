@@ -278,14 +278,15 @@ def get_export_data(
     if metadata:
         upload_data['metadata'] = metadata
 
+    upload_data['tags'] = []
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            upload_data["tags"].append(tag)
+
     upload_data['libraries'] = []
-    if props.libraries == '':
-        upload_data['libraries'].append({
-            'id': props.default_library
-        })
-    else:
-        libraries = comma2array(props.libraries)
-        for library_id in libraries:
+    for library in props.libraries_list.keys():
+        if props.libraries_list[library].selected is True:
+            library_id = props.libraries_list[library].id_
             library = {}
             library.update({
                 'id': library_id
@@ -294,17 +295,12 @@ def get_export_data(
                 custom_props = {}
                 for name in props.custom_props.keys():
                     value = props.custom_props[name]
-                    key = props.custom_props_info[name]['key']
+                    slug = props.custom_props_info[name]['slug']
                     prop_library_id = props.custom_props_info[name]['library_id']
                     if prop_library_id == library_id:
-                        custom_props.update({key: value})
+                        custom_props.update({slug: value})
                 library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
-
-    upload_data['tags'] = []
-    for tag in props.tags_list.keys():
-        if props.tags_list[tag].selected is True:
-            upload_data["tags"].append(tag)
 
     export_data['publish_message'] = props.publish_message
 
