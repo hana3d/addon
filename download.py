@@ -433,8 +433,8 @@ def import_scene(asset_data: dict, file_names: list):
     return scene
 
 
-def import_model(scene, asset_data: dict, file_names: list, **kwargs):
-    sprops = scene.hana3d_models
+def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
+    sprops = window_manager.hana3d_models
     if sprops.append_method == 'LINK_COLLECTION':
         sprops.append_link = 'LINK'
         sprops.import_as = 'GROUP'
@@ -585,13 +585,12 @@ def append_asset(asset_data: dict, **kwargs):
         raise FileNotFoundError(f'Could not find file for asset {asset_name}')
 
     kwargs['name'] = asset_data['name']
-    scene = bpy.context.scene
     wm = bpy.context.window_manager
 
     if asset_data['asset_type'] == 'scene':
-        asset = import_scene()
+        asset = import_scene(asset_data, file_names)
     if asset_data['asset_type'] == 'model':
-        asset = import_model(scene, asset_data, file_names, **kwargs)
+        asset = import_model(wm, asset_data, file_names, **kwargs)
     elif asset_data['asset_type'] == 'material':
         asset = import_material(asset_data, file_names, **kwargs)
 
