@@ -1677,11 +1677,11 @@ class DefaultNamesOperator(bpy.types.Operator):
                 and len(search_props.tags_list) == 0
             ):
                 search_props.workspace = search_props.workspace
-                return {'PASS_THROUGH'}
 
         asset = utils.get_active_asset()
         if asset is None:
             return {'PASS_THROUGH'}
+
         props = asset.hana3d
 
         if ui_props.down_up == 'UPLOAD':
