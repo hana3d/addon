@@ -1670,10 +1670,18 @@ class DefaultNamesOperator(bpy.types.Operator):
         if not draw_event:
             return {'PASS_THROUGH'}
 
+        if ui_props.down_up == 'SEARCH':
+            search_props = utils.get_search_props()
+            if (
+                search_props.workspace != ''
+                and len(search_props.tags_list) == 0
+            ):
+                search_props.workspace = search_props.workspace
+                return {'PASS_THROUGH'}
+
         asset = utils.get_active_asset()
         if asset is None:
             return {'PASS_THROUGH'}
-
         props = asset.hana3d
 
         if ui_props.down_up == 'UPLOAD':
@@ -1681,13 +1689,6 @@ class DefaultNamesOperator(bpy.types.Operator):
                 props.workspace = props.workspace
             if props.name == '' and props.name != asset.name:
                 props.name = asset.name
-        elif ui_props.down_up == 'SEARCH':
-            search_props = utils.get_search_props()
-            if (
-                search_props.workspace != ''
-                and len(search_props.tags_list) == 0
-            ):
-                search_props.workspace = search_props.workspace
 
         if props.render_job_name == '':
             if 'jobs' not in props.render_data:
