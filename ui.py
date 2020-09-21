@@ -245,7 +245,6 @@ def draw_text_block(x=0, y=0, width=40, font_size=10, line_height=15, text='', c
 
 
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
-    print('draw tooltip')
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
 
@@ -663,6 +662,8 @@ def draw_callback_2d_search(self, context):
                 ui_props.drawoffset = 0
 
             if ui_props.wcount * ui_props.hcount < len(search_results):
+                pagination_text = f'{ui_props.scrolloffset} ({ui_props.wcount}) {wm["search results orig"]["count"]} results'
+                ui_bgl.draw_text(pagination_text, 1000, 600, 16)
                 # arrows
                 arrow_y = (
                     ui_props.bar_y
