@@ -245,6 +245,7 @@ def draw_text_block(x=0, y=0, width=40, font_size=10, line_height=15, text='', c
 
 
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
+    print('draw tooltip')
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
 
@@ -977,7 +978,8 @@ def mouse_in_region(r, mx, my):
 
 
 def update_ui_size(area, region):
-    ui = bpy.context.window_manager.Hana3DUI
+    wm = bpy.context.window_manager
+    ui = wm.Hana3DUI
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     ui_scale = bpy.context.preferences.view.ui_scale
 
