@@ -139,15 +139,15 @@ if __name__ == "__main__":
         if ipath.startswith('//'):
             ipath = ipath[1:]
 
-        img = bpy.data.images['interior.exr']
-        img.filepath = ipath
-        img.reload()
+        hdr_img = bpy.data.images['interior.exr']
+        hdr_img.filepath = ipath
+        hdr_img.reload()
 
         bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
         if data['save_only']:
-            print(f'SAVING {data["blend_filepath"]}')
+            hdr_img.pack()
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
         else:
             bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH

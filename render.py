@@ -34,7 +34,7 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from hana3d import autothumb, colors, paths, rerequests, types, ui, utils
+from hana3d import autothumb, colors, paths, rerequests, ui, utils
 
 render_threads = []
 upload_threads = []
@@ -69,7 +69,7 @@ class UploadFileMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.file_size: int
-        self.props: types.Props
+        # self.props: types.Props
         self.filepath: str
         self.log_state_name: str
         self.add_report: bool
@@ -139,7 +139,7 @@ class _read_in_chunks:
 class RenderThread(UploadFileMixin, threading.Thread):
     def __init__(
             self,
-            props: types.Props,
+            props,
             engine: str,
             frame_start: int,
             frame_end: int,
@@ -182,7 +182,6 @@ class RenderThread(UploadFileMixin, threading.Thread):
 
             if self.cancelled:
                 return
-            raise
             job_id = self._create_job(render_scene_id)
             nrf_output = self._pool_job(job_id)
             if not nrf_output:
@@ -378,7 +377,10 @@ class RenderThread(UploadFileMixin, threading.Thread):
 
     def _put_new_thumbnail(self, render_scene_id: str, thumbnail_url: str) -> str:
         url = paths.get_api_url('assets', self.props.id)
-        data = {'thumbnail_url': thumbnail_url}
+        data = {
+            'thumbnail_url': thumbnail_url,
+            'metadata_only': True
+        }
         response = rerequests.put(url, json=data, headers=self.headers)
         assert response.ok, response.text
 
@@ -536,7 +538,7 @@ class RemoveRender(Operator):
         assert response.ok, f'Error deleting render using DELETE on {url}: {response.text}'
 
     @staticmethod
-    def remove_from_props(id_job: str, props: types.Props):
+    def remove_from_props(id_job: str, props):
         jobs = [
             job
             for job in props.render_data['jobs']
@@ -545,7 +547,7 @@ class RemoveRender(Operator):
         props.render_data['jobs'] = jobs
 
     @staticmethod
-    def switch_active_render_job(props: types.Props):
+    def switch_active_render_job(props):
         if len(props.render_data['jobs']) == 0:
             return
         id_first_job = props.render_data['jobs'][0]['id']
@@ -595,7 +597,7 @@ class OpenImage(Operator):
 
 
 class UploadThread(UploadFileMixin, threading.Thread):
-    def __init__(self, context, props: types.Props):
+    def __init__(self, context, props):
         super().__init__(daemon=True)
         self.props = props
         self.context = context
