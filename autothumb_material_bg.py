@@ -43,7 +43,7 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
             # append_material(file_name, matname = None, link = False, fake_user = True)
-        link = True if data['save_only'] else False
+        link = not data['save_only']
 
         mat = append_link.append_material(
             file_name=HANA3D_EXPORT_FILE_INPUT,
@@ -107,14 +107,15 @@ if __name__ == "__main__":
         if ipath.startswith('//'):
             ipath = ipath[1:]
 
-        img = bpy.data.images['interior.exr']
-        img.filepath = ipath
-        img.reload()
+        hdr_img = bpy.data.images['interior.exr']
+        hdr_img.filepath = ipath
+        hdr_img.reload()
 
         bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
         if data['save_only']:
+            hdr_img.pack()
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
         else:
             bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
