@@ -168,10 +168,6 @@ def timer_update():
             if ok:
                 bpy.ops.object.run_assetbar_fix_context()
                 for r in rdata['results']:
-                    try:
-                        r['filesSize'] = int(r['filesSize'] / 1024)
-                    except Exception:
-                        utils.p('asset with no files-size')
                     if r['assetType'] == asset_type:
                         if len(r['files']) > 0:
                             tname = None

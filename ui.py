@@ -662,6 +662,11 @@ def draw_callback_2d_search(self, context):
                 ui_props.drawoffset = 0
 
             if ui_props.wcount * ui_props.hcount < len(search_results):
+                page_start = ui_props.scrolloffset + 1
+                page_end = ui_props.scrolloffset + ui_props.wcount
+                pagination_text = f'{page_start} - {page_end} of {wm["search results orig"]["count"]}'
+                ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
+                                 - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
                 # arrows
                 arrow_y = (
                     ui_props.bar_y
@@ -977,7 +982,8 @@ def mouse_in_region(r, mx, my):
 
 
 def update_ui_size(area, region):
-    ui = bpy.context.window_manager.Hana3DUI
+    wm = bpy.context.window_manager
+    ui = wm.Hana3DUI
     user_preferences = bpy.context.preferences.addons['hana3d'].preferences
     ui_scale = bpy.context.preferences.view.ui_scale
 
