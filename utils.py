@@ -104,7 +104,7 @@ def get_selected_models():
 
 
 def get_search_props():
-    scene = bpy.context.scene
+    scene = bpy.context.window_manager
     if scene is None:
         return
     uiprops = scene.Hana3DUI
@@ -125,8 +125,7 @@ def get_search_props():
 
 
 def get_active_asset():
-    scene = bpy.context.scene
-    ui_props = scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model()
@@ -578,8 +577,8 @@ def scale_uvs(ob, scale=1.0, pivot=Vector((0.5, 0.5))):
 
 # map uv cubic and switch of auto tex space and set it to 1,1,1
 def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale=False):
-    s = bpy.context.scene
-    mat_props = s.hana3d_mat
+    wm = bpy.context.window_manager
+    mat_props = wm.hana3d_mat
     if mat_props.automap:
         tob = bpy.data.objects[target_object]
         # only automap mesh models

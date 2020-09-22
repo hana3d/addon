@@ -354,7 +354,7 @@ class RenderScene(Operator):
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
 
-        render_props = context.scene.Hana3DRender
+        render_props = context.window_manager.Hana3DRender
         if render_props.frame_animation == 'FRAME':
             frame_start = context.scene.frame_current
             frame_end = context.scene.frame_current

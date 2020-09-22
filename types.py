@@ -68,19 +68,19 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        s = context.scene
+        wm = context.window_manager
         if self.asset_type == 'MODEL':
-            s['search results'] = s.get('hana3d model search')
-            s['search results orig'] = s.get('hana3d model search orig')
+            wm['search results'] = wm.get('hana3d model search')
+            wm['search results orig'] = wm.get('hana3d model search orig')
         elif self.asset_type == 'SCENE':
-            s['search results'] = s.get('hana3d scene search')
-            s['search results orig'] = s.get('hana3d scene search orig')
+            wm['search results'] = wm.get('hana3d scene search')
+            wm['search results orig'] = wm.get('hana3d scene search orig')
         elif self.asset_type == 'MATERIAL':
-            s['search results'] = s.get('hana3d material search')
-            s['search results orig'] = s.get('hana3d material search orig')
+            wm['search results'] = wm.get('hana3d material search')
+            wm['search results orig'] = wm.get('hana3d material search orig')
         elif self.asset_type == 'HDR':
-            s['search results'] = s.get('hana3d hdr search')
-            s['search results orig'] = s.get('hana3d hdr search orig')
+            wm['search results'] = wm.get('hana3d hdr search')
+            wm['search results orig'] = wm.get('hana3d hdr search orig')
         search.load_previews()
 
     def switch_active_asset_type(self, context):
@@ -291,7 +291,7 @@ def workspace_items(self, context):
 def search_update(self, context):
     utils.p('search updater')
     # if self.search_keywords != '':
-    ui_props = bpy.context.scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
 
@@ -1030,34 +1030,34 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.Scene.Hana3DUI = PointerProperty(type=Hana3DUIProps)
-    bpy.types.Scene.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
+    bpy.types.WindowManager.Hana3DUI = PointerProperty(type=Hana3DUIProps)
+    bpy.types.WindowManager.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
 
     # MODELS
-    bpy.types.Scene.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
+    bpy.types.WindowManager.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
     bpy.types.Object.hana3d = PointerProperty(type=Hana3DModelUploadProps)
 
     # SCENES
-    bpy.types.Scene.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
+    bpy.types.WindowManager.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
     bpy.types.Scene.hana3d = PointerProperty(type=Hana3DSceneUploadProps)
 
     # MATERIALS
-    bpy.types.Scene.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
+    bpy.types.WindowManager.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
     bpy.types.Material.hana3d = PointerProperty(type=Hana3DMaterialUploadProps)
 
 
 def unregister():
     del bpy.types.Material.hana3d
-    del bpy.types.Scene.hana3d_mat
+    del bpy.types.WindowManager.hana3d_mat
 
     del bpy.types.Scene.hana3d
-    del bpy.types.Scene.hana3d_scene
+    del bpy.types.WindowManager.hana3d_scene
 
     del bpy.types.Object.hana3d
-    del bpy.types.Scene.hana3d_models
+    del bpy.types.WindowManager.hana3d_models
 
-    del bpy.types.Scene.Hana3DRender
-    del bpy.types.Scene.Hana3DUI
+    del bpy.types.WindowManager.Hana3DRender
+    del bpy.types.WindowManager.Hana3DUI
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
