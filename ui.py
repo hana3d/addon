@@ -662,8 +662,11 @@ def draw_callback_2d_search(self, context):
                 ui_props.drawoffset = 0
 
             if ui_props.wcount * ui_props.hcount < len(search_results):
-                pagination_text = f'{ui_props.scrolloffset} ({ui_props.wcount}) {wm["search results orig"]["count"]} results'
-                ui_bgl.draw_text(pagination_text, 1000, 600, 16)
+                page_start = ui_props.scrolloffset + 1
+                page_end = ui_props.scrolloffset + ui_props.wcount
+                pagination_text = f'{page_start} - {page_end} of {wm["search results orig"]["count"]}'
+                ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
+                                 - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
                 # arrows
                 arrow_y = (
                     ui_props.bar_y
