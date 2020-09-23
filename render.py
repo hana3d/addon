@@ -171,6 +171,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
         self.cancelled = False
 
     def run(self):
+        # Re-set upload props inside thread to avoid threading errors
+        self.props = utils.get_upload_props()
         self.props.rendering = True
         try:
             render_scene_id, upload_url = self._create_render_view()
@@ -536,6 +538,8 @@ class UploadThread(UploadFileMixin, threading.Thread):
         self.log_state_name = 'upload_render_state'
 
     def run(self):
+        # Re-set upload props inside thread to avoid threading errors
+        self.props = utils.get_upload_props()
         self.props.uploading_render = True
         try:
             img_name = self.props.active_image
