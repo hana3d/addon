@@ -103,8 +103,10 @@ def check_timers_timer():
         bpy.app.timers.register(tasks_queue.queue_worker)
     if not bpy.app.timers.is_registered(bg_blender.bg_update):
         bpy.app.timers.register(bg_blender.bg_update)
-    if not bpy.app.timers.is_registered(render.threads_timer):
-        bpy.app.timers.register(render.threads_timer)
+    if not bpy.app.timers.is_registered(render.threads_cleanup):
+        bpy.app.timers.register(render.threads_cleanup)
+    if not bpy.app.timers.is_registered(render.threads_state_update):
+        bpy.app.timers.register(render.threads_state_update)
     return 5.0
 
 
