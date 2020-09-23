@@ -23,6 +23,7 @@ from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
 from . import (
+    async_loop,
     addon_updater_ops,
     append_link,
     autothumb,
@@ -281,6 +282,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 
 modules = (
+    async_loop,
     types,
     tags,
     libraries,
