@@ -394,7 +394,6 @@ class UploadOperator(Operator):
 
         if props.remote_thumbnail:
             thread = render.RenderThread(
-                props,
                 engine='CYCLES',
                 frame_start=1,
                 frame_end=1,

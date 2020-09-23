@@ -139,20 +139,19 @@ class _read_in_chunks:
 class RenderThread(UploadFileMixin, threading.Thread):
     def __init__(
             self,
-            props,
             engine: str,
             frame_start: int,
             frame_end: int,
             is_thumbnail: bool = False):
         super().__init__(daemon=True)
-        self.props = props
+        props = utils.get_upload_props()
         self.engine = engine
         self.frame_start = frame_start
         self.frame_end = frame_end
         self.is_thumbnail = is_thumbnail
 
         if is_thumbnail:
-            self.render_job_name = 'thumbnail_' + self.props.name
+            self.render_job_name = 'thumbnail_' + props.name
             self.log_state_name = 'thumbnail_generating_state'
             self.add_report = False
         else:
@@ -168,6 +167,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         self.cancelled = False
 
     def run(self):
+        self.props = utils.get_upload_props()  # Re-set upload props to avoid threading errors
         self._set_running_flag(True)
         try:
             if self.is_thumbnail:
@@ -223,17 +223,17 @@ class RenderThread(UploadFileMixin, threading.Thread):
             if self.props.asset_type == 'MODEL':
                 thumbnailer = autothumb.generate_model_thumbnail
             elif self.props.asset_type == 'MATERIAL':
-                thumbnailer = bpy.ops.material.hana3d_thumbnail
+                thumbnailer = autothumb.generate_material_thumbnail
             elif self.props.asset_type == 'SCENE':
-                thumbnailer = bpy.ops.scene.hana3d_thumbnail
+                thumbnailer = autothumb.generate_scene_thumbnail
             else:
                 raise TypeError(f'Unexpected asset_type={self.props.asset_type}')
 
             self.props.is_generating_thumbnail = True
             thumbnailer(
+                props=self.props,
                 save_only=True,
                 blend_filepath=self.filepath,
-                view_id=self.props.view_id
             )
 
             # thumbnailer may run asynchronously, so we have to wait for it to finish
@@ -430,7 +430,7 @@ class RenderScene(Operator):
             frame_start = context.scene.frame_start
             frame_end = context.scene.frame_end
 
-        thread = RenderThread(props, render_props.engine, frame_start, frame_end)
+        thread = RenderThread(render_props.engine, frame_start, frame_end)
         thread.start()
         render_threads.append(thread)
 

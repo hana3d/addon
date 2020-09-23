@@ -20,6 +20,7 @@ import json
 import os
 import sys
 import threading
+import time
 import uuid
 from typing import List, Tuple
 
@@ -77,7 +78,6 @@ def get_active_model(context=None, view_id=None):
         for ob in context.blend_data.objects
         if ob.hana3d.view_id == view_id
     ]
-    assert len(models) == 1
     return models[0]
 
 
@@ -792,3 +792,16 @@ def append_array_inside_prop(prop: IDPropertyGroup, list_name: str, item: any):
     else:
         prop[list_name] = prop[list_name].__add__([item])
     return prop[list_name]
+
+
+def save_file(filepath, **kwargs):
+    n_tries = 5
+    for n in range(n_tries):
+        try:
+            bpy.ops.wm.save_as_mainfile(filepath=filepath, **kwargs)
+            break
+        except RuntimeError as e:
+            if n == n_tries - 1:
+                raise e
+            print(f'Error when saving file ({e}), retrying...')
+            time.sleep(1)
