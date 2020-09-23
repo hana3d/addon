@@ -172,6 +172,16 @@ def comma2array(text):
     return ar
 
 
+def get_global_name(asset_type, asset_name):
+    if asset_type.upper() == 'MODEL':
+        return f'bpy.data.objects["{asset_name}"]'
+    if asset_type.upper() == 'MATERIAL':
+        return f'bpy.data.materials["{asset_name}"]'
+    if asset_type.upper() == 'SCENE':
+        return f'bpy.data.scenes["{asset_name}"]'
+    raise ValueError(f'Unexpected asset type {asset_type}')
+
+
 def get_export_data(
         asset_type: str,
         path_computing: str = 'uploading',
