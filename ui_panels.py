@@ -202,10 +202,10 @@ def draw_panel_common_search(layout, context):
     layout.prop(props, 'workspace', expand=False, text='Workspace')
     layout.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
     draw_selected_libraries(layout, props, "object.hana3d_remove_library_search")
-    layout.prop(props, "public_only")
-    label_multiline(layout, text=props.report)
     layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
     draw_selected_tags(layout, props, "object.hana3d_remove_tag_search")
+    layout.prop(props, "public_only")
+    label_multiline(layout, text=props.report)
 
     if asset_type == 'MODEL':
         layout.separator()
