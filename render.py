@@ -17,7 +17,6 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import os
-import queue
 import shutil
 import tempfile
 import threading
@@ -35,9 +34,8 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from hana3d import autothumb, colors, paths, rerequests, ui, utils
+from hana3d import autothumb, colors, paths, rerequests, ui, utils, thread_tools
 
-state_update_queue = queue.Queue()
 render_threads = []
 upload_threads = []
 
@@ -67,28 +65,6 @@ def threads_cleanup():
     return 2
 
 
-def threads_state_update():
-    """Updates properties in main thread"""
-    while not state_update_queue.empty():
-        cmd = state_update_queue.get()
-        try:
-            exec(cmd)
-            state_update_queue.task_done()
-        except Exception as e:
-            print(f'Failed to execute command {cmd!r} ({e})')
-    return 0.02
-
-
-def update_in_foreground(
-        global_object_name: str,
-        property_name: str,
-        value,
-        operation: str = '='):
-    """Update blender objects in foreground to avoid threading errors"""
-    cmd = f'{global_object_name}.hana3d.{property_name} {operation} {value!r}'
-    state_update_queue.put(cmd)
-
-
 class UploadFileMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -108,16 +84,18 @@ class UploadFileMixin:
         self.finished = False
 
     def update_state(self, property_name, value, operation: str = '='):
-        global_name = utils.get_global_name(self.asset_type, self.asset_name)
-        update_in_foreground(global_name, property_name, value, operation)
+        thread_tools.update_in_foreground(
+            self.asset_type,
+            self.asset_name,
+            property_name,
+            value,
+            operation
+        )
         if hasattr(self, property_name):
             setattr(self, property_name, value)
 
     def get_state(self, property_name: str):
-        global_name = utils.get_global_name(self.asset_type, self.asset_name)
-        value = None
-        exec(f'value = {global_name}.hana3d.{property_name}')
-        return value
+        return thread_tools.get_state(self.asset_type, self.asset_name, property_name)
 
     def log(self, text: str, error: bool = False):
         self.update_state('render_state', text)
@@ -252,7 +230,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self._set_running_flag(False)
             time.sleep(5)
             self.update_state(self.log_state_name, '')
-            search.get_profile()
+            utils.update_profile()
 
     def _set_running_flag(self, flag: bool):
         if self.is_thumbnail:
@@ -439,7 +417,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         with open(file_path, 'wb') as f:
             f.write(response.content)
 
-        self.set_value('thumbnail', file_path)
+        self.update_state('thumbnail', file_path)
 
 
 class RenderScene(Operator):
@@ -504,7 +482,7 @@ class CancelJob(Operator):
             if thread.props.view_id == self.view_id
         ]
         thread_job.cancelled = True
-        thread_job.set_value('rendering', False)
+        thread_job.update_state('rendering', False)
 
         return {'FINISHED'}
 
@@ -785,12 +763,10 @@ def register():
         bpy.utils.register_class(cls)
 
     bpy.app.timers.register(threads_cleanup)
-    bpy.app.timers.register(threads_state_update)
 
 
 def unregister():
     bpy.app.timers.unregister(threads_cleanup)
-    bpy.app.timers.unregister(threads_state_update)
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

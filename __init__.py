@@ -36,6 +36,7 @@ from . import (
     search,
     tags,
     tasks_queue,
+    thread_tools,
     types,
     ui,
     ui_panels,
@@ -283,22 +284,22 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 
 modules = (
-    async_loop,
-    types,
-    tags,
-    libraries,
-    search,
-    download,
-    upload,
+    append_link,
     autothumb,
-    ui,
-    icons,
     bg_blender,
-    ui_panels,
+    download,
     hana3d_oauth,
-    tasks_queue,
+    icons,
+    libraries,
     render,
-    append_link
+    search,
+    tags,
+    tasks_queue,
+    thread_tools,
+    types,
+    ui,
+    ui_panels,
+    upload,
 )
 
 
