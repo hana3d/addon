@@ -254,7 +254,7 @@ def set_thumbnail(asset_data, asset):
 
 
 def update_downloaded_progress(downloader: Downloader):
-    sr = bpy.context.scene.get('search results')
+    sr = bpy.context.window_manager.get('search results')
     if sr is None:
         utils.p('search results not found')
         return
@@ -414,14 +414,14 @@ def check_existing(asset_data):
 
 def import_scene(asset_data: dict, file_names: list):
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
-    if bpy.context.scene.hana3d_scene.merge_add == 'ADD':
+    if bpy.context.window_manager.hana3d_scene.merge_add == 'ADD':
         for window in bpy.context.window_manager.windows:
             window.scene = bpy.data.scenes[asset_data['name']]
     return scene
 
 
-def import_model(scene, asset_data: dict, file_names: list, **kwargs):
-    sprops = scene.hana3d_models
+def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
+    sprops = window_manager.hana3d_models
     if sprops.append_method == 'LINK_COLLECTION':
         sprops.append_link = 'LINK'
         sprops.import_as = 'GROUP'
@@ -571,17 +571,17 @@ def append_asset(asset_data: dict, **kwargs):
         raise FileNotFoundError(f'Could not find file for asset {asset_name}')
 
     kwargs['name'] = asset_data['name']
-    scene = bpy.context.scene
+    wm = bpy.context.window_manager
 
     if asset_data['asset_type'] == 'scene':
-        asset = import_scene()
+        asset = import_scene(asset_data, file_names)
     if asset_data['asset_type'] == 'model':
-        asset = import_model(scene, asset_data, file_names, **kwargs)
+        asset = import_model(wm, asset_data, file_names, **kwargs)
     elif asset_data['asset_type'] == 'material':
         asset = import_material(asset_data, file_names, **kwargs)
 
-    scene['assets used'] = scene.get('assets used', {})
-    scene['assets used'][asset_data['view_id']] = asset_data.copy()
+    wm['assets used'] = wm.get('assets used', {})
+    wm['assets used'][asset_data['view_id']] = asset_data.copy()
 
     set_asset_props(asset, asset_data)
     if asset_data['view_id'] in download_threads:
@@ -598,8 +598,8 @@ def append_asset_safe(asset_data: dict, **kwargs):
 def check_asset_in_scene(asset_data):
     '''checks if the asset is already in scene. If yes,
     modifies asset data so the asset can be reached again.'''
-    scene = bpy.context.scene
-    au = scene.get('assets used', {})
+    wm = bpy.context.window_manager
+    au = wm.get('assets used', {})
 
     id = asset_data.get('view_id')
     if id in au.keys():
@@ -721,14 +721,14 @@ class Hana3DDownloadOperator(bpy.types.Operator):
     cast_parent: StringProperty(name="Particles Target Object", description="", default="")
 
     def execute(self, context):
-        s = bpy.context.scene
-        sr = s['search results']
+        wm = context.window_manager
+        sr = wm['search results']
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
         asset_data = sr[self.asset_index].to_dict()
-        au = s.get('assets used')
+        au = wm.get('assets used')
         if au is None:
-            s['assets used'] = {}
+            wm['assets used'] = {}
 
         atype = asset_data['asset_type']
         if (
@@ -815,10 +815,10 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     def execute(self, context):
         if self.reset is True:
             self.object_count = 0
-        scene = context.scene
-        if 'search results' not in scene:
+        wm = context.window_manager
+        if 'search results' not in wm:
             return {'CANCELLED'}
-        sr = scene['search results']
+        sr = wm['search results']
 
         for index, result in zip(range(self.batch_size), sr[self.object_count:]):
             asset_data = result.to_dict()

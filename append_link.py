@@ -136,7 +136,7 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
     '''append a scene type asset'''
     context = bpy.context
     scene = context.scene
-    props = scene.hana3d_scene
+    props = context.window_manager.hana3d_scene
 
     if props.merge_add == 'MERGE' and scenename is None:
         with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):

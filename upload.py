@@ -34,9 +34,11 @@ HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
 def get_upload_location(props, context):
-    if props.asset_type == 'MODEL':
+    wm = context.window_manager
+    ui_props = wm.Hana3DUI
+    if ui_props.asset_type == 'MODEL':
         if context.view_layer.objects.active is not None:
-            ob = utils.get_active_model(context)
+            ob = utils.get_active_model()
             return ob.location
     if props.asset_type == 'SCENE':
         return None
@@ -394,6 +396,7 @@ class UploadOperator(Operator):
 
         if props.remote_thumbnail:
             thread = render.RenderThread(
+                props,
                 engine='CYCLES',
                 frame_start=1,
                 frame_end=1,
