@@ -26,7 +26,7 @@ if 'bpy' in locals():
     ui = reload(ui)
     utils = reload(utils)
 else:
-    from hana3d import autothumb, bg_blender, paths, rerequests, ui, utils
+    from hana3d import bg_blender, paths, rerequests, ui, utils
 
 import json
 import os
@@ -110,8 +110,8 @@ def verification_status_change_thread(asset_id, state):
 
 
 def get_upload_location(props):
-    scene = bpy.context.scene
-    ui_props = scene.Hana3DUI
+    wm = bpy.context.window_manager
+    ui_props = wm.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = utils.get_active_model()
@@ -137,7 +137,6 @@ def start_upload(self, context, props, asset_type, reupload, upload_set, correla
     props.upload_state = 'preparing upload'
 
     # do this for fixing long tags in some upload cases
-    props.tags = props.tags[:]
     if 'jobs' not in props.render_data:
         props.render_data['jobs'] = []
 
@@ -397,8 +396,8 @@ class AssetVerificationStatusChange(Operator):
 
     def execute(self, context):
         # update status in search results for validator's clarity
-        sr = bpy.context.scene['search results']
-        sro = bpy.context.scene['search results orig']['results']
+        sr = bpy.context.window_manager['search results']
+        sro = bpy.context.window_manager['search results orig']['results']
 
         for r in sr:
             if r['id'] == self.asset_id:

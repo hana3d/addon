@@ -58,6 +58,7 @@ def upload_file(upload_data, f, correlation_id):
         'assetId': upload_data['id'],
         'libraries': upload_data['libraries'],
         'tags': upload_data['tags'],
+        'workspace': upload_data['workspace'],
         'fileType': f['type'],
         'fileIndex': f['index'],
         'originalFilename': os.path.basename(f['file_path']),

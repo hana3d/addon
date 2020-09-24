@@ -104,7 +104,7 @@ def get_selected_models():
 
 
 def get_search_props():
-    scene = bpy.context.scene
+    scene = bpy.context.window_manager
     if scene is None:
         return
     uiprops = scene.Hana3DUI
@@ -125,8 +125,7 @@ def get_search_props():
 
 
 def get_active_asset():
-    scene = bpy.context.scene
-    ui_props = scene.Hana3DUI
+    ui_props = bpy.context.window_manager.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model()
@@ -171,6 +170,16 @@ def comma2array(text):
         if s != '':
             ar.append(s)
     return ar
+
+
+def get_global_name(asset_type, asset_name):
+    if asset_type.upper() == 'MODEL':
+        return f'bpy.data.objects["{asset_name}"]'
+    if asset_type.upper() == 'MATERIAL':
+        return f'bpy.data.materials["{asset_name}"]'
+    if asset_type.upper() == 'SCENE':
+        return f'bpy.data.scenes["{asset_name}"]'
+    raise ValueError(f'Unexpected asset type {asset_type}')
 
 
 def get_export_data(
@@ -279,14 +288,15 @@ def get_export_data(
     if metadata:
         upload_data['metadata'] = metadata
 
+    upload_data['tags'] = []
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            upload_data["tags"].append(tag)
+
     upload_data['libraries'] = []
-    if props.libraries == '':
-        upload_data['libraries'].append({
-            'id': props.default_library
-        })
-    else:
-        libraries = comma2array(props.libraries)
-        for library_id in libraries:
+    for library in props.libraries_list.keys():
+        if props.libraries_list[library].selected is True:
+            library_id = props.libraries_list[library].id_
             library = {}
             library.update({
                 'id': library_id
@@ -295,17 +305,12 @@ def get_export_data(
                 custom_props = {}
                 for name in props.custom_props.keys():
                     value = props.custom_props[name]
-                    key = props.custom_props_info[name]['key']
+                    slug = props.custom_props_info[name]['slug']
                     prop_library_id = props.custom_props_info[name]['library_id']
                     if prop_library_id == library_id:
-                        custom_props.update({key: value})
+                        custom_props.update({slug: value})
                 library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
-
-    upload_data['tags'] = []
-    for tag in props.tags_list.keys():
-        if props.tags_list[tag].selected is True:
-            upload_data["tags"].append(tag)
 
     export_data['publish_message'] = props.publish_message
 
@@ -582,8 +587,8 @@ def scale_uvs(ob, scale=1.0, pivot=Vector((0.5, 0.5))):
 
 # map uv cubic and switch of auto tex space and set it to 1,1,1
 def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale=False):
-    s = bpy.context.scene
-    mat_props = s.hana3d_mat
+    wm = bpy.context.window_manager
+    mat_props = wm.hana3d_mat
     if mat_props.automap:
         tob = bpy.data.objects[target_object]
         # only automap mesh models

@@ -96,25 +96,31 @@ def draw_selected_tags(layout, props, operator):
             tag_counter = 0
 
 
+def draw_selected_libraries(layout, props, operator):
+    row = layout.row()
+    row.scale_y = 0.9
+    library_counter = 0
+    for library in props.libraries_list.keys():
+        if props.libraries_list[library].selected is True:
+            op = row.operator(operator, text=library, icon='X')
+            op.library = library
+            library_counter += 1
+        if library_counter == 3:
+            row = layout.row()
+            row.scale_y = 0.9
+            library_counter = 0
+
+
 def draw_panel_common_upload(layout, context):
-    scene = bpy.context.scene
-    uiprops = scene.Hana3DUI
+    uiprops = bpy.context.window_manager.Hana3DUI
     asset_type = uiprops.asset_type
     props = utils.get_upload_props()
 
     box = layout.box()
     box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
     box.prop(props, 'workspace', expand=False, text='Workspace')
-    row = box.row(align=True)
-    col = row.column()
-    col.scale_x = 0.7
-    col.label(text='Libraries:')
-    col = row.column()
-    col.scale_x = 1.24
-    col.operator(
-        "object.hana3d_list_libraries_upload",
-        text=props.libraries_text
-    )
+    box.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    draw_selected_libraries(box, props, "object.hana3d_remove_library_upload")
     for name in props.custom_props.keys():
         box.prop(props.custom_props, f'["{name}"]')
 
@@ -180,8 +186,7 @@ def draw_panel_common_upload(layout, context):
 
 
 def draw_panel_common_search(layout, context):
-    scene = bpy.context.scene
-    uiprops = scene.Hana3DUI
+    uiprops = bpy.context.window_manager.Hana3DUI
     asset_type = uiprops.asset_type
     props = utils.get_search_props()
 
@@ -189,16 +194,8 @@ def draw_panel_common_search(layout, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
     layout.prop(props, 'workspace', expand=False, text='Workspace')
-    row = layout.row(align=True)
-    col = row.column()
-    col.scale_x = 0.7
-    col.label(text='Libraries:')
-    col = row.column()
-    col.scale_x = 1.24
-    col.operator(
-        "object.hana3d_list_libraries_search",
-        text=props.libraries_text
-    )
+    layout.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    draw_selected_libraries(layout, props, "object.hana3d_remove_library_search")
     layout.prop(props, "public_only")
     label_multiline(layout, text=props.report)
     layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
@@ -209,9 +206,10 @@ def draw_panel_common_search(layout, context):
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
         row = layout.row(align=True)
-        op = row.operator("scene.hana3d_batch_download", text='Import preview files')
+        op = row.operator("scene.hana3d_batch_download", text='Import first 20')
         op.reset = True
-        op = row.operator("scene.hana3d_batch_download", text='Import Next 10')
+        batch_size = op.batch_size
+        op = row.operator("scene.hana3d_batch_download", text=f'Import next {batch_size}')
         op.reset = False
     # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge
     #     layout.separator()
@@ -224,8 +222,8 @@ def draw_panel_common_search(layout, context):
 
 
 def draw_assetbar_show_hide(layout, props):
-    s = bpy.context.scene
-    ui_props = s.Hana3DUI
+    wm = bpy.context.window_manager
+    ui_props = wm.Hana3DUI
 
     if ui_props.assetbar_on:
         icon = 'HIDE_OFF'
@@ -294,7 +292,8 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
     def draw(self, context):
         s = context.scene
-        ui_props = s.Hana3DUI
+        wm = context.window_manager
+        ui_props = wm.Hana3DUI
         user_preferences = bpy.context.preferences.addons['hana3d'].preferences
         layout = self.layout
 
@@ -375,19 +374,12 @@ class VIEW3D_PT_hana3d_downloads(Panel):
 
     def draw(self, context):
         layout = self.layout
-        for threaddata in download.download_threads:
-            tcom = threaddata[2]
-            asset_data = threaddata[1]
+        for view_id, thread in download.download_threads.items():
             row = layout.row()
-            row.label(text=asset_data['name'])
-            row.label(text=str(int(tcom.progress)) + ' %')
-            row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
-            if tcom.passargs.get('retry_counter', 0) > 0:
-                row = layout.row()
-                row.label(text='failed. retrying ... ', icon='ERROR')
-                row.label(text=str(tcom.passargs["retry_counter"]))
-
-                layout.separator()
+            row.label(text=thread.asset_data['name'])
+            row.label(text=str(int(thread.tcom.progress)) + ' %')
+            op = row.operator('scene.hana3d_download_kill', text='', icon='CANCEL')
+            op.view_id = view_id
 
 
 def header_search_draw(self, context):
@@ -396,17 +388,17 @@ def header_search_draw(self, context):
     if not utils.guard_from_crash():
         return
 
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = context.preferences.addons['hana3d'].preferences
     if preferences.search_in_header:
         layout = self.layout
-        s = bpy.context.scene
-        ui_props = s.Hana3DUI
+        wm = context.window_manager
+        ui_props = wm.Hana3DUI
         if ui_props.asset_type == 'MODEL':
-            props = s.hana3d_models
+            props = wm.hana3d_models
         if ui_props.asset_type == 'MATERIAL':
-            props = s.hana3d_mat
+            props = wm.hana3d_mat
         if ui_props.asset_type == 'SCENE':
-            props = s.hana3d_scene
+            props = wm.hana3d_scene
         # if ui_props.asset_type == 'HDR':
         #     props = s.hana3d_hdr
 
@@ -458,9 +450,9 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         return True
 
     def draw(self, context):
-        render_props = context.scene.Hana3DRender
+        render_props = context.window_manager.Hana3DRender
         asset_props = utils.get_upload_props()
-        ui_props = context.scene.Hana3DUI
+        ui_props = context.window_manager.Hana3DUI
 
         self.layout.prop(ui_props, 'asset_type_render', expand=False, text='')
 
