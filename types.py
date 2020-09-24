@@ -369,10 +369,12 @@ class Hana3DCommonSearchProps:
     def update_tags_input(self, context):
         if self.tags_input != '':
             self.tags_list[self.tags_input].selected = True
+            search.search()
 
     def update_libraries_input(self, context):
         if self.libraries_input != '':
             self.libraries_list[self.libraries_input].selected = True
+            search.search()
 
     # STATES
     search_keywords: StringProperty(
