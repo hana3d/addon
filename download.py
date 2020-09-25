@@ -318,9 +318,9 @@ def cleanup_threads():
 
 def execute_append_tasks():
     if append_tasks_queue.empty():
-        return 2.0
-    if any(thread.is_alive() for thread in download_threads.values()):
         return 0.5
+    if any(thread.is_alive() for thread in download_threads.values()):
+        return 0.1
 
     task = append_tasks_queue.get()
     try:
@@ -366,7 +366,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
 
     cleanup_threads()
 
-    return 0.5
+    return 0.1
 
 
 def download(asset_data, **kwargs):
