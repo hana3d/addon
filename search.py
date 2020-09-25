@@ -249,7 +249,7 @@ def timer_update():
                 props.search_error = False
                 props.report = 'Found %i results. ' % (wm['search results orig']['count'])
                 if len(wm['search results']) == 0:
-                    tasks_queue.add_task((ui.add_report, ('No matching results found.',)))
+                    tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 
             else:
                 print('error', error)
@@ -624,7 +624,7 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    tasks_queue.add_task((ui.add_report, ('hana3d searching....', 2)))
+    tasks_queue.add_task(ui.add_report, ('hana3d searching....', 2))
 
     props.report = 'hana3d searching....'
 

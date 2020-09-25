@@ -28,7 +28,7 @@ import bpy
 from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from hana3d import paths, rerequests
+from hana3d import paths, rerequests, tasks_queue
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -223,7 +223,7 @@ def update_profile():
 
 
 def update_profile_async():
-    threading.Thread(target=update_profile, daemon=True).start()
+    tasks_queue.add_task(update_profile)
 
 
 def get_hidden_image(

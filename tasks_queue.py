@@ -47,9 +47,9 @@ class task_object:
         self.only_last = only_last
 
 
-def add_task(task, wait=0, only_last=False):
+def add_task(func, args=(), wait=0, only_last=False):
     q = get_queue()
-    taskob = task_object(task[0], task[1], wait=wait, only_last=only_last)
+    taskob = task_object(func, args, wait=wait, only_last=only_last)
     q.put(taskob)
 
 

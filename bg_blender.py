@@ -153,7 +153,7 @@ def bg_update():
             if 'finished successfully' in tcom.lasttext:
                 bg_processes.remove(p)
                 exec(f'{tcom.eval_path_computing} = False')
-                tasks_queue.add_task((exec, (f'{tcom.eval_path_state} = ""',)), wait=5)
+                tasks_queue.add_task(exec, (f'{tcom.eval_path_state} = ""',), wait=5)
             else:
                 readthread = threading.Thread(target=threadread, args=(tcom,), daemon=True)
                 readthread.start()
