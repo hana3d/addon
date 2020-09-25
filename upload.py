@@ -51,16 +51,6 @@ def get_upload_location(props, context):
     return None
 
 
-def comma2array(text):
-    commasep = text.split(',')
-    ar = []
-    for i, s in enumerate(commasep):
-        s = s.strip()
-        if s != '':
-            ar.append(s)
-    return ar
-
-
 def get_export_data(
         props: types.Props,
         path_computing: str = 'uploading',
