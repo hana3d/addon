@@ -184,7 +184,7 @@ def generate_material_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.materials[asset_name]
+        props = bpy.data.materials[asset_name].hana3d
         update_state = False
     else:
         update_state = True
@@ -338,7 +338,7 @@ def generate_scene_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.scenes[asset_name]
+        props = bpy.data.scenes[asset_name].hana3d
         update_state = False
     else:
         update_state = True
