@@ -68,10 +68,15 @@ def update_state(
 
 
 def get_state(asset_type: str, asset_name: str, property_name: str):
-    global_name = get_global_name(asset_type, asset_name)
-    value = None
-    exec(f'value = {global_name}.hana3d.{property_name}')
-    return value
+    if asset_type.upper() == 'MODEL':
+        asset = bpy.data.objects[asset_name]
+    elif asset_type.upper() == 'MATERIAL':
+        asset = bpy.data.materials[asset_name]
+    elif asset_type.upper() == 'SCENE':
+        asset = bpy.data.scenes[asset_name]
+    else:
+        raise ValueError(f'Unexpected asset type {asset_type}')
+    return getattr(asset.hana3d, property_name)
 
 
 def register():

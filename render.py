@@ -185,7 +185,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             or len(props.render_data['jobs']) == 0
         )
 
-        self.tempdir = tempfile.TemporaryDirectory()
+        self.tempdir = tempfile.mkdtemp()
         self.filepath = os.path.join(self.tempdir, 'export_render.blend')
 
         self.job_progress = 0.0
@@ -218,7 +218,6 @@ class RenderThread(UploadFileMixin, threading.Thread):
             else:
                 jobs_data = self._post_completed_job(render_scene_id, nrf_output)
                 self._import_renders(jobs_data)
-            utils.update_profile_async()
         except Exception as e:
             self.log(f'Error in render job {self.render_job_name}:{e!r}')
             raise e
@@ -240,7 +239,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
 
     def _wait_for_upload_complete(self):
         while self.get_state('uploading'):
-            time.sleep(5)
+            time.sleep(0.1)
         self.update_state('upload_state', '')
 
     def _save_render_scene(self):
