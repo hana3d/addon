@@ -99,6 +99,8 @@ def check_timers_timer():
         bpy.app.timers.register(search.timer_update)
     if not bpy.app.timers.is_registered(download.timer_update):
         bpy.app.timers.register(download.timer_update)
+    if not bpy.app.timers.is_registered(download.execute_append_tasks):
+        bpy.app.timers.register(download.execute_append_tasks)
     if not (bpy.app.timers.is_registered(tasks_queue.queue_worker)):
         bpy.app.timers.register(tasks_queue.queue_worker)
     if not bpy.app.timers.is_registered(bg_blender.bg_update):
