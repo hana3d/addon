@@ -47,7 +47,7 @@ from . import (
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 6, 0),
+    "version": (0, 6, 1),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
     "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
@@ -76,6 +76,8 @@ def check_timers_timer():
         bpy.app.timers.register(search.timer_update)
     if not bpy.app.timers.is_registered(download.timer_update):
         bpy.app.timers.register(download.timer_update)
+    if not bpy.app.timers.is_registered(download.execute_append_tasks):
+        bpy.app.timers.register(download.execute_append_tasks)
     if not bpy.app.timers.is_registered(tasks_queue.queue_worker):
         bpy.app.timers.register(tasks_queue.queue_worker)
     if not bpy.app.timers.is_registered(bg_blender.bg_update):
