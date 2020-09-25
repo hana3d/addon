@@ -22,29 +22,10 @@ import subprocess
 import tempfile
 
 import bpy
-from bpy.props import BoolProperty, StringProperty
 
 from hana3d import bg_blender, colors, paths, ui, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
-
-
-class LocalRenderProperties:
-    save_only: BoolProperty(
-        default=False,
-        description="Save render scene instead of generating final render",
-    )
-
-    blend_filepath: StringProperty(
-        description="Filepath to .blend scene to be rendered when only saving",
-        subtype='FILE_PATH',
-        options={'HIDDEN', 'SKIP_SAVE'},
-    )
-
-    view_id: StringProperty(
-        description="view_id of asset. Overrides current context's active object",
-        default="",
-    )
 
 
 def generate_model_thumbnail(
@@ -154,7 +135,7 @@ def generate_model_thumbnail(
         bpy.ops.file.autopack_toggle()
 
 
-class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
+class GenerateModelThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
 
     bl_idname = "object.hana3d_thumbnail"
@@ -297,7 +278,7 @@ def generate_material_thumbnail(
         mat.hana3d.thumbnail_generating_state = 'Saving .blend file'
 
 
-class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
+class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for materials"""
 
     bl_idname = "material.hana3d_thumbnail"
@@ -328,7 +309,7 @@ class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operato
 
     def execute(self, context):
         try:
-            props = utils.get_active_material(context)
+            props = utils.get_active_material(context).hana3d
             generate_material_thumbnail(props)
         except Exception as e:
             props.is_generating_thumbnail = False
@@ -408,7 +389,7 @@ def generate_scene_thumbnail(
     context.scene.render.resolution_y = y
 
 
-class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
+class GenerateSceneThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for scene"""
 
     bl_idname = "scene.hana3d_thumbnail"

@@ -84,8 +84,6 @@ def queue_worker():
             task.wait -= time_step
             back_to_queue.append(task)
         else:
-            utils.p('as a task:   ')
-            utils.p(task.command, task.arguments)
             try:
                 task.command(*task.arguments)
             except Exception as e:

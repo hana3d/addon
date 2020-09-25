@@ -185,7 +185,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             or len(props.render_data['jobs']) == 0
         )
 
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = tempfile.TemporaryDirectory()
         self.filepath = os.path.join(self.tempdir, 'export_render.blend')
 
         self.job_progress = 0.0
@@ -246,11 +246,11 @@ class RenderThread(UploadFileMixin, threading.Thread):
     def _save_render_scene(self):
         if self.is_thumbnail:
             # Workaround to avoid segmentation fault erros when calling operators within threads
-            if self.asset_type == 'MODEL':
+            if self.asset_type.upper() == 'MODEL':
                 thumbnailer = autothumb.generate_model_thumbnail
-            elif self.asset_type == 'MATERIAL':
+            elif self.asset_type.upper() == 'MATERIAL':
                 thumbnailer = autothumb.generate_material_thumbnail
-            elif self.asset_type == 'SCENE':
+            elif self.asset_type.upper() == 'SCENE':
                 thumbnailer = autothumb.generate_scene_thumbnail
             else:
                 raise TypeError(f'Unexpected asset_type={self.asset_type}')
