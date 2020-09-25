@@ -255,16 +255,16 @@ class RenderThread(UploadFileMixin, threading.Thread):
             else:
                 raise TypeError(f'Unexpected asset_type={self.asset_type}')
 
-            self.set_value('is_generating_thumbnail', True)
+            self.update_state('is_generating_thumbnail', True)
             thumbnailer(
-                props=self.props,
+                asset_name=self.asset_name,
                 save_only=True,
                 blend_filepath=self.filepath,
             )
 
             # thumbnailer may run asynchronously, so we have to wait for it to finish
             while self.get_state('is_generating_thumbnail'):
-                time.sleep(5)
+                time.sleep(0.1)
         else:
             bpy.ops.wm.save_as_mainfile(filepath=self.filepath, compress=True, copy=True)
         self.file_size = os.path.getsize(self.filepath)

@@ -48,13 +48,20 @@ class LocalRenderProperties:
 
 
 def generate_model_thumbnail(
-        props,
+        props=None,
+        asset_name: str = None,
         save_only: bool = False,
         blend_filepath: str = ''):
+    if props is None:
+        props = bpy.data.objects[asset_name].hana3d
+        update_state = False
+    else:
+        update_state = True
     mainmodel = utils.get_active_model()
     assert mainmodel.hana3d.view_id == props.view_id, 'Error when checking for active asset'
-    mainmodel.hana3d.is_generating_thumbnail = True
-    mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
+    if update_state:
+        mainmodel.hana3d.is_generating_thumbnail = True
+        mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -91,17 +98,16 @@ def generate_model_thumbnail(
     for ob in obs:
         obnames.append(ob.name)
     with open(datafile, 'w') as s:
-        hana3d = mainmodel.hana3d
         json.dump(
             {
                 "type": "model",
                 "models": str(obnames),
-                "thumbnail_angle": hana3d.thumbnail_angle,
-                "thumbnail_snap_to": hana3d.thumbnail_snap_to,
-                "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
-                "thumbnail_resolution": hana3d.thumbnail_resolution,
-                "thumbnail_samples": hana3d.thumbnail_samples,
-                "thumbnail_denoising": hana3d.thumbnail_denoising,
+                "thumbnail_angle": props.thumbnail_angle,
+                "thumbnail_snap_to": props.thumbnail_snap_to,
+                "thumbnail_background_lightness": props.thumbnail_background_lightness,
+                "thumbnail_resolution": props.thumbnail_resolution,
+                "thumbnail_samples": props.thumbnail_samples,
+                "thumbnail_denoising": props.thumbnail_denoising,
                 "save_only": save_only,
                 "blend_filepath": blend_filepath,
             },
@@ -139,9 +145,10 @@ def generate_model_thumbnail(
         process=proc,
     )
 
-    if not save_only:
+    if not save_only and update_state:
         mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
-    mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
+    if update_state:
+        mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
 
     if autopack is True:
         bpy.ops.file.autopack_toggle()
@@ -176,7 +183,7 @@ class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
 
     def execute(self, context):
         try:
-            props = utils.get_active_model(context)
+            props = utils.get_active_model(context).hana3d
             generate_model_thumbnail(props, self.save_only, self.blend_filepath)
         except Exception as e:
             props.is_generating_thumbnail = False
@@ -191,13 +198,20 @@ class GenerateModelThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
 
 
 def generate_material_thumbnail(
-        props,
+        props=None,
+        asset_name: str = None,
         save_only: bool = False,
         blend_filepath: str = ''):
+    if props is None:
+        props = bpy.data.materials[asset_name]
+        update_state = False
+    else:
+        update_state = True
     mat = utils.get_active_material()
     assert mat.hana3d.view_id == props.view_id, 'Error when checking active material'
-    mat.hana3d.is_generating_thumbnail = True
-    mat.hana3d.thumbnail_generating_state = 'starting blender instance'
+    if update_state:
+        mat.hana3d.is_generating_thumbnail = True
+        mat.hana3d.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -226,20 +240,19 @@ def generate_material_thumbnail(
     bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
 
     with open(datafile, 'w') as s:
-        hana3d = mat.hana3d
         json.dump(
             {
                 "type": "material",
                 "material": mat.name,
-                "thumbnail_type": hana3d.thumbnail_generator_type,
-                "thumbnail_scale": hana3d.thumbnail_scale,
-                "thumbnail_background": hana3d.thumbnail_background,
-                "thumbnail_background_lightness": hana3d.thumbnail_background_lightness,
-                "thumbnail_resolution": hana3d.thumbnail_resolution,
-                "thumbnail_samples": hana3d.thumbnail_samples,
-                "thumbnail_denoising": hana3d.thumbnail_denoising,
-                "adaptive_subdivision": hana3d.adaptive_subdivision,
-                "texture_size_meters": hana3d.texture_size_meters,
+                "thumbnail_type": props.thumbnail_generator_type,
+                "thumbnail_scale": props.thumbnail_scale,
+                "thumbnail_background": props.thumbnail_background,
+                "thumbnail_background_lightness": props.thumbnail_background_lightness,
+                "thumbnail_resolution": props.thumbnail_resolution,
+                "thumbnail_samples": props.thumbnail_samples,
+                "thumbnail_denoising": props.thumbnail_denoising,
+                "adaptive_subdivision": props.adaptive_subdivision,
+                "texture_size_meters": props.texture_size_meters,
                 "save_only": save_only,
                 "blend_filepath": blend_filepath,
             },
@@ -278,9 +291,10 @@ def generate_material_thumbnail(
         process=proc,
     )
 
-    if not save_only:
+    if not save_only and update_state:
         mat.hana3d.thumbnail = rel_thumb_path + '.png'
-    mat.hana3d.thumbnail_generating_state = 'Saving .blend file'
+    if update_state:
+        mat.hana3d.thumbnail_generating_state = 'Saving .blend file'
 
 
 class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
@@ -299,8 +313,7 @@ class GenerateMaterialThumbnailOperator(LocalRenderProperties, bpy.types.Operato
 
     def draw(self, context):
         layout = self.layout
-        active_object = utils.get_active_model(context)
-        props = active_object.active_material.hana3d
+        props = utils.get_active_material(context).hana3d
         layout.prop(props, 'thumbnail_generator_type')
         layout.prop(props, 'thumbnail_scale')
         layout.prop(props, 'thumbnail_background')
@@ -333,18 +346,25 @@ def get_active_scene(context=None, view_id: str = None):
     context = context or bpy.context
     if view_id is None:
         return context.scene
-    scenes = [s for s in context.blend_data.scenes if s.view_id == self.view_id]
+    scenes = [s for s in context.blend_data.scenes if s.view_id == view_id]
 
     return scenes[0]
 
 
 def generate_scene_thumbnail(
-        props,
+        props=None,
+        asset_name: str = None,
         save_only: bool = False,
         blend_filepath: str = ''):
+    if props is None:
+        props = bpy.data.scenes[asset_name]
+        update_state = False
+    else:
+        update_state = True
     context = bpy.context
-    props.is_generating_thumbnail = True
-    props.thumbnail_generating_state = 'starting blender instance'
+    if update_state:
+        props.is_generating_thumbnail = True
+        props.thumbnail_generating_state = 'starting blender instance'
 
     basename, ext = os.path.splitext(bpy.data.filepath)
     if not basename:
@@ -410,7 +430,7 @@ class GenerateSceneThumbnailOperator(LocalRenderProperties, bpy.types.Operator):
 
     def execute(self, context):
         try:
-            props = get_active_scene(context)
+            props = get_active_scene(context).hana3d
             generate_scene_thumbnail(props)
         except Exception as e:
             self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
