@@ -185,7 +185,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             or len(props.render_data['jobs']) == 0
         )
 
-        self.tempdir = tempfile.TemporaryDirectory()
+        self.tempdir = tempfile.mkdtemp()
         self.filepath = os.path.join(self.tempdir, 'export_render.blend')
 
         self.job_progress = 0.0
