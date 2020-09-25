@@ -57,6 +57,7 @@ def get_export_data(
         path_state: str = 'upload_state'):
     export_data = {
         "type": props.asset_type,
+        "thumbnail_path": bpy.path.abspath(props.thumbnail),
     }
     upload_params = {}
     if props.asset_type.upper() == 'MODEL':
@@ -69,7 +70,6 @@ def get_export_data(
             obnames.append(ob.name)
         export_data["type"] = 'MODEL'
         export_data["models"] = obnames
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
         eval_path = f"bpy.data.objects['{mainmodel.name}']"
 
@@ -97,7 +97,6 @@ def get_export_data(
 
         export_data["type"] = 'SCENE'
         export_data["scene"] = name
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
         eval_path = f"bpy.data.scenes['{name}']"
 
@@ -116,7 +115,6 @@ def get_export_data(
 
         export_data["type"] = 'MATERIAL'
         export_data["material"] = str(mat.name)
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
         eval_path = f"bpy.data.materials['{mat.name}']"
 
