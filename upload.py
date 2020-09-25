@@ -69,7 +69,7 @@ def get_export_data(
         "type": props.asset_type,
     }
     upload_params = {}
-    if props.asset_type == 'MODEL':
+    if props.asset_type.upper() == 'MODEL':
         # Prepare to save the file
         mainmodel = utils.get_active_model(bpy.context)
 
@@ -77,6 +77,7 @@ def get_export_data(
         obnames = []
         for ob in obs:
             obnames.append(ob.name)
+        export_data["type"] = 'MODEL'
         export_data["models"] = obnames
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
@@ -100,10 +101,11 @@ def get_export_data(
             "objectCount": props.object_count,
         }
 
-    elif props.asset_type == 'SCENE':
+    elif props.asset_type.upper() == 'SCENE':
         # Prepare to save the file
         name = bpy.context.scene.name
 
+        export_data["type"] = 'SCENE'
         export_data["scene"] = name
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
@@ -119,9 +121,10 @@ def get_export_data(
             # "objectCount": 1,  # props.object_count,
         }
 
-    elif props.asset_type == 'MATERIAL':
+    elif props.asset_type.upper() == 'MATERIAL':
         mat = bpy.context.active_object.active_material
 
+        export_data["type"] = 'MATERIAL'
         export_data["material"] = str(mat.name)
         export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
 
@@ -229,7 +232,8 @@ class UploadOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return bpy.context.view_layer.objects.active is not None
+        props = utils.get_upload_props()
+        return bpy.context.view_layer.objects.active is not None and not props.uploading
 
     def execute(self, context):
         obj = utils.get_active_asset()

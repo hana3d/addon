@@ -164,7 +164,7 @@ if __name__ == "__main__":
                     g.objects.link(o)
                 bpy.context.scene.collection.children.link(g)
                 fix_objects_origin(allobs, g)
-            if export_data['type'] == 'SCENE':
+            elif export_data['type'] == 'SCENE':
                 sname = export_data['scene']
                 main_source = append_link.append_scene(
                     file_name=data['source_filepath'],
