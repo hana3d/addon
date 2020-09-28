@@ -16,16 +16,11 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    utils = reload(utils)
-else:
-    from hana3d import utils
-
 import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
+
+from hana3d import utils
 
 
 class Hana3DAddTag(Operator):

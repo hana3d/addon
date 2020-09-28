@@ -16,17 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    bg_blender = reload(bg_blender)
-    paths = reload(paths)
-    rerequests = reload(rerequests)
-    utils = reload(utils)
-else:
-    from hana3d import append_link, bg_blender, paths, rerequests, utils
-
 import json
 import logging
 import os
@@ -35,6 +24,8 @@ import time
 
 import bpy
 import requests
+
+from hana3d import append_link, bg_blender, paths, rerequests, utils
 
 HANA3D_EXPORT_DATA = sys.argv[-1]
 
@@ -45,10 +36,6 @@ def start_logging():
     requests_log = logging.getLogger("requests.packages.urllib3")
     requests_log.setLevel(logging.DEBUG)
     requests_log.propagate = True
-
-
-def print_gap():
-    print('\n\n\n\n')
 
 
 def upload_file(upload_data, f, correlation_id):
@@ -177,7 +164,7 @@ if __name__ == "__main__":
                     g.objects.link(o)
                 bpy.context.scene.collection.children.link(g)
                 fix_objects_origin(allobs, g)
-            if export_data['type'] == 'SCENE':
+            elif export_data['type'] == 'SCENE':
                 sname = export_data['scene']
                 main_source = append_link.append_scene(
                     file_name=data['source_filepath'],

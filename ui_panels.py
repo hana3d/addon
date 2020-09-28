@@ -16,17 +16,10 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    download = reload(download)
-    utils = reload(utils)
-else:
-    from hana3d import download, utils
-
 import bpy
 from bpy.types import Panel
 
+from hana3d import download, utils
 
 from . import addon_updater_ops
 
@@ -134,17 +127,18 @@ def draw_panel_common_upload(layout, context):
     prop_needed(row, props, 'thumbnail', props.has_thumbnail, False)
     if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
         if asset_type == 'MODEL':
-            row.operator('object.hana3d_generate_thumbnail', text='', icon='IMAGE_DATA')
+            row.operator('object.hana3d_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'SCENE':
-            row.operator('object.hana3d_scene_thumbnail', text='', icon='IMAGE_DATA')
+            row.operator('object.hana3d_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'MATERIAL':
-            row.operator('object.hana3d_material_thumbnail', text='', icon='IMAGE_DATA')
-    if props.is_generating_thumbnail:
-        row = box.row(align=True)
+            row.operator('material.hana3d_thumbnail', text='', icon='IMAGE_DATA')
+    if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
+        row = box.row()
         row.label(text=props.thumbnail_generating_state)
-        op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
-        op.process_source = asset_type
-        op.process_type = 'THUMBNAILER'
+        if props.is_generating_thumbnail:
+            op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
+            op.process_source = asset_type
+            op.process_type = 'THUMBNAILER'
     box.prop(props, 'description')
     box.prop(props, 'is_public')
 

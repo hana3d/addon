@@ -16,17 +16,12 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    utils = reload(utils)
-else:
-    from hana3d import utils
-
 import queue
 
 import bpy
 from bpy.app.handlers import persistent
+
+from hana3d import utils
 
 
 @persistent
@@ -52,9 +47,9 @@ class task_object:
         self.only_last = only_last
 
 
-def add_task(task, wait=0, only_last=False):
+def add_task(func, args=(), wait=0, only_last=False):
     q = get_queue()
-    taskob = task_object(task[0], task[1], wait=wait, only_last=only_last)
+    taskob = task_object(func, args, wait=wait, only_last=only_last)
     q.put(taskob)
 
 
@@ -83,15 +78,12 @@ def queue_worker():
     # second round, execute or put back waiting tasks.
     back_to_queue = []
     while not q.empty():
-        # print('window manager', bpy.context.window_manager)
         task = q.get()
 
         if task.wait > 0:
             task.wait -= time_step
             back_to_queue.append(task)
         else:
-            utils.p('as a task:   ')
-            utils.p(task.command, task.arguments)
             try:
                 task.command(*task.arguments)
             except Exception as e:

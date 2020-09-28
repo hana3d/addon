@@ -16,23 +16,18 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    paths = reload(paths)
-    version_checker = reload(version_checker)
-else:
-    from hana3d import paths, version_checker
-
 import json
 import os
 import sys
+import time
 import uuid
 from typing import List, Tuple
 
 import bpy
 from idprop.types import IDPropertyGroup
 from mathutils import Vector
+
+from hana3d import paths, rerequests, tasks_queue
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -68,13 +63,26 @@ def selection_set(sel):
         ob.select_set(True)
 
 
-def get_active_model():
-    if bpy.context.view_layer.objects.active is not None:
-        ob = bpy.context.view_layer.objects.active
+def get_active_model(context=None, view_id=None):
+    context = context or bpy.context
+    if not view_id:
+        if context.view_layer.objects.active is None:
+            return
+        ob = context.view_layer.objects.active
         while ob.parent is not None:
             ob = ob.parent
         return ob
-    return None
+    models = [
+        ob
+        for ob in context.blend_data.objects
+        if ob.hana3d.view_id == view_id
+    ]
+    return models[0]
+
+
+def get_active_material(context=None, view_id=None):
+    active_object = get_active_model(context, view_id)
+    return active_object.active_material
 
 
 def get_selected_models():
@@ -128,7 +136,7 @@ def get_active_asset():
     ui_props = bpy.context.window_manager.Hana3DUI
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
-            ob = get_active_model()
+            ob = get_active_model(bpy.context)
             return ob
     if ui_props.asset_type == 'SCENE':
         return bpy.context.scene
@@ -147,174 +155,6 @@ def get_upload_props():
     if active_asset is None:
         return None
     return active_asset.hana3d
-
-
-def get_app_version():
-    ver = bpy.app.version
-    return '%i.%i.%i' % (ver[0], ver[1], ver[2])
-
-
-def add_version(data):
-    app_version = get_app_version()
-    addon_version = version_checker.get_addon_version()
-    data["sourceAppName"] = "blender"
-    data["sourceAppVersion"] = app_version
-    data["addonVersion"] = addon_version
-
-
-def comma2array(text):
-    commasep = text.split(',')
-    ar = []
-    for i, s in enumerate(commasep):
-        s = s.strip()
-        if s != '':
-            ar.append(s)
-    return ar
-
-
-def get_global_name(asset_type, asset_name):
-    if asset_type.upper() == 'MODEL':
-        return f'bpy.data.objects["{asset_name}"]'
-    if asset_type.upper() == 'MATERIAL':
-        return f'bpy.data.materials["{asset_name}"]'
-    if asset_type.upper() == 'SCENE':
-        return f'bpy.data.scenes["{asset_name}"]'
-    raise ValueError(f'Unexpected asset type {asset_type}')
-
-
-def get_export_data(
-        asset_type: str,
-        path_computing: str = 'uploading',
-        path_state: str = 'upload_state'):
-    export_data = {
-        "type": asset_type,
-    }
-    upload_params = {}
-    if asset_type == 'MODEL':
-        # Prepare to save the file
-        mainmodel = get_active_model()
-
-        props = mainmodel.hana3d
-
-        obs = get_hierarchy(mainmodel)
-        obnames = []
-        for ob in obs:
-            obnames.append(ob.name)
-        export_data["models"] = obnames
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path = f"bpy.data.objects['{mainmodel.name}']"
-
-        upload_data = {
-            "assetType": 'model',
-        }
-        upload_params = {
-            "dimensionX": round(props.dimensions[0], 4),
-            "dimensionY": round(props.dimensions[1], 4),
-            "dimensionZ": round(props.dimensions[2], 4),
-            "boundBoxMinX": round(props.bbox_min[0], 4),
-            "boundBoxMinY": round(props.bbox_min[1], 4),
-            "boundBoxMinZ": round(props.bbox_min[2], 4),
-            "boundBoxMaxX": round(props.bbox_max[0], 4),
-            "boundBoxMaxY": round(props.bbox_max[1], 4),
-            "boundBoxMaxZ": round(props.bbox_max[2], 4),
-            "faceCount": props.face_count,
-            "faceCountRender": props.face_count_render,
-            "objectCount": props.object_count,
-            "manufacturer": props.manufacturer,
-            "designer": props.designer,
-        }
-
-    elif asset_type == 'SCENE':
-        # Prepare to save the file
-        s = bpy.context.scene
-
-        props = s.hana3d
-
-        export_data["scene"] = s.name
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path = f"bpy.data.scenes['{s.name}']"
-
-        upload_data = {
-            "assetType": 'scene',
-        }
-        upload_params = {
-            # TODO add values
-            # "faceCount": 1,  # props.face_count,
-            # "faceCountRender": 1,  # props.face_count_render,
-            # "objectCount": 1,  # props.object_count,
-        }
-
-    elif asset_type == 'MATERIAL':
-        mat = bpy.context.active_object.active_material
-        props = mat.hana3d
-
-        # props.name = mat.name
-
-        export_data["material"] = str(mat.name)
-        export_data["thumbnail_path"] = bpy.path.abspath(props.thumbnail)
-
-        eval_path = f"bpy.data.materials['{mat.name}']"
-
-        upload_data = {
-            "assetType": 'material',
-        }
-
-        upload_params = {}
-    else:
-        raise Exception(f'Unexpected asset_type={asset_type}')
-
-    bg_process_params = {
-        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
-        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
-        'eval_path': eval_path,
-    }
-
-    add_version(upload_data)
-
-    upload_data["name"] = props.name
-    upload_data["description"] = props.description
-
-    upload_data['parameters'] = upload_params
-
-    upload_data["is_public"] = props.is_public
-    if props.workspace != '' and not props.is_public:
-        upload_data['workspace'] = props.workspace
-
-    metadata = {}
-    if hasattr(props, 'custom_props'):
-        metadata.update(props.custom_props)
-    if metadata:
-        upload_data['metadata'] = metadata
-
-    upload_data['tags'] = []
-    for tag in props.tags_list.keys():
-        if props.tags_list[tag].selected is True:
-            upload_data["tags"].append(tag)
-
-    upload_data['libraries'] = []
-    for library in props.libraries_list.keys():
-        if props.libraries_list[library].selected is True:
-            library_id = props.libraries_list[library].id_
-            library = {}
-            library.update({
-                'id': library_id
-            })
-            if props.custom_props.keys() != []:
-                custom_props = {}
-                for name in props.custom_props.keys():
-                    value = props.custom_props[name]
-                    slug = props.custom_props_info[name]['slug']
-                    prop_library_id = props.custom_props_info[name]['library_id']
-                    if prop_library_id == library_id:
-                        custom_props.update({slug: value})
-                library.update({'metadata': {'view_props': custom_props}})
-            upload_data['libraries'].append(library)
-
-    export_data['publish_message'] = props.publish_message
-
-    return export_data, upload_data, bg_process_params, props
 
 
 def previmg_name(index, fullsize=False):
@@ -370,35 +210,44 @@ def save_prefs(self, context):
             print(e)
 
 
-def get_hidden_image(tpath, bdata_name, force_reload=False):
-    hidden_name = '.%s' % bdata_name
+def update_profile():
+    p('update_profile')
+    url = paths.get_api_url('me')
+    headers = get_headers(include_id_token=True)
+
+    r = rerequests.get(url, headers=headers)
+    assert r.ok, f'Failed to get profile data: {r.text}'
+
+    bpy.context.window_manager['hana3d profile'] = r.json()
+
+
+def update_profile_async():
+    tasks_queue.add_task(update_profile)
+
+
+def get_hidden_image(
+        thumbnail_path: str,
+        image_name: str,
+        force_reload: bool = False,
+        default_image: str = 'thumbnail_notready.jpg'):
+    if thumbnail_path.startswith('//'):
+        thumbnail_path = bpy.path.abspath(thumbnail_path)
+    if not os.path.exists(thumbnail_path) or thumbnail_path == '':
+        thumbnail_path = paths.get_addon_thumbnail_path(default_image)
+
+    hidden_name = f'.{image_name}'
     img = bpy.data.images.get(hidden_name)
 
-    if tpath.startswith('//'):
-        tpath = bpy.path.abspath(tpath)
-
-    if img is None or (img.filepath != tpath):
-        if tpath.startswith('//'):
-            tpath = bpy.path.abspath(tpath)
-        if not os.path.exists(tpath) or tpath == '':
-            tpath = paths.get_addon_thumbnail_path('thumbnail_notready.jpg')
-
-        if img is None:
-            img = bpy.data.images.load(tpath)
-            img.name = hidden_name
-        else:
-            if img.filepath != tpath:
-                if img.packed_file is not None:
-                    img.unpack(method='USE_ORIGINAL')
-
-                img.filepath = tpath
-                img.reload()
+    if img is None:
+        img = bpy.data.images.load(thumbnail_path)
+        img.name = hidden_name
         img.colorspace_settings.name = 'Linear'
-    elif force_reload:
+    if img.filepath != thumbnail_path or force_reload:
         if img.packed_file is not None:
             img.unpack(method='USE_ORIGINAL')
+
+        img.filepath = thumbnail_path
         img.reload()
-        img.colorspace_settings.name = 'Linear'
     return img
 
 
@@ -866,9 +715,91 @@ def fill_object_metadata(obj: bpy.types.Object):
     props.object_count = len(obs)
 
 
+def split_text(
+        text: str,
+        threshold: int = 40,
+        separators: List[str] = None):
+    """Split text into multiple lines of maximum length of threshold"""
+    assert threshold > 0
+    separators = separators or [' ', ',', '.', ';', ':']
+    text = text.rstrip().replace('\r\n', '\n')
+    lines = []
+
+    while len(text) > threshold:
+        limit = text.find('\n')
+        if limit == 0:
+            lines.append('')
+            text = text[1:]
+            continue
+        if limit == -1:
+            limit = max(text.rfind(sep, 0, threshold) for sep in separators)
+            if limit in (-1, 0):
+                limit = threshold
+        lines.append(text[:limit])
+        text = text[limit:]
+    lines.append(text)
+    return lines
+
+
+def writeblock(text, width=40):
+    dlines = split_text(text, threshold=width)
+    return '\n'.join(dlines) + '\n'
+
+
+def generate_tooltip(
+        name: str,
+        description: str = None,
+        dimensions: Tuple[float, float, float] = None,
+        face_count: int = None,
+        face_count_render: int = None,
+        object_count: int = None,
+) -> str:
+
+    col_w = 40
+
+    t = ''
+    t += writeblock(name, width=col_w) + '\n'
+    if description is not None:
+        t += writeblock(description, width=col_w)
+
+    if dimensions is not None and sum(dimensions) > 0:
+        t += 'size: {:.2f}m, {:.2f}m, {:.2f}m\n'.format(*dimensions)
+
+    if face_count and face_count_render:
+        t += f'face count: {face_count}, render (incl. modifiers): {face_count_render}\n'
+
+    if object_count:
+        t += f'object count: {object_count}\n'
+
+    return t[:-1]
+
+
+def get_addon_version():
+    import hana3d
+    return hana3d.bl_info['version']
+
+
+def get_addon_blender_version():
+    import hana3d
+    return hana3d.bl_info['blender']
+
+
 def append_array_inside_prop(prop: IDPropertyGroup, list_name: str, item: any):
     if len(prop[list_name]) == 0:
         prop[list_name] = [item]
     else:
         prop[list_name] = prop[list_name].__add__([item])
     return prop[list_name]
+
+
+def save_file(filepath, **kwargs):
+    n_tries = 5
+    for n in range(n_tries):
+        try:
+            bpy.ops.wm.save_as_mainfile(filepath=filepath, **kwargs)
+            break
+        except RuntimeError as e:
+            if n == n_tries - 1:
+                raise e
+            print(f'Error when saving file ({e}), retrying...')
+            time.sleep(1)

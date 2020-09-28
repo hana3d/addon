@@ -16,271 +16,166 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    autothumb = reload(autothumb)
-    bg_blender = reload(bg_blender)
-    paths = reload(paths)
-    rerequests = reload(rerequests)
-    ui = reload(ui)
-    utils = reload(utils)
-else:
-    from hana3d import bg_blender, paths, rerequests, ui, utils
-
 import json
 import os
-import re
 import subprocess
 import tempfile
-import threading
 import uuid
+from typing import List
 
 import bpy
 import requests
-from bpy.props import BoolProperty, EnumProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
+
+from hana3d import bg_blender, paths, render, rerequests, types, ui, utils
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
-def write_to_report(props, text):
-    props.report = props.report + text + '\n'
-
-
-def get_missing_data_model(props):
-    props.report = ''
-    props.update_thumbnail()
-
-    if props.name == '':
-        write_to_report(props, 'Set model name')
-    # if props.tags == '':
-    #     write_to_report(props, 'Write at least 3 tags')
-    if not props.has_thumbnail:
-        write_to_report(props, 'Add thumbnail:')
-
-        props.report += props.thumbnail_generating_state + '\n'
-    if not any(props.dimensions):
-        write_to_report(props, 'Run autotags operator or fill in dimensions manually')
-
-
-def get_missing_data_scene(props):
-    props.report = ''
-    props.update_thumbnail()
-
-    if props.name == '':
-        write_to_report(props, 'Set scene name')
-    if not props.has_thumbnail:
-        write_to_report(props, 'Add thumbnail:')
-        props.report += props.thumbnail_generating_state + '\n'
-
-
-def get_missing_data_material(props):
-    props.report = ''
-    props.update_thumbnail()
-    if props.name == '':
-        write_to_report(props, 'Set material name')
-    # if props.tags == '':
-    #     write_to_report(props, 'Write at least 3 tags')
-    if not props.has_thumbnail:
-        write_to_report(props, 'Add thumbnail:')
-        props.report += props.thumbnail_generating_state
-
-
-def sub_to_camel(content):
-    replaced = re.sub(r"_.", lambda m: m.group(0)[1].upper(), content)
-    return replaced
-
-
-def camel_to_sub(content):
-    replaced = re.sub(r"[A-Z]", lambda m: '_' + m.group(0).lower(), content)
-    return replaced
-
-
-def verification_status_change_thread(asset_id, state):
-    upload_data = {"verificationStatus": state}
-    url = paths.get_api_url('assets', asset_id)
-    headers = utils.get_headers()
-    try:
-        rerequests.patch(url, json=upload_data, headers=headers)
-    except requests.exceptions.RequestException as e:
-        print(e)
-        return {'CANCELLED'}
-    return {'FINISHED'}
-
-
-def get_upload_location(props):
-    wm = bpy.context.window_manager
-    ui_props = wm.Hana3DUI
-    if ui_props.asset_type == 'MODEL':
-        if bpy.context.view_layer.objects.active is not None:
+def get_upload_location(props, context):
+    if props.asset_type.upper() == 'MODEL':
+        if context.view_layer.objects.active is not None:
             ob = utils.get_active_model()
             return ob.location
-    if ui_props.asset_type == 'SCENE':
+    elif props.asset_type.upper() == 'SCENE':
         return None
-    elif ui_props.asset_type == 'MATERIAL':
+    elif props.asset_type.upper() == 'MATERIAL':
         if (
-            bpy.context.view_layer.objects.active is not None
-            and bpy.context.active_object.active_material is not None
+            context.view_layer.objects.active is not None
+            and context.active_object.active_material is not None
         ):
-            return bpy.context.active_object.location
+            return context.active_object.location
     return None
 
 
-def start_upload(self, context, props, asset_type, reupload, upload_set, correlation_id):
-    '''start upload process, by processing data'''
+def get_export_data(
+        props: types.Props,
+        path_computing: str = 'uploading',
+        path_state: str = 'upload_state'):
+    export_data = {
+        "type": props.asset_type,
+        "thumbnail_path": bpy.path.abspath(props.thumbnail),
+    }
+    upload_params = {}
+    if props.asset_type.upper() == 'MODEL':
+        # Prepare to save the file
+        mainmodel = utils.get_active_model(bpy.context)
 
-    # fix the name first
-    utils.name_update()
+        obs = utils.get_hierarchy(mainmodel)
+        obnames = []
+        for ob in obs:
+            obnames.append(ob.name)
+        export_data["type"] = 'MODEL'
+        export_data["models"] = obnames
 
-    location = get_upload_location(props)
-    props.upload_state = 'preparing upload'
+        eval_path = f"bpy.data.objects['{mainmodel.name}']"
 
-    # do this for fixing long tags in some upload cases
-    if 'jobs' not in props.render_data:
-        props.render_data['jobs'] = []
+        upload_data = {
+            "assetType": 'model',
+        }
+        upload_params = {
+            "dimensionX": round(props.dimensions[0], 4),
+            "dimensionY": round(props.dimensions[1], 4),
+            "dimensionZ": round(props.dimensions[2], 4),
+            "boundBoxMinX": round(props.bbox_min[0], 4),
+            "boundBoxMinY": round(props.bbox_min[1], 4),
+            "boundBoxMinZ": round(props.bbox_min[2], 4),
+            "boundBoxMaxX": round(props.bbox_max[0], 4),
+            "boundBoxMaxY": round(props.bbox_max[1], 4),
+            "boundBoxMaxZ": round(props.bbox_max[2], 4),
+            "faceCount": props.face_count,
+            "faceCountRender": props.face_count_render,
+            "objectCount": props.object_count,
+        }
 
-    props.name = props.name.strip()
-    # TODO  move this to separate function
-    # check for missing metadata
-    if asset_type == 'MODEL':
-        get_missing_data_model(props)
-    if asset_type == 'SCENE':
-        get_missing_data_scene(props)
-    elif asset_type == 'MATERIAL':
-        get_missing_data_material(props)
+    elif props.asset_type.upper() == 'SCENE':
+        # Prepare to save the file
+        name = bpy.context.scene.name
 
-    if props.report != '':
-        self.report({'ERROR_INVALID_INPUT'}, props.report)
-        return {'CANCELLED'}
+        export_data["type"] = 'SCENE'
+        export_data["scene"] = name
 
-    if not reupload:
-        props.view_id = ''
-        props.id = ''
-    export_data, upload_data, bg_process_params, props = utils.get_export_data(asset_type)
+        eval_path = f"bpy.data.scenes['{name}']"
 
-    # weird array conversion only for upload, not for tooltips.
-    upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
+        upload_data = {
+            "assetType": 'scene',
+        }
+        upload_params = {
+            # TODO add values
+            # "faceCount": 1,  # props.face_count,
+            # "faceCountRender": 1,  # props.face_count_render,
+            # "objectCount": 1,  # props.object_count,
+        }
 
-    binary_path = bpy.app.binary_path
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    basename, ext = os.path.splitext(bpy.data.filepath)
-    # if not basename:
-    #     basename = os.path.join(basename, "temp")
-    if not ext:
-        ext = ".blend"
-    tempdir = tempfile.mkdtemp()
-    datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
+    elif props.asset_type.upper() == 'MATERIAL':
+        mat = bpy.context.active_object.active_material
 
-    # check if thumbnail exists:
-    if 'THUMBNAIL' in upload_set:
-        if not os.path.exists(export_data["thumbnail_path"]):
-            props.upload_state = 'Thumbnail not found'
-            props.uploading = False
-            return {'CANCELLED'}
+        export_data["type"] = 'MATERIAL'
+        export_data["material"] = str(mat.name)
 
-    headers = utils.get_headers(correlation_id)
+        eval_path = f"bpy.data.materials['{mat.name}']"
 
-    global reports
-    if props.id == '':
-        url = paths.get_api_url('assets')
-        try:
-            response = rerequests.post(
-                url,
-                json=upload_data,
-                headers=headers,
-                immediate=True
-            )
-            ui.add_report('uploaded metadata')
+        upload_data = {
+            "assetType": 'material',
+        }
 
-            dict_response = response.json()
-            utils.pprint(dict_response)
-            props.id = dict_response['id']
-        except requests.exceptions.RequestException as e:
-            print(e)
-            props.upload_state = str(e)
-            props.uploading = False
-            return {'CANCELLED'}
+        upload_params = {}
     else:
-        url = paths.get_api_url('assets', props.id)
-        try:
-            rerequests.put(
-                url,
-                json=upload_data,
-                headers=headers,
-                immediate=True
-            )
-            ui.add_report('uploaded metadata')
-        except requests.exceptions.RequestException as e:
-            print(e)
-            props.upload_state = str(e)
-            props.uploading = False
-            return {'CANCELLED'}
+        raise Exception(f'Unexpected asset_type={props.asset_type}')
 
-    if upload_set == ['METADATA']:
-        props.uploading = False
-        props.upload_state = 'upload finished successfully'
-        return {'FINISHED'}
-
-    props.view_id = str(uuid.uuid4())
-    upload_data['viewId'] = props.view_id
-    upload_data['id'] = props.id
-
-    source_filepath = os.path.join(tempdir, "export_hana3d" + ext)
-    clean_file_path = paths.get_clean_filepath()
-    data = {
-        'clean_file_path': clean_file_path,
-        'source_filepath': source_filepath,
-        'temp_dir': tempdir,
-        'export_data': export_data,
-        'upload_data': upload_data,
-        'upload_set': upload_set,
-        'correlation_id': correlation_id,
+    bg_process_params = {
+        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
+        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
+        'eval_path': eval_path,
     }
 
-    try:
-        props.uploading = True
-        autopack = bpy.data.use_autopack is True
-        if autopack:
-            bpy.ops.file.autopack_toggle()
-        bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
+    upload_data["sourceAppName"] = "blender"
+    upload_data["sourceAppVersion"] = '{}.{}.{}'.format(*utils.get_addon_version())
+    upload_data["addonVersion"] = '{}.{}.{}'.format(*utils.get_addon_blender_version())
 
-        with open(datafile, 'w') as s:
-            json.dump(data, s)
+    upload_data["name"] = props.name
+    upload_data["description"] = props.description
 
-        proc = subprocess.Popen(
-            [
-                binary_path,
-                "--background",
-                "-noaudio",
-                clean_file_path,
-                "--python",
-                os.path.join(script_path, "upload_bg.py"),
-                "--",
-                datafile,  # ,filepath, tempdir
-            ],
-            bufsize=5000,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-        )
+    upload_data['parameters'] = upload_params
 
-        bg_blender.add_bg_process(
-            process_type='UPLOAD',
-            process=proc,
-            location=location,
-            **bg_process_params,
-        )
+    upload_data["is_public"] = props.is_public
+    if props.workspace != '' and not props.is_public:
+        upload_data['workspace'] = props.workspace
 
-        if autopack:
-            bpy.ops.file.autopack_toggle()
+    metadata = {}
+    if hasattr(props, 'custom_props'):
+        metadata.update(props.custom_props)
+    if metadata:
+        upload_data['metadata'] = metadata
 
-    except Exception as e:
-        props.upload_state = str(e)
-        props.uploading = False
-        print(e)
-        return {'CANCELLED'}
+    upload_data['tags'] = []
+    for tag in props.tags_list.keys():
+        if props.tags_list[tag].selected is True:
+            upload_data["tags"].append(tag)
 
-    return {'FINISHED'}
+    upload_data['libraries'] = []
+    for library in props.libraries_list.keys():
+        if props.libraries_list[library].selected is True:
+            library_id = props.libraries_list[library].id_
+            library = {}
+            library.update({
+                'id': library_id
+            })
+            if props.custom_props.keys() != []:
+                custom_props = {}
+                for name in props.custom_props.keys():
+                    value = props.custom_props[name]
+                    slug = props.custom_props_info[name]['slug']
+                    prop_library_id = props.custom_props_info[name]['library_id']
+                    if prop_library_id == library_id:
+                        custom_props.update({slug: value})
+                library.update({'metadata': {'view_props': custom_props}})
+            upload_data['libraries'].append(library)
+
+    export_data['publish_message'] = props.publish_message
+
+    return export_data, upload_data, bg_process_params
 
 
 asset_types = (
@@ -323,7 +218,8 @@ class UploadOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return bpy.context.view_layer.objects.active is not None
+        props = utils.get_upload_props()
+        return bpy.context.view_layer.objects.active is not None and not props.uploading
 
     def execute(self, context):
         obj = utils.get_active_asset()
@@ -332,20 +228,13 @@ class UploadOperator(Operator):
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(obj)
 
-        upload_set = ['METADATA', 'THUMBNAIL', 'MAINFILE']
+        upload_set = ['METADATA', 'MAINFILE']
+        if props.has_thumbnail:
+            upload_set.append('THUMBNAIL')
+        else:
+            props.remote_thumbnail = True
 
-        correlation_id = str(uuid.uuid4())
-        result = start_upload(
-            self,
-            context,
-            props,
-            self.asset_type,
-            self.reupload,
-            upload_set,
-            correlation_id
-        )
-
-        return result
+        return self.start_upload(context, props, upload_set)
 
     def draw(self, context):
         props = utils.get_upload_props()
@@ -361,68 +250,156 @@ class UploadOperator(Operator):
             layout.label(text="Do this only when you create a new asset from an old one.")
             layout.label(text="For updates of thumbnail or model use reupload.")
 
-    def invoke(self, context, event):
-        # props = utils.get_upload_props()
+    def start_upload(self, context, props: types.Props, upload_set: List[str]):
+        utils.name_update()
 
-        # if not utils.user_logged_in():
-        #     ui_panels.draw_not_logged_in(self)
-        #     return {'CANCELLED'}
+        location = get_upload_location(props, context)
+        props.upload_state = 'preparing upload'
 
-        return self.execute(context)
+        if 'jobs' not in props.render_data:
+            props.render_data['jobs'] = []
 
+        if not self.reupload:
+            props.view_id = ''
+            props.id = ''
+        export_data, upload_data, bg_process_params = get_export_data(props)
 
-class AssetVerificationStatusChange(Operator):
-    """Change verification status"""
+        # weird array conversion only for upload, not for tooltips.
+        upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
 
-    bl_idname = "object.hana3d_change_status"
-    bl_description = "Change asset ststus"
-    bl_label = "Change verification status"
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+        binary_path = bpy.app.binary_path
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        basename, ext = os.path.splitext(bpy.data.filepath)
+        # if not basename:
+        #     basename = os.path.join(basename, "temp")
+        if not ext:
+            ext = ".blend"
+        tempdir = tempfile.mkdtemp()
+        datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
-    # type of upload - model, material, textures, e.t.c.
-    asset_id: StringProperty(name="asset id",)
+        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
+            props.upload_state = 'Thumbnail not found'
+            props.uploading = False
+            return {'CANCELLED'}
 
-    state: StringProperty(name="verification_status", default='uploaded')
+        correlation_id = str(uuid.uuid4())
+        headers = utils.get_headers(correlation_id)
 
-    @classmethod
-    def poll(cls, context):
-        return True
+        global reports
+        if props.id == '':
+            url = paths.get_api_url('assets')
+            try:
+                response = rerequests.post(
+                    url,
+                    json=upload_data,
+                    headers=headers,
+                    immediate=True
+                )
+                ui.add_report('uploaded metadata')
 
-    def draw(self, context):
-        layout = self.layout
-        # if self.state == 'deleted':
-        layout.label(text='Really delete asset from hana3d online storage?')
-        # layout.prop(self, 'state')
+                dict_response = response.json()
+                utils.pprint(dict_response)
+                props.id = dict_response['id']
+            except requests.exceptions.RequestException as e:
+                print(e)
+                props.upload_state = str(e)
+                props.uploading = False
+                return {'CANCELLED'}
+        else:
+            url = paths.get_api_url('assets', props.id)
+            try:
+                rerequests.put(
+                    url,
+                    json=upload_data,
+                    headers=headers,
+                    immediate=True
+                )
+                ui.add_report('uploaded metadata')
+            except requests.exceptions.RequestException as e:
+                print(e)
+                props.upload_state = str(e)
+                props.uploading = False
+                return {'CANCELLED'}
 
-    def execute(self, context):
-        # update status in search results for validator's clarity
-        sr = bpy.context.window_manager['search results']
-        sro = bpy.context.window_manager['search results orig']['results']
+        if upload_set == ['METADATA']:
+            props.uploading = False
+            props.upload_state = 'upload finished successfully'
+            return {'FINISHED'}
 
-        for r in sr:
-            if r['id'] == self.asset_id:
-                r['verification_status'] = self.state
-        for r in sro:
-            if r['id'] == self.asset_id:
-                r['verificationStatus'] = self.state
+        props.view_id = str(uuid.uuid4())
+        upload_data['viewId'] = props.view_id
+        upload_data['id'] = props.id
 
-        thread = threading.Thread(
-            target=verification_status_change_thread,
-            args=(self.asset_id, self.state)
-        )
-        thread.start()
+        source_filepath = os.path.join(tempdir, "export_hana3d" + ext)
+        clean_file_path = paths.get_clean_filepath()
+        data = {
+            'clean_file_path': clean_file_path,
+            'source_filepath': source_filepath,
+            'temp_dir': tempdir,
+            'export_data': export_data,
+            'upload_data': upload_data,
+            'upload_set': upload_set,
+            'correlation_id': correlation_id,
+        }
+
+        try:
+            props.uploading = True
+            autopack = bpy.data.use_autopack is True
+            if autopack:
+                bpy.ops.file.autopack_toggle()
+            bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
+
+            with open(datafile, 'w') as s:
+                json.dump(data, s)
+
+            proc = subprocess.Popen(
+                [
+                    binary_path,
+                    "--background",
+                    "-noaudio",
+                    clean_file_path,
+                    "--python",
+                    os.path.join(script_path, "upload_bg.py"),
+                    "--",
+                    datafile,  # ,filepath, tempdir
+                ],
+                bufsize=5000,
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+            )
+
+            bg_blender.add_bg_process(
+                process_type='UPLOAD',
+                process=proc,
+                location=location,
+                **bg_process_params,
+            )
+
+            if autopack:
+                bpy.ops.file.autopack_toggle()
+
+        except Exception as e:
+            props.upload_state = str(e)
+            props.uploading = False
+            print(e)
+            return {'CANCELLED'}
+
+        if props.remote_thumbnail:
+            thread = render.RenderThread(
+                props,
+                engine='CYCLES',
+                frame_start=1,
+                frame_end=1,
+                is_thumbnail=True,
+            )
+            thread.start()
+            render.render_threads.append(thread)
+
         return {'FINISHED'}
-
-    def invoke(self, context, event):
-        print(self.state)
-        if self.state == 'deleted':
-            wm = context.window_manager
-            return wm.invoke_props_dialog(self)
 
 
 classes = (
     UploadOperator,
-    AssetVerificationStatusChange,
 )
 
 
