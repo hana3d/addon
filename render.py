@@ -36,7 +36,6 @@ import tempfile
 import threading
 import time
 import uuid
-import re
 from collections import defaultdict
 from copy import copy
 from datetime import datetime
