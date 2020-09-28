@@ -3,7 +3,7 @@
 set -eu
 
 input="/builds/real2u/hana3d/__init__.py"
-line=`sed "22q;d" $input`
+line=`grep -m 1 '"version"' $input`
 
 tmp="${line%%(*}"
 if [ "$tmp" != "$line" ]; then
