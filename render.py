@@ -424,10 +424,10 @@ class CancelJob(Operator):
         thread_job, = [
             thread
             for thread in render_threads
-            if thread.props.view_id == self.view_id
+            if thread.view_id == self.view_id
         ]
         thread_job.cancelled = True
-        thread_job.props.rendering = False
+        thread_job.update_state('rendering', False)
 
         return {'FINISHED'}
 
