@@ -557,6 +557,12 @@ class Hana3DCommonUploadProps:
         default="",
     )
 
+    view_workspace: StringProperty(
+        name="View Workspace",
+        description="Unique ID of view's Workspace",
+        default="",
+    )
+
     name: StringProperty(
         name="Name",
         description="Main name of the asset",

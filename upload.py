@@ -159,6 +159,8 @@ def start_upload(self, context, props, asset_type, reupload, upload_set, correla
         props.id = ''
     export_data, upload_data, bg_process_params, props = utils.get_export_data(asset_type)
 
+    workspace = props.workspace
+
     # weird array conversion only for upload, not for tooltips.
     upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
 
@@ -220,6 +222,7 @@ def start_upload(self, context, props, asset_type, reupload, upload_set, correla
     if upload_set == ['METADATA']:
         props.uploading = False
         props.upload_state = 'upload finished successfully'
+        props.view_workspace = workspace
         return {'FINISHED'}
 
     props.view_id = str(uuid.uuid4())
@@ -280,6 +283,7 @@ def start_upload(self, context, props, asset_type, reupload, upload_set, correla
         print(e)
         return {'CANCELLED'}
 
+    props.view_workspace = workspace
     return {'FINISHED'}
 
 
