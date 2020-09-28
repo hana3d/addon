@@ -115,7 +115,6 @@ if __name__ == "__main__":
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
         if data['save_only']:
-            bpy.context.evaluated_depsgraph_get()
             hdr_img.pack()
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
         else:
