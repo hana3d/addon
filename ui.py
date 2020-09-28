@@ -643,7 +643,10 @@ def draw_callback_2d_search(self, context):
         )
 
         if search_results is not None:
-            if ui_props.scrolloffset > 0 or ui_props.wcount * ui_props.hcount < len(search_results):
+            if (
+                ui_props.scrolloffset > 0
+                or ui_props.wcount * ui_props.hcount < len(search_results)
+            ):
                 ui_props.drawoffset = 35
             else:
                 ui_props.drawoffset = 0
