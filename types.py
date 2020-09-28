@@ -233,6 +233,10 @@ class Hana3DRenderProps(PropertyGroup):
             return 'N/A'
         return f'${balance:.2f}'
 
+    def update_cameras(self, context):
+        if self.cameras in ('ALL_CAMERAS', 'VISIBLE_CAMERAS'):
+            self.frame_animation = 'FRAME'
+
     render_ui_mode: EnumProperty(
         name='Render UI mode',
         items=(
@@ -263,7 +267,16 @@ class Hana3DRenderProps(PropertyGroup):
             ("ANIMATION", "Animation", "Render a range of frames", "RENDER_ANIMATION", 1),
         ),
         description="",
-        default="FRAME",
+    )
+    cameras: EnumProperty(
+        name="Cameras",
+        items=(
+            ("ACTIVE_CAMERA", "Active camera", "Render with only the active camera"),
+            ("VISIBLE_CAMERAS", "Visible cameras", "Render with visible cameras"),
+            ("ALL_CAMERAS", "All cameras", "Render with all cameras"),
+        ),
+        description="",
+        update=update_cameras,
     )
 
 

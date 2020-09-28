@@ -156,14 +156,18 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self,
             props,
             engine: str,
-            frame_start: int,
-            frame_end: int,
+            frame_start: int = None,
+            frame_end: int = None,
+            cameras: List[str] = None,
             is_thumbnail: bool = False):
         super().__init__(daemon=True)
         self.asset_name = props.id_data.name
         self.engine = engine
         self.frame_start = frame_start
         self.frame_end = frame_end
+        self.cameras = cameras
+        self.is_multiple_cameras = cameras is not None and len(cameras) > 0
+        self.log_state_name = 'render_state'
         self.render_state = ''
 
         self.is_thumbnail = is_thumbnail
@@ -304,10 +308,18 @@ class RenderThread(UploadFileMixin, threading.Thread):
             'job_name': self.render_job_name,
             'render_scene_id': render_scene_id,
             'engine': self.engine,
-            'frame_start': self.frame_start,
-            'frame_end': self.frame_end,
             'extension': '.blend',
         }
+        if self.is_multiple_cameras:
+            add_data = {
+                'cameras': self.cameras
+            }
+        else:
+            add_data = {
+                'frame_start': self.frame_start,
+                'frame_end': self.frame_end,
+            }
+        data.update(add_data)
         response = rerequests.post(job_url, json=data, headers=self.headers)
         assert response.ok, f'Error when creating job: {response.text}'
 
@@ -346,7 +358,19 @@ class RenderThread(UploadFileMixin, threading.Thread):
         url = paths.get_api_url('uploads')
         jobs_data = []
         for n, render_url in enumerate(nrf_output):
-            frame = self.frame_start + n
+            render = {
+                'file_type': 'output',
+                'job_name': self.render_job_name,
+                'environment': 'notrenderfarm'
+            }
+            if self.is_multiple_cameras:
+                camera = os.path.splitext(paths.extract_filename_from_url(render_url))
+                render['camera'] = camera[0]
+                job_name = f'{self.render_job_name}.{camera[0]}'
+            else:
+                frame = self.frame_start + n
+                render['frame'] = frame
+                job_name = f'{self.render_job_name}.{frame:03d}'
             data = {
                 'assetId': self.asset_id,
                 'libraries': [],
@@ -354,12 +378,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 'id_parent': render_scene_id,
                 'url': render_url,
                 'metadata': {
-                    'render': {
-                        'file_type': 'output',
-                        'job_name': self.render_job_name,
-                        'environment': 'notrenderfarm',
-                        'frame': frame,
-                    }
+                    'render': render
                 }
             }
             response = rerequests.post(url, json=data, headers=self.headers)
@@ -370,7 +389,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 'id': dict_response['id'],
                 'file_url': dict_response['output_url'],
                 'created': datetime.isoformat(datetime.utcnow()),
-                'job_name': f'{self.render_job_name}.{frame:03d}',
+                'job_name': job_name,
             }
             jobs_data.append(job)
         return jobs_data
@@ -446,14 +465,22 @@ class RenderScene(Operator):
             return {'FINISHED'}
 
         render_props = context.window_manager.Hana3DRender
-        if render_props.frame_animation == 'FRAME':
+        if render_props.cameras == 'VISIBLE_CAMERAS':
+            cameras = [ob.name_full for ob in context.scene.objects
+                       if ob.type == 'CAMERA' and ob.visible_get()]
+            thread = RenderThread(props, render_props.engine, cameras=cameras)
+        elif render_props.cameras == 'ALL_CAMERAS':
+            cameras = [ob.name_full for ob in context.scene.objects if ob.type == 'CAMERA']
+            thread = RenderThread(props, render_props.engine, cameras=cameras)
+        elif render_props.frame_animation == 'FRAME':
             frame_start = context.scene.frame_current
             frame_end = context.scene.frame_current
+            thread = RenderThread(props, render_props.engine, frame_start, frame_end)
         elif render_props.frame_animation == 'ANIMATION':
             frame_start = context.scene.frame_start
             frame_end = context.scene.frame_end
+            thread = RenderThread(props, render_props.engine, frame_start, frame_end)
 
-        thread = RenderThread(props, render_props.engine, frame_start, frame_end)
         thread.start()
         render_threads.append(thread)
 
@@ -475,13 +502,16 @@ class CancelJob(Operator):
         return props is not None and props.rendering
 
     def execute(self, context):
-        thread_job, = [
+        view_thread_jobs = [
             thread
             for thread in render_threads
-            if thread.props.view_id == self.view_id
+            if thread.view_id == self.view_id
         ]
-        thread_job.cancelled = True
-        thread_job.update_state('rendering', False)
+        if len(view_thread_jobs) == 1:
+            thread_job = view_thread_jobs[0]
+            thread_job.cancelled = True
+        props = utils.get_upload_props()  # TODO: get props using thread's view_id
+        props.rendering = False
 
         return {'FINISHED'}
 

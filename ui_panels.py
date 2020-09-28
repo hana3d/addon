@@ -516,6 +516,10 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
 
         box.label(text='Render Parameters', icon='PREFERENCES')
         box.prop(asset_props, 'render_job_name', text='Name')
+        box.prop(render_props, 'cameras', expand=False, icon_only=False)
+        if render_props.cameras == 'ACTIVE_CAMERA':
+            row = box.row()
+            row.label(text=context.scene.camera.name_full)
         box.prop(render_props, 'engine')
         row = box.row()
         row.label(text="Resolution X")
@@ -526,7 +530,14 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
 
         row = box.row()
         row.prop(render_props, 'frame_animation', text='')
-        if render_props.frame_animation == 'FRAME':
+        if render_props.cameras in ('VISIBLE_CAMERAS', 'ALL_CAMERAS'):
+            row.enabled = False
+            row = box.row()
+            row.label(text="Frame")
+            row.prop(context.scene, "frame_current", text='')
+            row = box.row()
+            row.label(text="Atenção! Só será renderizado um frame por câmera!", icon='ERROR')
+        elif render_props.frame_animation == 'FRAME':
             row = box.row()
             row.label(text="Frame")
             row.prop(context.scene, "frame_current", text='')
