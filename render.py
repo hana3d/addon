@@ -421,13 +421,16 @@ class CancelJob(Operator):
         return props is not None and props.rendering
 
     def execute(self, context):
-        thread_job, = [
+        view_thread_jobs = [
             thread
             for thread in render_threads
-            if thread.props.view_id == self.view_id
+            if thread.view_id == self.view_id
         ]
-        thread_job.cancelled = True
-        thread_job.props.rendering = False
+        if len(view_thread_jobs) == 1:
+            thread_job = view_thread_jobs[0]
+            thread_job.cancelled = True
+        props = utils.get_upload_props()  # TODO: get props using thread's view_id
+        props.rendering = False
 
         return {'FINISHED'}
 
