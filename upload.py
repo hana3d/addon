@@ -34,15 +34,13 @@ HANA3D_EXPORT_DATA_FILE = "data.json"
 
 
 def get_upload_location(props, context):
-    wm = context.window_manager
-    ui_props = wm.Hana3DUI
-    if ui_props.asset_type == 'MODEL':
+    if props.asset_type.upper() == 'MODEL':
         if context.view_layer.objects.active is not None:
             ob = utils.get_active_model()
             return ob.location
-    if props.asset_type == 'SCENE':
+    elif props.asset_type.upper() == 'SCENE':
         return None
-    elif props.asset_type == 'MATERIAL':
+    elif props.asset_type.upper() == 'MATERIAL':
         if (
             context.view_layer.objects.active is not None
             and context.active_object.active_material is not None
