@@ -803,3 +803,11 @@ def save_file(filepath, **kwargs):
                 raise e
             print(f'Error when saving file ({e}), retrying...')
             time.sleep(1)
+
+
+def show_popup(message="", title="Info:", icon='INFO'):
+
+    def draw(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popover(draw)

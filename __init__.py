@@ -25,6 +25,7 @@ from bpy.types import AddonPreferences
 from . import (
     addon_updater_ops,
     append_link,
+    asset,
     autothumb,
     bg_blender,
     download,
@@ -287,6 +288,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 modules = (
     append_link,
+    asset,
     autothumb,
     bg_blender,
     download,
