@@ -16,17 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if 'bpy' in locals():
-    from importlib import reload
-
-    paths = reload(paths)
-    render = reload(render)
-    search = reload(search)
-    utils = reload(utils)
-else:
-    from hana3d import paths, render, search, utils
-
 import math
 import os
 from typing import Union
@@ -43,6 +32,8 @@ from bpy.props import (
     StringProperty
 )
 from bpy.types import PropertyGroup
+
+from hana3d import paths, render, search, utils
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -124,7 +115,7 @@ class Hana3DUIProps(PropertyGroup):
     down_up: EnumProperty(
         name="Download vs Upload",
         items=(
-            ('SEARCH', 'Search', 'Sctivate searching', 'VIEWZOOM', 0),
+            ('SEARCH', 'Search', 'Activate searching', 'VIEWZOOM', 0),
             ('UPLOAD', 'Upload', 'Activate uploading', 'COPYDOWN', 1),
         ),
         description="hana3d",
@@ -540,14 +531,10 @@ class Hana3DCommonUploadProps:
                 }
                 self.custom_props[name] = ''
 
-    def update_thumbnail(self, context=None):
-        img = utils.get_hidden_image(self.thumbnail, 'upload_preview', force_reload=True)
-        if img is not None:
-            self.has_thumbnail = True
-            self.thumbnail_generating_state = ''
-        else:
-            self.has_thumbnail = False
-            self.thumbnail_generating_state = 'No thumbnail or wrong file path\n'
+    def update_preview(self, context=None):
+        """Mark upload preview to be updated by draw calllback"""
+        self.force_preview_reload = True
+        self.has_thumbnail = self.thumbnail != ''
 
     def clear_data(self):
         """Set all properties to their default values"""
@@ -611,7 +598,6 @@ class Hana3DCommonUploadProps:
         name="Uploading",
         description="True when background process is running",
         default=False,
-        update=update_thumbnail,
     )
 
     upload_state: StringProperty(
@@ -625,14 +611,25 @@ class Hana3DCommonUploadProps:
         description="Path to the thumbnail - 512x512 .jpg image",
         subtype='FILE_PATH',
         default="",
-        update=update_thumbnail,
+        update=update_preview,
+    )
+
+    force_preview_reload: BoolProperty(
+        description="True if upload preview image should be updated",
+        default=True,
     )
 
     is_generating_thumbnail: BoolProperty(
         name="Generating Thumbnail",
         description="True when background process is running",
         default=False,
-        update=update_thumbnail,
+        update=update_preview,
+    )
+
+    remote_thumbnail: BoolProperty(
+        name="Generating thumbnail on notrenderfarm",
+        default=False,
+        update=update_preview,
     )
 
     has_thumbnail: BoolProperty(
@@ -644,7 +641,7 @@ class Hana3DCommonUploadProps:
     thumbnail_generating_state: StringProperty(
         name="Thumbnail Generating State",
         description="bg process reports for thumbnail generation",
-        default='Please add thumbnail(jpg, at least 512x512)',
+        default='',
     )
 
     report: StringProperty(
@@ -811,21 +808,10 @@ class Hana3DMaterialUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default="BALL",
     )
 
-    asset_type: StringProperty(default='material')
+    asset_type: StringProperty(default='MATERIAL')
 
 
 class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
-    manufacturer: StringProperty(
-        name="Manufacturer",
-        description="Manufacturer, company making a design peace or product. Not you",
-        default="",
-    )
-    designer: StringProperty(
-        name="Designer",
-        description="Author of the original design piece depicted. Usually not you",
-        default="",
-    )
-
     thumbnail_background_lightness: FloatProperty(
         name="Thumbnail Background Lightness",
         description="set to make your material stand out",
@@ -904,7 +890,7 @@ class Hana3DModelUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         default=False
     )
 
-    asset_type: StringProperty(default='model')
+    asset_type: StringProperty(default='MODEL')
 
 
 class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
@@ -961,7 +947,7 @@ class Hana3DSceneUploadProps(PropertyGroup, Hana3DCommonUploadProps):
         min=5,
         max=5000
     )
-    asset_type: StringProperty(default='scene')
+    asset_type: StringProperty(default='SCENE')
 
 
 class Hana3DModelSearchProps(PropertyGroup, Hana3DCommonSearchProps):

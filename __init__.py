@@ -16,6 +16,34 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+import bpy
+import bpy.utils.previews
+from bpy.app.handlers import persistent
+from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
+from bpy.types import AddonPreferences
+
+from . import (
+    addon_updater_ops,
+    append_link,
+    autothumb,
+    bg_blender,
+    download,
+    hana3d_oauth,
+    icons,
+    libraries,
+    paths,
+    render,
+    search,
+    tags,
+    tasks_queue,
+    thread_tools,
+    types,
+    ui,
+    ui_panels,
+    upload,
+    utils
+)
+
 bl_info = {
     "name": "Hana3D - BlenderKit Fork",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
@@ -24,59 +52,8 @@ bl_info = {
     "location": "View3D > Properties > hana3d",
     "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
     "warning": "",
-    # "doc_url": "{BLENDER_MANUAL_URL}/addons/add_mesh/hana3d.html",
     "category": "3D View",
 }
-
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    autothumb = reload(autothumb)
-    bg_blender = reload(bg_blender)
-    download = reload(download)
-    hana3d_oauth = reload(hana3d_oauth)
-    icons = reload(icons)
-    libraries = reload(libraries)
-    paths = reload(paths)
-    render = reload(render)
-    search = reload(search)
-    tags = reload(tags)
-    tasks_queue = reload(tasks_queue)
-    types = reload(types)
-    ui = reload(ui)
-    ui_panels = reload(ui_panels)
-    upload = reload(upload)
-    utils = reload(utils)
-else:
-    from . import (
-        append_link,
-        autothumb,
-        bg_blender,
-        download,
-        hana3d_oauth,
-        icons,
-        libraries,
-        paths,
-        render,
-        search,
-        tags,
-        tasks_queue,
-        types,
-        ui,
-        ui_panels,
-        upload,
-        utils
-    )
-
-import bpy
-import bpy.utils.previews
-from bpy.app.handlers import persistent
-from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
-from bpy.types import AddonPreferences
-
-
-from . import addon_updater_ops
 
 
 @persistent
@@ -101,14 +78,14 @@ def check_timers_timer():
         bpy.app.timers.register(download.timer_update)
     if not bpy.app.timers.is_registered(download.execute_append_tasks):
         bpy.app.timers.register(download.execute_append_tasks)
-    if not (bpy.app.timers.is_registered(tasks_queue.queue_worker)):
+    if not bpy.app.timers.is_registered(tasks_queue.queue_worker):
         bpy.app.timers.register(tasks_queue.queue_worker)
     if not bpy.app.timers.is_registered(bg_blender.bg_update):
         bpy.app.timers.register(bg_blender.bg_update)
     if not bpy.app.timers.is_registered(render.threads_cleanup):
         bpy.app.timers.register(render.threads_cleanup)
-    if not bpy.app.timers.is_registered(render.threads_state_update):
-        bpy.app.timers.register(render.threads_state_update)
+    if not bpy.app.timers.is_registered(thread_tools.threads_state_update):
+        bpy.app.timers.register(thread_tools.threads_state_update)
     return 5.0
 
 
@@ -309,21 +286,22 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 
 modules = (
-    types,
-    tags,
-    libraries,
-    search,
-    download,
-    upload,
+    append_link,
     autothumb,
-    ui,
-    icons,
     bg_blender,
-    ui_panels,
+    download,
     hana3d_oauth,
-    tasks_queue,
+    icons,
+    libraries,
     render,
-    append_link
+    search,
+    tags,
+    tasks_queue,
+    thread_tools,
+    types,
+    ui,
+    ui_panels,
+    upload,
 )
 
 

@@ -16,29 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    bg_blender = reload(bg_blender)
-    colors = reload(colors)
-    download = reload(download)
-    paths = reload(paths)
-    render = reload(render)
-    search = reload(search)
-    ui_bgl = reload(ui_bgl)
-    utils = reload(utils)
-else:
-    from hana3d import (
-        bg_blender,
-        colors,
-        download,
-        paths,
-        render,
-        search,
-        ui_bgl,
-        utils
-    )
-
 import math
 import os
 import time
@@ -49,6 +26,17 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
+
+from hana3d import (
+    bg_blender,
+    colors,
+    download,
+    paths,
+    render,
+    search,
+    ui_bgl,
+    utils
+)
 
 handler_2d = None
 handler_3d = None
@@ -229,19 +217,6 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
         rects = ((v0, v1, vz1, vz0), (v1, v2, vz2, vz1), (v2, v3, vz3, vz2), (v3, v0, vz0, vz3))
         for r in rects:
             ui_bgl.draw_rect_3d(r, color)
-
-
-def draw_text_block(x=0, y=0, width=40, font_size=10, line_height=15, text='', color=colors.TEXT):
-    lines = text.split('\n')
-    nlines = []
-    for line in lines:
-        nlines.extend(search.split_subs(line,))
-
-    column_lines = 0
-    for line in nlines:
-        ytext = y - column_lines * line_height
-        column_lines += 1
-        ui_bgl.draw_text(line, x, ytext, font_size, color)
 
 
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
@@ -500,8 +475,6 @@ def draw_callback_2d(self, context):
         w1 = self.window
         go = True
         if len(a.spaces[0].region_quadviews) > 0:
-            # print(dir(bpy.context.region_data))
-            # print('quad', a.spaces[0].region_3d, a.spaces[0].region_quadviews[0])
             if a.spaces[0].region_3d != context.region_data:
                 go = False
     except Exception:
@@ -607,14 +580,28 @@ def draw_callback_2d_progress(self, context):
 
 def draw_callback_2d_upload_preview(self, context):
     ui_props = context.window_manager.Hana3DUI
-
     props = utils.get_upload_props()
-    if props is not None and ui_props.draw_tooltip:
 
+    if props is not None and ui_props.draw_tooltip:
         ui_props.thumbnail_image = props.thumbnail
 
-        img = utils.get_hidden_image(ui_props.thumbnail_image, 'upload_preview')
+        if props.force_preview_reload:
+            force_reload = True
+            props.force_preview_reload = False
+        else:
+            force_reload = False
 
+        if props.remote_thumbnail:
+            default_image = 'thumbnail-in-progress.png'
+        else:
+            default_image = 'thumbnail_notready.jpg'
+
+        img = utils.get_hidden_image(
+            ui_props.thumbnail_image,
+            'upload_preview',
+            force_reload,
+            default_image,
+        )
         draw_tooltip(ui_props.bar_x, ui_props.bar_y, text=ui_props.tooltip, img=img)
 
 
@@ -656,7 +643,10 @@ def draw_callback_2d_search(self, context):
         )
 
         if search_results is not None:
-            if ui_props.scrolloffset > 0 or ui_props.wcount * ui_props.hcount < len(search_results):
+            if (
+                ui_props.scrolloffset > 0
+                or ui_props.wcount * ui_props.hcount < len(search_results)
+            ):
                 ui_props.drawoffset = 35
             else:
                 ui_props.drawoffset = 0
@@ -664,7 +654,8 @@ def draw_callback_2d_search(self, context):
             if ui_props.wcount * ui_props.hcount < len(search_results):
                 page_start = ui_props.scrolloffset + 1
                 page_end = ui_props.scrolloffset + ui_props.wcount
-                pagination_text = f'{page_start} - {page_end} of {wm["search results orig"]["count"]}'
+                pagination_text = \
+                    f'{page_start} - {page_end} of {wm["search results orig"]["count"]}'
                 ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
                                  - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
                 # arrows
@@ -1182,8 +1173,16 @@ class AssetBarOperator(bpy.types.Operator):
                     and ao is not None
                     and ao.active_material is not None
                 ):
-                    upload_data = utils.get_export_data(ui_props.asset_type)[1]
-                    ui_props.tooltip = search.generate_tooltip(upload_data)
+                    props = utils.get_upload_props()
+                    asset_data = {
+                        'name': props.name,
+                        'description': props.description,
+                        'dimensions': getattr(props, 'dimensions', None),
+                        'face_count': getattr(props, 'face_count', None),
+                        'face_count_render': getattr(props, 'face_count_render', None),
+                        'object_count': getattr(props, 'object_count', None),
+                    }
+                    ui_props.tooltip = utils.generate_tooltip(**asset_data)
 
             return {'PASS_THROUGH'}
 

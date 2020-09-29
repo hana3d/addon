@@ -16,30 +16,18 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    bg_blender = reload(bg_blender)
-    utils = reload(utils)
-else:
-    from hana3d import append_link, bg_blender, utils
-
 import json
 import sys
 from pathlib import Path
 
 import bpy
 
+from hana3d import append_link, bg_blender, utils
+
 HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
 HANA3D_THUMBNAIL_PATH = sys.argv[-2]
 HANA3D_EXPORT_FILE_INPUT = sys.argv[-3]
 HANA3D_EXPORT_DATA = sys.argv[-4]
-
-
-def render_thumbnails():
-    bpy.ops.render.render(write_still=True, animation=False)
 
 
 def unhide_collection(cname):
@@ -55,10 +43,12 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
             # append_material(file_name, matname = None, link = False, fake_user = True)
+        link = not data['save_only']
+
         mat = append_link.append_material(
             file_name=HANA3D_EXPORT_FILE_INPUT,
             matname=data["material"],
-            link=True,
+            link=link,
             fake_user=False
         )
 
@@ -117,16 +107,20 @@ if __name__ == "__main__":
         if ipath.startswith('//'):
             ipath = ipath[1:]
 
-        img = bpy.data.images['interior.exr']
-        img.filepath = ipath
-        img.reload()
+        hdr_img = bpy.data.images['interior.exr']
+        hdr_img.filepath = ipath
+        hdr_img.reload()
 
         bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
-        bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
-        bg_blender.progress('rendering thumbnail')
-        render_thumbnails()
+        if data['save_only']:
+            hdr_img.pack()
+            bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
+        else:
+            bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
+            bg_blender.progress('rendering thumbnail')
+            bpy.ops.render.render(write_still=True, animation=False)
         bg_blender.progress('background autothumbnailer finished successfully')
 
     except Exception as e:

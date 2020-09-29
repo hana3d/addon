@@ -16,19 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    colors = reload(colors)
-    paths = reload(paths)
-    rerequests = reload(rerequests)
-    types = reload(types)
-    ui = reload(ui)
-    utils = reload(utils)
-else:
-    from hana3d import append_link, colors, paths, rerequests, types, ui, utils
-
 import copy
 import functools
 import os
@@ -48,6 +35,8 @@ from bpy.props import (
     IntProperty,
     StringProperty
 )
+
+from hana3d import append_link, colors, paths, rerequests, types, ui, utils
 
 download_threads = {}
 append_tasks_queue = Queue()
@@ -156,8 +145,6 @@ def check_missing():
             fp = bpy.path.abspath(fp)
         if not os.path.exists(fp) and library.get('asset_data') is not None:
             missing.append(library)
-
-    # print('missing libraries', missing)
 
     for library in missing:
         asset_data = library['asset_data']

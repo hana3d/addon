@@ -16,15 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    append_link = reload(append_link)
-    bg_blender = reload(bg_blender)
-    utils = reload(utils)
-else:
-    from hana3d import append_link, bg_blender, utils
-
 import json
 import math
 import sys
@@ -32,6 +23,8 @@ from pathlib import Path
 
 import bpy
 import mathutils
+
+from hana3d import append_link, bg_blender, utils
 
 HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
 HANA3D_THUMBNAIL_PATH = sys.argv[-2]
@@ -81,12 +74,9 @@ def center_obs_for_thumbnail(obs):
     bpy.context.view_layer.update()
 
 
-def render_thumbnails():
-    bpy.ops.render.render(write_still=True, animation=False)
-
-
 if __name__ == "__main__":
     try:
+        print('autothumb_model_bg')
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
@@ -94,10 +84,11 @@ if __name__ == "__main__":
 
         bg_blender.progress('preparing thumbnail scene')
         obnames = get_obnames()
+        link = not data['save_only']
         main_object, allobs = append_link.append_objects(
             file_name=HANA3D_EXPORT_FILE_INPUT,
             obnames=obnames,
-            link=True
+            link=link,
         )
         bpy.context.view_layer.update()
 
@@ -110,7 +101,6 @@ if __name__ == "__main__":
 
         bpy.context.scene.camera = bpy.data.objects[camdict[data['thumbnail_snap_to']]]
         center_obs_for_thumbnail(allobs)
-        bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
         if user_preferences.thumbnail_use_gpu:
             bpy.context.scene.cycles.device = 'GPU'
 
@@ -149,16 +139,20 @@ if __name__ == "__main__":
         if ipath.startswith('//'):
             ipath = ipath[1:]
 
-        img = bpy.data.images['interior.exr']
-        img.filepath = ipath
-        img.reload()
+        hdr_img = bpy.data.images['interior.exr']
+        hdr_img.filepath = ipath
+        hdr_img.reload()
 
         bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
         bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
-        bg_blender.progress('rendering thumbnail')
-        render_thumbnails()
-        fpath = HANA3D_THUMBNAIL_PATH + '0001.jpg'
+        if data['save_only']:
+            hdr_img.pack()
+            bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
+        else:
+            bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
+            bg_blender.progress('rendering thumbnail')
+            bpy.ops.render.render(write_still=True, animation=False)
         bg_blender.progress('background autothumbnailer finished successfully')
 
     except Exception:
