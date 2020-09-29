@@ -498,8 +498,12 @@ class Searcher(threading.Thread):
 def build_query_common(query, props):
     '''add shared parameters to query'''
     query_common = {}
-    if props.search_keywords != '':
-        query_common['search_term'] = props.search_keywords
+    keywords = props.search_keywords
+    if keywords != '':
+        if keywords.startswith('view_id:'):
+            query_common['view_id'] = keywords.replace('view_id:', '')
+        else:
+            query_common['search_term'] = keywords
 
     if props.search_verification_status != 'ALL':
         query_common['verification_status'] = props.search_verification_status.lower()

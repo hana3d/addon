@@ -309,8 +309,8 @@ def search_update(self, context):
     ati = kwds.find(atstr)
     # if the asset type already isn't there it means this update function
     # was triggered by it's last iteration and needs to cancel
-    if idi > -1 and ati == -1:
-        return
+    # if idi > -1 and ati == -1:
+    #     return
     if ati > -1:
         at = kwds[ati:].lower()
         # uncertain length of the remaining string
