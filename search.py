@@ -43,6 +43,10 @@ def check_errors(rdata):
                 hana3d_oauth.refresh_token_thread()
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
+    elif rdata.get('status_code') == 400:
+        utils.p(rdata)
+        if rdata.get('code') == 'invalid_permissions':
+            return False, rdata.get('description')
     return True, ''
 
 
