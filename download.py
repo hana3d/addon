@@ -22,7 +22,6 @@ import os
 import shutil
 import threading
 from queue import Queue
-from typing import List
 
 import bpy
 import requests
@@ -36,7 +35,7 @@ from bpy.props import (
     StringProperty
 )
 
-from hana3d import append_link, colors, paths, rerequests, types, ui, utils
+from hana3d import append_link, colors, paths, render_tools, types, ui, utils
 
 download_threads = {}
 append_tasks_queue = Queue()
@@ -202,45 +201,6 @@ def scene_load(context):
     download_threads = {}
 
     check_missing()
-
-
-def download_file(file_path: str, url: str) -> str:
-    response = requests.get(url, stream=True)
-
-    # Write to temp file and then rename to avoid reading errors as file is being downloaded
-    tmp_file = file_path + '_tmp'
-    with open(tmp_file, 'wb') as f:
-        f.write(response.content)
-    os.rename(tmp_file, file_path)
-
-
-def download_renders(jobs: List[dict]):
-    """Download render files from urls and write local paths to jobs dictionaries"""
-    for job in jobs:
-        if not os.path.exists(job['file_path']):
-            thread = threading.Thread(
-                target=download_file,
-                args=(job['file_path'], job['file_url']),
-                daemon=True,
-            )
-            thread.start()
-
-
-def add_file_paths(jobs: List[dict], download_dir: str):
-    for job in jobs:
-        url = job['file_url']
-        filename = paths.extract_filename_from_url(url)
-
-        file_path = os.path.join(download_dir, filename)
-        job['file_path'] = file_path
-
-
-def get_render_jobs(view_id: str) -> List[dict]:
-    url = paths.get_api_url('renders', query={'view_id': view_id})
-    response = rerequests.get(url, headers=utils.get_headers())
-    assert response.ok, response.text
-
-    return response.json()
 
 
 def set_thumbnail(asset_data, asset):
@@ -529,11 +489,8 @@ def set_asset_props(asset, asset_data):
     asset.hana3d.tags = ','.join(asset_data['tags'])
     asset.hana3d.description = asset_data['description']
 
-    jobs = get_render_jobs(asset_data['view_id'])
-    download_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
-    add_file_paths(jobs, download_dir)
+    jobs = render_tools.get_render_jobs(asset_data['asset_type'], asset_data['view_id'])
     asset.hana3d.render_data['jobs'] = jobs
-    download_renders(jobs)
 
     if 'tags' in asset_data:
         types.update_tags_list(asset.hana3d, bpy.context)

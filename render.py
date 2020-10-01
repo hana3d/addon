@@ -34,7 +34,16 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from hana3d import autothumb, colors, paths, rerequests, ui, utils, thread_tools
+from hana3d import (
+    autothumb,
+    colors,
+    paths,
+    render_tools,
+    rerequests,
+    thread_tools,
+    ui,
+    utils
+)
 
 render_threads = []
 upload_threads = []
@@ -217,11 +226,9 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 raise Exception('notrenderfarm returned no output')
             if self.is_thumbnail:
                 thumbnail_url = nrf_output[0]
-                self._put_new_thumbnail(render_scene_id, thumbnail_url)
                 self._import_thumbnail(thumbnail_url)
             else:
-                jobs_data = self._post_completed_job(render_scene_id, nrf_output)
-                self._import_renders(jobs_data)
+                self._import_renders(job_id)
         except Exception as e:
             self.log(f'Error in render job {self.render_job_name}:{e!r}')
             raise e
@@ -394,26 +401,13 @@ class RenderThread(UploadFileMixin, threading.Thread):
             jobs_data.append(job)
         return jobs_data
 
-    def _import_renders(self, jobs_data: List[dict]):
-        for job in jobs_data:
-            url = job['file_url']
-            filename = paths.extract_filename_from_url(url)
-            download_dir = paths.get_download_dirs(self.asset_type)[0]
-            file_path = os.path.join(download_dir, filename)
-
-            response = requests.get(url, stream=True)
-            with open(file_path, 'wb') as f:
-                f.write(response.content)
-
-            job['file_path'] = file_path
-            _, ext = os.path.splitext(filename)
-            job['file_format'] = ext[1:] if len(ext) > 0 else ''
-
-            img = bpy.data.images.load(file_path, check_existing=True)
-            img.name = job['job_name']
-            job['image'] = img
-
-        # Append this way as property type is different depending on length
+    def _import_renders(self, job_id: str):
+        while True:
+            jobs_data = render_tools.get_render_jobs(self.asset_type, self.view_id, job_id)
+            if len(jobs_data) > 0:
+                break
+            # Retry needed on cases when backend has not yet ingested results from render farm
+            time.sleep(5)
         operation = '=' if self.no_previous_jobs else '+='
         self.update_state("render_data['jobs']", jobs_data, operation)
 
