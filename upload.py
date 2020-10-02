@@ -231,6 +231,7 @@ class UploadOperator(Operator):
         upload_set = ['METADATA', 'MAINFILE']
         if props.has_thumbnail:
             upload_set.append('THUMBNAIL')
+            props.remote_thumbnail = False
         else:
             props.remote_thumbnail = True
 
