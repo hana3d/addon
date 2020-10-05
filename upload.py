@@ -264,6 +264,8 @@ class UploadOperator(Operator):
             props.id = ''
         export_data, upload_data, bg_process_params = get_export_data(props)
 
+        workspace = props.workspace
+
         # weird array conversion only for upload, not for tooltips.
         upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
 
@@ -324,6 +326,7 @@ class UploadOperator(Operator):
         if upload_set == ['METADATA']:
             props.uploading = False
             props.upload_state = 'upload finished successfully'
+            props.view_workspace = workspace
             return {'FINISHED'}
 
         props.view_id = str(uuid.uuid4())
@@ -395,6 +398,7 @@ class UploadOperator(Operator):
             thread.start()
             render.render_threads.append(thread)
 
+        props.view_workspace = workspace
         return {'FINISHED'}
 
 

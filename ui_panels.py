@@ -164,12 +164,12 @@ def draw_panel_common_upload(layout, context):
 
     row = layout.row()
     row.scale_y = 2.0
-    if props.view_id == '':
+    if props.view_id == '' or props.workspace != props.view_workspace:
         optext = 'Upload %s' % asset_type.lower()
         op = row.operator("object.hana3d_upload", text=optext, icon='EXPORT')
         op.asset_type = asset_type
 
-    if props.view_id != '':
+    if props.view_id != '' and props.workspace == props.view_workspace:
         op = row.operator("object.hana3d_upload", text='Reupload asset', icon='EXPORT')
         op.asset_type = asset_type
         op.reupload = True
