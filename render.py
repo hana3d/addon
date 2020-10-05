@@ -86,6 +86,7 @@ class UploadFileMixin:
 
         self._upload_progress_bytes = 0
         self.uploading = False
+        self.upload_state = ''
 
         correlation_id = str(uuid.uuid4())
         self.headers = utils.get_headers(correlation_id)
