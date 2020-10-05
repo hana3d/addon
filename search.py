@@ -43,6 +43,10 @@ def check_errors(rdata):
                 hana3d_oauth.refresh_token_thread()
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
+    elif rdata.get('status_code') == 403:
+        utils.p(rdata)
+        if rdata.get('code') == 'invalid_permissions':
+            return False, rdata.get('description')
     return True, ''
 
 
@@ -83,26 +87,6 @@ def fetch_server_data():
 
 first_time = True
 last_clipboard = ''
-
-
-def check_clipboard():
-    # clipboard monitoring to search assets from web
-    if platform.system() != 'Linux':
-        global last_clipboard
-        if bpy.context.window_manager.clipboard != last_clipboard:
-            last_clipboard = bpy.context.window_manager.clipboard
-            instr = 'view_id:'
-            # first check if contains asset id, then asset type
-            if last_clipboard[: len(instr)] == instr:
-                atstr = 'asset_type:'
-                ati = last_clipboard.find(atstr)
-                # this only checks if the asset_type keyword is there but
-                # let's the keywords update function do the parsing.
-                if ati > -1:
-                    search_props = utils.get_search_props()
-                    search_props.search_keywords = last_clipboard
-                    # don't run search after this
-                    # assigning to keywords runs the search_update function.
 
 
 # @bpy.app.handlers.persistent
@@ -498,17 +482,18 @@ class Searcher(threading.Thread):
 
 def build_query_common(query, props):
     '''add shared parameters to query'''
-    query_common = {}
-    if props.search_keywords != '':
-        query_common['search_term'] = props.search_keywords
+    keywords = props.search_keywords
+    if keywords != '':
+        if keywords.startswith('view_id:'):
+            query['view_id'] = keywords.replace('view_id:', '')
+        else:
+            query['search_term'] = keywords
 
     if props.search_verification_status != 'ALL':
-        query_common['verification_status'] = props.search_verification_status.lower()
+        query['verification_status'] = props.search_verification_status.lower()
 
     if props.public_only:
         query['public'] = True
-
-    query.update(query_common)
 
 
 def build_query_model():

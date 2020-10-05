@@ -61,6 +61,7 @@ def prop_needed(layout, props, name, value, is_not_filled=''):
         row.alert = False
     else:
         row.prop(props, name)
+    return row
 
 
 def draw_not_logged_in(source):
@@ -119,7 +120,8 @@ def draw_panel_common_upload(layout, context):
 
     box = layout.box()
     box.label(text='Asset Info', icon='MESH_CUBE')
-    prop_needed(box, props, 'name', props.name)
+    row = prop_needed(box, props, 'name', props.name)
+    row.operator('object.hana3d_share_asset', text='', icon='LINKED')
     col = box.column()
     if props.is_generating_thumbnail:
         col.enabled = False

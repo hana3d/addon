@@ -298,34 +298,6 @@ def search_update(self, context):
     ui_props = bpy.context.window_manager.Hana3DUI
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
-
-    # here we tweak the input if it comes form the clipboard.
-    # we need to get rid of asset type and set it to
-    sprops = utils.get_search_props()
-    instr = 'view_id:'
-    atstr = 'asset_type:'
-    kwds = sprops.search_keywords
-    idi = kwds.find(instr)
-    ati = kwds.find(atstr)
-    # if the asset type already isn't there it means this update function
-    # was triggered by it's last iteration and needs to cancel
-    if idi > -1 and ati == -1:
-        return
-    if ati > -1:
-        at = kwds[ati:].lower()
-        # uncertain length of the remaining string
-        # find as better method to check the presence of asset type
-        if at.find('model') > -1:
-            ui_props.asset_type = 'MODEL'
-        elif at.find('material') > -1:
-            ui_props.asset_type = 'MATERIAL'
-        # now we trim the input copypaste by anything extra that is there,
-        # this is also a way for this function to recognize that it already has parsed the clipboard
-        # the search props can have changed and this needs to transfer the data to the other field
-        # this complex behaviour is here for the case where
-        # the user needs to paste manually into blender?
-        sprops = utils.get_search_props()
-        sprops.search_keywords = kwds[:ati].rstrip()
     search.search()
 
 
