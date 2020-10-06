@@ -330,6 +330,8 @@ class UploadOperator(Operator):
             props.view_workspace = workspace
             return {'FINISHED'}
 
+        if self.reupload:
+            upload_data['id_parent'] = props.view_id
         props.view_id = str(uuid.uuid4())
         upload_data['viewId'] = props.view_id
         upload_data['id'] = props.id
