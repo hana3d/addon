@@ -73,7 +73,7 @@ def generate_model_thumbnail(
         autopack = True
         bpy.ops.file.autopack_toggle()
 
-    utils.save_file(filepath)
+    utils.save_file(filepath, compress=False, copy=True)
     obs = utils.get_hierarchy(mainmodel)
     obnames = []
     for ob in obs:
@@ -165,7 +165,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
     def execute(self, context):
         try:
             props = utils.get_active_model(context).hana3d
-            generate_model_thumbnail(props, self.save_only, self.blend_filepath)
+            generate_model_thumbnail(props)
         except Exception as e:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
@@ -218,7 +218,7 @@ def generate_material_thumbnail(
     tfpath = paths.get_material_thumbnailer_filepath()
     datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
-    bpy.ops.wm.save_as_mainfile(filepath=filepath, compress=False, copy=True)
+    utils.save_file(filepath, compress=False, copy=True)
 
     with open(datafile, 'w') as s:
         json.dump(
