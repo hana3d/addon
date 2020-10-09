@@ -229,6 +229,6 @@ if __name__ == "__main__":
             bg_blender.progress('upload failed.')
 
     except Exception as e:
-        print(e)
-        bg_blender.progress(e)
+        logging.exception(e)
+        bg_blender.progress(f'Error during upload: {repr(e)}')
         sys.exit(1)
