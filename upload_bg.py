@@ -45,12 +45,13 @@ def upload_file(upload_data, f, correlation_id):
         'assetId': upload_data['id'],
         'libraries': upload_data['libraries'],
         'tags': upload_data['tags'],
-        'workspace': upload_data['workspace'],
         'fileType': f['type'],
         'fileIndex': f['index'],
         'originalFilename': os.path.basename(f['file_path']),
         'comment': f['publish_message']
     }
+    if 'workspace' in upload_data:
+        upload_info['workspace'] = upload_data['upload_data']
     if f['type'] == 'blend':
         upload_info['viewId'] = upload_data['viewId']
         if 'id_parent' in upload_data:
