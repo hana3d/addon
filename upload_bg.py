@@ -51,7 +51,7 @@ def upload_file(upload_data, f, correlation_id):
         'comment': f['publish_message']
     }
     if 'workspace' in upload_data:
-        upload_info['workspace'] = upload_data['upload_data']
+        upload_info['workspace'] = upload_data['workspace']
     if f['type'] == 'blend':
         upload_info['viewId'] = upload_data['viewId']
         if 'id_parent' in upload_data:
