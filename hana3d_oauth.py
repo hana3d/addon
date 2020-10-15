@@ -40,21 +40,12 @@ def login(authenticator: oauth.OAuthAuthenticator):
     write_tokens(oauth_response)
 
 
-def refresh_token_thread():
+def refresh_token(immediate: bool = False) -> dict:
     preferences = bpy.context.preferences.addons['hana3d'].preferences
-    if len(preferences.api_key_refresh) > 0 and not preferences.refresh_in_progress:
-        preferences.refresh_in_progress = True
-        thread = threading.Thread(
-            target=refresh_token,
-            args=(preferences.api_key_refresh,),
-            daemon=True
-        )
-        thread.start()
-    else:
+    if preferences.refresh_in_progress:
         ui.add_report('Already Refreshing token, will be ready soon.')
-
-
-def refresh_token(api_key_refresh: str, immediate: bool = False) -> dict:
+        return
+    preferences.refresh_in_progress = True
     authenticator = oauth.OAuthAuthenticator(
         auth0_url=AUTH_URL,
         platform_url=PLATFORM_URL,
@@ -62,7 +53,7 @@ def refresh_token(api_key_refresh: str, immediate: bool = False) -> dict:
         ports=PORTS,
         audience=AUDIENCE,
     )
-    oauth_response = authenticator.get_refreshed_token(api_key_refresh)
+    oauth_response = authenticator.get_refreshed_token(preferences.api_key_refresh)
     if oauth_response['access_token'] is not None and oauth_response['refresh_token'] is not None:
         if immediate:
             write_tokens(oauth_response)

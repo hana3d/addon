@@ -40,7 +40,7 @@ def check_errors(rdata):
         if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons['hana3d'].preferences
             if user_preferences.api_key != '':
-                hana3d_oauth.refresh_token_thread()
+                hana3d_oauth.refresh_token(immediate=False)
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     elif rdata.get('status_code') == 403:
@@ -80,7 +80,7 @@ def fetch_server_data():
             len(user_preferences.api_key) > 0
             and user_preferences.api_key_timeout < time.time()
         ):
-            hana3d_oauth.refresh_token_thread()
+            hana3d_oauth.refresh_token(immediate=False)
         if api_key != '' and bpy.context.window_manager.get('hana3d profile') is None:
             utils.update_profile_async()
 

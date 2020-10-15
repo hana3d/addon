@@ -16,7 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy
 import requests
 
 from hana3d import hana3d_oauth, ui, utils
@@ -45,11 +44,7 @@ def rerequest(method, url, **kwargs):
             utils.p('refreshing token')
             ui.add_report('Refreshing token. If this fails, please login in Hana3D Login panel.', 10)  # noqa E501
 
-            preferences = bpy.context.preferences.addons['hana3d'].preferences
-            oauth_response = hana3d_oauth.refresh_token(
-                preferences.api_key_refresh,
-                immediate
-            )
+            oauth_response = hana3d_oauth.refresh_token(immediate=immediate)
             updated_headers = utils.get_headers(api_key=oauth_response['access_token'])
             kwargs['headers'].update(updated_headers)
             response = requests.request(method, url, **kwargs)
