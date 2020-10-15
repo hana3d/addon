@@ -67,13 +67,15 @@ def refresh_token(api_key_refresh: str, immediate: bool = False) -> dict:
         if immediate:
             write_tokens(oauth_response)
         else:
-            threading.Thread(target=write_tokens, args=(oauth_response,), daemon=True)
+            thread = threading.Thread(target=write_tokens, args=(oauth_response,), daemon=True)
+            thread.start()
     else:
         ui.add_report('Auto-Login failed, please login manually', color=colors.RED)
         if immediate:
             reset_tokens()
         else:
-            threading.Thread(target=reset_tokens, daemon=True)
+            thread = threading.Thread(target=reset_tokens, daemon=True)
+            thread.start()
     return oauth_response
 
 
