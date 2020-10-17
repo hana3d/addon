@@ -8,7 +8,6 @@ tests:
   only:
     - master
     - helder.tests
-    - helder.ci
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
