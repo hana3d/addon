@@ -142,7 +142,7 @@ def draw_panel_common_upload(layout, context):
             op.process_source = asset_type
             op.process_type = 'THUMBNAILER'
     box.prop(props, 'description')
-    box.prop(props, 'is_public')
+    # box.prop(props, 'is_public')  # Commented out until feature is needed
 
     box = layout.box()
     box.label(text='Tags', icon='COLOR')

@@ -45,12 +45,13 @@ def upload_file(upload_data, f, correlation_id):
         'assetId': upload_data['id'],
         'libraries': upload_data['libraries'],
         'tags': upload_data['tags'],
-        'workspace': upload_data['workspace'],
         'fileType': f['type'],
         'fileIndex': f['index'],
         'originalFilename': os.path.basename(f['file_path']),
         'comment': f['publish_message']
     }
+    if 'workspace' in upload_data:
+        upload_info['workspace'] = upload_data['workspace']
     if f['type'] == 'blend':
         upload_info['viewId'] = upload_data['viewId']
         if 'id_parent' in upload_data:
@@ -229,6 +230,6 @@ if __name__ == "__main__":
             bg_blender.progress('upload failed.')
 
     except Exception as e:
-        print(e)
-        bg_blender.progress(e)
+        logging.exception(e)
+        bg_blender.progress(f'Error during upload: {repr(e)}')
         sys.exit(1)
