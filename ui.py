@@ -653,7 +653,8 @@ def draw_callback_2d_search(self, context):
 
             if ui_props.wcount * ui_props.hcount < len(search_results):
                 page_start = ui_props.scrolloffset + 1
-                page_end = ui_props.scrolloffset + ui_props.wcount
+                page_end = ui_props.scrolloffset + ui_props.wcount * \
+                    context.preferences.addons['hana3d'].preferences.max_assetbar_rows
                 pagination_text = \
                     f'{page_start} - {page_end} of {wm["search results orig"]["count"]}'
                 ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
