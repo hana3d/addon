@@ -519,7 +519,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         box.label(text='Render Parameters', icon='PREFERENCES')
         box.prop(asset_props, 'render_job_name', text='Name')
         box.prop(render_props, 'cameras', expand=False, icon_only=False)
-        if render_props.cameras == 'ACTIVE_CAMERA':
+        if render_props.cameras == 'ACTIVE_CAMERA' and context.scene.camera is not None:
             row = box.row()
             row.label(text=context.scene.camera.name_full)
         box.prop(render_props, 'engine')
