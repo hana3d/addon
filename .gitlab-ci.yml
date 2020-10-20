@@ -11,7 +11,6 @@ tests:
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
-    # - BLENDER28_URL="$(curl -s https://www.blender.org/download/ | grep -oe '[^\"]*blender-2\.82[^\"]*linux64[^\"]*' | tail -n1)"
     - BLENDER_URL=https://download.blender.org/release/Blender2.90/blender-2.90.0-linux64.tar.xz
     - BLENDER_VERSION=$(echo $BLENDER_URL | grep -Po 'blender-2\.\K[0-9]+')
     - echo "Installing Blender 2.${BLENDER_VERSION}"
@@ -23,8 +22,6 @@ tests:
     - PATH="/opt/blender/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
   script:
-    # - ls /opt/blender/2.90/scripts/addons
-    # - ls /opt/blender/2.90/scripts/addons/hana3d
     - /opt/blender/blender -b -P tests/install.py -noaudio
     - /opt/blender/blender -b -P tests/auth.py -noaudio
     - /opt/blender/blender -b tests/scenes/suzanne.blend --addons hana3d -P tests/upload.py -noaudio --

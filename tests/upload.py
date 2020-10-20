@@ -33,7 +33,7 @@ def main():
         # while props.uploading:
         print('Upload State: ', props.upload_state)
         print('Uploading: ', props.uploading)
-        # time.sleep(30)
+        time.sleep(30)
 
         # print('Upload State: ', props.upload_state)
 
