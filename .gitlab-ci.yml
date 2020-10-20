@@ -30,7 +30,6 @@ e2e-stage:
   stage: e2e-stage
   only:
     - dev
-    - helder.tests
   script:
     - "curl -X POST -F token=$E2E_TOKEN -F ref=stage https://gitlab.com/api/v4/projects/21908959/trigger/pipeline"
 
