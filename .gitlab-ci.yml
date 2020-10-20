@@ -27,7 +27,6 @@ tests:
     - /opt/blender/blender -b -P tests/install.py -noaudio
 
 e2e-stage:
-  image: node:13-stretch
   stage: e2e-stage
   only:
     - dev
@@ -36,7 +35,6 @@ e2e-stage:
     - "curl -X POST -F token=$E2E_TOKEN -F ref=stage https://gitlab.com/api/v4/projects/21908959/trigger/pipeline"
 
 e2e-master:
-  image: node:13-stretch
   stage: e2e-master
   only:
     - master
