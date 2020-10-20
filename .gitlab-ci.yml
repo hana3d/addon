@@ -1,5 +1,7 @@
 stages:
 - tests
+- e2e-stage
+- e2e-master
 - release
 
 tests:
@@ -23,6 +25,23 @@ tests:
     - cp -r /builds/real2u/hana3d /opt/blender/2.90/scripts/addons/
   script:
     - /opt/blender/blender -b -P tests/install.py -noaudio
+
+e2e-stage:
+  image: node:13-stretch
+  stage: e2e-stage
+  only:
+    - dev
+    - helder.tests
+  script:
+    - "curl -X POST -F token=$E2E_TOKEN -F ref=stage https://gitlab.com/api/v4/projects/21908959/trigger/pipeline"
+
+e2e-master:
+  image: node:13-stretch
+  stage: e2e-master
+  only:
+    - master
+  script:
+    - "curl -X POST -F token=$E2E_TOKEN -F ref=master https://gitlab.com/api/v4/projects/21908959/trigger/pipeline"
 
 release:
   image: node:13
