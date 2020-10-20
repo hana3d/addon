@@ -5,6 +5,8 @@ import time
 import bpy
 import requests
 
+API_URL = 'https://staging-api.hana3d.com'
+
 
 def write_tokens(oauth_response: dict):
     preferences = bpy.context.preferences.addons['hana3d'].preferences
