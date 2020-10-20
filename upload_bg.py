@@ -138,6 +138,9 @@ def fix_objects_origin(objects, coll):
 
 
 if __name__ == "__main__":
+    # preferences = bpy.context.preferences.addons['hana3d'].preferences
+    # # bg_blender.write_output(str(preferences.api_key) + '\n')
+    # bg_blender.write_output(str(preferences.api_key_refresh) + '\n')
 
     try:
         bg_blender.progress('preparing scene - append data')

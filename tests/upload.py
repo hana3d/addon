@@ -13,6 +13,9 @@ API_URL = 'https://staging-api.hana3d.com'
 def write_tokens(oauth_response: dict):
     preferences = bpy.context.preferences.addons['hana3d'].preferences
     preferences.api_key = oauth_response['access_token']
+    preferences.api_key_refresh = ''
+    preferences.api_key_timeout = time.time() + oauth_response['expires_in']
+    preferences.api_key_life = oauth_response['expires_in']
 
 
 def test_connection(url: str, headers: dict):
@@ -37,6 +40,7 @@ def get_auth():
         "client_secret": os.getenv('CLIENT_SECRET')
     }
     oauth_response = requests.request(method, url, headers=headers, json=data)
+    # print(oauth_response.text)
     credentials = oauth_response.json()
     headers = {'Authorization': f'{credentials["token_type"]} {credentials["access_token"]}'}
     test_connection(API_URL, headers)
@@ -55,7 +59,7 @@ def main():
         print('Upload State: ', props.upload_state)
         print('Uploading: ', props.uploading)
 
-        get_auth()
+        # get_auth()
         utils.update_profile()
 
         bpy.ops.object.select_all(action='DESELECT')

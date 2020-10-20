@@ -67,6 +67,10 @@ def threadread(tcom: threadCom):
     while True:
         line = tcom.proc.stdout.readline()
         line = str(line)
+
+        if len(line) > 3:
+            print(line, len(line))
+
         start = line.find('progress{')
         if start > -1:
             end = line.rfind('}')
@@ -79,8 +83,6 @@ def threadread(tcom: threadCom):
             end = line.rfind('}')
             tcom.output_msg = line[start + 13: end]
             break
-        if len(line) > 3:
-            print(line, len(line))
 
 
 class upload_in_chunks:
