@@ -7,7 +7,7 @@ tests:
   stage: tests
   only:
     - master
-    - helder.tests
+    - dev
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
@@ -23,9 +23,6 @@ tests:
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
   script:
     - /opt/blender/blender -b -P tests/install.py -noaudio
-    - /opt/blender/blender -b -P tests/auth.py -noaudio
-    - /opt/blender/blender -b tests/scenes/suzanne.blend --addons hana3d -P tests/upload.py -noaudio --
-
 
 release:
   image: node:13
