@@ -18,9 +18,9 @@ tests:
     - echo "Downloading from $BLENDER_URL"
     - curl -SL "$BLENDER_URL" | tar -Jx -C /opt/blender --strip-components=1
     - ln -s /opt/blender/blender /usr/local/bin/blender
-    - cp -r /builds/real2u/hana3d /opt/blender/2.90/scripts/addons/
     - PATH="/opt/blender/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
+    - cp -r /builds/real2u/hana3d /opt/blender/2.90/scripts/addons/
   script:
     - /opt/blender/blender -b -P tests/install.py -noaudio
 
