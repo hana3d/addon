@@ -26,6 +26,7 @@ tests:
     # - ls /opt/blender/2.90/scripts/addons
     # - ls /opt/blender/2.90/scripts/addons/hana3d
     - /opt/blender/blender -b -P tests/install.py -noaudio
+    - /opt/blender/blender -b -P tests/auth.py -noaudio
     - /opt/blender/blender -b tests/scenes/suzanne.blend --addons hana3d -P tests/upload.py -noaudio --
 
 
