@@ -178,8 +178,7 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
         for s in data_from.scenes:
             if s == scenename or scenename is None:
                 data_to.scenes = [s]
-                scenename = s
-    scene = bpy.data.scenes[scenename]
+    scene = data_to.scenes[0]
     if fake_user:
         scene.use_fake_user = True
     return scene
