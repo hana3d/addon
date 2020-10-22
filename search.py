@@ -342,6 +342,7 @@ class Searcher(threading.Thread):
                 try:
                     origdata = json.load(infile)
                     urlquery = origdata['next']
+                    urlquery = urlquery.replace('False', 'false').replace('True', 'true')
                     # rparameters = {}
                     if urlquery is None:
                         return

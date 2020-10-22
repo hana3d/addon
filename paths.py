@@ -62,8 +62,17 @@ def get_api_url(*paths: str, query: dict = None) -> str:
     url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
     if query is None:
         return url
+    correct_bool(query)
     query_string = urllib.parse.urlencode(query)
     return f'{url}?{query_string}'
+
+
+def correct_bool(query):
+    if isinstance(query.get('public'), bool):
+        if query['public']:
+            query['public'] = 'true'
+        else:
+            query['public'] = 'false'
 
 
 def get_auth_url():
