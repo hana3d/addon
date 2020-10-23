@@ -1,6 +1,6 @@
 stages:
 - tests
-- e2e-stage
+- e2e-dev
 - e2e-master
 - release
 
@@ -26,12 +26,12 @@ tests:
   script:
     - /opt/blender/blender -b -P tests/install.py -noaudio
 
-e2e-stage:
-  stage: e2e-stage
+e2e-dev:
+  stage: e2e-dev
   only:
     - dev
   script:
-    - "curl -X POST -F token=$E2E_TOKEN -F ref=stage https://gitlab.com/api/v4/projects/21908959/trigger/pipeline"
+    - "curl -X POST -F token=$E2E_TOKEN -F ref=dev https://gitlab.com/api/v4/projects/21908959/trigger/pipeline"
 
 e2e-master:
   stage: e2e-master
