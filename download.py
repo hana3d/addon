@@ -374,6 +374,7 @@ def check_existing(asset_data):
 
 def import_scene(asset_data: dict, file_names: list):
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
+    scene.name = asset_data['name']
     if bpy.context.window_manager.hana3d_scene.merge_add == 'ADD':
         for window in bpy.context.window_manager.windows:
             window.scene = bpy.data.scenes[asset_data['name']]

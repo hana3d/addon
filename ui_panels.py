@@ -519,7 +519,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         box.label(text='Render Parameters', icon='PREFERENCES')
         box.prop(asset_props, 'render_job_name', text='Name')
         box.prop(render_props, 'cameras', expand=False, icon_only=False)
-        if render_props.cameras == 'ACTIVE_CAMERA':
+        if render_props.cameras == 'ACTIVE_CAMERA' and context.scene.camera is not None:
             row = box.row()
             row.label(text=context.scene.camera.name_full)
         box.prop(render_props, 'engine')
@@ -553,9 +553,17 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
 
         if asset_props is not None and asset_props.rendering:
             self.draw_kill_job(asset_props)
-        row = self.layout.row()
-        row.scale_y = 2.0
-        row.operator('hana3d.render_scene', icon='SCENE')
+
+        visible_cameras = [ob.name_full for ob in context.scene.objects
+                           if ob.type == 'CAMERA' and ob.visible_get()]
+        all_cameras = [ob.name_full for ob in context.scene.objects
+                       if ob.type == 'CAMERA']
+        if render_props.cameras == 'ACTIVE_CAMERA' and context.scene.camera is not None or \
+                render_props.cameras == 'VISIBLE_CAMERAS' and len(visible_cameras) or \
+                render_props.cameras == 'ALL_CAMERAS' and len(all_cameras):
+            row = self.layout.row()
+            row.scale_y = 2.0
+            row.operator('hana3d.render_scene', icon='SCENE')
 
     def draw_kill_job(self, asset_props):
         row = self.layout.row(align=True)
