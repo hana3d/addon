@@ -67,6 +67,8 @@ def threadread(tcom: threadCom):
     while True:
         line = tcom.proc.stdout.readline()
         line = str(line)
+        if len(line) > 3:
+            print(line, len(line))
         start = line.find('progress{')
         if start > -1:
             end = line.rfind('}')

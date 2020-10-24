@@ -88,7 +88,8 @@ def upload_file(upload_data, f, correlation_id):
             upload_done_url = paths.get_api_url('uploads_s3', upload['id'], 'upload-file')
             upload_response = rerequests.post(upload_done_url, headers=headers)
             dict_response = upload_response.json()
-            os.environ['HANA3D_POST_PROCESS_ID'] = dict_response.get('post_process_job_id')
+            if type(dict_response) == dict:
+                os.environ['HANA3D_POST_PROCESS_ID'] = dict_response.get('post_process_job_id')
 
     bg_blender.progress('finished uploading')
 
