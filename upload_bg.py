@@ -89,7 +89,10 @@ def upload_file(upload_data, f, correlation_id):
             upload_response = rerequests.post(upload_done_url, headers=headers)
             dict_response = upload_response.json()
             if type(dict_response) == dict:
-                os.environ['HANA3D_POST_PROCESS_ID'] = dict_response.get('post_process_job_id')
+                tempdir = paths.get_temp_dir()
+                json_filepath = os.path.join(tempdir, 'post_process.json')
+                with open(json_filepath, 'w') as json_file:
+                    json.dump(dict_response, json_file)
 
     bg_blender.progress('finished uploading')
 
