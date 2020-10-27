@@ -1,14 +1,15 @@
 stages:
-- tests
+- unit-tests
 - e2e
 - release
 
-tests:
+unit-tests:
   image: node:13-stretch
   stage: tests
   only:
     - master
     - dev
+    - merge_requests
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
