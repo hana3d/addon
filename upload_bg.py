@@ -87,6 +87,12 @@ def upload_file(upload_data, f, correlation_id):
             # confirm single file upload to hana3d server
             upload_done_url = paths.get_api_url('uploads_s3', upload['id'], 'upload-file')
             upload_response = rerequests.post(upload_done_url, headers=headers)
+            dict_response = upload_response.json()
+            if type(dict_response) == dict:
+                tempdir = paths.get_temp_dir()
+                json_filepath = os.path.join(tempdir, 'post_process.json')
+                with open(json_filepath, 'w') as json_file:
+                    json.dump(dict_response, json_file)
 
     bg_blender.progress('finished uploading')
 
@@ -138,7 +144,6 @@ def fix_objects_origin(objects, coll):
 
 
 if __name__ == "__main__":
-
     try:
         bg_blender.progress('preparing scene - append data')
         with open(HANA3D_EXPORT_DATA, 'r') as s:

@@ -1,5 +1,6 @@
 stages:
 - tests
+- e2e
 - release
 
 tests:
@@ -7,26 +8,30 @@ tests:
   stage: tests
   only:
     - master
-    - helder.tests
+    - dev
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
-    # - BLENDER28_URL="$(curl -s https://www.blender.org/download/ | grep -oe '[^\"]*blender-2\.82[^\"]*linux64[^\"]*' | tail -n1)"
-    - BLENDER28_URL=https://download.blender.org/release/Blender2.83/blender-2.83.0-linux64.tar.xz
-    - BLENDER28_VERSION=$(echo $BLENDER28_URL | grep -Po 'blender-2\.\K[0-9]+')
-    - echo "Installing Blender 2.${BLENDER28_VERSION}"
-    - mkdir /opt/blender28
-    - echo "Downloading from $BLENDER28_URL"
-    - curl -SL "$BLENDER28_URL" | tar -Jx -C /opt/blender28 --strip-components=1
-    - ln -s /opt/blender28/blender /usr/local/bin/blender28
-    - cp -r /builds/real2u/hana3d /opt/blender28/2.83/scripts/addons/
-    - PATH="/opt/blender28/blender:${PATH}"
+    - BLENDER_URL=https://download.blender.org/release/Blender2.90/blender-2.90.0-linux64.tar.xz
+    - BLENDER_VERSION=$(echo $BLENDER_URL | grep -Po 'blender-2\.\K[0-9]+')
+    - echo "Installing Blender 2.${BLENDER_VERSION}"
+    - mkdir /opt/blender
+    - echo "Downloading from $BLENDER_URL"
+    - curl -SL "$BLENDER_URL" | tar -Jx -C /opt/blender --strip-components=1
+    - ln -s /opt/blender/blender /usr/local/bin/blender
+    - PATH="/opt/blender/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
+    - cp -r /builds/real2u/hana3d /opt/blender/2.90/scripts/addons/
   script:
-    - ls /opt/blender28/2.83/scripts/addons
-    - ls /opt/blender28/2.83/scripts/addons/hana3d
-    - /opt/blender28/blender -b -P tests/install.py -noaudio
+    - /opt/blender/blender -b -P tests/install.py -noaudio
 
+e2e:
+  stage: e2e
+  only:
+    - dev
+    - master
+  script:
+    - "curl -X POST -F token=$E2E_TOKEN -F ref=$CI_COMMIT_BRANCH https://gitlab.com/api/v4/projects/21908959/trigger/pipeline"
 
 release:
   image: node:13

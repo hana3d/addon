@@ -1,4 +1,12 @@
-import addon_utils
+import sys
 
-if addon_utils.enable("hana3d", default_set=True, persistent=True, handle_error=None) is None:
-    exit(1)
+import addon_utils
+import bpy
+
+
+enable = addon_utils.enable("hana3d", default_set=True, persistent=True, handle_error=None)
+
+if enable is None:
+    sys.exit(1)
+else:
+    bpy.ops.wm.save_userpref()
