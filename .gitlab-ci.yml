@@ -5,7 +5,7 @@ stages:
 
 unit-tests:
   image: node:13-stretch
-  stage: tests
+  stage: unit-tests
   only:
     - master
     - dev
