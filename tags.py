@@ -69,6 +69,7 @@ class RemoveTagSearch(Operator):
 
     tag: bpy.props.StringProperty(name='Tag', default='')
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_search_props()
         props.tags_list[self.tag].selected = False
@@ -84,6 +85,7 @@ class RemoveTagUpload(Operator):
 
     tag: bpy.props.StringProperty(name='Tag', default='')
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
         props.tags_list[self.tag].selected = False

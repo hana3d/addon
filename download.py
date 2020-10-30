@@ -36,6 +36,7 @@ from bpy.props import (
 )
 
 from hana3d import append_link, colors, paths, render_tools, types, ui, utils
+from hana3d.report_tools import execute_wrapper
 
 download_threads = {}
 append_tasks_queue = Queue()
@@ -623,6 +624,7 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
 
     view_id: StringProperty()
 
+    @execute_wrapper
     def execute(self, context):
         thread = download_threads.pop(self.view_id)
         thread.stop()
@@ -680,6 +682,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
     cast_parent: StringProperty(name="Particles Target Object", description="", default="")
 
+    @execute_wrapper
     def execute(self, context):
         wm = context.window_manager
         sr = wm['search results']
@@ -772,6 +775,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     def poll(cls, context):
         return len(download_threads) == 0
 
+    @execute_wrapper
     def execute(self, context):
         if self.reset is True:
             self.object_count = 0

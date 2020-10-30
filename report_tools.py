@@ -19,13 +19,14 @@
 import datetime
 import functools
 import getpass
+import requests
 import traceback
 import uuid
 
 import addon_utils
 import bpy
 
-from hana3d import paths, rerequests, utils
+from hana3d import paths
 
 
 def get_hana3d_version():
@@ -61,14 +62,8 @@ def execute_wrapper(func):
                 'user': getpass.getuser(),
                 'error': format_exception(e)
             }
-            headers = utils.get_headers()
             url = paths.get_api_url('report')
-            rerequests.post(
-                url,
-                json=data,
-                headers=headers,
-                immediate=True
-            )
+            requests.post(url, json=data)
             raise
 
     return wrapper

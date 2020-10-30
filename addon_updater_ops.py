@@ -20,6 +20,7 @@ import os
 
 import bpy
 from bpy.app.handlers import persistent
+from hana3d.report_tools import execute_wrapper
 
 # updater import, import safely
 # Prevents popups for users with invalid python installs e.g. missing libraries
@@ -177,6 +178,7 @@ class addon_updater_install_popup(bpy.types.Operator):
         # potentially in future, could have UI for 'check to select old version'
         # to revert back to.
 
+    @execute_wrapper
     def execute(self, context):
 
         # in case of error importing updater
@@ -225,6 +227,7 @@ class addon_updater_check_now(bpy.types.Operator):
     bl_description = "Check now for an update to the {x} addon".format(x=updater.addon)
     bl_options = {'REGISTER', 'INTERNAL'}
 
+    @execute_wrapper
     def execute(self, context):
         if updater.invalidupdater is True:
             return {'CANCELLED'}
@@ -274,6 +277,7 @@ class addon_updater_update_now(bpy.types.Operator):
         options={'HIDDEN'},
     )
 
+    @execute_wrapper
     def execute(self, context):
 
         # in case of error importing updater
@@ -371,6 +375,7 @@ class addon_updater_update_target(bpy.types.Operator):
         subcol = split.column()
         subcol.prop(self, "target", text="")
 
+    @execute_wrapper
     def execute(self, context):
 
         # in case of error importing updater
@@ -448,6 +453,7 @@ class addon_updater_install_manually(bpy.types.Operator):
                 row = layout.row()
                 row.label(text="See source website to download the update")
 
+    @execute_wrapper
     def execute(self, context):
 
         return {'FINISHED'}
@@ -519,6 +525,7 @@ class addon_updater_updated_successful(bpy.types.Operator):
                 col.label(text="Addon successfully installed", icon="FILE_TICK")
                 col.label(text="Consider restarting blender to fully reload.", icon="BLANK1")
 
+    @execute_wrapper
     def execute(self, context):
         return {'FINISHED'}
 
@@ -538,6 +545,7 @@ class addon_updater_restore_backup(bpy.types.Operator):
         except Exception:
             return False
 
+    @execute_wrapper
     def execute(self, context):
         # in case of error importing updater
         if updater.invalidupdater is True:
@@ -563,6 +571,7 @@ class addon_updater_ignore(bpy.types.Operator):
         else:
             return False
 
+    @execute_wrapper
     def execute(self, context):
         # in case of error importing updater
         if updater.invalidupdater is True:
@@ -587,6 +596,7 @@ class addon_updater_end_background(bpy.types.Operator):
     #     else:
     #         return False
 
+    @execute_wrapper
     def execute(self, context):
         # in case of error importing updater
         if updater.invalidupdater is True:

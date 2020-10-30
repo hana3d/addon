@@ -23,6 +23,7 @@ import bpy
 import requests
 
 from hana3d import colors, oauth, paths, ui, utils
+from hana3d.report_tools import execute_wrapper
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -113,6 +114,7 @@ class RegisterLoginOnline(bpy.types.Operator):
     def poll(cls, context):
         return True
 
+    @execute_wrapper
     def execute(self, context):
         preferences = bpy.context.preferences.addons['hana3d'].preferences
         preferences.login_attempt = True
@@ -146,6 +148,7 @@ class Logout(bpy.types.Operator):
     def poll(cls, context):
         return True
 
+    @execute_wrapper
     def execute(self, context):
         reset_tokens()
         return {'FINISHED'}
@@ -162,6 +165,7 @@ class CancelLoginOnline(bpy.types.Operator):
     def poll(cls, context):
         return True
 
+    @execute_wrapper
     def execute(self, context):
         global active_authenticator
         preferences = bpy.context.preferences.addons['hana3d'].preferences

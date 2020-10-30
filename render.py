@@ -44,6 +44,7 @@ from hana3d import (
     ui,
     utils
 )
+from hana3d.report_tools import execute_wrapper
 
 render_threads = []
 upload_threads = []
@@ -445,6 +446,7 @@ class RenderScene(Operator):
         props = utils.get_upload_props()
         return props is not None and not props.rendering
 
+    @execute_wrapper
     def execute(self, context):
         if context.scene.camera is None:
             self.report({'WARNING'}, "No active camera found in scene")
@@ -496,6 +498,7 @@ class CancelJob(Operator):
         props = utils.get_upload_props()
         return props is not None and props.rendering
 
+    @execute_wrapper
     def execute(self, context):
         view_thread_jobs = [
             thread
@@ -523,6 +526,7 @@ class ImportRender(Operator):
         props = utils.get_upload_props()
         return len(props.render_data['jobs']) > 0
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
         for job in props.render_data['jobs']:
@@ -562,6 +566,7 @@ class RemoveRender(Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
         id_job = props.render_job_output
@@ -628,6 +633,7 @@ class OpenImage(Operator):
     def poll(cls, context):
         return True
 
+    @execute_wrapper
     def execute(self, context):
         for file in self.files:
             image = load_image(
@@ -759,6 +765,7 @@ class UploadImage(Operator):
         props = utils.get_upload_props()
         return props is not None and props.active_image != '' and not props.uploading_render
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
 
