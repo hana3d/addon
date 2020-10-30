@@ -20,7 +20,7 @@ import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-from hana3d import utils
+from hana3d import utils, types
 from hana3d.report_tools import execute_wrapper
 
 
@@ -64,9 +64,25 @@ class RemoveLibraryUpload(Operator):
         return {'INTERFACE'}
 
 
+class RefreshLibraries(bpy.types.Operator):
+    """Refresh Libraries"""
+
+    bl_idname = "object.hana3d_refresh_libraries"
+    bl_label = "Hana3D Refresh Libraries"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def execute(self, context):
+        utils.update_libraries(utils.get_search_props().workspace)
+        types.update_libraries_list(utils.get_search_props(), context)
+        utils.update_libraries(utils.get_upload_props().workspace)
+        types.update_libraries_list(utils.get_upload_props(), context)
+        return {'FINISHED'}
+
+
 classes = (
     RemoveLibrarySearch,
-    RemoveLibraryUpload
+    RemoveLibraryUpload,
+    RefreshLibraries
 )
 
 
