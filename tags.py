@@ -20,7 +20,8 @@ import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-from hana3d import utils, report_tools
+from hana3d import utils
+from hana3d.report_tools import execute_wrapper
 
 
 class Hana3DAddTag(Operator):
@@ -36,7 +37,7 @@ class Hana3DAddTag(Operator):
         layout = self.layout
         layout.prop(self, 'tag')
 
-    @report_tools.report_wrapper
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
         current_workspace = props.workspace

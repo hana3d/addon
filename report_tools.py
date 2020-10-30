@@ -18,30 +18,20 @@
 
 import datetime
 import functools
-import json
-import logging
-import pprint
+import getpass
 import traceback
+import uuid
 
-HEADERS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Credentials': True,
-    'Content-Type': 'application/json'
-}
+import addon_utils
+import bpy
+
+from hana3d import paths, rerequests, utils
 
 
-class ResponseEncoder(json.JSONEncoder):
-    """JSONEncoder with additional logic for encoding non-standard objects"""
-
-    def default(self, obj):
-        if isinstance(obj, (datetime.date, datetime.datetime, datetime.time)):
-            return obj.isoformat()
-        if isinstance(obj, requests.Response):
-            try:
-                return obj.json()
-            except json.JSONDecodeError:
-                return obj.text
-        return super().default(obj)
+def get_hana3d_version():
+    for addon in addon_utils.modules():
+        if addon.bl_info['name'] == 'Hana3D':
+            return str(addon.bl_info['version'])
 
 
 def format_exception(exc: Exception) -> dict:
@@ -56,56 +46,29 @@ def format_exception(exc: Exception) -> dict:
     }
 
 
-def format_message(json_msg):
-    json_msg = json.loads(json_msg)
-    json_msg = pprint.pformat(json_msg, width=999)
-    json_msg = json_msg.replace("'", "")
-    json_msg = json_msg.replace("\\n", "")
-    return json_msg
-
-
-def send_to_slack(status_code: int, json_body: dict):
-    msg = format_message(json_body)
-    print(msg)
-    # json = {"text": f"An HTTP {status_code} error has occurred:\n {msg}"}
-    # requests.post(config.HANA3D_ERRORS_WEBHOOK_URL, json=json)
-
-
-def report_wrapper(func):
+def execute_wrapper(func):
     """Decorator to build error reports"""
     @functools.wraps(func)
     def wrapper(event, context):
-        encoder = ResponseEncoder()
         try:
-            logging.debug(event, extra={'type': 'debug_event'})
-            body = func(event, context)
-            if body is None:
-                body = 'ok'
-            status_code = 200
-            json_body = encoder.encode(body)
-            payload = {
-                'statusCode': status_code,
-                'headers': HEADERS,
-                'body': json_body
-            }
-            logging.debug(payload, extra={'type': 'debug_response'})
+            return func(event, context)
         except Exception as e:
-            logging.exception(e)
-            body = format_exception(e)
-            status_code = 500
-            json_body = encoder.encode(body)
-            payload = {
-                'statusCode': status_code,
-                'headers': HEADERS,
-                'body': json_body
+            data = {
+                'event_id': str(uuid.uuid4()),
+                'addon_version': get_hana3d_version(),
+                'blender_version': bpy.app.version_string,
+                'timestamp': datetime.datetime.now().isoformat(),
+                'user': getpass.getuser(),
+                'error': format_exception(e)
             }
-        finally:
-            send_to_slack(status_code, json_body)
-            log_message = {
-                'status_code': status_code,
-                'event': event,
-                'response': json_body,
-            }
-            logging.info(log_message, extra={'type': 'request'})
-    #     return payload
-    # return wrapper
+            headers = utils.get_headers()
+            url = paths.get_api_url('report')
+            rerequests.post(
+                url,
+                json=data,
+                headers=headers,
+                immediate=True
+            )
+            raise
+
+    return wrapper
