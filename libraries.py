@@ -76,6 +76,7 @@ class RefreshLibraries(bpy.types.Operator):
         types.update_libraries_list(utils.get_search_props(), context)
         utils.update_libraries(utils.get_upload_props().workspace)
         types.update_libraries_list(utils.get_upload_props(), context)
+        utils.show_popup('Libraries updated!')
         return {'FINISHED'}
 
 
