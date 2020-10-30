@@ -24,6 +24,7 @@ import tempfile
 import bpy
 
 from hana3d import bg_blender, colors, paths, ui, utils
+from hana3d.report_tools import execute_wrapper
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
@@ -162,6 +163,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         preferences = bpy.context.preferences.addons['hana3d'].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
+    @execute_wrapper
     def execute(self, context):
         try:
             props = utils.get_active_model(context).hana3d
@@ -307,6 +309,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         preferences = context.preferences.addons['hana3d'].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
+    @execute_wrapper
     def execute(self, context):
         try:
             props = utils.get_active_material(context).hana3d
@@ -409,6 +412,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         preferences = bpy.context.preferences.addons['hana3d'].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
+    @execute_wrapper
     def execute(self, context):
         try:
             props = get_active_scene(context).hana3d

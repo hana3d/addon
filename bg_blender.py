@@ -25,6 +25,7 @@ import bpy
 from bpy.props import EnumProperty
 
 from hana3d import utils, tasks_queue
+from hana3d.report_tools import execute_wrapper
 
 bg_processes = []
 
@@ -199,6 +200,7 @@ class KillBgProcess(bpy.types.Operator):
         default="MODEL",
     )
 
+    @execute_wrapper
     def execute(self, context):
         # first do the easy stuff...TODO all cases.
         props = utils.get_upload_props()

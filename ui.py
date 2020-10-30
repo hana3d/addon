@@ -37,6 +37,7 @@ from hana3d import (
     ui_bgl,
     utils
 )
+from hana3d.report_tools import execute_wrapper
 
 handler_2d = None
 handler_3d = None
@@ -1652,6 +1653,7 @@ class AssetBarOperator(bpy.types.Operator):
         ui_props.assetbar_on = True
         return {'RUNNING_MODAL'}
 
+    @execute_wrapper
     def execute(self, context):
         return {'RUNNING_MODAL'}
 
@@ -1723,6 +1725,7 @@ class TransferHana3DData(bpy.types.Operator):
     bl_description = "Transfer hana3d metadata from one object to another when fixing uploads with wrong parenting."  # noqa E501
     bl_options = {'REGISTER', 'UNDO'}
 
+    @execute_wrapper
     def execute(self, context):
         source_ob = bpy.context.active_object
         for target_ob in bpy.context.selected_objects:
@@ -1747,6 +1750,7 @@ class UndoWithContext(bpy.types.Operator):
 
     message: StringProperty('Undo Message', default='hana3d operation')
 
+    @execute_wrapper
     def execute(self, context):
         C_dict = bpy.context.copy()
         C_dict.update(region='WINDOW')
@@ -1769,6 +1773,7 @@ class RunAssetBarWithContext(bpy.types.Operator):
     # def modal(self, context, event):
     #     return {'RUNNING_MODAL'}
 
+    @execute_wrapper
     def execute(self, context):
         C_dict = bpy.context.copy()
         C_dict.update(region='WINDOW')

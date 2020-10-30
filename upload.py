@@ -29,6 +29,7 @@ from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
 from hana3d import bg_blender, paths, render, rerequests, types, ui, utils
+from hana3d.report_tools import execute_wrapper
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 
@@ -221,6 +222,7 @@ class UploadOperator(Operator):
         props = utils.get_upload_props()
         return bpy.context.view_layer.objects.active is not None and not props.uploading
 
+    @execute_wrapper
     def execute(self, context):
         obj = utils.get_active_asset()
         props = obj.hana3d

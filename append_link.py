@@ -19,6 +19,7 @@
 import bpy
 
 from hana3d import render_settings, utils
+from hana3d.report_tools import execute_wrapper
 
 
 def append_material(file_name, matname=None, link=False, fake_user=True):
@@ -285,6 +286,7 @@ class DeleteSceneWorkaround(bpy.types.Operator):
     bl_idname = "scene.hana3d_delete_scene"
     bl_label = "Test Operator"
 
+    @execute_wrapper
     def execute(self, context):
         bpy.data.scenes.remove(context.scene, do_unlink=True)
         return {'FINISHED'}

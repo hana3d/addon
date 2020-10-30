@@ -29,6 +29,7 @@ from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
 from hana3d import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
+from hana3d.report_tools import execute_wrapper
 
 search_start_time = 0
 prev_time = 0
@@ -650,6 +651,7 @@ class SearchOperator(Operator):
     def poll(cls, context):
         return True
 
+    @execute_wrapper
     def execute(self, context):
         # TODO this should all get transferred to properties of the search operator,
         #  so sprops don't have to be fetched here at all.

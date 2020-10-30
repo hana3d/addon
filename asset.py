@@ -19,6 +19,7 @@
 import bpy
 
 from hana3d import utils
+from hana3d.report_tools import execute_wrapper
 
 
 class ShareAsset(bpy.types.Operator):
@@ -28,6 +29,7 @@ class ShareAsset(bpy.types.Operator):
     bl_label = "Hana3D Share Asset"
     bl_options = {'REGISTER', 'INTERNAL'}
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
         context.window_manager.clipboard = f"view_id:{props.view_id}"

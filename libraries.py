@@ -16,16 +16,12 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-if 'bpy' in locals():
-    from importlib import reload
-
-    utils = reload(utils)
-else:
-    from hana3d import utils
-
 import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
+
+from hana3d import utils
+from hana3d.report_tools import execute_wrapper
 
 
 class RemoveLibrarySearch(Operator):
@@ -37,6 +33,7 @@ class RemoveLibrarySearch(Operator):
 
     library: StringProperty(name='Library', default='')
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_search_props()
         props.libraries_list[self.library].selected = False
@@ -52,6 +49,7 @@ class RemoveLibraryUpload(Operator):
 
     library: StringProperty(name='Library', default='')
 
+    @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
         props.libraries_list[self.library].selected = False
