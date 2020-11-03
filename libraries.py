@@ -20,8 +20,29 @@ import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-from hana3d import utils, types
+from hana3d import utils, types, paths, rerequests
 from hana3d.report_tools import execute_wrapper
+
+
+def update_libraries(workspace):
+    utils.p('update_libraries')
+    query = {
+        'workspace_id': workspace
+    }
+    url = paths.get_api_url('libraries', query=query)
+    headers = utils.get_headers()
+
+    r = rerequests.get(url, headers=headers)
+    assert r.ok, f'Failed to get library data: {r.text}'
+
+    workspaces = bpy.context.window_manager['hana3d profile']['user']['workspaces']
+
+    for k, v in enumerate(workspaces):
+        if v['id'] == workspace:
+            workspaces[k]['libraries'] = r.json()
+            break
+
+    bpy.context.window_manager['hana3d profile']['user']['workspaces'] = workspaces
 
 
 class RemoveLibrarySearch(Operator):
@@ -71,11 +92,16 @@ class RefreshLibraries(bpy.types.Operator):
     bl_label = "Hana3D Refresh Libraries"
     bl_options = {'REGISTER', 'INTERNAL'}
 
+    @execute_wrapper
     def execute(self, context):
-        utils.update_libraries(utils.get_search_props().workspace)
-        types.update_libraries_list(utils.get_search_props(), context)
-        utils.update_libraries(utils.get_upload_props().workspace)
-        types.update_libraries_list(utils.get_upload_props(), context)
+        search_props = utils.get_search_props()
+        update_libraries(search_props.workspace)
+        types.update_libraries_list(search_props, context)
+
+        upload_props = utils.get_upload_props()
+        update_libraries(upload_props.workspace)
+        types.update_libraries_list(upload_props, context)
+
         utils.show_popup('Libraries updated!')
         return {'FINISHED'}
 

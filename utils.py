@@ -221,27 +221,6 @@ def update_profile():
     bpy.context.window_manager['hana3d profile'] = r.json()
 
 
-def update_libraries(workspace):
-    p('update_libraries')
-    query = {
-        'workspace_id': workspace
-    }
-    url = paths.get_api_url('libraries', query=query)
-    headers = get_headers(include_id_token=True)
-
-    r = rerequests.get(url, headers=headers)
-    assert r.ok, f'Failed to get library data: {r.text}'
-
-    workspaces = bpy.context.window_manager['hana3d profile']['user']['workspaces']
-
-    for k, v in enumerate(workspaces):
-        if v['id'] == workspace:
-            workspaces[k]['libraries'] = r.json()
-            break
-
-    bpy.context.window_manager['hana3d profile']['user']['workspaces'] = workspaces
-
-
 def update_profile_async():
     tasks_queue.add_task(update_profile)
 
