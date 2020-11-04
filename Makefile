@@ -43,6 +43,8 @@ build: ## build addon according to stage
 	rm -r hana3d_$(STAGE) || true
 	mkdir hana3d_$(STAGE)
 	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' \) | xargs cp --parents -t hana3d_$(STAGE)
+	find hana3d_$(STAGE) -type f -name autothumb.py -print0 | LC_ALL=C xargs -0 sed -i.bak "s/from \. /from hana3d_$(STAGE) /g"
+	find hana3d_$(STAGE) -type f -name autothumb.py -print0 | LC_ALL=C xargs -0 sed -i.bak "s/from \./from hana3d_$(STAGE)./g"
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
 	rm -r hana3d_$(STAGE)
 
