@@ -23,6 +23,7 @@ endef
 
 export PYTHON=python
 export PRINT_HELP_PYSCRIPT
+STAGE ?= production
 
 ###################################################################################################
 ## GENERAL COMMANDS
@@ -33,6 +34,4 @@ help: ## show this message
 
 
 build: ## build addon according to stage
-ifdef STAGE
-		zip -rq hana3d_$(STAGE).zip .
-endif
+	zip -rq hana3d_$(STAGE).zip .
