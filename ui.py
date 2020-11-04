@@ -1720,7 +1720,7 @@ class DefaultNamesOperator(bpy.types.Operator):
 class TransferHana3DData(bpy.types.Operator):
     """Regenerate cobweb"""
 
-    bl_idname = "object.hana3d_data_trasnfer"
+    bl_idname = "object.hana3d_data_transfer"
     bl_label = "Transfer hana3d data"
     bl_description = "Transfer hana3d metadata from one object to another when fixing uploads with wrong parenting."  # noqa E501
     bl_options = {'REGISTER', 'UNDO'}

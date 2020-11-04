@@ -20,32 +20,10 @@ import os
 import urllib.parse
 
 import bpy
+import stage.production as stage
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-HANA3D_AUTH_URL = "https://hana3d.us.auth0.com"
-HANA3D_AUTH_CLIENT_ID_DEV = "K3Tp6c6bbvF8gT6nwK1buVZjpTeDeXfu"
-HANA3D_AUTH_CLIENT_ID_PROD = "DDfs3mFwivtSoUOqwCZnJODaOhmwZvor"
-HANA3D_AUTH_AUDIENCE_DEV = "https://staging-hana3d.com"
-HANA3D_AUTH_AUDIENCE_PROD = "https://hana3d.com"
-HANA3D_PLATFORM_URL_LOCAL = "https://staging.hana3d.com"
-HANA3D_PLATFORM_URL_DEV = "https://staging.hana3d.com"
-HANA3D_PLATFORM_URL_PROD = "https://hana3d.com"
-HANA3D_AUTH_LANDING = "/landing"
-HANA3D_SETTINGS_FILENAME = os.path.join(_presets, "hana3d.json")
-
-URL_HANA3D_MAIN = 'https://api.hana3d.com'
-URL_HANA3D_LOCAL = 'http://localhost:5000'
-URL_HANA3D_DEV = os.getenv('URL_HANA3D_DEV', 'https://staging-api.hana3d.com')
-
-
-def get_hana3d_url():
-    if os.getenv('HANA3D_ENV') == 'local':
-        return URL_HANA3D_LOCAL
-
-    if os.getenv('HANA3D_ENV') == 'dev':
-        return URL_HANA3D_DEV
-
-    return URL_HANA3D_MAIN
+HANA3D_SETTINGS_FILENAME = os.path.join(_presets, HANA3D_NAME + ".json")
 
 
 def find_in_local(text=''):
@@ -58,7 +36,7 @@ def find_in_local(text=''):
 
 
 def get_api_url(*paths: str, query: dict = None) -> str:
-    base_url = get_hana3d_url() + '/v1/'
+    base_url = stage.HANA3D_URL + '/v1/'
     url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
     if query is None:
         return url
@@ -76,52 +54,34 @@ def correct_bool(query):
 
 
 def get_auth_url():
-    return HANA3D_AUTH_URL
+    return stage.HANA3D_AUTH_URL
 
 
 def get_platform_url():
-    if os.getenv('HANA3D_ENV') == 'local':
-        return HANA3D_PLATFORM_URL_LOCAL
-
-    if os.getenv('HANA3D_ENV') == 'dev':
-        return HANA3D_PLATFORM_URL_DEV
-
-    return HANA3D_PLATFORM_URL_PROD
+    return stage.HANA3D_PLATFORM_URL
 
 
 def get_auth_landing_url():
-    return get_platform_url() + HANA3D_AUTH_LANDING
+    return get_platform_url() + stage.HANA3D_AUTH_LANDING
 
 
 def get_auth_client_id():
-    if os.getenv('HANA3D_ENV') == 'local':
-        return HANA3D_AUTH_CLIENT_ID_DEV
-
-    if os.getenv('HANA3D_ENV') == 'dev':
-        return HANA3D_AUTH_CLIENT_ID_DEV
-
-    return HANA3D_AUTH_CLIENT_ID_PROD
+    return stage.HANA3D_AUTH_CLIENT_ID
 
 
 def get_auth_audience():
-    if os.getenv('HANA3D_ENV') == 'local':
-        return HANA3D_AUTH_AUDIENCE_DEV
-
-    if os.getenv('HANA3D_ENV') == 'dev':
-        return HANA3D_AUTH_AUDIENCE_DEV
-
-    return HANA3D_AUTH_AUDIENCE_PROD
+    return stage.HANA3D_AUTH_AUDIENCE
 
 
 def default_global_dict():
     from os.path import expanduser
 
     home = expanduser("~")
-    return home + os.sep + 'hana3d_data'
+    return home + os.sep + stage.HANA3D_NAME + '_data'
 
 
 def get_temp_dir(subdir=None):
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences
 
     # tempdir = user_preferences.temp_dir
     tempdir = os.path.join(user_preferences.global_dir, 'temp')
@@ -150,7 +110,7 @@ def get_download_dirs(asset_type):
     subdmapping = {'model': 'models', 'scene': 'scenes', 'material': 'materials'}
     asset_type = asset_type.lower()
 
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences
     dirs = []
     if user_preferences.directory_behaviour == 'BOTH' or 'GLOBAL':
         ddir = user_preferences.global_dir
