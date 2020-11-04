@@ -26,7 +26,7 @@ import uuid
 import addon_utils
 import bpy
 
-from hana3d import paths
+from .paths import *
 
 
 def get_hana3d_version():

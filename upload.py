@@ -28,8 +28,8 @@ import requests
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from hana3d import bg_blender, paths, render, rerequests, types, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import bg_blender, paths, render, rerequests, types, ui, utils
+from .report_tools import execute_wrapper
 
 HANA3D_EXPORT_DATA_FILE = "data.json"
 

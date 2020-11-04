@@ -20,8 +20,8 @@ import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-from hana3d import utils
-from hana3d.report_tools import execute_wrapper
+from . import utils
+from .report_tools import execute_wrapper
 
 
 class RemoveLibrarySearch(Operator):

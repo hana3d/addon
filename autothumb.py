@@ -23,10 +23,11 @@ import tempfile
 
 import bpy
 
-from hana3d import bg_blender, colors, paths, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import bg_blender, colors, paths, ui, utils
+from .report_tools import execute_wrapper
+from .stage import HANA3D_NAME
 
-HANA3D_EXPORT_DATA_FILE = "data.json"
+HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 
 
 def generate_model_thumbnail(
@@ -160,7 +161,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     @execute_wrapper
@@ -306,7 +307,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_denoising')
         layout.prop(props, 'adaptive_subdivision')
-        preferences = context.preferences.addons['hana3d'].preferences
+        preferences = context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     @execute_wrapper
@@ -367,7 +368,7 @@ def generate_scene_thumbnail(
         rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
         i += 1
 
-    user_preferences = context.preferences.addons['hana3d'].preferences
+    user_preferences = context.preferences.addons[HANA3D_NAME].preferences
 
     if user_preferences.thumbnail_use_gpu:
         context.scene.cycles.device = 'GPU'
@@ -409,7 +410,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     @execute_wrapper

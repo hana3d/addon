@@ -34,7 +34,7 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from hana3d import (
+from . import (
     autothumb,
     colors,
     paths,
@@ -44,7 +44,7 @@ from hana3d import (
     ui,
     utils
 )
-from hana3d.report_tools import execute_wrapper
+from .report_tools import execute_wrapper
 
 render_threads = []
 upload_threads = []

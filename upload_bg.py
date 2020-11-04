@@ -25,7 +25,7 @@ import time
 import bpy
 import requests
 
-from hana3d import append_link, bg_blender, paths, rerequests, utils
+from . import append_link, bg_blender, paths, rerequests, utils
 
 HANA3D_EXPORT_DATA = sys.argv[-1]
 

@@ -18,8 +18,8 @@
 
 import bpy
 
-from hana3d import utils
-from hana3d.report_tools import execute_wrapper
+from . import utils
+from .report_tools import execute_wrapper
 
 
 class ShareAsset(bpy.types.Operator):

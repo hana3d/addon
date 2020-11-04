@@ -19,9 +19,12 @@
 import bpy
 from bpy.types import Panel
 
-from hana3d import download, utils
-
-from . import addon_updater_ops
+from . import (
+    download,
+    utils,
+    addon_updater_ops
+)
+from .stage import HANA3D_NAME
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
@@ -248,7 +251,7 @@ class VIEW3D_PT_hana3d_login(Panel):
 
     def draw(self, context):
         layout = self.layout
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
         if user_preferences.login_attempt:
             draw_login_progress(layout)
@@ -264,7 +267,7 @@ def draw_login_progress(layout):
 
 
 def draw_login_buttons(layout):
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
     if user_preferences.login_attempt:
         draw_login_progress(layout)
@@ -290,7 +293,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
         s = context.scene
         wm = context.window_manager
         ui_props = wm.Hana3DUI
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout = self.layout
 
         row = layout.row()
@@ -384,7 +387,7 @@ def header_search_draw(self, context):
     if not utils.guard_from_crash():
         return
 
-    preferences = context.preferences.addons['hana3d'].preferences
+    preferences = context.preferences.addons[HANA3D_NAME].preferences
     if preferences.search_in_header:
         layout = self.layout
         wm = context.window_manager
@@ -429,7 +432,7 @@ class VIEW3D_PT_UpdaterPanel(Panel):
 
         addon_updater_ops.update_notice_box_ui(self, context)
 
-        layout.prop(context.preferences.addons['hana3d'].preferences, 'search_in_header')
+        layout.prop(context.preferences.addons[HANA3D_NAME].preferences, 'search_in_header')
 
 
 class VIEW3D_PT_hana3d_RenderPanel(Panel):

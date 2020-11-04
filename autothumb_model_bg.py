@@ -24,7 +24,8 @@ from pathlib import Path
 import bpy
 import mathutils
 
-from hana3d import append_link, bg_blender, utils
+from . import append_link, bg_blender, utils
+from .stage import HANA3D_NAME
 
 HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
 HANA3D_THUMBNAIL_PATH = sys.argv[-2]
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
         bg_blender.progress('preparing thumbnail scene')
         obnames = get_obnames()

@@ -21,7 +21,7 @@ import queue
 import bpy
 from bpy.app.handlers import persistent
 
-from hana3d import utils
+from . import utils
 
 
 @persistent

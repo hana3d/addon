@@ -35,8 +35,8 @@ from bpy.props import (
     StringProperty
 )
 
-from hana3d import append_link, colors, paths, render_tools, types, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import append_link, colors, paths, render_tools, types, ui, utils
+from .report_tools import execute_wrapper
 
 download_threads = {}
 append_tasks_queue = Queue()

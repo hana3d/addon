@@ -18,8 +18,11 @@
 
 import bpy
 
-from hana3d import render_settings, utils
-from hana3d.report_tools import execute_wrapper
+from . import (
+    render_settings,
+    utils
+)
+from .report_tools import execute_wrapper
 
 
 def append_material(file_name, matname=None, link=False, fake_user=True):

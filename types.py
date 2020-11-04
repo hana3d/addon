@@ -33,7 +33,7 @@ from bpy.props import (
 )
 from bpy.types import PropertyGroup
 
-from hana3d import paths, render, search, utils
+from . import paths, render, search, utils
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),

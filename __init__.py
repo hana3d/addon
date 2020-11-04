@@ -44,14 +44,15 @@ from . import (
     upload,
     utils
 )
+from .stage import HANA3D_NAME
 
 bl_info = {
     "name": "Hana3D",
-    "author": "Vilem Duha, Petr Dlouhy, Real2U",
+    "author": "Vilem Duha, Petr Dlouhy, R2U",
     "version": (0, 6, 8),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
-    "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
+    "description": "Online Hana3D library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
     "warning": "",
     "category": "3D View",
 }
@@ -63,7 +64,7 @@ def scene_load(context):
     ui_props = bpy.context.window_manager.Hana3DUI
     ui_props.assetbar_on = False
     ui_props.turn_off = False
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
 
@@ -94,7 +95,7 @@ def check_timers_timer():
 class Hana3DAddonPreferences(AddonPreferences):
     # this must match the addon name, use '__package__'
     # when defining this in a submodule of a python package.
-    bl_idname = __name__
+    bl_idname = HANA3D_NAME
 
     default_global_dict = paths.default_global_dict()
 

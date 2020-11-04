@@ -23,6 +23,8 @@ endef
 
 export PYTHON=python
 export PRINT_HELP_PYSCRIPT
+export BLENDER_VERSION=2.90
+export BLENDER_ADDON_PATH=$(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/scripts/addons
 STAGE ?= production
 
 ###################################################################################################
@@ -33,5 +35,18 @@ help: ## show this message
 	@$(PYTHON) -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 
+clean: ## clean blender Hana3D addons
+	rm -r $(BLENDER_ADDON_PATH)/hana3d* || true
+
+
 build: ## build addon according to stage
-	cd .. && zip -rq hana3d_$(STAGE).zip hana3d/ && cd -
+	rm -r hana3d_$(STAGE) || true
+	mkdir hana3d_$(STAGE)
+	find . \( -name '*.py' -o -name '*.png' \) | xargs cp --parents -t hana3d_$(STAGE)
+	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
+	rm -r hana3d_$(STAGE)
+
+
+install: ## install the addon on blender
+	mkdir -p $(BLENDER_ADDON_PATH)
+	unzip -q hana3d_$(STAGE).zip -d $(BLENDER_ADDON_PATH)

@@ -20,12 +20,18 @@ import os
 import urllib.parse
 
 import bpy
-from . import (
-    stage
+from .stage import (
+    HANA3D_NAME,
+    HANA3D_AUTH_URL,
+    HANA3D_AUTH_CLIENT_ID,
+    HANA3D_AUTH_AUDIENCE,
+    HANA3D_PLATFORM_URL,
+    HANA3D_AUTH_LANDING,
+    HANA3D_URL,
 )
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-HANA3D_SETTINGS_FILENAME = os.path.join(_presets, stage.HANA3D_NAME + ".json")
+HANA3D_SETTINGS_FILENAME = os.path.join(_presets, HANA3D_NAME + ".json")
 
 
 def find_in_local(text=''):
@@ -38,7 +44,7 @@ def find_in_local(text=''):
 
 
 def get_api_url(*paths: str, query: dict = None) -> str:
-    base_url = stage.HANA3D_URL + '/v1/'
+    base_url = HANA3D_URL + '/v1/'
     url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
     if query is None:
         return url
@@ -56,34 +62,34 @@ def correct_bool(query):
 
 
 def get_auth_url():
-    return stage.HANA3D_AUTH_URL
+    return HANA3D_AUTH_URL
 
 
 def get_platform_url():
-    return stage.HANA3D_PLATFORM_URL
+    return HANA3D_PLATFORM_URL
 
 
 def get_auth_landing_url():
-    return get_platform_url() + stage.HANA3D_AUTH_LANDING
+    return get_platform_url() + HANA3D_AUTH_LANDING
 
 
 def get_auth_client_id():
-    return stage.HANA3D_AUTH_CLIENT_ID
+    return HANA3D_AUTH_CLIENT_ID
 
 
 def get_auth_audience():
-    return stage.HANA3D_AUTH_AUDIENCE
+    return HANA3D_AUTH_AUDIENCE
 
 
 def default_global_dict():
     from os.path import expanduser
 
     home = expanduser("~")
-    return home + os.sep + stage.HANA3D_NAME + '_data'
+    return home + os.sep + HANA3D_NAME + '_data'
 
 
 def get_temp_dir(subdir=None):
-    user_preferences = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
     # tempdir = user_preferences.temp_dir
     tempdir = os.path.join(user_preferences.global_dir, 'temp')
@@ -112,7 +118,7 @@ def get_download_dirs(asset_type):
     subdmapping = {'model': 'models', 'scene': 'scenes', 'material': 'materials'}
     asset_type = asset_type.lower()
 
-    user_preferences = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     dirs = []
     if user_preferences.directory_behaviour == 'BOTH' or 'GLOBAL':
         ddir = user_preferences.global_dir

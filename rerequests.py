@@ -18,7 +18,7 @@
 
 import requests
 
-from hana3d import hana3d_oauth, ui, utils
+from . import hana3d_oauth, ui, utils
 
 
 def rerequest(method, url, **kwargs):

@@ -20,7 +20,8 @@ import os
 
 import bpy
 from bpy.app.handlers import persistent
-from hana3d.report_tools import execute_wrapper
+from .report_tools import execute_wrapper
+from .stage import HANA3D_NAME
 
 # updater import, import safely
 # Prevents popups for users with invalid python installs e.g. missing libraries
@@ -60,7 +61,7 @@ except Exception as e:
 # Must declare this before classes are loaded
 # otherwise the bl_idname's will not match and have errors.
 # Must be all lowercase and no spaces
-updater.addon = "hana3d"
+updater.addon = HANA3D_NAME
 
 
 # -----------------------------------------------------------------------------

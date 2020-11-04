@@ -22,7 +22,7 @@ from typing import List
 
 import requests
 
-from hana3d import paths, rerequests, utils
+from . import paths, rerequests, utils
 
 
 def download_file(file_path: str, url: str) -> str:

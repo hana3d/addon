@@ -22,8 +22,9 @@ import time
 import bpy
 import requests
 
-from hana3d import colors, oauth, paths, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import colors, oauth, paths, ui, utils
+from .report_tools import execute_wrapper
+from .stage import HANA3D_NAME
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -42,7 +43,7 @@ def login(authenticator: oauth.OAuthAuthenticator):
 
 
 def refresh_token(immediate: bool = False) -> dict:
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     if preferences.refresh_in_progress:
         ui.add_report('Already Refreshing token, will be ready soon.')
         return
@@ -75,7 +76,7 @@ def write_tokens(oauth_response: dict):
     utils.p('writing tokens')
     utils.p(oauth_response)
 
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.api_key_refresh = oauth_response['refresh_token']
     preferences.api_key = oauth_response['access_token']
     preferences.api_key_timeout = time.time() + oauth_response['expires_in']
@@ -91,7 +92,7 @@ def write_tokens(oauth_response: dict):
 
 
 def reset_tokens():
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.api_key_refresh = ''
     preferences.api_key = ''
     preferences.api_key_timeout = 0
@@ -116,7 +117,7 @@ class RegisterLoginOnline(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         preferences.login_attempt = True
         self.start_login_thread()
         return {'FINISHED'}
@@ -168,7 +169,7 @@ class CancelLoginOnline(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         global active_authenticator
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         preferences.login_attempt = False
         try:
             if active_authenticator is not None:

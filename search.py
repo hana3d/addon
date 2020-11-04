@@ -28,8 +28,9 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from hana3d import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
+from .report_tools import execute_wrapper
+from .stage import HANA3D_NAME
 
 search_start_time = 0
 prev_time = 0
@@ -39,7 +40,7 @@ def check_errors(rdata):
     if rdata.get('status_code') == 401:
         utils.p(rdata)
         if rdata.get('code') == 'token_expired':
-            user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+            user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
             if user_preferences.api_key != '':
                 hana3d_oauth.refresh_token(immediate=False)
                 return False, rdata.get('description')
@@ -60,7 +61,7 @@ reports = ''
 def refresh_token_timer():
     ''' this timer gets run every time the token needs refresh. '''
     utils.p('refresh timer')
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     fetch_server_data()
 
     return user_preferences.api_key_life
@@ -74,7 +75,7 @@ def scene_load(context):
 
 def fetch_server_data():
     if not bpy.app.background:
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if (
@@ -93,7 +94,7 @@ last_clipboard = ''
 # @bpy.app.handlers.persistent
 def timer_update():
     global first_time
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     if first_time:
         first_time = False
         if preferences.show_on_start:

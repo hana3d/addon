@@ -27,7 +27,7 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from hana3d import (
+from . import (
     bg_blender,
     colors,
     download,
@@ -37,7 +37,8 @@ from hana3d import (
     ui_bgl,
     utils
 )
-from hana3d.report_tools import execute_wrapper
+from .report_tools import execute_wrapper
+from .stage import HANA3D_NAME
 
 handler_2d = None
 handler_3d = None
@@ -655,7 +656,7 @@ def draw_callback_2d_search(self, context):
             if ui_props.wcount * ui_props.hcount < len(search_results):
                 page_start = ui_props.scrolloffset + 1
                 page_end = ui_props.scrolloffset + ui_props.wcount * \
-                    context.preferences.addons['hana3d'].preferences.max_assetbar_rows
+                    context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
                 pagination_text = \
                     f'{page_start} - {page_end} of {wm["search results orig"]["count"]}'
                 ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
@@ -977,7 +978,7 @@ def mouse_in_region(r, mx, my):
 def update_ui_size(area, region):
     wm = bpy.context.window_manager
     ui = wm.Hana3DUI
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     ui_scale = bpy.context.preferences.view.ui_scale
 
     ui.margin = ui.bl_rna.properties['margin'].default * ui_scale
@@ -1730,10 +1731,10 @@ class TransferHana3DData(bpy.types.Operator):
         source_ob = bpy.context.active_object
         for target_ob in bpy.context.selected_objects:
             if target_ob != source_ob:
-                target_ob.property_unset('hana3d')
+                target_ob.property_unset(HANA3D_NAME)
                 for k in source_ob.keys():
                     target_ob[k] = source_ob[k]
-        source_ob.property_unset('hana3d')
+        source_ob.property_unset(HANA3D_NAME)
         return {'FINISHED'}
 
 
@@ -1818,7 +1819,7 @@ def pre_load(context):
     ui_props = bpy.context.window_manager.Hana3DUI
     ui_props.assetbar_on = False
     ui_props.turn_off = True
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.login_attempt = False
 
 
