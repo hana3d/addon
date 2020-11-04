@@ -42,7 +42,7 @@ clean: ## clean blender Hana3D addons
 build: ## build addon according to stage
 	rm -r hana3d_$(STAGE) || true
 	mkdir hana3d_$(STAGE)
-	find . \( -name '*.py' -o -name '*.png' \) | xargs cp --parents -t hana3d_$(STAGE)
+	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' \) | xargs cp --parents -t hana3d_$(STAGE)
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
 	rm -r hana3d_$(STAGE)
 

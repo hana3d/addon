@@ -24,7 +24,7 @@ import requests
 
 from . import colors, oauth, paths, ui, utils
 from .report_tools import execute_wrapper
-from .stage import HANA3D_NAME
+from .stage import HANA3D_NAME, HANA3D_PROFILE
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -100,8 +100,8 @@ def reset_tokens():
     preferences.id_token = ''
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    if 'hana3d profile' in bpy.context.window_manager.keys():
-        del bpy.context.window_manager['hana3d profile']
+    if HANA3D_PROFILE in bpy.context.window_manager.keys():
+        del bpy.context.window_manager[HANA3D_PROFILE]
 
 
 class RegisterLoginOnline(bpy.types.Operator):

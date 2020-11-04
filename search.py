@@ -30,7 +30,7 @@ from bpy.types import Operator
 
 from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
 from .report_tools import execute_wrapper
-from .stage import HANA3D_NAME
+from .stage import HANA3D_NAME, HANA3D_PROFILE
 
 search_start_time = 0
 prev_time = 0
@@ -83,7 +83,7 @@ def fetch_server_data():
             and user_preferences.api_key_timeout < time.time()
         ):
             hana3d_oauth.refresh_token(immediate=False)
-        if api_key != '' and bpy.context.window_manager.get('hana3d profile') is None:
+        if api_key != '' and bpy.context.window_manager.get(HANA3D_PROFILE) is None:
             utils.update_profile_async()
 
 

@@ -34,6 +34,7 @@ from bpy.props import (
 from bpy.types import PropertyGroup
 
 from . import paths, render, search, utils
+from .stage import HANA3D_PROFILE
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -213,7 +214,7 @@ class Hana3DUIProps(PropertyGroup):
     thumbnail_image = StringProperty(
         name="Thumbnail Image",
         description="",
-        default=paths.get_addon_thumbnail_path('thumbnail_notready.jpg'),
+        default=paths.get_addon_thumbnail_path('thumbnail_notready.png'),
     )
 
 
@@ -225,7 +226,7 @@ class Hana3DRenderProps(PropertyGroup):
         return ''
 
     def get_balance(self) -> str:
-        profile = bpy.context.window_manager.get('hana3d profile')
+        profile = bpy.context.window_manager.get(HANA3D_PROFILE)
         if not profile:
             return 'N/A'
         balance = profile['user'].get('nrf_balance')
@@ -281,7 +282,7 @@ class Hana3DRenderProps(PropertyGroup):
 
 
 def workspace_items(self, context):
-    profile = bpy.context.window_manager.get('hana3d profile')
+    profile = bpy.context.window_manager.get(HANA3D_PROFILE)
     if profile is not None:
         user = profile.get('user')
         if user is not None:
@@ -304,7 +305,7 @@ def search_update(self, context):
 def update_tags_list(props, context):
     props.tags_list.clear()
     current_workspace = props.workspace
-    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for tag in workspace['tags']:
                 new_tag = props.tags_list.add()
@@ -314,7 +315,7 @@ def update_tags_list(props, context):
 def update_libraries_list(props, context):
     props.libraries_list.clear()
     current_workspace = props.workspace
-    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for library in workspace['libraries']:
                 new_library = props.libraries_list.add()

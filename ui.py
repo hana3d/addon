@@ -596,7 +596,7 @@ def draw_callback_2d_upload_preview(self, context):
         if props.remote_thumbnail:
             default_image = 'thumbnail-in-progress.png'
         else:
-            default_image = 'thumbnail_notready.jpg'
+            default_image = 'thumbnail_notready.png'
 
         img = utils.get_hidden_image(
             ui_props.thumbnail_image,

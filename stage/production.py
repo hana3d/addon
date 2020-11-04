@@ -1,4 +1,5 @@
 HANA3D_NAME = "hana3d_production"
+HANA3D_PROFILE = "hana3d_production_profile"
 HANA3D_DESCRIPTION = "Hana3D"
 HANA3D_AUTH_URL = "https://hana3d.us.auth0.com"
 HANA3D_AUTH_CLIENT_ID = "DDfs3mFwivtSoUOqwCZnJODaOhmwZvor"

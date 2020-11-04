@@ -28,6 +28,7 @@ from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
 from . import paths, rerequests, tasks_queue, stage
+from .stage import HANA3D_PROFILE
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -218,7 +219,7 @@ def update_profile():
     r = rerequests.get(url, headers=headers)
     assert r.ok, f'Failed to get profile data: {r.text}'
 
-    bpy.context.window_manager['hana3d profile'] = r.json()
+    bpy.context.window_manager[HANA3D_PROFILE] = r.json()
 
 
 def update_profile_async():
@@ -229,7 +230,7 @@ def get_hidden_image(
         thumbnail_path: str,
         image_name: str,
         force_reload: bool = False,
-        default_image: str = 'thumbnail_notready.jpg'):
+        default_image: str = 'thumbnail_notready.png'):
     if thumbnail_path.startswith('//'):
         thumbnail_path = bpy.path.abspath(thumbnail_path)
     if not os.path.exists(thumbnail_path) or thumbnail_path == '':
@@ -543,14 +544,14 @@ def dict_to_params(inputs, parameters=None):
 
 
 def user_logged_in():
-    a = bpy.context.window_manager.get('hana3d profile')
+    a = bpy.context.window_manager.get(HANA3D_PROFILE)
     if a is not None:
         return True
     return False
 
 
 def profile_is_validator():
-    a = bpy.context.window_manager.get('hana3d profile')
+    a = bpy.context.window_manager.get(HANA3D_PROFILE)
     if a is not None and a['user'].get('exmenu'):
         return True
     return False
@@ -775,13 +776,13 @@ def generate_tooltip(
 
 
 def get_addon_version():
-    import hana3d
-    return hana3d.bl_info['version']
+    from . import bl_info
+    return bl_info['version']
 
 
 def get_addon_blender_version():
-    import hana3d
-    return hana3d.bl_info['blender']
+    from . import bl_info
+    return bl_info['blender']
 
 
 def append_array_inside_prop(prop: IDPropertyGroup, list_name: str, item: any):

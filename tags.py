@@ -22,6 +22,7 @@ from bpy.types import Operator
 
 from . import utils
 from .report_tools import execute_wrapper
+from .stage import HANA3D_PROFILE
 
 
 class Hana3DAddTag(Operator):
@@ -50,7 +51,7 @@ class Hana3DAddTag(Operator):
         new_tag = search_props.tags_list.add()
         new_tag['name'] = self.tag
 
-        for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+        for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
             if current_workspace == workspace['id']:
                 utils.append_array_inside_prop(workspace, 'tags', self.tag)
         return {'FINISHED'}
