@@ -34,4 +34,4 @@ help: ## show this message
 
 
 build: ## build addon according to stage
-	zip -rq hana3d_$(STAGE).zip .
+	cd .. && zip -rq hana3d_$(STAGE).zip hana3d/ && cd -

@@ -20,10 +20,12 @@ import os
 import urllib.parse
 
 import bpy
-import stage
+from . import (
+    stage
+)
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-HANA3D_SETTINGS_FILENAME = os.path.join(_presets, HANA3D_NAME + ".json")
+HANA3D_SETTINGS_FILENAME = os.path.join(_presets, stage.HANA3D_NAME + ".json")
 
 
 def find_in_local(text=''):
