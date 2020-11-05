@@ -133,7 +133,7 @@ def draw_panel_common_upload(layout, context):
         if asset_type == 'MODEL':
             row.operator('object.hana3d_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'SCENE':
-            row.operator('object.hana3d_thumbnail', text='', icon='IMAGE_DATA')
+            row.operator('scene.hana3d_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'MATERIAL':
             row.operator('material.hana3d_thumbnail', text='', icon='IMAGE_DATA')
     if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
