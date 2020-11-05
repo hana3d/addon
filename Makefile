@@ -41,10 +41,13 @@ clean: ## clean blender Hana3D addons
 
 build: ## build addon according to stage
 	rm -r hana3d_$(STAGE) || true
+	# create addon folder
 	mkdir hana3d_$(STAGE)
 	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' \) | xargs cp --parents -t hana3d_$(STAGE)
-	find hana3d_$(STAGE) -type f -name autothumb.py -print0 | LC_ALL=C xargs -0 sed -i.bak "s/from \. /from hana3d_$(STAGE) /g"
-	find hana3d_$(STAGE) -type f -name autothumb.py -print0 | LC_ALL=C xargs -0 sed -i.bak "s/from \./from hana3d_$(STAGE)./g"
+	# background processes must NOT have relative imports
+	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i.bak "s/from \. /from hana3d_$(STAGE) /g"
+	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i.bak "s/from \./from hana3d_$(STAGE)./g"
+	# zip addon folder
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
 	rm -r hana3d_$(STAGE)
 
