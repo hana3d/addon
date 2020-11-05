@@ -28,7 +28,7 @@ from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
 from . import paths, rerequests, tasks_queue, stage
-from .stage import HANA3D_PROFILE
+from .config import HANA3D_PROFILE
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000

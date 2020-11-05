@@ -34,7 +34,7 @@ from bpy.props import (
 from bpy.types import PropertyGroup
 
 from . import paths, render, search, utils
-from .stage import HANA3D_PROFILE
+from .config import HANA3D_PROFILE
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),

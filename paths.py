@@ -20,7 +20,7 @@ import os
 import urllib.parse
 
 import bpy
-from .stage import (
+from .config import (
     HANA3D_NAME,
     HANA3D_AUTH_URL,
     HANA3D_AUTH_CLIENT_ID,

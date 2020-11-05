@@ -23,7 +23,7 @@ from pathlib import Path
 import bpy
 
 from . import append_link, bg_blender, utils
-from .stage import HANA3D_NAME
+from .config import HANA3D_NAME
 
 HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
 HANA3D_THUMBNAIL_PATH = sys.argv[-2]

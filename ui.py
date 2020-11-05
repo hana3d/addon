@@ -38,7 +38,7 @@ from . import (
     utils
 )
 from .report_tools import execute_wrapper
-from .stage import HANA3D_NAME
+from .config import HANA3D_NAME
 
 handler_2d = None
 handler_3d = None

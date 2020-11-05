@@ -24,7 +24,7 @@ from . import (
     utils,
     addon_updater_ops
 )
-from .stage import HANA3D_NAME
+from .config import HANA3D_NAME
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):

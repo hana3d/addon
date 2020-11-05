@@ -22,7 +22,7 @@ from bpy.types import Operator
 
 from . import utils
 from .report_tools import execute_wrapper
-from .stage import HANA3D_PROFILE
+from .config import HANA3D_PROFILE
 
 
 class Hana3DAddTag(Operator):

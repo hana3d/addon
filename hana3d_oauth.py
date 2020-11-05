@@ -24,7 +24,7 @@ import requests
 
 from . import colors, oauth, paths, ui, utils
 from .report_tools import execute_wrapper
-from .stage import HANA3D_NAME, HANA3D_PROFILE
+from .config import HANA3D_NAME, HANA3D_PROFILE
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()

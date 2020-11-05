@@ -44,7 +44,7 @@ from . import (
     upload,
     utils
 )
-from .stage import HANA3D_NAME
+from .config import HANA3D_NAME
 
 bl_info = {
     "name": "Hana3D",

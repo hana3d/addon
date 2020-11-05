@@ -30,7 +30,7 @@ from bpy.types import Operator
 
 from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
 from .report_tools import execute_wrapper
-from .stage import HANA3D_NAME, HANA3D_PROFILE
+from .config import HANA3D_NAME, HANA3D_PROFILE
 
 search_start_time = 0
 prev_time = 0
