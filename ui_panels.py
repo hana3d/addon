@@ -338,7 +338,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
             if e not in ('CYCLES', 'BLENDER_EEVEE'):
                 rtext = (
                     'Only Cycles and EEVEE render engines are currently supported. '
-                    "Please use Cycles for all assets you upload to Hana3D".
+                    "Please use Cycles for all assets you upload to Hana3D."
                 )
                 label_multiline(layout, rtext, icon='ERROR', width=w)
                 return
