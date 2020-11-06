@@ -108,7 +108,7 @@ class Hana3DAddonPreferences(AddonPreferences):
     )
 
     api_key_refresh: StringProperty(
-        name="hana3d refresh API Key",
+        name="Hana3D refresh API Key",
         description="API key used to refresh the token regularly.",
         default="",
         subtype="PASSWORD",
@@ -143,7 +143,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
     login_attempt: BoolProperty(
         name="Login/Signup attempt",
-        description="When this is on, hana3d is trying to connect and login",
+        description="When this is on, Hana3D is trying to connect and login",
         default=False,
     )
 
