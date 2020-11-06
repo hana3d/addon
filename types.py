@@ -34,7 +34,7 @@ from bpy.props import (
 from bpy.types import PropertyGroup
 
 from . import paths, render, search, utils
-from .config import HANA3D_PROFILE
+from .config import HANA3D_PROFILE, HANA3D_NAME
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -1016,25 +1016,25 @@ def register():
 
     # MODELS
     bpy.types.WindowManager.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
-    bpy.types.Object.hana3d = PointerProperty(type=Hana3DModelUploadProps)
+    bpy.types.Object[HANA3D_NAME] = PointerProperty(type=Hana3DModelUploadProps)
 
     # SCENES
     bpy.types.WindowManager.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
-    bpy.types.Scene.hana3d = PointerProperty(type=Hana3DSceneUploadProps)
+    bpy.types.Scene[HANA3D_NAME] = PointerProperty(type=Hana3DSceneUploadProps)
 
     # MATERIALS
     bpy.types.WindowManager.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
-    bpy.types.Material.hana3d = PointerProperty(type=Hana3DMaterialUploadProps)
+    bpy.types.Material[HANA3D_NAME] = PointerProperty(type=Hana3DMaterialUploadProps)
 
 
 def unregister():
-    del bpy.types.Material.hana3d
+    del bpy.types.Material[HANA3D_NAME]
     del bpy.types.WindowManager.hana3d_mat
 
-    del bpy.types.Scene.hana3d
+    del bpy.types.Scene[HANA3D_NAME]
     del bpy.types.WindowManager.hana3d_scene
 
-    del bpy.types.Object.hana3d
+    del bpy.types.Object[HANA3D_NAME]
     del bpy.types.WindowManager.hana3d_models
 
     del bpy.types.WindowManager.Hana3DRender

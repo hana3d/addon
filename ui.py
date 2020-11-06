@@ -1691,7 +1691,7 @@ class DefaultNamesOperator(bpy.types.Operator):
         if asset is None:
             return {'PASS_THROUGH'}
 
-        props = asset.hana3d
+        props = asset[HANA3D_NAME]
 
         if ui_props.down_up == 'UPLOAD':
             if props.workspace != '' and len(props.tags_list) == 0:

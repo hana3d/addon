@@ -155,7 +155,7 @@ def get_upload_props():
     active_asset = get_active_asset()
     if active_asset is None:
         return None
-    return active_asset.hana3d
+    return active_asset[HANA3D_NAME]
 
 
 def previmg_name(index, fullsize=False):
@@ -495,7 +495,7 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
 def name_update():
     asset = get_active_asset()
-    props = asset.hana3d
+    props = asset[HANA3D_NAME]
     if asset is None:
         return
     if props.name_old != props.name:
@@ -705,7 +705,7 @@ def check_meshprops(props, obs) -> Tuple[int, int]:
 def fill_object_metadata(obj: bpy.types.Object):
     """ call all analysis functions """
     obs = get_hierarchy(obj)
-    props = obj.hana3d
+    props = obj[HANA3D_NAME]
 
     dim, bbox_min, bbox_max = get_dimensions(obs)
     props.dimensions = dim
