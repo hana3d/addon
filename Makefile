@@ -55,6 +55,7 @@ build: ## build addon according to stage
 	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/from \./from hana3d_$(STAGE)./g"
 	# zip addon folder
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
+	cp hana3d_$(STAGE).zip ~/Downloads
 	rm -r hana3d_$(STAGE)
 
 
