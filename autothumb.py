@@ -178,6 +178,13 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
+        if bpy.data.filepath == '':
+            title = "Can't render thumbnail"
+            message = "please save your file first"
+            utils.show_pop_menu(message, title)
+
+            return {'CANCELLED'}
+
         return wm.invoke_props_dialog(self)
 
 
@@ -324,6 +331,13 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
+        if bpy.data.filepath == '':
+            title = "Can't render thumbnail"
+            message = "please save your file first"
+            utils.show_pop_menu(message, title)
+
+            return {'CANCELLED'}
+
         return wm.invoke_props_dialog(self)
 
 
@@ -431,11 +445,8 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         if bpy.data.filepath == '':
             title = "Can't render thumbnail"
             message = "please save your file first"
+            utils.show_pop_menu(message, title)
 
-            def draw_message(self, context):
-                self.layout.label(text=message)
-
-            bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'CANCELLED'}
 
         return wm.invoke_props_dialog(self)

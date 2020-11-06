@@ -806,9 +806,17 @@ def save_file(filepath, **kwargs):
             time.sleep(1)
 
 
-def show_popup(message="", title="Info:", icon='INFO'):
+def show_popup(message=""):
 
     def draw(self, context):
         self.layout.label(text=message)
 
     bpy.context.window_manager.popover(draw)
+
+
+def show_pop_menu(message, title, icon='INFO'):
+
+    def draw_message(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popup_menu(draw_message, title=title, icon=icon)

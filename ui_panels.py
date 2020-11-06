@@ -116,7 +116,9 @@ def draw_panel_common_upload(layout, context):
     box = layout.box()
     box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
     box.prop(props, 'workspace', expand=False, text='Workspace')
-    box.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    row = box.row()
+    row.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    row.operator('object.hana3d_refresh_libraries', text='', icon='FILE_REFRESH')
     draw_selected_libraries(box, props, "object.hana3d_remove_library_upload")
     for name in props.custom_props.keys():
         box.prop(props.custom_props, f'["{name}"]')
@@ -134,7 +136,7 @@ def draw_panel_common_upload(layout, context):
         if asset_type == 'MODEL':
             row.operator('object.hana3d_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'SCENE':
-            row.operator('object.hana3d_thumbnail', text='', icon='IMAGE_DATA')
+            row.operator('scene.hana3d_thumbnail', text='', icon='IMAGE_DATA')
         elif asset_type == 'MATERIAL':
             row.operator('material.hana3d_thumbnail', text='', icon='IMAGE_DATA')
     if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
@@ -193,7 +195,9 @@ def draw_panel_common_search(layout, context):
     row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
     draw_assetbar_show_hide(row, props)
     layout.prop(props, 'workspace', expand=False, text='Workspace')
-    layout.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    row = layout.row()
+    row.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    row.operator('object.hana3d_refresh_libraries', text='', icon='FILE_REFRESH')
     draw_selected_libraries(layout, props, "object.hana3d_remove_library_search")
     layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
     draw_selected_tags(layout, props, "object.hana3d_remove_tag_search")
