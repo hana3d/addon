@@ -30,8 +30,9 @@ from bpy.types import Operator
 
 from . import bg_blender, paths, render, rerequests, types, ui, utils
 from .report_tools import execute_wrapper
+from .config import HANA3D_NAME
 
-HANA3D_EXPORT_DATA_FILE = "data.json"
+HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 
 
 def get_upload_location(props, context):
@@ -126,8 +127,8 @@ def get_export_data(
         raise Exception(f'Unexpected asset_type={props.asset_type}')
 
     bg_process_params = {
-        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
-        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
+        'eval_path_computing': f'{eval_path}.{HANA3D_NAME}.{path_computing}',
+        'eval_path_state': f'{eval_path}.{HANA3D_NAME}.{path_state}',
         'eval_path': eval_path,
     }
 

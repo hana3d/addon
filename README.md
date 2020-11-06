@@ -29,3 +29,10 @@ Feature set:
 - tags
 - model/material/scene
 - workspaces
+
+
+# TODO
+
+- [ ] window manager, wm
+- [ ] grep hana3d
+- [ ] grep Hana3D

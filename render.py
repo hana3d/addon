@@ -45,6 +45,7 @@ from . import (
     utils
 )
 from .report_tools import execute_wrapper
+from .config import HANA3D_NAME
 
 render_threads = []
 upload_threads = []
@@ -437,7 +438,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
 class RenderScene(Operator):
     """Render Scene online at notrenderfarm.com"""
 
-    bl_idname = "hana3d.render_scene"
+    bl_idname = HANA3D_NAME + ".render_scene"
     bl_label = "Render Scene"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -487,7 +488,7 @@ class RenderScene(Operator):
 class CancelJob(Operator):
     """Render Scene online at notrenderfarm.com"""
 
-    bl_idname = "hana3d.cancel_render_job"
+    bl_idname = HANA3D_NAME + ".cancel_render_job"
     bl_label = "Render Scene"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -517,7 +518,7 @@ class CancelJob(Operator):
 class ImportRender(Operator):
     """Import finished render job"""
 
-    bl_idname = "hana3d.import_render"
+    bl_idname = HANA3D_NAME + ".import_render"
     bl_label = "Import render to scene"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -554,7 +555,7 @@ class ImportRender(Operator):
 class RemoveRender(Operator):
     """Remove finished render job"""
 
-    bl_idname = "hana3d.remove_render"
+    bl_idname = HANA3D_NAME + ".remove_render"
     bl_label = "Remove render"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -610,7 +611,7 @@ class RemoveRender(Operator):
 class OpenImage(Operator):
     """Open image from computer"""
 
-    bl_idname = "hana3d.open_image"
+    bl_idname = HANA3D_NAME + ".open_image"
     bl_label = "Open image"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -755,7 +756,7 @@ class UploadThread(UploadFileMixin, threading.Thread):
 class UploadImage(Operator):
     """Upload existing render image"""
 
-    bl_idname = "hana3d.upload_render_image"
+    bl_idname = HANA3D_NAME + ".upload_render_image"
     bl_label = "Upload to Hana3D"
     bl_options = {'REGISTER', 'UNDO'}
     bl_icon = 'EXPORT'

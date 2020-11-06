@@ -338,7 +338,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
             if e not in ('CYCLES', 'BLENDER_EEVEE'):
                 rtext = (
                     'Only Cycles and EEVEE render engines are currently supported. '
-                    'Please use Cycles for all assets you upload to hana3d.'
+                    'Please use Cycles for all assets you upload to Hana3D.'
                 )
                 label_multiline(layout, rtext, icon='ERROR', width=w)
                 return
@@ -512,9 +512,9 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         )
 
         row = box.row()
-        row.operator('hana3d.import_render', icon='IMPORT')
+        row.operator(HANA3D_NAME + '.import_render', icon='IMPORT')
         row = box.row()
-        row.operator('hana3d.remove_render', icon='CANCEL')
+        row.operator(HANA3D_NAME + '.remove_render', icon='CANCEL')
 
     def draw_generate_panel(self, context, render_props, asset_props):
         box = self.layout.box()
@@ -570,12 +570,12 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
                 render_props.cameras == 'ALL_CAMERAS' and len(all_cameras):
             row = self.layout.row()
             row.scale_y = 2.0
-            row.operator('hana3d.render_scene', icon='SCENE')
+            row.operator(HANA3D_NAME + '.render_scene', icon='SCENE')
 
     def draw_kill_job(self, asset_props):
         row = self.layout.row(align=True)
         row.label(text=asset_props.render_state)
-        op = row.operator('hana3d.cancel_render_job', text="", icon='CANCEL')
+        op = row.operator(HANA3D_NAME + '.cancel_render_job', text="", icon='CANCEL')
         op.view_id = asset_props.view_id
 
     def draw_upload_panel(self, asset_props):
@@ -583,14 +583,14 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
 
         row = box.row()
         row.prop(asset_props, 'active_image', text='')
-        row.operator('hana3d.open_image', text='', icon='FILEBROWSER')
+        row.operator(HANA3D_NAME + '.open_image', text='', icon='FILEBROWSER')
 
         row = box.row()
         row.prop(asset_props, 'render_job_name', text='Name')
         row = box.row()
         row.label(text=asset_props.upload_render_state)
         row = box.row()
-        row.operator('hana3d.upload_render_image', icon='EXPORT')
+        row.operator(HANA3D_NAME + '.upload_render_image', icon='EXPORT')
 
         # Only work in EDIT_IMAGE space
         # box = self.layout.box()

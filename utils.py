@@ -28,7 +28,7 @@ from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
 from . import paths, rerequests, tasks_queue, stage
-from .config import HANA3D_PROFILE
+from .config import HANA3D_PROFILE, HANA3D_NAME
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -76,7 +76,7 @@ def get_active_model(context=None, view_id=None):
     models = [
         ob
         for ob in context.blend_data.objects
-        if ob.hana3d.view_id == view_id
+        if ob[HANA3D_NAME].view_id == view_id
     ]
     return models[0]
 
@@ -95,14 +95,14 @@ def get_selected_models():
             while (
                 ob.parent is not None
                 and ob not in done
-                and ob.hana3d.view_id != ''
+                and ob[HANA3D_NAME].view_id != ''
                 and ob.instance_collection is not None
             ):
                 done[ob] = True
                 ob = ob.parent
 
             if ob not in parents and ob not in done:
-                if ob.hana3d.name != '' or ob.instance_collection is not None:
+                if ob[HANA3D_NAME].name != '' or ob.instance_collection is not None:
                     parents.append(ob)
             done[ob] = True
 

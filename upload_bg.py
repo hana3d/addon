@@ -26,6 +26,7 @@ import bpy
 import requests
 
 from . import append_link, bg_blender, paths, rerequests, utils
+from .config import HANA3D_NAME
 
 HANA3D_EXPORT_DATA = sys.argv[-1]
 
@@ -189,7 +190,7 @@ if __name__ == "__main__":
 
             bpy.ops.file.pack_all()
 
-            main_source.hana3d.uploading = False
+            main_source[HANA3D_NAME].uploading = False
             fpath = os.path.join(data['temp_dir'], upload_data['viewId'] + '.blend')
 
             bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)
