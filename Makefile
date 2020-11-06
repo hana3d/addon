@@ -36,8 +36,12 @@ help: ## show this message
 	@$(PYTHON) -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 
-lint: ## clean blender Hana3D addons
+lint: ## lint code
 	python3 -m flake8
+
+
+test: ## test code
+	echo "TODO" && exit 1
 
 
 clean: ## clean blender Hana3D addons

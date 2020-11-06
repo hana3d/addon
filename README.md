@@ -14,6 +14,11 @@ make clean build install
 
 ### Testing
 
+```
+make lint
+make test
+```
+
 Feature set:
 
 - search
