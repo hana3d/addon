@@ -42,7 +42,7 @@ def rerequest(method, url, **kwargs):
 
         if response.status_code == 401 and code == 'token_expired':
             utils.p('refreshing token')
-            ui.add_report('Refreshing token. If this fails, please login in Hana3D Login panel.', 10)  # noqa E501
+            ui.add_report("Refreshing token. If this fails, please login in Hana3D Login panel.", 10)  # noqa E501
 
             oauth_response = hana3d_oauth.refresh_token(immediate=immediate)
             updated_headers = utils.get_headers(api_key=oauth_response['access_token'])

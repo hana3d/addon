@@ -87,7 +87,7 @@ def write_tokens(oauth_response: dict):
     props = utils.get_search_props()
     if props is not None:
         props.report = ''
-    ui.add_report('Hana3D Re-Login success')
+    ui.add_report("Hana3D Re-Login success")
     utils.update_profile_async()
 
 

@@ -338,7 +338,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
             if e not in ('CYCLES', 'BLENDER_EEVEE'):
                 rtext = (
                     'Only Cycles and EEVEE render engines are currently supported. '
-                    'Please use Cycles for all assets you upload to Hana3D.'
+                    "Please use Cycles for all assets you upload to Hana3D".
                 )
                 label_multiline(layout, rtext, icon='ERROR', width=w)
                 return
@@ -496,7 +496,7 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
     def draw_main_panel(self, render_props, asset_props):
         if 'jobs' not in asset_props.render_data or len(asset_props.render_data['jobs']) == 0:
             row = self.layout.row()
-            row.label(text='This asset has no saved renders in Hana3D')
+            row.label(text="This asset has no saved renders in Hana3D")
             return
 
         box = self.layout.box()

@@ -27,11 +27,12 @@ import addon_utils
 import bpy
 
 from . import paths
+from .config import HANA3D_DESCRIPTION
 
 
 def get_hana3d_version():
     for addon in addon_utils.modules():
-        if addon.bl_info['name'] == 'Hana3D':
+        if addon.bl_info['name'] == HANA3D_DESCRIPTION:
             return str(addon.bl_info['version'])
 
 

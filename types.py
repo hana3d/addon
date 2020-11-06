@@ -84,32 +84,32 @@ class Hana3DUIProps(PropertyGroup):
                 (
                     'MODEL',
                     'Find Models',
-                    'Find models in the Hana3D online database',
+                    "Find models in the Hana3D online database",
                     'OBJECT_DATAMODE',
                     0,
                 ),
                 (
                     'SCENE',
                     'Find Scenes',
-                    'Find scenes in the Hana3D online database',
+                    "Find scenes in the Hana3D online database",
                     'SCENE_DATA',
                     1,
                 ),
                 (
                     'MATERIAL',
                     'Find Materials',
-                    'Find materials in the Hana3D online database',
+                    "Find materials in the Hana3D online database",
                     'MATERIAL',
                     2,
                 ),
-                # ('HDR', 'Find HDRs', 'Find HDRs in the Hana3D online database', 'WORLD_DATA', 3),
+                # ("HDR", "Find HDRs", "Find HDRs in the Hana3D online database", "WORLD_DATA", 3),
             )
         else:
             items = (
-                ('MODEL', 'Upload Model', 'Upload a model to Hana3D', 'OBJECT_DATAMODE', 0),
-                ('SCENE', 'Upload Scene', 'Upload a scene to Hana3D', 'SCENE_DATA', 1),
-                ('MATERIAL', 'Upload Material', 'Upload a material to Hana3D', 'MATERIAL', 2),
-                # ('HDR', 'Upload HDR', 'Upload a HDR to Hana3D', 'WORLD_DATA', 3),
+                ("MODEL", "Upload Model", "Upload a model to Hana3D", "OBJECT_DATAMODE", 0),
+                ("SCENE", "Upload Scene", "Upload a scene to Hana3D", "SCENE_DATA", 1),
+                ("MATERIAL", "Upload Material", "Upload a material to Hana3D", "MATERIAL", 2),
+                # ("HDR", "Upload HDR", "Upload a HDR to Hana3D", "WORLD_DATA", 3),
             )
         return items
 
