@@ -18,7 +18,6 @@
 
 import json
 import os
-import platform
 import threading
 import time
 

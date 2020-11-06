@@ -519,7 +519,7 @@ def set_asset_props(asset, asset_data):
                         'view_props' in library['metadata']
                         and slug in library['metadata']['view_props']
                     ):
-                        asset[HANA3D_NAME].custom_props[name] = library['metadata']['view_props'][slug]
+                        asset[HANA3D_NAME].custom_props[name] = library['metadata']['view_props'][slug] # noqa E501
                     else:
                         asset[HANA3D_NAME].custom_props[name] = ''
 

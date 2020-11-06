@@ -27,7 +27,7 @@ import bpy
 from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from . import paths, rerequests, tasks_queue, stage
+from . import paths, rerequests, tasks_queue
 from .config import HANA3D_PROFILE, HANA3D_NAME
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
@@ -166,7 +166,7 @@ def previmg_name(index, fullsize=False):
 
 
 def load_prefs():
-    user_preferences = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     # if user_preferences.api_key == '':
     fpath = paths.HANA3D_SETTINGS_FILENAME
     if os.path.exists(fpath):
@@ -183,7 +183,7 @@ def load_prefs():
 def save_prefs(self, context):
     # first check context, so we don't do this on registration or blender startup
     if not bpy.app.background:  # (hasattr kills blender)
-        user_preferences = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         # we test the api key for length, so not a random accidentally typed sequence gets saved.
         lk = len(user_preferences.api_key)
         if 0 < lk < 25:
@@ -411,11 +411,11 @@ def get_headers(
     if correlation_id:
         headers['X-Correlation-Id'] = correlation_id
     if api_key is None:
-        api_key = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences.api_key
+        api_key = bpy.context.preferences.addons[HANA3D_NAME].preferences.api_key
     if api_key != '':
         headers["Authorization"] = "Bearer %s" % api_key
     if include_id_token:
-        id_token = bpy.context.preferences.addons[stage.HANA3D_NAME].preferences.id_token
+        id_token = bpy.context.preferences.addons[HANA3D_NAME].preferences.id_token
         headers['X-ID-Token'] = id_token
     return headers
 
@@ -560,9 +560,9 @@ def profile_is_validator():
 def guard_from_crash():
     '''Blender tends to crash when trying to run some functions
     with the addon going through unregistration process.'''
-    if bpy.context.preferences.addons.get(stage.HANA3D_NAME) is None:
+    if bpy.context.preferences.addons.get(HANA3D_NAME) is None:
         return False
-    if bpy.context.preferences.addons[stage.HANA3D_NAME].preferences is None:
+    if bpy.context.preferences.addons[HANA3D_NAME].preferences is None:
         return False
     return True
 
