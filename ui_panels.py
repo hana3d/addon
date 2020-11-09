@@ -24,7 +24,12 @@ from . import (
     utils,
     addon_updater_ops
 )
-from .config import HANA3D_NAME
+from .config import (
+    HANA3D_NAME,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+    HANA3D_MATERIALS,
+)
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
@@ -397,11 +402,11 @@ def header_search_draw(self, context):
         wm = context.window_manager
         ui_props = wm.Hana3DUI
         if ui_props.asset_type == 'MODEL':
-            props = wm.hana3d_models
+            props = getattr(wm, HANA3D_MODELS)
         if ui_props.asset_type == 'MATERIAL':
-            props = wm.hana3d_mat
+            props = getattr(wm, HANA3D_MATERIALS)
         if ui_props.asset_type == 'SCENE':
-            props = wm.hana3d_scene
+            props = getattr(wm, HANA3D_SCENES)
         # if ui_props.asset_type == 'HDR':
         #     props = s.hana3d_hdr
 

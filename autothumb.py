@@ -36,15 +36,16 @@ def generate_model_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.objects[asset_name][HANA3D_NAME]
+        props = getattr(bpy.data.objects[asset_name], HANA3D_NAME)
         update_state = False
     else:
         update_state = True
     mainmodel = utils.get_active_model()
-    assert mainmodel[HANA3D_NAME].view_id == props.view_id, 'Error when checking for active asset'
+    model_props = getattr(mainmodel, HANA3D_NAME)
+    assert model_props.view_id == props.view_id, 'Error when checking for active asset'
     if update_state:
-        mainmodel[HANA3D_NAME].is_generating_thumbnail = True
-        mainmodel[HANA3D_NAME].thumbnail_generating_state = 'starting blender instance'
+        model_props.is_generating_thumbnail = True
+        model_props.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -129,9 +130,9 @@ def generate_model_thumbnail(
     )
 
     if not save_only and update_state:
-        mainmodel[HANA3D_NAME].thumbnail = rel_thumb_path + '.jpg'
+        model_props.thumbnail = rel_thumb_path + '.jpg'
     if update_state:
-        mainmodel[HANA3D_NAME].thumbnail_generating_state = 'Saving .blend file'
+        model_props.thumbnail_generating_state = 'Saving .blend file'
 
     if autopack is True:
         bpy.ops.file.autopack_toggle()
@@ -152,7 +153,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
-        props = ob[HANA3D_NAME]
+        props = getattr(ob, HANA3D_NAME)
         layout = self.layout
         layout.label(text='thumbnailer settings')
         layout.prop(props, 'thumbnail_background_lightness')
@@ -167,7 +168,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         try:
-            props = utils.get_active_model(context)[HANA3D_NAME]
+            props = getattr(utils.get_active_model(context), HANA3D_NAME)
             generate_model_thumbnail(props)
         except Exception as e:
             props.is_generating_thumbnail = False
@@ -194,15 +195,16 @@ def generate_material_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.materials[asset_name][HANA3D_NAME]
+        props = getattr(bpy.data.materials[asset_name], HANA3D_NAME)
         update_state = False
     else:
         update_state = True
     mat = utils.get_active_material()
-    assert mat[HANA3D_NAME].view_id == props.view_id, 'Error when checking active material'
+    material_props = getattr(mat, HANA3D_NAME)
+    assert material_props.view_id == props.view_id, 'Error when checking active material'
     if update_state:
-        mat[HANA3D_NAME].is_generating_thumbnail = True
-        mat[HANA3D_NAME].thumbnail_generating_state = 'starting blender instance'
+        material_props.is_generating_thumbnail = True
+        material_props.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -283,9 +285,9 @@ def generate_material_thumbnail(
     )
 
     if not save_only and update_state:
-        mat[HANA3D_NAME].thumbnail = rel_thumb_path + '.png'
+        material_props.thumbnail = rel_thumb_path + '.png'
     if update_state:
-        mat[HANA3D_NAME].thumbnail_generating_state = 'Saving .blend file'
+        material_props.thumbnail_generating_state = 'Saving .blend file'
 
 
 class GenerateMaterialThumbnailOperator(bpy.types.Operator):
@@ -304,7 +306,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-        props = utils.get_active_material(context)[HANA3D_NAME]
+        props = getattr(utils.get_active_material(context), HANA3D_NAME)
         layout.prop(props, 'thumbnail_generator_type')
         layout.prop(props, 'thumbnail_scale')
         layout.prop(props, 'thumbnail_background')
@@ -320,7 +322,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         try:
-            props = utils.get_active_material(context)[HANA3D_NAME]
+            props = getattr(utils.get_active_material(context), HANA3D_NAME)
             generate_material_thumbnail(props)
         except Exception as e:
             props.is_generating_thumbnail = False
@@ -356,7 +358,7 @@ def generate_scene_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.scenes[asset_name][HANA3D_NAME]
+        props = getattr(bpy.data.scenes[asset_name], HANA3D_NAME)
         update_state = False
     else:
         update_state = True
@@ -418,7 +420,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
-        props = ob[HANA3D_NAME]
+        props = getattr(ob, HANA3D_NAME)
         layout = self.layout
         layout.label(text='thumbnailer settings')
         layout.prop(props, 'thumbnail_samples')
@@ -430,7 +432,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         try:
-            props = get_active_scene(context)[HANA3D_NAME]
+            props = getattr(get_active_scene(context), HANA3D_NAME)
             generate_scene_thumbnail(props)
         except Exception as e:
             self.report({'WARNING'}, "Error while exporting file: %s" % str(e))

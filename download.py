@@ -37,7 +37,11 @@ from bpy.props import (
 
 from . import append_link, colors, paths, render_tools, types, ui, utils
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME
+from .config import (
+    HANA3D_NAME,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+)
 
 download_threads = {}
 append_tasks_queue = Queue()
@@ -212,7 +216,8 @@ def set_thumbnail(asset_data, asset):
     asset_thumbs_dir = paths.get_download_dirs(asset_data["asset_type"])[0]
     asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
     shutil.copy(thumbpath, asset_thumb_path)
-    asset[HANA3D_NAME].thumbnail = asset_thumb_path
+    asset_props = getattr(asset, HANA3D_NAME)
+    asset_props.thumbnail = asset_thumb_path
 
 
 def update_downloaded_progress(downloader: Downloader):
@@ -377,14 +382,15 @@ def check_existing(asset_data):
 def import_scene(asset_data: dict, file_names: list):
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
     scene.name = asset_data['name']
-    if bpy.context.window_manager.hana3d_scene.merge_add == 'ADD':
+    props = getattr(bpy.context.window_manager, HANA3D_SCENES)
+    if props.merge_add == 'ADD':
         for window in bpy.context.window_manager.windows:
             window.scene = bpy.data.scenes[asset_data['name']]
     return scene
 
 
 def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
-    sprops = window_manager.hana3d_models
+    sprops = getattr(window_manager, HANA3D_MODELS)
     if sprops.append_method == 'LINK_COLLECTION':
         sprops.append_link = 'LINK'
         sprops.import_as = 'GROUP'
@@ -462,7 +468,7 @@ def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
 
 def import_material(asset_data: dict, file_names: list, **kwargs):
     for m in bpy.data.materials:
-        if m[HANA3D_NAME].view_id == asset_data['view_id']:
+        if getattr(m, HANA3D_NAME).view_id == asset_data['view_id']:
             inscene = True
             material = m
             break
@@ -480,37 +486,38 @@ def import_material(asset_data: dict, file_names: list, **kwargs):
 
 
 def set_asset_props(asset, asset_data):
-    asset[HANA3D_NAME].clear_data()
+    asset_props = getattr(asset, HANA3D_NAME)
+    asset_props.clear_data()
     asset['asset_data'] = asset_data
 
     set_thumbnail(asset_data, asset)
 
-    asset[HANA3D_NAME].id = asset_data['id']
-    asset[HANA3D_NAME].view_id = asset_data['view_id']
-    asset[HANA3D_NAME].view_workspace = asset_data['workspace']
-    asset[HANA3D_NAME].name = asset_data['name']
-    asset[HANA3D_NAME].tags = ','.join(asset_data['tags'])
-    asset[HANA3D_NAME].description = asset_data['description']
+    asset_props.id = asset_data['id']
+    asset_props.view_id = asset_data['view_id']
+    asset_props.view_workspace = asset_data['workspace']
+    asset_props.name = asset_data['name']
+    asset_props.tags = ','.join(asset_data['tags'])
+    asset_props.description = asset_data['description']
 
     jobs = render_tools.get_render_jobs(asset_data['asset_type'], asset_data['view_id'])
-    asset[HANA3D_NAME].render_data['jobs'] = jobs
+    asset_props.render_data['jobs'] = jobs
 
     if 'tags' in asset_data:
-        types.update_tags_list(asset[HANA3D_NAME], bpy.context)
+        types.update_tags_list(asset_props, bpy.context)
         for tag in asset_data['tags']:
-            asset[HANA3D_NAME].tags_list[tag].selected = True
+            asset_props.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
-        libraries_list = asset[HANA3D_NAME].libraries_list
-        types.update_libraries_list(asset[HANA3D_NAME], bpy.context)
+        libraries_list = asset_props.libraries_list
+        types.update_libraries_list(asset_props, bpy.context)
         for library in asset_data['libraries']:
             libraries_list[library["name"]].selected = True
             if 'metadata' in library and library['metadata'] is not None:
                 for view_prop in libraries_list[library["name"]].metadata['view_props']:
                     name = f'{libraries_list[library["name"]].name} {view_prop["name"]}'
                     slug = view_prop['slug']
-                    if name not in asset[HANA3D_NAME].custom_props:
-                        asset[HANA3D_NAME].custom_props_info[name] = {
+                    if name not in asset_props.custom_props:
+                        asset_props.custom_props_info[name] = {
                             'slug': slug,
                             'library_name': libraries_list[library["name"]].name,
                             'library_id': libraries_list[library["name"]].id_
@@ -519,9 +526,9 @@ def set_asset_props(asset, asset_data):
                         'view_props' in library['metadata']
                         and slug in library['metadata']['view_props']
                     ):
-                        asset[HANA3D_NAME].custom_props[name] = library['metadata']['view_props'][slug] # noqa E501
+                        asset_props.custom_props[name] = library['metadata']['view_props'][slug]  # noqa E501
                     else:
-                        asset[HANA3D_NAME].custom_props[name] = ''
+                        asset_props.custom_props[name] = ''
 
 
 def append_asset(asset_data: dict, **kwargs):

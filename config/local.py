@@ -1,4 +1,7 @@
 HANA3D_NAME = "hana3d_local"
+HANA3D_MODELS = "hana3d_local_models"
+HANA3D_SCENES = "hana3d_local_scenes"
+HANA3D_MATERIALS = "hana3d_local_materials"
 HANA3D_PROFILE = "hana3d_local_profile"
 HANA3D_DESCRIPTION = "Hana3D (local)"
 HANA3D_AUTH_URL = "https://hana3d.us.auth0.com"

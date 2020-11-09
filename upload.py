@@ -226,7 +226,7 @@ class UploadOperator(Operator):
     @execute_wrapper
     def execute(self, context):
         obj = utils.get_active_asset()
-        props = obj[HANA3D_NAME]
+        props = getattr(obj, HANA3D_NAME)
 
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(obj)

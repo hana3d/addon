@@ -77,7 +77,8 @@ def get_state(asset_type: str, asset_name: str, property_name: str):
         asset = bpy.data.scenes[asset_name]
     else:
         raise ValueError(f'Unexpected asset type {asset_type}')
-    return getattr(asset[HANA3D_NAME], property_name)
+    asset_props = getattr(asset, HANA3D_NAME)
+    return getattr(asset_props, property_name)
 
 
 def register():

@@ -36,14 +36,15 @@ def update_libraries(workspace):
     r = rerequests.get(url, headers=headers)
     assert r.ok, f'Failed to get library data: {r.text}'
 
-    workspaces = bpy.context.window_manager[HANA3D_PROFILE]['user']['workspaces']
+    profile = bpy.context.window_manager[HANA3D_PROFILE]
+    workspaces = profile['user']['workspaces']
 
     for k, v in enumerate(workspaces):
         if v['id'] == workspace:
             workspaces[k]['libraries'] = r.json()
             break
 
-    bpy.context.window_manager[HANA3D_PROFILE]['user']['workspaces'] = workspaces
+    profile['user']['workspaces'] = workspaces
 
 
 class RemoveLibrarySearch(Operator):

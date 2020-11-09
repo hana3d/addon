@@ -34,7 +34,13 @@ from bpy.props import (
 from bpy.types import PropertyGroup
 
 from . import paths, render, search, utils
-from .config import HANA3D_PROFILE, HANA3D_NAME
+from .config import (
+    HANA3D_PROFILE,
+    HANA3D_NAME,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+    HANA3D_MATERIALS,
+)
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -1015,30 +1021,30 @@ def register():
     bpy.types.WindowManager.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
 
     # MODELS
-    bpy.types.WindowManager.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
+    setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))
     setattr(bpy.types.Object, HANA3D_NAME, PointerProperty(type=Hana3DModelUploadProps))
 
     # SCENES
-    bpy.types.WindowManager.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
+    setattr(bpy.types.WindowManager, HANA3D_SCENES, PointerProperty(type=Hana3DSceneSearchProps))
     setattr(bpy.types.Scene, HANA3D_NAME, PointerProperty(type=Hana3DSceneUploadProps))
 
     # MATERIALS
-    bpy.types.WindowManager.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
+    setattr(bpy.types.WindowManager, HANA3D_MATERIALS, PointerProperty(type=Hana3DMaterialSearchProps))  # noqa E501
     setattr(bpy.types.Material, HANA3D_NAME, PointerProperty(type=Hana3DMaterialUploadProps))
 
 
 def unregister():
-    del bpy.types.Material[HANA3D_NAME]
-    del bpy.types.WindowManager.hana3d_mat
+    delattr(bpy.types.Material, HANA3D_NAME)
+    delattr(bpy.types.WindowManager, HANA3D_MATERIALS)
 
-    del bpy.types.Scene[HANA3D_NAME]
-    del bpy.types.WindowManager.hana3d_scene
+    delattr(bpy.types.Scene, HANA3D_NAME)
+    delattr(bpy.types.WindowManager, HANA3D_SCENES)
 
-    del bpy.types.Object[HANA3D_NAME]
-    del bpy.types.WindowManager.hana3d_models
+    delattr(bpy.types.Object, HANA3D_NAME)
+    delattr(bpy.types.WindowManager, HANA3D_MODELS)
 
-    del bpy.types.WindowManager.Hana3DRender
-    del bpy.types.WindowManager.Hana3DUI
+    delattr(bpy.types.WindowManager, 'Hana3DRender')
+    delattr(bpy.types.WindowManager, 'Hana3DUI')
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

@@ -29,7 +29,13 @@ from bpy.types import Operator
 
 from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME, HANA3D_PROFILE
+from .config import (
+    HANA3D_PROFILE,
+    HANA3D_NAME,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+    HANA3D_MATERIALS,
+)
 
 search_start_time = 0
 prev_time = 0
@@ -117,15 +123,15 @@ def timer_update():
             wm = bpy.context.window_manager
             asset_type = thread[2]
             if asset_type == 'model':
-                props = wm.hana3d_models
+                props = getattr(wm, HANA3D_MODELS)
                 json_filepath = os.path.join(icons_dir, 'model_searchresult.json')
                 search_name = 'hana3d model search'
             if asset_type == 'scene':
-                props = wm.hana3d_scene
+                props = getattr(wm, HANA3D_SCENES)
                 json_filepath = os.path.join(icons_dir, 'scene_searchresult.json')
                 search_name = 'hana3d scene search'
             if asset_type == 'material':
-                props = wm.hana3d_mat
+                props = getattr(wm, HANA3D_MATERIALS)
                 json_filepath = os.path.join(icons_dir, 'material_searchresult.json')
                 search_name = 'hana3d material search'
 
@@ -501,7 +507,7 @@ def build_query_common(query, props):
 def build_query_model():
     '''use all search input to request results from server'''
 
-    props = bpy.context.window_manager.hana3d_models
+    props = getattr(bpy.context.window_manager, HANA3D_MODELS)
     query = {
         "asset_type": 'model',
     }
@@ -514,7 +520,7 @@ def build_query_model():
 def build_query_scene():
     '''use all search input to request results from server'''
 
-    props = bpy.context.window_manager.hana3d_scene
+    props = getattr(bpy.context.window_manager, HANA3D_SCENES)
     query = {
         "asset_type": 'scene',
     }
@@ -523,7 +529,7 @@ def build_query_scene():
 
 
 def build_query_material():
-    props = bpy.context.window_manager.hana3d_mat
+    props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
     query = {
         "asset_type": 'material',
     }
@@ -569,21 +575,21 @@ def search(get_next=False, author_id=''):
     uiprops = wm.Hana3DUI
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(wm, 'hana3d_models'):
+        if not hasattr(wm, HANA3D_MODELS):
             return
-        props = wm.hana3d_models
+        props = getattr(wm, HANA3D_MODELS)
         query = build_query_model()
 
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(wm, 'hana3d_scene'):
+        if not hasattr(wm, HANA3D_SCENES):
             return
-        props = wm.hana3d_scene
+        props = getattr(wm, HANA3D_SCENES)
         query = build_query_scene()
 
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(wm, 'hana3d_mat'):
+        if not hasattr(wm, HANA3D_MATERIALS):
             return
-        props = wm.hana3d_mat
+        props = getattr(wm, HANA3D_MATERIALS)
         query = build_query_material()
 
     if props.is_searching and get_next:

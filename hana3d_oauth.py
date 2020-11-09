@@ -101,7 +101,7 @@ def reset_tokens():
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
     if HANA3D_PROFILE in bpy.context.window_manager.keys():
-        del bpy.context.window_manager[HANA3D_PROFILE]
+        delattr(bpy.context.window_manager, HANA3D_PROFILE)
 
 
 class RegisterLoginOnline(bpy.types.Operator):

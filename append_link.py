@@ -23,6 +23,9 @@ from . import (
     utils
 )
 from .report_tools import execute_wrapper
+from .config import (
+    HANA3D_SCENES,
+)
 
 
 def append_material(file_name, matname=None, link=False, fake_user=True):
@@ -140,7 +143,7 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
     '''append a scene type asset'''
     context = bpy.context
     scene = context.scene
-    props = context.window_manager.hana3d_scene
+    props = getattr(context.window_manager, HANA3D_SCENES)
 
     if props.merge_add == 'MERGE' and scenename is None:
         with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):

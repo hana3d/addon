@@ -28,7 +28,13 @@ from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
 from . import paths, rerequests, tasks_queue
-from .config import HANA3D_PROFILE, HANA3D_NAME
+from .config import (
+    HANA3D_NAME,
+    HANA3D_PROFILE,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+    HANA3D_MATERIALS,
+)
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -76,7 +82,7 @@ def get_active_model(context=None, view_id=None):
     models = [
         ob
         for ob in context.blend_data.objects
-        if ob[HANA3D_NAME].view_id == view_id
+        if getattr(ob, HANA3D_NAME).view_id == view_id
     ]
     return models[0]
 
@@ -95,14 +101,14 @@ def get_selected_models():
             while (
                 ob.parent is not None
                 and ob not in done
-                and ob[HANA3D_NAME].view_id != ''
+                and getattr(ob, HANA3D_NAME).view_id != ''
                 and ob.instance_collection is not None
             ):
                 done[ob] = True
                 ob = ob.parent
 
             if ob not in parents and ob not in done:
-                if ob[HANA3D_NAME].name != '' or ob.instance_collection is not None:
+                if getattr(ob, HANA3D_NAME).name != '' or ob.instance_collection is not None:
                     parents.append(ob)
             done[ob] = True
 
@@ -119,17 +125,17 @@ def get_search_props():
     uiprops = scene.Hana3DUI
     props = None
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'hana3d_models'):
+        if not hasattr(scene, HANA3D_MODELS):
             return
-        props = scene.hana3d_models
+        props = getattr(scene, HANA3D_MODELS)
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'hana3d_scene'):
+        if not hasattr(scene, HANA3D_SCENES):
             return
-        props = scene.hana3d_scene
+        props = getattr(scene, HANA3D_SCENES)
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'hana3d_mat'):
+        if not hasattr(scene, HANA3D_MATERIALS):
             return
-        props = scene.hana3d_mat
+        props = getattr(scene, HANA3D_MATERIALS)
     return props
 
 
@@ -438,7 +444,7 @@ def scale_uvs(ob, scale=1.0, pivot=Vector((0.5, 0.5))):
 # map uv cubic and switch of auto tex space and set it to 1,1,1
 def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale=False):
     wm = bpy.context.window_manager
-    mat_props = wm.hana3d_mat
+    mat_props = getattr(wm, HANA3D_MATERIALS)
     if mat_props.automap:
         tob = bpy.data.objects[target_object]
         # only automap mesh models
@@ -495,7 +501,7 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
 def name_update():
     asset = get_active_asset()
-    props = asset[HANA3D_NAME]
+    props = getattr(asset, HANA3D_NAME)
     if asset is None:
         return
     if props.name_old != props.name:
@@ -705,7 +711,7 @@ def check_meshprops(props, obs) -> Tuple[int, int]:
 def fill_object_metadata(obj: bpy.types.Object):
     """ call all analysis functions """
     obs = get_hierarchy(obj)
-    props = obj[HANA3D_NAME]
+    props = getattr(obj, HANA3D_NAME)
 
     dim, bbox_min, bbox_max = get_dimensions(obs)
     props.dimensions = dim

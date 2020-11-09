@@ -190,7 +190,8 @@ if __name__ == "__main__":
 
             bpy.ops.file.pack_all()
 
-            main_source[HANA3D_NAME].uploading = False
+            main_source_props = getattr(main_source, HANA3D_NAME)
+            main_source_props.uploading = False
             fpath = os.path.join(data['temp_dir'], upload_data['viewId'] + '.blend')
 
             bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)

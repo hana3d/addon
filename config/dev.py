@@ -1,4 +1,7 @@
 HANA3D_NAME = "hana3d_dev"
+HANA3D_MODELS = "hana3d_dev_models"
+HANA3D_SCENES = "hana3d_dev_scenes"
+HANA3D_MATERIALS = "hana3d_dev_materials"
 HANA3D_PROFILE = "hana3d_dev_profile"
 HANA3D_DESCRIPTION = "Hana3D (dev)"
 HANA3D_AUTH_URL = "https://hana3d.us.auth0.com"

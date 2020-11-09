@@ -38,7 +38,10 @@ from . import (
     utils
 )
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME
+from .config import (
+    HANA3D_NAME,
+    HANA3D_MODELS,
+)
 
 handler_2d = None
 handler_3d = None
@@ -889,7 +892,7 @@ def mouse_raycast(context, mx, my):
     if has_hit:
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
         up = Vector((0, 0, 1))
-        props = bpy.context.window_manager.hana3d_models
+        props = getattr(bpy.context.window_manager, HANA3D_MODELS)
         if snapped_normal.angle(up) < math.radians(10.0):
             randoffset = props.offset_rotation_amount + math.pi
         else:
@@ -941,7 +944,7 @@ def floor_raycast(context, mx, my):
         object = None
         matrix = None
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
-        props = bpy.context.window_manager.hana3d_models
+        props = getattr(bpy.context.window_manager, HANA3D_MODELS)
         randoffset = props.offset_rotation_amount + math.pi
         snapped_rotation.rotate_axis('Z', randoffset)
 
@@ -1212,7 +1215,7 @@ class AssetBarOperator(bpy.types.Operator):
             if ui_props.dragging and not mouse_in_asset_bar(mx, my):
                 # and my < r.height - ui_props.bar_height \
                 # and mx > 0 and mx < r.width and my > 0:
-                sprops = wm.hana3d_models
+                sprops = getattr(wm, HANA3D_MODELS)
                 if event.type == 'WHEELUPMOUSE':
                     sprops.offset_rotation_amount += sprops.offset_rotation_step
                 elif event.type == 'WHEELDOWNMOUSE':
@@ -1691,7 +1694,7 @@ class DefaultNamesOperator(bpy.types.Operator):
         if asset is None:
             return {'PASS_THROUGH'}
 
-        props = asset[HANA3D_NAME]
+        props = getattr(asset, HANA3D_NAME)
 
         if ui_props.down_up == 'UPLOAD':
             if props.workspace != '' and len(props.tags_list) == 0:
