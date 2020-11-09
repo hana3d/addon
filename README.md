@@ -21,23 +21,17 @@ make test
 
 Feature set:
 
-- search
-- upload
-  - reupload
-  - conversion pipeline (.blend -> .glb/.usdz)
-  - webhooks
-- download
-  - link
-  - append
-- render
+- login/logout
+- workspaces
+- assets (model, material, scene)
+  - upload
+    - reupload
+    - conversion pipeline (.blend -> .glb/.usdz)
+    - webhooks
+  - download
+    - link
+    - append
+  - render
 - libraries
 - tags
-- model/material/scene
-- workspaces
 
-
-# TODO
-
-- [ ] window manager, wm
-- [ ] grep hana3d
-- [ ] grep Hana3D
