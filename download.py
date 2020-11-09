@@ -39,6 +39,7 @@ from . import append_link, colors, paths, render_tools, types, ui, utils
 from .report_tools import execute_wrapper
 from .config import (
     HANA3D_NAME,
+    HANA3D_DESCRIPTION,
     HANA3D_MODELS,
     HANA3D_SCENES,
 )
@@ -652,8 +653,8 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
 class Hana3DDownloadOperator(bpy.types.Operator):
     """Download and link asset to scene. Only link if asset already available locally."""
 
-    bl_idname = "scene.hana3d_download"
-    bl_label = "Hana3D Asset Download"
+    bl_idname = f"scene.{HANA3D_NAME}_download"
+    bl_label = f"{HANA3D_DESCRIPTION} Asset Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     asset_type: EnumProperty(

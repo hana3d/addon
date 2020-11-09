@@ -1542,7 +1542,8 @@ class AssetBarOperator(bpy.types.Operator):
                             rotation = (0, 0, 0)
 
                             asset_data = sr[asset_search_index]
-                            bpy.ops.scene.hana3d_download(
+                            download_op = getattr(bpy.ops.scene, HANA3D_NAME + "_download")
+                            download_op(
                                 True,
                                 asset_type=ui_props.asset_type,
                                 asset_index=asset_search_index,
@@ -1560,7 +1561,8 @@ class AssetBarOperator(bpy.types.Operator):
                             loc = s.cursor.location
                             rotation = s.cursor.rotation_euler
 
-                        bpy.ops.scene.hana3d_download(
+                        download_op = getattr(bpy.ops.scene, HANA3D_NAME + "_download")
+                        download_op(
                             True,
                             asset_type=ui_props.asset_type,
                             asset_index=asset_search_index,
@@ -1570,7 +1572,8 @@ class AssetBarOperator(bpy.types.Operator):
                         )
 
                     else:
-                        bpy.ops.scene.hana3d_download(
+                        download_op = getattr(bpy.ops.scene, HANA3D_NAME + "_download")
+                        download_op(
                             asset_type=ui_props.asset_type,
                             asset_index=asset_search_index
                         )
