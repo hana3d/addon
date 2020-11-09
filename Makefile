@@ -59,10 +59,6 @@ build: ## build addon according to stage
 	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' \) | xargs cp --parents -t hana3d_$(STAGE)
 	# replace config file with appropriate stage
 	LC_ALL=C sed -i "" "s/from \.production/from .$(STAGE)/g" hana3d_$(STAGE)/config/__init__.py
-	# replace addon description on strings: static properties are evaluated before runtime + description should be accurate on tooltips
-	find hana3d_$(STAGE) -type f -name '*.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/\(\".*\)Hana3D\(.*\"\)/\1$(HANA3D_DESCRIPTION)\2/g"
-	# replace name assignment by dot notation (https://docs.blender.org/api/current/info_gotcha.html), as `bpy.types.Object[HANA3D_NAME] = ` won't work
-	find hana3d_$(STAGE) -type f -name '*.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/\[HANA3D_NAME\]/.$(HANA3D_NAME)/g"
 	# background processes must NOT have relative imports
 	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/from \. /from hana3d_$(STAGE) /g"
 	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/from \./from hana3d_$(STAGE)./g"

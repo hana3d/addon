@@ -1016,15 +1016,15 @@ def register():
 
     # MODELS
     bpy.types.WindowManager.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
-    bpy.types.Object[HANA3D_NAME] = PointerProperty(type=Hana3DModelUploadProps)
+    setattr(bpy.types.Object, HANA3D_NAME, PointerProperty(type=Hana3DModelUploadProps))
 
     # SCENES
     bpy.types.WindowManager.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
-    bpy.types.Scene[HANA3D_NAME] = PointerProperty(type=Hana3DSceneUploadProps)
+    setattr(bpy.types.Scene, HANA3D_NAME, PointerProperty(type=Hana3DSceneUploadProps))
 
     # MATERIALS
     bpy.types.WindowManager.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
-    bpy.types.Material[HANA3D_NAME] = PointerProperty(type=Hana3DMaterialUploadProps)
+    setattr(bpy.types.Material, HANA3D_NAME, PointerProperty(type=Hana3DMaterialUploadProps))
 
 
 def unregister():
