@@ -25,8 +25,10 @@ export PYTHON=python
 export PRINT_HELP_PYSCRIPT
 export BLENDER_VERSION=2.90
 export BLENDER_ADDON_PATH=$(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/scripts/addons
+export BLENDER_PRESETS_PATH=$(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/scripts/presets
 STAGE ?= production
 HANA3D_DESCRIPTION=$(shell sed -e 's/HANA3D_DESCRIPTION.*"\(.*\)\"/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).py)
+HANA3D_NAME=$(shell sed -e 's/HANA3D_NAME.*"\(.*\)\"/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).py)
 
 ###################################################################################################
 ## GENERAL COMMANDS
@@ -46,6 +48,7 @@ test: ## test code
 
 clean: ## clean blender Hana3D addons
 	rm -r $(BLENDER_ADDON_PATH)/hana3d_$(STAGE) || true
+	rm -r $(BLENDER_PRESETS_PATH)/hana3d_$(STAGE) || true
 
 
 build: ## build addon according to stage
@@ -58,6 +61,8 @@ build: ## build addon according to stage
 	LC_ALL=C sed -i "" "s/from \.production/from .$(STAGE)/g" hana3d_$(STAGE)/config/__init__.py
 	# replace addon description on strings: static properties are evaluated before runtime + description should be accurate on tooltips
 	find hana3d_$(STAGE) -type f -name '*.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/\(\".*\)Hana3D\(.*\"\)/\1$(HANA3D_DESCRIPTION)\2/g"
+	# replace name assignment by dot notation (https://docs.blender.org/api/current/info_gotcha.html), as `bpy.types.Object[HANA3D_NAME] = ` won't work
+	find hana3d_$(STAGE) -type f -name '*.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/\[HANA3D_NAME\]/.$(HANA3D_NAME)/g"
 	# background processes must NOT have relative imports
 	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/from \. /from hana3d_$(STAGE) /g"
 	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "" "s/from \./from hana3d_$(STAGE)./g"
