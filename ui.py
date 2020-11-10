@@ -1822,6 +1822,15 @@ def pre_load(context):
     preferences.login_attempt = False
 
 
+def redraw_regions():
+    for area in bpy.context.window.screen.areas:
+        if area.type == 'VIEW_3D':
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    region.tag_redraw()
+    return 0.1
+
+
 def register():
     global handler_2d, handler_3d
 
@@ -1871,6 +1880,7 @@ def register():
     addon_keymapitems.append(kmi)
 
     bpy.app.handlers.load_post.append(default_name_handler)
+    bpy.app.timers.register(redraw_regions)
 
 
 def unregister():
