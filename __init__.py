@@ -87,6 +87,8 @@ def check_timers_timer():
         bpy.app.timers.register(render.threads_cleanup)
     if not bpy.app.timers.is_registered(thread_tools.threads_state_update):
         bpy.app.timers.register(thread_tools.threads_state_update)
+    if not bpy.app.timers.is_registered(ui.redraw_regions):
+        bpy.app.timers.register(ui.redraw_regions)
     return 5.0
 
 
