@@ -30,7 +30,7 @@ from bpy.types import Operator
 
 from . import bg_blender, paths, render, rerequests, types, ui, utils
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 
@@ -191,8 +191,8 @@ asset_types = (
 class UploadOperator(Operator):
     """Tooltip"""
 
-    bl_idname = "object.hana3d_upload"
-    bl_description = "Upload or re-upload asset + thumbnail + metadata"
+    bl_idname = f"object.{HANA3D_NAME}_upload"
+    bl_description = f"Upload or re-upload asset + thumbnail + metadata to {HANA3D_DESCRIPTION}"
 
     bl_label = "hana3d asset upload"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}

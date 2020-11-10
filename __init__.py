@@ -44,7 +44,7 @@ from . import (
     upload,
     utils
 )
-from .config import HANA3D_NAME
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
 bl_info = {
     "name": "Hana3D",
@@ -100,15 +100,15 @@ class Hana3DAddonPreferences(AddonPreferences):
     default_global_dict = paths.default_global_dict()
 
     api_key: StringProperty(
-        name="Hana3D API Key",
-        description="Your Hana3D API Key. Get it from your page on the website",
+        name=f"{HANA3D_DESCRIPTION} API Key",
+        description=f"Your {HANA3D_DESCRIPTION} API Key. Get it from your page on the website",
         default="",
         subtype="PASSWORD",
         update=utils.save_prefs,
     )
 
     api_key_refresh: StringProperty(
-        name="Hana3D refresh API Key",
+        name=f"{HANA3D_DESCRIPTION} refresh API Key",
         description="API key used to refresh the token regularly.",
         default="",
         subtype="PASSWORD",
@@ -129,7 +129,7 @@ class Hana3DAddonPreferences(AddonPreferences):
     )
 
     id_token: StringProperty(
-        name="Hana3D ID Token",
+        name=f"{HANA3D_DESCRIPTION} ID Token",
         default="",
         subtype="PASSWORD",
         update=utils.save_prefs,
@@ -143,7 +143,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
     login_attempt: BoolProperty(
         name="Login/Signup attempt",
-        description="When this is on, Hana3D is trying to connect and login",
+        description=f"When this is on, {HANA3D_DESCRIPTION} is trying to connect and login",
         default=False,
     )
 
@@ -272,7 +272,7 @@ class Hana3DAddonPreferences(AddonPreferences):
         if self.api_key.strip() == '':
             ui_panels.draw_login_buttons(layout)
         else:
-            layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
+            layout.operator(f"wm.{HANA3D_NAME}_logout", text="Logout", icon='URL')
 
         layout.prop(self, "api_key", text='Your API Key')
         layout.prop(self, "global_dir")

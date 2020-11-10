@@ -24,7 +24,7 @@ import requests
 
 from . import colors, oauth, paths, ui, utils
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME, HANA3D_PROFILE
+from .config import HANA3D_NAME, HANA3D_PROFILE, HANA3D_DESCRIPTION
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -87,7 +87,7 @@ def write_tokens(oauth_response: dict):
     props = utils.get_search_props()
     if props is not None:
         props.report = ''
-    ui.add_report("Hana3D Re-Login success")
+    ui.add_report(f"{HANA3D_DESCRIPTION} Re-Login success")
     utils.update_profile_async()
 
 
@@ -107,8 +107,8 @@ def reset_tokens():
 class RegisterLoginOnline(bpy.types.Operator):
     """Login online on hana3d webpage"""
 
-    bl_idname = "wm.hana3d_login"
-    bl_label = "hana3d login or signup"
+    bl_idname = f"wm.{HANA3D_NAME}_login"
+    bl_label = f"{HANA3D_DESCRIPTION} login or signup"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -141,8 +141,8 @@ class RegisterLoginOnline(bpy.types.Operator):
 class Logout(bpy.types.Operator):
     """Logout from hana3d immediately"""
 
-    bl_idname = "wm.hana3d_logout"
-    bl_label = "hana3d logout"
+    bl_idname = f"wm.{HANA3D_NAME}_logout"
+    bl_label = f"{HANA3D_DESCRIPTION} logout"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -158,8 +158,8 @@ class Logout(bpy.types.Operator):
 class CancelLoginOnline(bpy.types.Operator):
     """Cancel login attempt."""
 
-    bl_idname = "wm.hana3d_login_cancel"
-    bl_label = "hana3d login cancel"
+    bl_idname = f"wm.{HANA3D_NAME}_login_cancel"
+    bl_label = f"{HANA3D_DESCRIPTION} login cancel"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod

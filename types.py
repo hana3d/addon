@@ -37,6 +37,7 @@ from . import paths, render, search, utils
 from .config import (
     HANA3D_PROFILE,
     HANA3D_NAME,
+    HANA3D_DESCRIPTION,
     HANA3D_MODELS,
     HANA3D_SCENES,
     HANA3D_MATERIALS,
@@ -90,32 +91,32 @@ class Hana3DUIProps(PropertyGroup):
                 (
                     'MODEL',
                     'Find Models',
-                    "Find models in the Hana3D online database",
+                    f"Find models in the {HANA3D_DESCRIPTION} online database",
                     'OBJECT_DATAMODE',
                     0,
                 ),
                 (
                     'SCENE',
                     'Find Scenes',
-                    "Find scenes in the Hana3D online database",
+                    f"Find scenes in the {HANA3D_DESCRIPTION} online database",
                     'SCENE_DATA',
                     1,
                 ),
                 (
                     'MATERIAL',
                     'Find Materials',
-                    "Find materials in the Hana3D online database",
+                    f"Find materials in the {HANA3D_DESCRIPTION} online database",
                     'MATERIAL',
                     2,
                 ),
-                # ("HDR", "Find HDRs", "Find HDRs in the Hana3D online database", "WORLD_DATA", 3),
+                # ("HDR", "Find HDRs", f"Find HDRs in the {HANA3D_DESCRIPTION} online database", "WORLD_DATA", 3), # noqa E501
             )
         else:
             items = (
-                ("MODEL", "Upload Model", "Upload a model to Hana3D", "OBJECT_DATAMODE", 0),
-                ("SCENE", "Upload Scene", "Upload a scene to Hana3D", "SCENE_DATA", 1),
-                ("MATERIAL", "Upload Material", "Upload a material to Hana3D", "MATERIAL", 2),
-                # ("HDR", "Upload HDR", "Upload a HDR to Hana3D", "WORLD_DATA", 3),
+                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0), # noqa E501
+                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1), # noqa E501
+                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2), # noqa E501
+                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3),
             )
         return items
 
@@ -129,14 +130,14 @@ class Hana3DUIProps(PropertyGroup):
         default="SEARCH",
     )
     asset_type: EnumProperty(
-        name="Hana3D Active Asset Type",
+        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
         items=asset_type_callback,
         description="Activate asset in UI",
         default=None,
         update=switch_search_results,
     )
     asset_type_render: EnumProperty(
-        name="Hana3D Active Asset Type",
+        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
         items=(
             (
                 'MODEL',

@@ -20,13 +20,17 @@ import bpy
 
 from . import utils
 from .report_tools import execute_wrapper
+from .config import (
+    HANA3D_NAME,
+    HANA3D_DESCRIPTION,
+)
 
 
 class ShareAsset(bpy.types.Operator):
     """Share Asset ID"""
 
-    bl_idname = "object.hana3d_share_asset"
-    bl_label = "Hana3D Share Asset"
+    bl_idname = f"object.{HANA3D_NAME}_share_asset"
+    bl_label = f"{HANA3D_DESCRIPTION} Share Asset"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @execute_wrapper

@@ -627,8 +627,8 @@ asset_types = (
 class Hana3DKillDownloadOperator(bpy.types.Operator):
     """Kill a download"""
 
-    bl_idname = "scene.hana3d_download_kill"
-    bl_label = "Hana3D Kill Asset Download"
+    bl_idname = f"scene.{HANA3D_NAME}_download_kill"
+    bl_label = f"{HANA3D_DESCRIPTION} Kill Asset Download"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     view_id: StringProperty()
@@ -742,8 +742,8 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 class Hana3DBatchDownloadOperator(bpy.types.Operator):
     """Download and link all preview assets to scene."""
 
-    bl_idname = "scene.hana3d_batch_download"
-    bl_label = "Hana3D Batch Download"
+    bl_idname = f"scene.{HANA3D_NAME}_batch_download"
+    bl_label = f"{HANA3D_DESCRIPTION} Batch Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     object_count: IntProperty(

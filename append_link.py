@@ -24,6 +24,7 @@ from . import (
 )
 from .report_tools import execute_wrapper
 from .config import (
+    HANA3D_NAME,
     HANA3D_SCENES,
 )
 
@@ -177,7 +178,8 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
 
         window = context.window_manager.windows[0]
         ctx = {'window': window, 'screen': window.screen, 'scene': imported_scene}
-        bpy.ops.scene.hana3d_delete_scene(ctx)
+        delete_scene_op = getattr(bpy.ops.scene, HANA3D_NAME + "_delete_scene")
+        delete_scene_op(ctx)
 
         return scene
 
@@ -289,7 +291,7 @@ def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwar
 
 
 class DeleteSceneWorkaround(bpy.types.Operator):
-    bl_idname = "scene.hana3d_delete_scene"
+    bl_idname = f"scene.{HANA3D_NAME}_delete_scene"
     bl_label = "Test Operator"
 
     @execute_wrapper

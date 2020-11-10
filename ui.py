@@ -40,6 +40,7 @@ from . import (
 from .report_tools import execute_wrapper
 from .config import (
     HANA3D_NAME,
+    HANA3D_DESCRIPTION,
     HANA3D_MODELS,
 )
 
@@ -1046,8 +1047,8 @@ def get_largest_3dview():
 class AssetBarOperator(bpy.types.Operator):
     '''runs search and displays the asset bar at the same time'''
 
-    bl_idname = "view3d.hana3d_asset_bar"
-    bl_label = "Hana3D Asset Bar UI"
+    bl_idname = f"view3d.{HANA3D_NAME}_asset_bar"
+    bl_label = f"{HANA3D_DESCRIPTION} Asset Bar UI"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     do_search: BoolProperty(name="Run Search", description='', default=True, options={'SKIP_SAVE'})
@@ -1668,8 +1669,8 @@ class AssetBarOperator(bpy.types.Operator):
 class DefaultNamesOperator(bpy.types.Operator):
     '''Assign default object name as props name and object render job name'''
 
-    bl_idname = "view3d.hana3d_default_name"
-    bl_label = "Hana3D Default Name"
+    bl_idname = f"view3d.{HANA3D_NAME}_default_name"
+    bl_label = f"{HANA3D_DESCRIPTION} Default Name"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def modal(self, context, event):
@@ -1727,8 +1728,8 @@ class DefaultNamesOperator(bpy.types.Operator):
 class TransferHana3DData(bpy.types.Operator):
     """Regenerate cobweb"""
 
-    bl_idname = "object.hana3d_data_transfer"
-    bl_label = "Transfer hana3d data"
+    bl_idname = f"object.{HANA3D_NAME}_data_transfer"
+    bl_label = f"Transfer {HANA3D_DESCRIPTION} data"
     bl_description = "Transfer hana3d metadata from one object to another when fixing uploads with wrong parenting."  # noqa E501
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1755,7 +1756,7 @@ class UndoWithContext(bpy.types.Operator):
     # def modal(self, context, event):
     #     return {'RUNNING_MODAL'}
 
-    message: StringProperty('Undo Message', default='hana3d operation')
+    message: StringProperty('Undo Message', default=f'{HANA3D_DESCRIPTION} operation')
 
     @execute_wrapper
     def execute(self, context):
@@ -1788,7 +1789,8 @@ class RunAssetBarWithContext(bpy.types.Operator):
             w, a, r = get_largest_3dview()
             override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
             C_dict.update(override)
-        bpy.ops.view3d.hana3d_asset_bar(
+        asset_bar_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_asset_bar')
+        asset_bar_op(
             C_dict,
             'INVOKE_REGION_WIN',
             keep_running=True,
@@ -1817,7 +1819,8 @@ def default_name_handler(dummy):
         w, a, r = get_largest_3dview()
         override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
         C_dict.update(override)
-    bpy.ops.view3d.hana3d_default_name(C_dict, 'INVOKE_REGION_WIN')
+    default_name_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_default_name')
+    default_name_op(C_dict, 'INVOKE_REGION_WIN')
 
 
 # @persistent

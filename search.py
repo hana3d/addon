@@ -32,6 +32,7 @@ from .report_tools import execute_wrapper
 from .config import (
     HANA3D_PROFILE,
     HANA3D_NAME,
+    HANA3D_DESCRIPTION,
     HANA3D_MODELS,
     HANA3D_SCENES,
     HANA3D_MATERIALS,
@@ -618,16 +619,16 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    tasks_queue.add_task(ui.add_report, ('hana3d searching....', 2))
+    tasks_queue.add_task(ui.add_report, (f'{HANA3D_DESCRIPTION} searching...', 2))
 
-    props.report = 'hana3d searching....'
+    props.report = f'{HANA3D_DESCRIPTION} searching...'
 
 
 class SearchOperator(Operator):
     """Tooltip"""
 
-    bl_idname = "view3d.hana3d_search"
-    bl_label = "hana3d asset search"
+    bl_idname = f"view3d.{HANA3D_NAME}_search"
+    bl_label = f"{HANA3D_DESCRIPTION} asset search"
     bl_description = "Search online for assets"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     own: BoolProperty(name="own assets only", description="Find all own assets", default=False)
@@ -668,7 +669,8 @@ class SearchOperator(Operator):
             sprops.search_keywords = self.keywords
 
         search(get_next=self.get_next, author_id=self.author_id)
-        # bpy.ops.view3d.hana3d_asset_bar()
+        # asset_bar_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_asset_bar')
+        # asset_bar_op()
 
         return {'FINISHED'}
 

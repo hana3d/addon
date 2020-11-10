@@ -22,7 +22,7 @@ from bpy.types import Operator
 
 from . import utils, types, paths, rerequests
 from .report_tools import execute_wrapper
-from .config import HANA3D_PROFILE
+from .config import HANA3D_PROFILE, HANA3D_NAME, HANA3D_DESCRIPTION
 
 
 def update_libraries(workspace):
@@ -50,8 +50,8 @@ def update_libraries(workspace):
 class RemoveLibrarySearch(Operator):
     """Remove Library"""
 
-    bl_idname = "object.hana3d_remove_library_search"
-    bl_label = "Hana3D Remove Library"
+    bl_idname = f"object.{HANA3D_NAME}_remove_library_search"
+    bl_label = f"{HANA3D_DESCRIPTION} Remove Library"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     library: StringProperty(name='Library', default='')
@@ -66,8 +66,8 @@ class RemoveLibrarySearch(Operator):
 class RemoveLibraryUpload(Operator):
     """Remove Library"""
 
-    bl_idname = "object.hana3d_remove_library_upload"
-    bl_label = "Hana3D Remove Library"
+    bl_idname = f"object.{HANA3D_NAME}_remove_library_upload"
+    bl_label = f"{HANA3D_DESCRIPTION} Remove Library"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     library: StringProperty(name='Library', default='')
@@ -90,8 +90,8 @@ class RemoveLibraryUpload(Operator):
 class RefreshLibraries(bpy.types.Operator):
     """Refresh Libraries"""
 
-    bl_idname = "object.hana3d_refresh_libraries"
-    bl_label = "Hana3D Refresh Libraries"
+    bl_idname = f"object.{HANA3D_NAME}_refresh_libraries"
+    bl_label = f"{HANA3D_DESCRIPTION} Refresh Libraries"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @execute_wrapper

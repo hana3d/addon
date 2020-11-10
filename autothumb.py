@@ -25,7 +25,7 @@ import bpy
 
 from . import bg_blender, colors, paths, ui, utils
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 
@@ -141,8 +141,8 @@ def generate_model_thumbnail(
 class GenerateModelThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
 
-    bl_idname = "object.hana3d_thumbnail"
-    bl_label = "Hana3D Thumbnail Generator"
+    bl_idname = f"object.{HANA3D_NAME}_thumbnail"
+    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -293,8 +293,8 @@ def generate_material_thumbnail(
 class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for materials"""
 
-    bl_idname = "material.hana3d_thumbnail"
-    bl_label = "Hana3D Material Thumbnail Generator"
+    bl_idname = f"material.{HANA3D_NAME}_thumbnail"
+    bl_label = f"{HANA3D_DESCRIPTION} Material Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -412,8 +412,8 @@ def generate_scene_thumbnail(
 class GenerateSceneThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for scene"""
 
-    bl_idname = "scene.hana3d_thumbnail"
-    bl_label = "Hana3D Thumbnail Generator"
+    bl_idname = f"scene.{HANA3D_NAME}_thumbnail"
+    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     def draw(self, context):

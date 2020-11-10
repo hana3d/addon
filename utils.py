@@ -166,9 +166,9 @@ def get_upload_props():
 
 def previmg_name(index, fullsize=False):
     if not fullsize:
-        return '.hana3d_preview_' + str(index).zfill(2)
+        return f'.{HANA3D_NAME}_preview_' + str(index).zfill(2)
     else:
-        return '.hana3d_preview_full_' + str(index).zfill(2)
+        return f'.{HANA3D_NAME}_preview_full_' + str(index).zfill(2)
 
 
 def load_prefs():

@@ -22,14 +22,14 @@ from bpy.types import Operator
 
 from . import utils
 from .report_tools import execute_wrapper
-from .config import HANA3D_PROFILE
+from .config import HANA3D_PROFILE, HANA3D_NAME, HANA3D_DESCRIPTION
 
 
 class Hana3DAddTag(Operator):
     """Add Tag"""
 
-    bl_idname = "object.hana3d_add_tag"
-    bl_label = "Add new tag"
+    bl_idname = f"object.{HANA3D_NAME}_add_tag"
+    bl_label = f"Add new tag to {HANA3D_DESCRIPTION}"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     tag: StringProperty(name='New Tag', default='')
@@ -64,8 +64,8 @@ class Hana3DAddTag(Operator):
 class RemoveTagSearch(Operator):
     """Remove Tag"""
 
-    bl_idname = "object.hana3d_remove_tag_search"
-    bl_label = "Hana3D List Libraries"
+    bl_idname = f"object.{HANA3D_NAME}_remove_tag_search"
+    bl_label = f"{HANA3D_DESCRIPTION} List Libraries"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     tag: bpy.props.StringProperty(name='Tag', default='')
@@ -80,8 +80,8 @@ class RemoveTagSearch(Operator):
 class RemoveTagUpload(Operator):
     """Remove Tag"""
 
-    bl_idname = "object.hana3d_remove_tag_upload"
-    bl_label = "Hana3D Remove Tag"
+    bl_idname = f"object.{HANA3D_NAME}_remove_tag_upload"
+    bl_label = f"{HANA3D_DESCRIPTION} Remove Tag"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     tag: bpy.props.StringProperty(name='Tag', default='')

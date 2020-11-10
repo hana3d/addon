@@ -45,7 +45,7 @@ from . import (
     utils
 )
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
 render_threads = []
 upload_threads = []
@@ -576,7 +576,7 @@ class RemoveRender(Operator):
         if job.get('image') is not None:  # Case when image was not imported to scene
             bpy.data.images.remove(job['image'])
 
-        self.remove_from_hana3d_backend(id_job)
+        self.remove_from_backend(id_job)
 
         name = job['job_name']  # Get name before job is de-referenced
         self.remove_from_props(id_job, props)
@@ -586,7 +586,7 @@ class RemoveRender(Operator):
         return {'FINISHED'}
 
     @staticmethod
-    def remove_from_hana3d_backend(id_job: str):
+    def remove_from_backend(id_job: str):
         url = paths.get_api_url('renders', id_job)
         response = rerequests.delete(url, headers=utils.get_headers())
         assert response.ok, f'Error deleting render using DELETE on {url}: {response.text}'
@@ -757,7 +757,7 @@ class UploadImage(Operator):
     """Upload existing render image"""
 
     bl_idname = HANA3D_NAME + ".upload_render_image"
-    bl_label = "Upload to Hana3D"
+    bl_label = f"Upload to {HANA3D_DESCRIPTION}"
     bl_options = {'REGISTER', 'UNDO'}
     bl_icon = 'EXPORT'
 
