@@ -58,6 +58,8 @@ build: ## build addon according to stage
 	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' \) | xargs cp --parents -t hana3d_$(STAGE)
 	# replace config file with appropriate stage
 	LC_ALL=C sed -i "s/from \.production/from .$(STAGE)/g" hana3d_$(STAGE)/config/__init__.py
+	# replace addon description strings: static properties are evaluated before runtime
+	LC_ALL=C sed -i "s/\(\".*\)Hana3D\(.*\"\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
 	# background processes must NOT have relative imports
 	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "s/from \. /from hana3d_$(STAGE) /g"
 	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "s/from \./from hana3d_$(STAGE)./g"
