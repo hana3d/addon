@@ -117,8 +117,8 @@ def generate_model_thumbnail(
         creationflags=utils.get_process_flags(),
     )
 
-    eval_path_computing = "bpy.data.objects['%s']['%s'].is_generating_thumbnail" % (mainmodel.name, HANA3D_NAME)  # noqa E501
-    eval_path_state = "bpy.data.objects['%s']['%s'].thumbnail_generating_state" % (mainmodel.name, HANA3D_NAME)  # noqa E501
+    eval_path_computing = "getattr(bpy.data.objects['%s'], '%s').is_generating_thumbnail" % (mainmodel.name, HANA3D_NAME)  # noqa E501
+    eval_path_state = "getattr(bpy.data.objects['%s'], '%s').thumbnail_generating_state" % (mainmodel.name, HANA3D_NAME)  # noqa E501
     eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
     bg_blender.add_bg_process(
@@ -272,8 +272,8 @@ def generate_material_thumbnail(
         creationflags=utils.get_process_flags(),
     )
 
-    eval_path_computing = "bpy.data.materials['%s']['%s'].is_generating_thumbnail" % (mat.name, HANA3D_NAME)  # noqa: E501
-    eval_path_state = "bpy.data.materials['%s']['%s'].thumbnail_generating_state" % (mat.name, HANA3D_NAME)  # noqa: E501
+    eval_path_computing = "getattr(bpy.data.materials['%s'], '%s').is_generating_thumbnail" % (mat.name, HANA3D_NAME)  # noqa: E501
+    eval_path_state = "getattr(bpy.data.materials['%s'], '%s').thumbnail_generating_state" % (mat.name, HANA3D_NAME)  # noqa: E501
     eval_path = "bpy.data.materials['%s']" % mat.name
 
     bg_blender.add_bg_process(
