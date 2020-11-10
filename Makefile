@@ -24,8 +24,7 @@ endef
 export PYTHON=python
 export PRINT_HELP_PYSCRIPT
 export BLENDER_VERSION=2.90
-export BLENDER_ADDON_PATH=$(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/scripts/addons
-export BLENDER_PRESETS_PATH=$(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/scripts/presets
+BLENDER_SCRIPTS_PATH ?= $(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/scripts
 STAGE ?= production
 HANA3D_DESCRIPTION=$(shell sed -e 's/HANA3D_DESCRIPTION.*"\(.*\)\"/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).py)
 HANA3D_NAME=$(shell sed -e 's/HANA3D_NAME.*"\(.*\)\"/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).py)
@@ -47,8 +46,8 @@ test: ## test code
 
 
 clean: ## clean blender Hana3D addons
-	rm -r $(BLENDER_ADDON_PATH)/hana3d_$(STAGE) || true
-	rm -r $(BLENDER_PRESETS_PATH)/hana3d_$(STAGE) || true
+	rm -r $(BLENDER_SCRIPTS_PATH)/addons/hana3d_$(STAGE) || true
+	rm -r $(BLENDER_SCRIPTS_PATH)/presets/hana3d_$(STAGE) || true
 
 
 build: ## build addon according to stage
@@ -69,5 +68,5 @@ build: ## build addon according to stage
 
 
 install: ## install the addon on blender
-	mkdir -p $(BLENDER_ADDON_PATH)
-	unzip -q hana3d_$(STAGE).zip -d $(BLENDER_ADDON_PATH)
+	mkdir -p $(BLENDER_SCRIPTS_PATH)/addons
+	unzip -q hana3d_$(STAGE).zip -d $(BLENDER_SCRIPTS_PATH)/addons
