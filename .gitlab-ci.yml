@@ -22,10 +22,9 @@ integration-tests:
     - ln -s /opt/blender/blender /usr/local/bin/blender
     - PATH="/opt/blender/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
-    - cp -r /builds/real2u/hana3d /opt/blender/2.90/scripts/addons/
   script:
     - BLENDER_SCRIPTS_PATH=/opt/blender/2.90/scripts STAGE=production make clean build install
-    - /opt/blender/blender -b -P tests/install.py -noaudio
+    - make test
 
 e2e:
   stage: e2e

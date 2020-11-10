@@ -42,7 +42,7 @@ lint: ## lint code
 
 
 test: ## test code
-	echo "TODO" && exit 1
+	blender -b -P tests/install.py -noaudio
 
 
 clean: ## clean blender Hana3D addons
