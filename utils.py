@@ -144,6 +144,7 @@ def get_active_asset():
     elif ui_props.asset_type == 'MATERIAL':
         if (
             bpy.context.view_layer.objects.active is not None
+            and bpy.context.active_object is not None
             and bpy.context.active_object.active_material is not None
         ):
             return bpy.context.active_object.active_material
