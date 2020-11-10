@@ -1,11 +1,11 @@
 stages:
-- unit-tests
+- integration-tests
 - e2e
 - release
 
-unit-tests:
+integration-tests:
   image: node:13-stretch
-  stage: unit-tests
+  stage: integration-tests
   only:
     - master
     - dev
