@@ -12,7 +12,7 @@ integration-tests:
     - merge_requests
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
-    - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
+    - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3 zip
     - BLENDER_URL=https://download.blender.org/release/Blender2.90/blender-2.90.0-linux64.tar.xz
     - BLENDER_VERSION=$(echo $BLENDER_URL | grep -Po 'blender-2\.\K[0-9]+')
     - echo "Installing Blender 2.${BLENDER_VERSION}"
