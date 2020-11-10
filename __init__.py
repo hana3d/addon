@@ -48,7 +48,7 @@ from . import (
 bl_info = {
     "name": "Hana3D",
     "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 6, 8),
+    "version": (0, 6, 9),
     "blender": (2, 83, 0),
     "location": "View3D > Properties > hana3d",
     "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
