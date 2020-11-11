@@ -24,7 +24,7 @@ endef
 export PYTHON=python
 export PRINT_HELP_PYSCRIPT
 export BLENDER_VERSION=2.90
-BLENDER_SCRIPTS_PATH ?= $(HOME)/Library/Application\ Support/Blender/$(BLENDER_VERSION)/scripts
+BLENDER_SCRIPTS_PATH ?= $(shell dirname $(shell readlink -f $(shell which blender)))/$(BLENDER_VERSION)/scripts/
 STAGE ?= production
 HANA3D_DESCRIPTION=$(shell sed -e 's/HANA3D_DESCRIPTION.*"\(.*\)\"/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).py)
 HANA3D_NAME=$(shell sed -e 's/HANA3D_NAME.*"\(.*\)\"/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).py)
