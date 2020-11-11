@@ -27,7 +27,7 @@ from . import bg_blender, colors, paths, ui, utils
 from .report_tools import execute_wrapper
 from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
-HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
+HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
 
 
 def generate_model_thumbnail(

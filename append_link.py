@@ -178,7 +178,7 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
 
         window = context.window_manager.windows[0]
         ctx = {'window': window, 'screen': window.screen, 'scene': imported_scene}
-        delete_scene_op = getattr(bpy.ops.scene, HANA3D_NAME + "_delete_scene")
+        delete_scene_op = getattr(bpy.ops.scene, f"{HANA3D_NAME}_delete_scene")
         delete_scene_op(ctx)
 
         return scene
