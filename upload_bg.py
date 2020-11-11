@@ -21,14 +21,21 @@ import logging
 import os
 import sys
 import time
+from importlib import import_module
 
 import bpy
 import requests
 
-from . import append_link, bg_blender, paths, rerequests, utils
-from .config import HANA3D_NAME
 
-HANA3D_EXPORT_DATA = sys.argv[-1]
+HANA3D_NAME = sys.argv[-1]
+HANA3D_EXPORT_DATA = sys.argv[-2]
+
+module = import_module(HANA3D_NAME)
+append_link = getattr(module, 'append_link')
+bg_blender = getattr(module, 'bg_blender')
+utils = getattr(module, 'utils')
+paths = getattr(module, 'paths')
+rerequests = getattr(module, 'rerequests')
 
 
 def start_logging():

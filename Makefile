@@ -60,12 +60,10 @@ build: ## build addon according to stage
 	cp ./config/$(STAGE).yml hana3d_$(STAGE)/config/config.yml 
 	# replace addon description strings: static properties are evaluated before runtime
 	LC_ALL=C sed -i "s/\(\".*\)Hana3D\(.*\"\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
-	# background processes must NOT have relative imports
-	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "s/from \. /from hana3d_$(STAGE) /g"
-	find hana3d_$(STAGE) -type f -name '*_bg.py' -print0 | LC_ALL=C xargs -0 sed -i "s/from \./from hana3d_$(STAGE)./g"
 	# zip addon folder
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
-	cp hana3d_$(STAGE).zip ~/Downloads
+	# copy to ~/Downloads for easy manual install
+	cp hana3d_$(STAGE).zip ~/Downloads || true
 	rm -r hana3d_$(STAGE)
 
 

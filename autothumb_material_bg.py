@@ -19,16 +19,20 @@
 import json
 import sys
 from pathlib import Path
+from importlib import import_module
 
 import bpy
 
-from . import append_link, bg_blender, utils
-from .config import HANA3D_NAME
+HANA3D_NAME = sys.argv[-1]
+HANA3D_EXPORT_TEMP_DIR = sys.argv[-2]
+HANA3D_THUMBNAIL_PATH = sys.argv[-3]
+HANA3D_EXPORT_FILE_INPUT = sys.argv[-4]
+HANA3D_EXPORT_DATA = sys.argv[-5]
 
-HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
-HANA3D_THUMBNAIL_PATH = sys.argv[-2]
-HANA3D_EXPORT_FILE_INPUT = sys.argv[-3]
-HANA3D_EXPORT_DATA = sys.argv[-4]
+module = import_module(HANA3D_NAME)
+append_link = getattr(module, 'append_link')
+bg_blender = getattr(module, 'bg_blender')
+utils = getattr(module, 'utils')
 
 
 def unhide_collection(cname):

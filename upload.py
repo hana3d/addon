@@ -370,7 +370,8 @@ class UploadOperator(Operator):
                     "--python",
                     os.path.join(script_path, "upload_bg.py"),
                     "--",
-                    datafile,  # ,filepath, tempdir
+                    datafile,
+                    HANA3D_NAME,
                 ],
                 bufsize=5000,
                 stdout=subprocess.PIPE,
