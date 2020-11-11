@@ -50,7 +50,7 @@ bl_info = {
     "name": "Hana3D",
     "author": "Vilem Duha, Petr Dlouhy, R2U",
     "version": (0, 6, 9),
-    "blender": (2, 83, 0),
+    "blender": (2, 90, 0),
     "location": "View3D > Properties > Hana3D",
     "description": "Online Hana3D library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
     "warning": "",
