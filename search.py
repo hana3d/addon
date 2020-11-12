@@ -119,23 +119,19 @@ def timer_update():
         return 0.5
     for thread in search_threads:
         if not thread[0].is_alive():
-            search_threads.remove(thread)  #
+            search_threads.remove(thread)
             icons_dir = thread[1]
             wm = bpy.context.window_manager
             asset_type = thread[2]
             if asset_type == 'model':
                 props = getattr(wm, HANA3D_MODELS)
-                json_filepath = os.path.join(icons_dir, 'model_searchresult.json')
-                search_name = 'hana3d model search'
             if asset_type == 'scene':
                 props = getattr(wm, HANA3D_SCENES)
-                json_filepath = os.path.join(icons_dir, 'scene_searchresult.json')
-                search_name = 'hana3d scene search'
             if asset_type == 'material':
                 props = getattr(wm, HANA3D_MATERIALS)
-                json_filepath = os.path.join(icons_dir, 'material_searchresult.json')
-                search_name = 'hana3d material search'
 
+            search_name = f'{HANA3D_NAME}_{asset_type.lower()}_search'
+            json_filepath = os.path.join(icons_dir, f'{asset_type.lower()}_searchresult.json')
             wm[search_name] = []
 
             global reports
@@ -226,7 +222,7 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if view_id in wm.get('assets used', {}).keys():
+                                if view_id in wm.get(f'{HANA3D_NAME}_assets_used', {}).keys():
                                     asset_data['downloaded'] = 100
 
                                 result_field.append(asset_data)
@@ -241,7 +237,7 @@ def timer_update():
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count'])
+                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count']) # noqa #501
                 if len(wm[f'{HANA3D_NAME}_search_results']) == 0:
                     tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 

@@ -195,7 +195,7 @@ def check_unused():
 
 @persistent
 def scene_save(context):
-    ''' does cleanup of hana3d props and sends a message to the server about assets used.'''
+    ''' does cleanup of Hana3D props and sends a message to the server about assets used.'''
     # TODO this can be optimized by merging these 2 functions, since both iterate over all objects.
     if not bpy.app.background:
         check_unused()
@@ -550,8 +550,8 @@ def append_asset(asset_data: dict, **kwargs):
     elif asset_data['asset_type'] == 'material':
         asset = import_material(asset_data, file_names, **kwargs)
 
-    wm['assets used'] = wm.get('assets used', {})
-    wm['assets used'][asset_data['view_id']] = asset_data.copy()
+    wm[f'{HANA3D_NAME}_assets_used'] = wm.get(f'{HANA3D_NAME}_assets_used', {})
+    wm[f'{HANA3D_NAME}_assets_used'][asset_data['view_id']] = asset_data.copy()
 
     set_asset_props(asset, asset_data)
     if asset_data['view_id'] in download_threads:
@@ -570,7 +570,7 @@ def check_asset_in_scene(asset_data):
     '''checks if the asset is already in scene. If yes,
     modifies asset data so the asset can be reached again.'''
     wm = bpy.context.window_manager
-    au = wm.get('assets used', {})
+    au = wm.get(f'{HANA3D_NAME}_assets_used', {})
 
     id = asset_data.get('view_id')
     if id in au.keys():
@@ -699,9 +699,9 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
         asset_data = sr[self.asset_index].to_dict()
-        au = wm.get('assets used')
+        au = wm.get(f'{HANA3D_NAME}_assets_used')
         if au is None:
-            wm['assets used'] = {}
+            wm[f'{HANA3D_NAME}_assets_used'] = {}
 
         atype = asset_data['asset_type']
         if (

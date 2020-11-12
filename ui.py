@@ -808,8 +808,8 @@ def draw_callback_2d_search(self, context):
 
                 gimg = None
                 atip = ''
-                if bpy.context.window_manager.get('hana3d authors') is not None:
-                    a = bpy.context.window_manager['hana3d authors'].get(r['author_id'])
+                if bpy.context.window_manager.get(f'{HANA3D_NAME}_authors') is not None:
+                    a = bpy.context.window_manager[f'{HANA3D_NAME}_authors'].get(r['author_id'])
                     if a is not None and a != '':
                         if a.get('gravatarImg') is not None:
                             gimg = utils.get_hidden_image(a['gravatarImg'], a['gravatarHash'])

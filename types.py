@@ -67,9 +67,8 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        # TODO antonio.environments
         wm = context.window_manager
-        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search')
+        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type.lower()}_search')
         wm[f'{HANA3D_NAME}_search_results_orig'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig') # noqa E501
         search.load_previews()
 
