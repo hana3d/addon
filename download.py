@@ -557,7 +557,8 @@ def append_asset(asset_data: dict, **kwargs):
     if asset_data['view_id'] in download_threads:
         download_threads.pop(asset_data['view_id'])
 
-    bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
+    undo_push_context_op = getattr(bpy.ops.wm, f"{HANA3D_NAME}_undo_push_context")
+    undo_push_context_op(message='add %s to scene' % asset_data['name'])
 
 
 def append_asset_safe(asset_data: dict, **kwargs):

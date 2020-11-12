@@ -149,7 +149,7 @@ def draw_panel_common_upload(layout, context):
         row = box.row()
         row.label(text=props.thumbnail_generating_state)
         if props.is_generating_thumbnail:
-            op = row.operator('object.kill_bg_process', text="", icon='CANCEL')
+            op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text="", icon='CANCEL')
             op.process_source = asset_type
             op.process_type = 'THUMBNAILER'
     box.prop(props, 'description')
@@ -167,7 +167,7 @@ def draw_panel_common_upload(layout, context):
     if props.upload_state != '':
         label_multiline(layout, text=props.upload_state, width=context.region.width)
     if props.uploading:
-        op = layout.operator('object.kill_bg_process', text="", icon='CANCEL')
+        op = layout.operator(f'object.{HANA3D_NAME}_kill_bg_process', text="", icon='CANCEL')
         op.process_source = asset_type
         op.process_type = 'UPLOAD'
         box = box.column()
@@ -425,7 +425,7 @@ class VIEW3D_PT_UpdaterPanel(Panel):
     """Panel to demo popup notice and ignoring functionality"""
 
     bl_label = "Preferences"
-    bl_idname = "VIEW3D_PT_UpdaterPanel"
+    bl_idname = f"VIEW3D_PT_{HANA3D_NAME}_UpdaterPanel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = "objectmode"

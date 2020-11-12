@@ -1748,9 +1748,9 @@ class TransferHana3DData(bpy.types.Operator):
 class UndoWithContext(bpy.types.Operator):
     """Regenerate cobweb"""
 
-    bl_idname = "wm.undo_push_context"
-    bl_label = "hana3d undo push"
-    bl_description = "hana3d undo push with fixed context"
+    bl_idname = f"wm.{HANA3D_NAME}_undo_push_context"
+    bl_label = f"{HANA3D_DESCRIPTION} undo push"
+    bl_description = f"{HANA3D_DESCRIPTION} undo push with fixed context"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     # def modal(self, context, event):
@@ -1773,8 +1773,8 @@ class UndoWithContext(bpy.types.Operator):
 class RunAssetBarWithContext(bpy.types.Operator):
     """Regenerate cobweb"""
 
-    bl_idname = "object.run_assetbar_fix_context"
-    bl_label = "hana3d assetbar with fixed context"
+    bl_idname = f"object.{HANA3D_NAME}_run_assetbar_fix_context"
+    bl_label = f"{HANA3D_DESCRIPTION} assetbar with fixed context"
     bl_description = "Run assetbar with fixed context"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 

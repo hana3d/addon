@@ -148,7 +148,8 @@ def timer_update():
             result_field = []
             ok, error = check_errors(rdata)
             if ok:
-                bpy.ops.object.run_assetbar_fix_context()
+                run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
+                run_assetbar_op()
                 for r in rdata['results']:
                     if r['assetType'] == asset_type:
                         if len(r['files']) > 0:

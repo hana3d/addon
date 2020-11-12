@@ -67,6 +67,7 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
+        # TODO antonio.environments
         wm = context.window_manager
         if self.asset_type == 'MODEL':
             wm['search results'] = wm.get('hana3d model search')
@@ -1018,6 +1019,7 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
+    # TODO antonio.environments
     bpy.types.WindowManager.Hana3DUI = PointerProperty(type=Hana3DUIProps)
     bpy.types.WindowManager.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
 
