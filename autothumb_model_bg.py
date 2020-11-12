@@ -126,6 +126,7 @@ if __name__ == "__main__":
         collection.hide_select = False
 
         main_object.rotation_euler = (0, 0, 0)
+        # material declared on thumbnailer.blend
         bpy.data.materials['hana3d background'].node_tree.nodes['Value'].outputs[
             'Value'
         ].default_value = data['thumbnail_background_lightness']
