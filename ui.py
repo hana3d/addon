@@ -42,6 +42,7 @@ from .config import (
     HANA3D_NAME,
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
+    HANA3D_UI,
 )
 
 handler_2d = None
@@ -139,7 +140,7 @@ class Report:
 
 def get_asset_under_mouse(mousex, mousey):
     wm = bpy.context.window_manager
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
 
     search_results = wm.get(f'{HANA3D_NAME}_search_results')
     if search_results is not None:
@@ -489,7 +490,7 @@ def draw_callback_2d(self, context):
         go = False
     if go and a == a1 and w == w1:
 
-        props = context.window_manager.Hana3DUI
+        props = getattr(context.window_manager, HANA3D_UI)
         if props.down_up == 'SEARCH':
             draw_callback_2d_search(self, context)
         elif props.down_up == 'UPLOAD':
@@ -523,7 +524,7 @@ def draw_callback_3d_progress(self, context):
 
 
 def draw_callback_2d_progress(self, context):
-    ui = bpy.context.window_manager.Hana3DUI
+    ui = getattr(bpy.context.window_manager, HANA3D_UI)
 
     x = ui.reports_x
     y = ui.reports_y
@@ -585,7 +586,7 @@ def draw_callback_2d_progress(self, context):
 
 
 def draw_callback_2d_upload_preview(self, context):
-    ui_props = context.window_manager.Hana3DUI
+    ui_props = getattr(context.window_manager, HANA3D_UI)
     props = utils.get_upload_props()
 
     if props is not None and ui_props.draw_tooltip:
@@ -613,7 +614,7 @@ def draw_callback_2d_upload_preview(self, context):
 
 def draw_callback_2d_search(self, context):
     wm = context.window_manager
-    ui_props = wm.Hana3DUI
+    ui_props = getattr(wm, HANA3D_UI)
 
     r = self.region
     # hc = bpy.context.preferences.themes[0].view_3d.space.header
@@ -662,7 +663,7 @@ def draw_callback_2d_search(self, context):
                 page_end = ui_props.scrolloffset + ui_props.wcount * \
                     context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
                 pagination_text = \
-                    f'{page_start} - {page_end} of {wm[f"{HANA3D_NAME}_search_results_orig"]["count"]}'
+                    f'{page_start} - {page_end} of {wm[f"{HANA3D_NAME}_search_results_orig"]["count"]}' # noqa E501
                 ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
                                  - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
                 # arrows
@@ -773,7 +774,7 @@ def draw_callback_2d_search(self, context):
         #     ui_bgl.draw_text(props.report, ui_props.bar_x,
         #                      ui_props.bar_y - 15 - ui_props.margin - ui_props.bar_height, 15)
 
-        props = wm.Hana3DUI
+        props = getattr(wm, HANA3D_UI)
         if props.draw_tooltip:
             # TODO move this lazy loading into a function and don't duplicate through the code
             iname = utils.previmg_name(ui_props.active_index, fullsize=True)
@@ -855,7 +856,7 @@ def draw_callback_3d(self, context):
     if not utils.guard_from_crash():
         return
 
-    ui = context.window_manager.Hana3DUI
+    ui = getattr(context.window_manager, HANA3D_UI)
 
     if ui.dragging and ui.asset_type == 'MODEL':
         if ui.draw_snapped_bounds:
@@ -960,7 +961,7 @@ def mouse_in_area(mx, my, x, y, w, h):
 
 
 def mouse_in_asset_bar(mx, my):
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
 
     if (
         ui_props.bar_y - ui_props.bar_height < my < ui_props.bar_y
@@ -981,7 +982,7 @@ def mouse_in_region(r, mx, my):
 
 def update_ui_size(area, region):
     wm = bpy.context.window_manager
-    ui = wm.Hana3DUI
+    ui = getattr(wm, HANA3D_UI)
     user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     ui_scale = bpy.context.preferences.view.ui_scale
 
@@ -1078,7 +1079,7 @@ class AssetBarOperator(bpy.types.Operator):
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d, 'WINDOW')
         except Exception:
             pass
-        ui_props = bpy.context.window_manager.Hana3DUI
+        ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
 
         ui_props.dragging = False
         ui_props.tooltip = ''
@@ -1090,7 +1091,7 @@ class AssetBarOperator(bpy.types.Operator):
 
     def modal(self, context, event):
         # This is for case of closing the area or changing type:
-        ui_props = context.window_manager.Hana3DUI
+        ui_props = getattr(context.window_manager, HANA3D_UI)
         areas = []
 
         if bpy.context.scene != self.scene:
@@ -1385,7 +1386,7 @@ class AssetBarOperator(bpy.types.Operator):
             mx = event.mouse_x - r.x
             my = event.mouse_y - r.y
 
-            ui_props = context.window_manager.Hana3DUI
+            ui_props = getattr(context.window_manager, HANA3D_UI)
             if event.value == 'PRESS' and ui_props.active_index > -1:
                 if ui_props.asset_type == 'MODEL' or ui_props.asset_type == 'MATERIAL':
                     # check if asset is locked and let the user know in that case
@@ -1397,10 +1398,10 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.draw_tooltip = False
                     ui_props.drag_length = 0
                 elif ui_props.asset_type == 'SCENE':
-                    context.window_manager.Hana3DUI.drag_init = True
+                    ui_props.drag_init = True
                     bpy.context.window.cursor_set("NONE")
-                    context.window_manager.Hana3DUI.draw_tooltip = False
-                    context.window_manager.Hana3DUI.drag_length = 0
+                    ui_props.draw_tooltip = False
+                    ui_props.drag_length = 0
 
             if not ui_props.dragging and not mouse_in_asset_bar(mx, my):
                 return {'PASS_THROUGH'}
@@ -1587,7 +1588,7 @@ class AssetBarOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         # FIRST START SEARCH
-        ui_props = context.window_manager.Hana3DUI
+        ui_props = getattr(context.window_manager, HANA3D_UI)
 
         if self.do_search:
             search.search()
@@ -1675,7 +1676,7 @@ class DefaultNamesOperator(bpy.types.Operator):
 
     def modal(self, context, event):
         # This is for case of closing the area or changing type:
-        ui_props = context.window_manager.Hana3DUI
+        ui_props = getattr(context.window_manager, HANA3D_UI)
 
         if ui_props.turn_off:
             return {'CANCELLED'}
@@ -1825,7 +1826,7 @@ def default_name_handler(dummy):
 
 # @persistent
 def pre_load(context):
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
     ui_props.turn_off = True
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences

@@ -41,6 +41,8 @@ from .config import (
     HANA3D_MODELS,
     HANA3D_SCENES,
     HANA3D_MATERIALS,
+    HANA3D_UI,
+    HANA3D_RENDER,
 )
 
 thumbnail_angles = (
@@ -68,7 +70,8 @@ thumbnail_resolutions = (
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
         wm = context.window_manager
-        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type.lower()}_search')
+        # TODO remove inconsistency between e.g. `model` and `MODEL`
+        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type.lower()}_search') # noqa E501
         wm[f'{HANA3D_NAME}_search_results_orig'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig') # noqa E501
         search.load_previews()
 
@@ -293,7 +296,7 @@ def workspace_items(self, context):
 def search_update(self, context):
     utils.p('search updater')
     # if self.search_keywords != '':
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
     search.search()
@@ -1008,9 +1011,8 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    # TODO antonio.environments
-    bpy.types.WindowManager.Hana3DUI = PointerProperty(type=Hana3DUIProps)
-    bpy.types.WindowManager.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
+    setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
+    setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
 
     # MODELS
     setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))
@@ -1035,8 +1037,8 @@ def unregister():
     delattr(bpy.types.Object, HANA3D_NAME)
     delattr(bpy.types.WindowManager, HANA3D_MODELS)
 
-    delattr(bpy.types.WindowManager, 'Hana3DRender')
-    delattr(bpy.types.WindowManager, 'Hana3DUI')
+    delattr(bpy.types.WindowManager, HANA3D_RENDER)
+    delattr(bpy.types.WindowManager, HANA3D_UI)
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

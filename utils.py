@@ -34,6 +34,7 @@ from .config import (
     HANA3D_MODELS,
     HANA3D_SCENES,
     HANA3D_MATERIALS,
+    HANA3D_UI,
 )
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
@@ -122,7 +123,7 @@ def get_search_props():
     scene = bpy.context.window_manager
     if scene is None:
         return
-    uiprops = scene.Hana3DUI
+    uiprops = getattr(scene, HANA3D_UI)
     props = None
     if uiprops.asset_type == 'MODEL':
         if not hasattr(scene, HANA3D_MODELS):
@@ -140,7 +141,7 @@ def get_search_props():
 
 
 def get_active_asset():
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model(bpy.context)

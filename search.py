@@ -36,6 +36,7 @@ from .config import (
     HANA3D_MODELS,
     HANA3D_SCENES,
     HANA3D_MATERIALS,
+    HANA3D_UI,
 )
 
 search_start_time = 0
@@ -115,7 +116,7 @@ def timer_update():
     global search_threads
     if len(search_threads) == 0:
         return 1.0
-    if bpy.context.window_manager.Hana3DUI.dragging:
+    if getattr(bpy.context.window_manager, HANA3D_UI).dragging:
         return 0.5
     for thread in search_threads:
         if not thread[0].is_alive():
@@ -130,8 +131,8 @@ def timer_update():
             if asset_type == 'material':
                 props = getattr(wm, HANA3D_MATERIALS)
 
-            search_name = f'{HANA3D_NAME}_{asset_type.lower()}_search'
-            json_filepath = os.path.join(icons_dir, f'{asset_type.lower()}_searchresult.json')
+            search_name = f'{HANA3D_NAME}_{asset_type}_search'
+            json_filepath = os.path.join(icons_dir, f'{asset_type}_searchresult.json')
             wm[search_name] = []
 
             global reports
@@ -232,7 +233,7 @@ def timer_update():
                 wm[search_name + ' orig'] = rdata
                 wm[f'{HANA3D_NAME}_search_results_orig'] = rdata
                 load_previews()
-                ui_props = bpy.context.window_manager.Hana3DUI
+                ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
@@ -257,7 +258,7 @@ def load_previews():
         'MATERIAL': 'material',
     }
     # FIRST START SEARCH
-    props = bpy.context.window_manager.Hana3DUI
+    props = getattr(bpy.context.window_manager, HANA3D_UI)
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
     wm = bpy.context.window_manager
@@ -570,7 +571,7 @@ def search(get_next=False, author_id=''):
     search_start_time = time.time()
     # mt('start')
     wm = bpy.context.window_manager
-    uiprops = wm.Hana3DUI
+    uiprops = getattr(wm, HANA3D_UI)
 
     if uiprops.asset_type == 'MODEL':
         if not hasattr(wm, HANA3D_MODELS):

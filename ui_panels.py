@@ -30,6 +30,8 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_MATERIALS,
     HANA3D_DESCRIPTION,
+    HANA3D_UI,
+    HANA3D_RENDER,
 )
 
 
@@ -115,7 +117,7 @@ def draw_selected_libraries(layout, props, operator):
 
 
 def draw_panel_common_upload(layout, context):
-    uiprops = bpy.context.window_manager.Hana3DUI
+    uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
     asset_type = uiprops.asset_type
     props = utils.get_upload_props()
 
@@ -193,7 +195,7 @@ def draw_panel_common_upload(layout, context):
 
 
 def draw_panel_common_search(layout, context):
-    uiprops = bpy.context.window_manager.Hana3DUI
+    uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
     asset_type = uiprops.asset_type
     props = utils.get_search_props()
 
@@ -232,7 +234,7 @@ def draw_panel_common_search(layout, context):
 
 def draw_assetbar_show_hide(layout, props):
     wm = bpy.context.window_manager
-    ui_props = wm.Hana3DUI
+    ui_props = getattr(wm, HANA3D_UI)
 
     if ui_props.assetbar_on:
         icon = 'HIDE_OFF'
@@ -302,7 +304,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
     def draw(self, context):
         s = context.scene
         wm = context.window_manager
-        ui_props = wm.Hana3DUI
+        ui_props = getattr(wm, HANA3D_UI)
         user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout = self.layout
 
@@ -401,7 +403,7 @@ def header_search_draw(self, context):
     if preferences.search_in_header:
         layout = self.layout
         wm = context.window_manager
-        ui_props = wm.Hana3DUI
+        ui_props = getattr(wm, HANA3D_UI)
         if ui_props.asset_type == 'MODEL':
             props = getattr(wm, HANA3D_MODELS)
         if ui_props.asset_type == 'MATERIAL':
@@ -459,9 +461,9 @@ class VIEW3D_PT_hana3d_RenderPanel(Panel):
         return True
 
     def draw(self, context):
-        render_props = context.window_manager.Hana3DRender
+        render_props = getattr(context.window_manager, HANA3D_RENDER)
         asset_props = utils.get_upload_props()
-        ui_props = context.window_manager.Hana3DUI
+        ui_props = getattr(context.window_manager, HANA3D_UI)
 
         self.layout.prop(ui_props, 'asset_type_render', expand=False, text='')
 

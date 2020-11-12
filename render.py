@@ -45,7 +45,7 @@ from . import (
     utils
 )
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME, HANA3D_DESCRIPTION
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION, HANA3D_RENDER
 
 render_threads = []
 upload_threads = []
@@ -462,7 +462,7 @@ class RenderScene(Operator):
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
 
-        render_props = context.window_manager.Hana3DRender
+        render_props = getattr(context.window_manager, HANA3D_RENDER)
         if render_props.cameras == 'VISIBLE_CAMERAS':
             cameras = [ob.name_full for ob in context.scene.objects
                        if ob.type == 'CAMERA' and ob.visible_get()]

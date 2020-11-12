@@ -44,7 +44,7 @@ from . import (
     upload,
     utils
 )
-from .config import HANA3D_NAME, HANA3D_DESCRIPTION
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION, HANA3D_UI
 
 bl_info = {
     "name": "Hana3D",
@@ -61,7 +61,7 @@ bl_info = {
 @persistent
 def scene_load(context):
     search.load_previews()
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
     ui_props.turn_off = False
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
