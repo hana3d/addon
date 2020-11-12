@@ -232,17 +232,17 @@ def timer_update():
                                 result_field.append(asset_data)
 
                 wm[search_name] = result_field
-                wm['search results'] = result_field
+                wm[f'{HANA3D_NAME}_search_results'] = result_field
                 wm[search_name + ' orig'] = rdata
-                wm['search results orig'] = rdata
+                wm[f'{HANA3D_NAME}_search_results_orig'] = rdata
                 load_previews()
                 ui_props = bpy.context.window_manager.Hana3DUI
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (wm['search results orig']['count'])
-                if len(wm['search results']) == 0:
+                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count'])
+                if len(wm[f'{HANA3D_NAME}_search_results']) == 0:
                     tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 
             else:
@@ -265,7 +265,7 @@ def load_previews():
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
     wm = bpy.context.window_manager
-    results = wm.get('search results')
+    results = wm.get(f'{HANA3D_NAME}_search_results')
     #
     if results is not None:
         i = 0

@@ -69,18 +69,8 @@ class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
         # TODO antonio.environments
         wm = context.window_manager
-        if self.asset_type == 'MODEL':
-            wm['search results'] = wm.get('hana3d model search')
-            wm['search results orig'] = wm.get('hana3d model search orig')
-        elif self.asset_type == 'SCENE':
-            wm['search results'] = wm.get('hana3d scene search')
-            wm['search results orig'] = wm.get('hana3d scene search orig')
-        elif self.asset_type == 'MATERIAL':
-            wm['search results'] = wm.get('hana3d material search')
-            wm['search results orig'] = wm.get('hana3d material search orig')
-        elif self.asset_type == 'HDR':
-            wm['search results'] = wm.get('hana3d hdr search')
-            wm['search results orig'] = wm.get('hana3d hdr search orig')
+        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search')
+        wm[f'{HANA3D_NAME}_search_results_orig'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig') # noqa E501
         search.load_previews()
 
     def switch_active_asset_type(self, context):

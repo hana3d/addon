@@ -141,7 +141,7 @@ def get_asset_under_mouse(mousex, mousey):
     wm = bpy.context.window_manager
     ui_props = bpy.context.window_manager.Hana3DUI
 
-    search_results = wm.get('search results')
+    search_results = wm.get(f'{HANA3D_NAME}_search_results')
     if search_results is not None:
 
         h_draw = min(ui_props.hcount, math.ceil(len(search_results) / ui_props.wcount))
@@ -627,8 +627,8 @@ def draw_callback_2d_search(self, context):
     # highlight = (1, 1, 1, 0.8)
     # background of asset bar
     if not ui_props.dragging:
-        search_results = wm.get('search results')
-        search_results_orig = wm.get('search results orig')
+        search_results = wm.get(f'{HANA3D_NAME}_search_results')
+        search_results_orig = wm.get(f'{HANA3D_NAME}_search_results_orig')
         if search_results is None:
             return
         h_draw = min(ui_props.hcount, math.ceil(len(search_results) / ui_props.wcount))
@@ -662,7 +662,7 @@ def draw_callback_2d_search(self, context):
                 page_end = ui_props.scrolloffset + ui_props.wcount * \
                     context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
                 pagination_text = \
-                    f'{page_start} - {page_end} of {wm["search results orig"]["count"]}'
+                    f'{page_start} - {page_end} of {wm[f"{HANA3D_NAME}_search_results_orig"]["count"]}'
                 ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
                                  - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
                 # arrows
@@ -779,7 +779,7 @@ def draw_callback_2d_search(self, context):
             iname = utils.previmg_name(ui_props.active_index, fullsize=True)
 
             directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
-            sr = wm.get('search results')
+            sr = wm.get(f'{HANA3D_NAME}_search_results')
             if sr is not None and -1 < ui_props.active_index < len(sr):
                 r = sr[ui_props.active_index]
                 tpath = os.path.join(directory, r['thumbnail'])
@@ -1001,7 +1001,7 @@ def update_ui_size(area, region):
     ui.bar_width = region.width - ui.bar_x - ui.bar_end
     ui.wcount = math.floor((ui.bar_width - 2 * ui.drawoffset) / (ui.thumb_size + ui.margin))
 
-    search_results = bpy.context.window_manager.get('search results')
+    search_results = bpy.context.window_manager.get(f'{HANA3D_NAME}_search_results')
     if search_results is not None and ui.wcount > 0:
         ui.hcount = min(
             user_preferences.max_assetbar_rows,
@@ -1068,7 +1068,7 @@ class AssetBarOperator(bpy.types.Operator):
         return properties.tooltip
 
     def search_more(self):
-        sro = bpy.context.window_manager.get('search results orig')
+        sro = bpy.context.window_manager.get(f'{HANA3D_NAME}_search_results_orig')
         if sro is not None and sro.get('next') is not None:
             search.search(get_next=True)
 
@@ -1197,8 +1197,8 @@ class AssetBarOperator(bpy.types.Operator):
         r = self.region
         s = bpy.context.scene
         wm = context.window_manager
-        sr = wm.get('search results')
-        search_results_orig = wm.get('search results orig')
+        sr = wm.get(f'{HANA3D_NAME}_search_results')
+        search_results_orig = wm.get(f'{HANA3D_NAME}_search_results_orig')
         # If there aren't any results, we need no interaction(yet)
         if sr is None:
             return {'PASS_THROUGH'}
@@ -1302,7 +1302,7 @@ class AssetBarOperator(bpy.types.Operator):
                 bpy.context.window.cursor_set("DEFAULT")
                 return {'PASS_THROUGH'}
 
-            sr = bpy.context.window_manager['search results']
+            sr = bpy.context.window_manager[f'{HANA3D_NAME}_search_results']
 
             if not ui_props.dragging:
                 bpy.context.window.cursor_set("DEFAULT")
@@ -1616,9 +1616,9 @@ class AssetBarOperator(bpy.types.Operator):
         ui_props.assetbar_on = True
         ui_props.turn_off = False
 
-        sr = bpy.context.window_manager.get('search results')
+        sr = bpy.context.window_manager.get(f'{HANA3D_NAME}_search_results')
         if sr is None:
-            bpy.context.window_manager['search results'] = []
+            bpy.context.window_manager[f'{HANA3D_NAME}_search_results'] = []
 
         if context.area.type != 'VIEW_3D':
             self.report({'WARNING'}, "View3D not found, cannot run operator")
