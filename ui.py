@@ -762,11 +762,11 @@ def draw_callback_2d_search(self, context):
                         ui_bgl.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
 
             # if user_preferences.api_key == '':
-            #     report = 'Register on hana3d website to upload your own assets.'
+            #     report = 'Register on Hana3D website to upload your own assets.'
             #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
             #                      ui_props.bar_y - 25 - ui_props.margin - ui_props.bar_height, 15)
             # elif len(search_results) == 0:
-            #     report = 'hana3d - No matching results found.'
+            #     report = 'Hana3D - No matching results found.'
             #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
             #                      ui_props.bar_y - 25 - ui_props.margin, 15)
         props = utils.get_search_props()
@@ -852,7 +852,7 @@ def draw_callback_2d_search(self, context):
 
 
 def draw_callback_3d(self, context):
-    ''' Draw snapped bbox while dragging and in the future other hana3d related stuff. '''
+    ''' Draw snapped bbox while dragging and in the future other Hana3D related stuff. '''
     if not utils.guard_from_crash():
         return
 

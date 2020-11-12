@@ -30,7 +30,7 @@ from . import paths
 from .config import HANA3D_DESCRIPTION
 
 
-def get_hana3d_version():
+def get_addon_version():
     for addon in addon_utils.modules():
         if addon.bl_info['name'] == HANA3D_DESCRIPTION:
             return str(addon.bl_info['version'])
@@ -57,7 +57,7 @@ def execute_wrapper(func):
         except Exception as e:
             data = {
                 'event_id': str(uuid.uuid4()),
-                'addon_version': get_hana3d_version(),
+                'addon_version': get_addon_version(),
                 'blender_version': bpy.app.version_string,
                 'timestamp': datetime.datetime.now().isoformat(),
                 'user': getpass.getuser(),
