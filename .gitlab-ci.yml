@@ -11,6 +11,7 @@ integration-tests:
     - dev
     - merge_requests
   before_script:
+    - if [ "$CI_COMMIT_BRANCH" == "master" ]; then export HANA3D_ENV=production; else if [ "$CI_COMMIT_BRANCH" == "dev" ]; then export HANA3D_ENV=dev; else export HANA3D_ENV=dev; fi; fi;
     - export DEBIAN_FRONTEND=noninteractive
     - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3 zip
     - BLENDER_URL=https://download.blender.org/release/Blender2.90/blender-2.90.0-linux64.tar.xz
@@ -23,7 +24,7 @@ integration-tests:
     - PATH="/opt/blender/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
   script:
-    - BLENDER_SCRIPTS_PATH=/opt/blender/2.90/scripts STAGE=production make clean build install
+    - BLENDER_SCRIPTS_PATH=/opt/blender/2.90/scripts STAGE=$HANA3D_ENV make clean build install
     - make test
 
 e2e:
