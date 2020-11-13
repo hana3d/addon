@@ -1,9 +1,11 @@
 import os
 
-dirname = os.path.dirname(os.path.realpath(__file__))
-config_file = "config.yml"
+config_dirname = os.path.dirname(os.path.realpath(__file__))
+addon_dirname = os.path.dirname(config_dirname)
+hana3d_stage = os.path.basename(addon_dirname)
+_, stage = hana3d_stage.split('_')
 
-with open(f'{dirname}/{config_file}') as f:
+with open(f'{config_dirname}/{stage}.yml') as f:
     lines = f.read().splitlines()
 
 config = {}
