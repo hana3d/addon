@@ -31,11 +31,11 @@ HANA3D_NAME = sys.argv[-1]
 HANA3D_EXPORT_DATA = sys.argv[-2]
 
 module = import_module(HANA3D_NAME)
-append_link = getattr(module, 'append_link')
-bg_blender = getattr(module, 'bg_blender')
-utils = getattr(module, 'utils')
-paths = getattr(module, 'paths')
-rerequests = getattr(module, 'rerequests')
+append_link = module.append_link
+bg_blender = module.bg_blender
+utils = module.utils
+paths = module.paths
+rerequests = module.rerequests
 
 
 def start_logging():
