@@ -18,8 +18,15 @@
 
 import bpy
 
-from hana3d import render_settings, utils
-from hana3d.report_tools import execute_wrapper
+from . import (
+    render_settings,
+    utils
+)
+from .report_tools import execute_wrapper
+from .config import (
+    HANA3D_NAME,
+    HANA3D_SCENES,
+)
 
 
 def append_material(file_name, matname=None, link=False, fake_user=True):
@@ -137,7 +144,7 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
     '''append a scene type asset'''
     context = bpy.context
     scene = context.scene
-    props = context.window_manager.hana3d_scene
+    props = getattr(context.window_manager, HANA3D_SCENES)
 
     if props.merge_add == 'MERGE' and scenename is None:
         with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
@@ -171,7 +178,8 @@ def append_scene(file_name, scenename=None, link=False, fake_user=False):
 
         window = context.window_manager.windows[0]
         ctx = {'window': window, 'screen': window.screen, 'scene': imported_scene}
-        bpy.ops.scene.hana3d_delete_scene(ctx)
+        delete_scene_op = getattr(bpy.ops.scene, f"{HANA3D_NAME}_delete_scene")
+        delete_scene_op(ctx)
 
         return scene
 
@@ -283,7 +291,7 @@ def append_objects(file_name, obnames=[], location=(0, 0, 0), link=False, **kwar
 
 
 class DeleteSceneWorkaround(bpy.types.Operator):
-    bl_idname = "scene.hana3d_delete_scene"
+    bl_idname = f"scene.{HANA3D_NAME}_delete_scene"
     bl_label = "Test Operator"
 
     @execute_wrapper

@@ -23,10 +23,11 @@ import tempfile
 
 import bpy
 
-from hana3d import bg_blender, colors, paths, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import bg_blender, colors, paths, ui, utils
+from .report_tools import execute_wrapper
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
-HANA3D_EXPORT_DATA_FILE = "data.json"
+HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
 
 
 def generate_model_thumbnail(
@@ -35,15 +36,16 @@ def generate_model_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.objects[asset_name].hana3d
+        props = getattr(bpy.data.objects[asset_name], HANA3D_NAME)
         update_state = False
     else:
         update_state = True
     mainmodel = utils.get_active_model()
-    assert mainmodel.hana3d.view_id == props.view_id, 'Error when checking for active asset'
+    model_props = getattr(mainmodel, HANA3D_NAME)
+    assert model_props.view_id == props.view_id, 'Error when checking for active asset'
     if update_state:
-        mainmodel.hana3d.is_generating_thumbnail = True
-        mainmodel.hana3d.thumbnail_generating_state = 'starting blender instance'
+        model_props.is_generating_thumbnail = True
+        model_props.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -65,7 +67,7 @@ def generate_model_thumbnail(
         rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
         i += 1
 
-    filepath = os.path.join(tempdir, "thumbnailer_hana3d" + ext)
+    filepath = os.path.join(tempdir, "thumbnailer_" + HANA3D_NAME + ext)
     tfpath = paths.get_thumbnailer_filepath()
     datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
@@ -108,6 +110,7 @@ def generate_model_thumbnail(
             filepath,
             thumb_path,
             tempdir,
+            HANA3D_NAME,
         ],
         bufsize=1,
         stdout=subprocess.PIPE,
@@ -115,8 +118,8 @@ def generate_model_thumbnail(
         creationflags=utils.get_process_flags(),
     )
 
-    eval_path_computing = "bpy.data.objects['%s'].hana3d.is_generating_thumbnail" % mainmodel.name  # noqa E501
-    eval_path_state = "bpy.data.objects['%s'].hana3d.thumbnail_generating_state" % mainmodel.name  # noqa E501
+    eval_path_computing = "getattr(bpy.data.objects['%s'], '%s').is_generating_thumbnail" % (mainmodel.name, HANA3D_NAME)  # noqa E501
+    eval_path_state = "getattr(bpy.data.objects['%s'], '%s').thumbnail_generating_state" % (mainmodel.name, HANA3D_NAME)  # noqa E501
     eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
     bg_blender.add_bg_process(
@@ -128,9 +131,9 @@ def generate_model_thumbnail(
     )
 
     if not save_only and update_state:
-        mainmodel.hana3d.thumbnail = rel_thumb_path + '.jpg'
+        model_props.thumbnail = rel_thumb_path + '.jpg'
     if update_state:
-        mainmodel.hana3d.thumbnail_generating_state = 'Saving .blend file'
+        model_props.thumbnail_generating_state = 'Saving .blend file'
 
     if autopack is True:
         bpy.ops.file.autopack_toggle()
@@ -139,8 +142,8 @@ def generate_model_thumbnail(
 class GenerateModelThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
 
-    bl_idname = "object.hana3d_thumbnail"
-    bl_label = "Hana3D Thumbnail Generator"
+    bl_idname = f"object.{HANA3D_NAME}_thumbnail"
+    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -151,7 +154,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
-        props = ob.hana3d
+        props = getattr(ob, HANA3D_NAME)
         layout = self.layout
         layout.label(text='thumbnailer settings')
         layout.prop(props, 'thumbnail_background_lightness')
@@ -160,13 +163,13 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     @execute_wrapper
     def execute(self, context):
         try:
-            props = utils.get_active_model(context).hana3d
+            props = getattr(utils.get_active_model(context), HANA3D_NAME)
             generate_model_thumbnail(props)
         except Exception as e:
             props.is_generating_thumbnail = False
@@ -193,15 +196,16 @@ def generate_material_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.materials[asset_name].hana3d
+        props = getattr(bpy.data.materials[asset_name], HANA3D_NAME)
         update_state = False
     else:
         update_state = True
     mat = utils.get_active_material()
-    assert mat.hana3d.view_id == props.view_id, 'Error when checking active material'
+    material_props = getattr(mat, HANA3D_NAME)
+    assert material_props.view_id == props.view_id, 'Error when checking active material'
     if update_state:
-        mat.hana3d.is_generating_thumbnail = True
-        mat.hana3d.thumbnail_generating_state = 'starting blender instance'
+        material_props.is_generating_thumbnail = True
+        material_props.thumbnail_generating_state = 'starting blender instance'
 
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -262,6 +266,7 @@ def generate_material_thumbnail(
             filepath,
             thumb_path,
             tempdir,
+            HANA3D_NAME,
         ],
         bufsize=1,
         stdout=subprocess.PIPE,
@@ -269,8 +274,8 @@ def generate_material_thumbnail(
         creationflags=utils.get_process_flags(),
     )
 
-    eval_path_computing = "bpy.data.materials['%s'].hana3d.is_generating_thumbnail" % mat.name  # noqa: E501
-    eval_path_state = "bpy.data.materials['%s'].hana3d.thumbnail_generating_state" % mat.name  # noqa: E501
+    eval_path_computing = "getattr(bpy.data.materials['%s'], '%s').is_generating_thumbnail" % (mat.name, HANA3D_NAME)  # noqa: E501
+    eval_path_state = "getattr(bpy.data.materials['%s'], '%s').thumbnail_generating_state" % (mat.name, HANA3D_NAME)  # noqa: E501
     eval_path = "bpy.data.materials['%s']" % mat.name
 
     bg_blender.add_bg_process(
@@ -282,16 +287,16 @@ def generate_material_thumbnail(
     )
 
     if not save_only and update_state:
-        mat.hana3d.thumbnail = rel_thumb_path + '.png'
+        material_props.thumbnail = rel_thumb_path + '.png'
     if update_state:
-        mat.hana3d.thumbnail_generating_state = 'Saving .blend file'
+        material_props.thumbnail_generating_state = 'Saving .blend file'
 
 
 class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for materials"""
 
-    bl_idname = "material.hana3d_thumbnail"
-    bl_label = "Hana3D Material Thumbnail Generator"
+    bl_idname = f"material.{HANA3D_NAME}_thumbnail"
+    bl_label = f"{HANA3D_DESCRIPTION} Material Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -303,7 +308,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-        props = utils.get_active_material(context).hana3d
+        props = getattr(utils.get_active_material(context), HANA3D_NAME)
         layout.prop(props, 'thumbnail_generator_type')
         layout.prop(props, 'thumbnail_scale')
         layout.prop(props, 'thumbnail_background')
@@ -313,13 +318,13 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_denoising')
         layout.prop(props, 'adaptive_subdivision')
-        preferences = context.preferences.addons['hana3d'].preferences
+        preferences = context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     @execute_wrapper
     def execute(self, context):
         try:
-            props = utils.get_active_material(context).hana3d
+            props = getattr(utils.get_active_material(context), HANA3D_NAME)
             generate_material_thumbnail(props)
         except Exception as e:
             props.is_generating_thumbnail = False
@@ -355,7 +360,7 @@ def generate_scene_thumbnail(
         save_only: bool = False,
         blend_filepath: str = ''):
     if props is None:
-        props = bpy.data.scenes[asset_name].hana3d
+        props = getattr(bpy.data.scenes[asset_name], HANA3D_NAME)
         update_state = False
     else:
         update_state = True
@@ -381,7 +386,7 @@ def generate_scene_thumbnail(
         rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
         i += 1
 
-    user_preferences = context.preferences.addons['hana3d'].preferences
+    user_preferences = context.preferences.addons[HANA3D_NAME].preferences
 
     if user_preferences.thumbnail_use_gpu:
         context.scene.cycles.device = 'GPU'
@@ -409,27 +414,27 @@ def generate_scene_thumbnail(
 class GenerateSceneThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for scene"""
 
-    bl_idname = "scene.hana3d_thumbnail"
-    bl_label = "Hana3D Thumbnail Generator"
+    bl_idname = f"scene.{HANA3D_NAME}_thumbnail"
+    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     def draw(self, context):
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
-        props = ob.hana3d
+        props = getattr(ob, HANA3D_NAME)
         layout = self.layout
         layout.label(text='thumbnailer settings')
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
     @execute_wrapper
     def execute(self, context):
         try:
-            props = get_active_scene(context).hana3d
+            props = getattr(get_active_scene(context), HANA3D_NAME)
             generate_scene_thumbnail(props)
         except Exception as e:
             self.report({'WARNING'}, "Error while exporting file: %s" % str(e))

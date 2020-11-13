@@ -18,7 +18,6 @@
 
 import json
 import os
-import platform
 import threading
 import time
 
@@ -28,8 +27,17 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from hana3d import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
+from .report_tools import execute_wrapper
+from .config import (
+    HANA3D_PROFILE,
+    HANA3D_NAME,
+    HANA3D_DESCRIPTION,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+    HANA3D_MATERIALS,
+    HANA3D_UI,
+)
 
 search_start_time = 0
 prev_time = 0
@@ -39,7 +47,7 @@ def check_errors(rdata):
     if rdata.get('status_code') == 401:
         utils.p(rdata)
         if rdata.get('code') == 'token_expired':
-            user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+            user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
             if user_preferences.api_key != '':
                 hana3d_oauth.refresh_token(immediate=False)
                 return False, rdata.get('description')
@@ -60,7 +68,7 @@ reports = ''
 def refresh_token_timer():
     ''' this timer gets run every time the token needs refresh. '''
     utils.p('refresh timer')
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     fetch_server_data()
 
     return user_preferences.api_key_life
@@ -74,7 +82,7 @@ def scene_load(context):
 
 def fetch_server_data():
     if not bpy.app.background:
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         api_key = user_preferences.api_key
         # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
         if (
@@ -82,7 +90,7 @@ def fetch_server_data():
             and user_preferences.api_key_timeout < time.time()
         ):
             hana3d_oauth.refresh_token(immediate=False)
-        if api_key != '' and bpy.context.window_manager.get('hana3d profile') is None:
+        if api_key != '' and bpy.context.window_manager.get(HANA3D_PROFILE) is None:
             utils.update_profile_async()
 
 
@@ -93,7 +101,7 @@ last_clipboard = ''
 # @bpy.app.handlers.persistent
 def timer_update():
     global first_time
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     if first_time:
         first_time = False
         if preferences.show_on_start:
@@ -108,27 +116,23 @@ def timer_update():
     global search_threads
     if len(search_threads) == 0:
         return 1.0
-    if bpy.context.window_manager.Hana3DUI.dragging:
+    if getattr(bpy.context.window_manager, HANA3D_UI).dragging:
         return 0.5
     for thread in search_threads:
         if not thread[0].is_alive():
-            search_threads.remove(thread)  #
+            search_threads.remove(thread)
             icons_dir = thread[1]
             wm = bpy.context.window_manager
             asset_type = thread[2]
             if asset_type == 'model':
-                props = wm.hana3d_models
-                json_filepath = os.path.join(icons_dir, 'model_searchresult.json')
-                search_name = 'hana3d model search'
+                props = getattr(wm, HANA3D_MODELS)
             if asset_type == 'scene':
-                props = wm.hana3d_scene
-                json_filepath = os.path.join(icons_dir, 'scene_searchresult.json')
-                search_name = 'hana3d scene search'
+                props = getattr(wm, HANA3D_SCENES)
             if asset_type == 'material':
-                props = wm.hana3d_mat
-                json_filepath = os.path.join(icons_dir, 'material_searchresult.json')
-                search_name = 'hana3d material search'
+                props = getattr(wm, HANA3D_MATERIALS)
 
+            search_name = f'{HANA3D_NAME}_{asset_type}_search'
+            json_filepath = os.path.join(icons_dir, f'{asset_type}_searchresult.json')
             wm[search_name] = []
 
             global reports
@@ -141,7 +145,8 @@ def timer_update():
             result_field = []
             ok, error = check_errors(rdata)
             if ok:
-                bpy.ops.object.run_assetbar_fix_context()
+                run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
+                run_assetbar_op()
                 for r in rdata['results']:
                     if r['assetType'] == asset_type:
                         if len(r['files']) > 0:
@@ -218,23 +223,23 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if view_id in wm.get('assets used', {}).keys():
+                                if view_id in wm.get(f'{HANA3D_NAME}_assets_used', {}).keys():
                                     asset_data['downloaded'] = 100
 
                                 result_field.append(asset_data)
 
                 wm[search_name] = result_field
-                wm['search results'] = result_field
+                wm[f'{HANA3D_NAME}_search_results'] = result_field
                 wm[search_name + ' orig'] = rdata
-                wm['search results orig'] = rdata
+                wm[f'{HANA3D_NAME}_search_results_orig'] = rdata
                 load_previews()
-                ui_props = bpy.context.window_manager.Hana3DUI
+                ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (wm['search results orig']['count'])
-                if len(wm['search results']) == 0:
+                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count']) # noqa #501
+                if len(wm[f'{HANA3D_NAME}_search_results']) == 0:
                     tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 
             else:
@@ -253,11 +258,11 @@ def load_previews():
         'MATERIAL': 'material',
     }
     # FIRST START SEARCH
-    props = bpy.context.window_manager.Hana3DUI
+    props = getattr(bpy.context.window_manager, HANA3D_UI)
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
     wm = bpy.context.window_manager
-    results = wm.get('search results')
+    results = wm.get(f'{HANA3D_NAME}_search_results')
     #
     if results is not None:
         i = 0
@@ -501,7 +506,7 @@ def build_query_common(query, props):
 def build_query_model():
     '''use all search input to request results from server'''
 
-    props = bpy.context.window_manager.hana3d_models
+    props = getattr(bpy.context.window_manager, HANA3D_MODELS)
     query = {
         "asset_type": 'model',
     }
@@ -514,7 +519,7 @@ def build_query_model():
 def build_query_scene():
     '''use all search input to request results from server'''
 
-    props = bpy.context.window_manager.hana3d_scene
+    props = getattr(bpy.context.window_manager, HANA3D_SCENES)
     query = {
         "asset_type": 'scene',
     }
@@ -523,7 +528,7 @@ def build_query_scene():
 
 
 def build_query_material():
-    props = bpy.context.window_manager.hana3d_mat
+    props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
     query = {
         "asset_type": 'material',
     }
@@ -566,24 +571,24 @@ def search(get_next=False, author_id=''):
     search_start_time = time.time()
     # mt('start')
     wm = bpy.context.window_manager
-    uiprops = wm.Hana3DUI
+    uiprops = getattr(wm, HANA3D_UI)
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(wm, 'hana3d_models'):
+        if not hasattr(wm, HANA3D_MODELS):
             return
-        props = wm.hana3d_models
+        props = getattr(wm, HANA3D_MODELS)
         query = build_query_model()
 
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(wm, 'hana3d_scene'):
+        if not hasattr(wm, HANA3D_SCENES):
             return
-        props = wm.hana3d_scene
+        props = getattr(wm, HANA3D_SCENES)
         query = build_query_scene()
 
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(wm, 'hana3d_mat'):
+        if not hasattr(wm, HANA3D_MATERIALS):
             return
-        props = wm.hana3d_mat
+        props = getattr(wm, HANA3D_MATERIALS)
         query = build_query_material()
 
     if props.is_searching and get_next:
@@ -612,16 +617,16 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    tasks_queue.add_task(ui.add_report, ('hana3d searching....', 2))
+    tasks_queue.add_task(ui.add_report, (f'{HANA3D_DESCRIPTION} searching...', 2))
 
-    props.report = 'hana3d searching....'
+    props.report = f'{HANA3D_DESCRIPTION} searching...'
 
 
 class SearchOperator(Operator):
     """Tooltip"""
 
-    bl_idname = "view3d.hana3d_search"
-    bl_label = "hana3d asset search"
+    bl_idname = f"view3d.{HANA3D_NAME}_search"
+    bl_label = f"{HANA3D_DESCRIPTION} asset search"
     bl_description = "Search online for assets"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
     own: BoolProperty(name="own assets only", description="Find all own assets", default=False)
@@ -662,7 +667,8 @@ class SearchOperator(Operator):
             sprops.search_keywords = self.keywords
 
         search(get_next=self.get_next, author_id=self.author_id)
-        # bpy.ops.view3d.hana3d_asset_bar()
+        # asset_bar_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_asset_bar')
+        # asset_bar_op()
 
         return {'FINISHED'}
 

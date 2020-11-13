@@ -24,8 +24,9 @@ import threading
 import bpy
 from bpy.props import EnumProperty
 
-from hana3d import utils, tasks_queue
-from hana3d.report_tools import execute_wrapper
+from . import utils, tasks_queue
+from .report_tools import execute_wrapper
+from .config import HANA3D_NAME
 
 bg_processes = []
 
@@ -182,7 +183,7 @@ process_sources = (
 class KillBgProcess(bpy.types.Operator):
     '''Remove processes in background'''
 
-    bl_idname = "object.kill_bg_process"
+    bl_idname = f"object.{HANA3D_NAME}_kill_bg_process"
     bl_label = "Kill Background Process"
     bl_options = {'REGISTER'}
 

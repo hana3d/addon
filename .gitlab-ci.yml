@@ -1,18 +1,18 @@
 stages:
-- unit-tests
+- integration-tests
 - e2e
 - release
 
-unit-tests:
+integration-tests:
   image: node:13-stretch
-  stage: unit-tests
+  stage: integration-tests
   only:
     - master
     - dev
     - merge_requests
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
-    - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
+    - apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3 zip
     - BLENDER_URL=https://download.blender.org/release/Blender2.90/blender-2.90.0-linux64.tar.xz
     - BLENDER_VERSION=$(echo $BLENDER_URL | grep -Po 'blender-2\.\K[0-9]+')
     - echo "Installing Blender 2.${BLENDER_VERSION}"
@@ -22,9 +22,9 @@ unit-tests:
     - ln -s /opt/blender/blender /usr/local/bin/blender
     - PATH="/opt/blender/blender:${PATH}"
     - ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1
-    - cp -r /builds/real2u/hana3d /opt/blender/2.90/scripts/addons/
   script:
-    - /opt/blender/blender -b -P tests/install.py -noaudio
+    - BLENDER_SCRIPTS_PATH=/opt/blender/2.90/scripts STAGE=production make clean build install
+    - make test
 
 e2e:
   stage: e2e

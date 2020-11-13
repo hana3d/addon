@@ -35,8 +35,14 @@ from bpy.props import (
     StringProperty
 )
 
-from hana3d import append_link, colors, paths, render_tools, types, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import append_link, colors, paths, render_tools, types, ui, utils
+from .report_tools import execute_wrapper
+from .config import (
+    HANA3D_NAME,
+    HANA3D_DESCRIPTION,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+)
 
 download_threads = {}
 append_tasks_queue = Queue()
@@ -189,7 +195,7 @@ def check_unused():
 
 @persistent
 def scene_save(context):
-    ''' does cleanup of hana3d props and sends a message to the server about assets used.'''
+    ''' does cleanup of Hana3D props and sends a message to the server about assets used.'''
     # TODO this can be optimized by merging these 2 functions, since both iterate over all objects.
     if not bpy.app.background:
         check_unused()
@@ -211,13 +217,14 @@ def set_thumbnail(asset_data, asset):
     asset_thumbs_dir = paths.get_download_dirs(asset_data["asset_type"])[0]
     asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
     shutil.copy(thumbpath, asset_thumb_path)
-    asset.hana3d.thumbnail = asset_thumb_path
+    asset_props = getattr(asset, HANA3D_NAME)
+    asset_props.thumbnail = asset_thumb_path
 
 
 def update_downloaded_progress(downloader: Downloader):
-    sr = bpy.context.window_manager.get('search results')
+    sr = bpy.context.window_manager.get(f'{HANA3D_NAME}_search_results')
     if sr is None:
-        utils.p('search results not found')
+        utils.p(f'{HANA3D_NAME}_search_results not found')
         return
     for r in sr:
         if r.get('view_id') == downloader.asset_data['view_id']:
@@ -376,14 +383,15 @@ def check_existing(asset_data):
 def import_scene(asset_data: dict, file_names: list):
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
     scene.name = asset_data['name']
-    if bpy.context.window_manager.hana3d_scene.merge_add == 'ADD':
+    props = getattr(bpy.context.window_manager, HANA3D_SCENES)
+    if props.merge_add == 'ADD':
         for window in bpy.context.window_manager.windows:
             window.scene = bpy.data.scenes[asset_data['name']]
     return scene
 
 
 def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
-    sprops = window_manager.hana3d_models
+    sprops = getattr(window_manager, HANA3D_MODELS)
     if sprops.append_method == 'LINK_COLLECTION':
         sprops.append_link = 'LINK'
         sprops.import_as = 'GROUP'
@@ -461,7 +469,7 @@ def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
 
 def import_material(asset_data: dict, file_names: list, **kwargs):
     for m in bpy.data.materials:
-        if m.hana3d.view_id == asset_data['view_id']:
+        if getattr(m, HANA3D_NAME).view_id == asset_data['view_id']:
             inscene = True
             material = m
             break
@@ -479,37 +487,38 @@ def import_material(asset_data: dict, file_names: list, **kwargs):
 
 
 def set_asset_props(asset, asset_data):
-    asset.hana3d.clear_data()
+    asset_props = getattr(asset, HANA3D_NAME)
+    asset_props.clear_data()
     asset['asset_data'] = asset_data
 
     set_thumbnail(asset_data, asset)
 
-    asset.hana3d.id = asset_data['id']
-    asset.hana3d.view_id = asset_data['view_id']
-    asset.hana3d.view_workspace = asset_data['workspace']
-    asset.hana3d.name = asset_data['name']
-    asset.hana3d.tags = ','.join(asset_data['tags'])
-    asset.hana3d.description = asset_data['description']
+    asset_props.id = asset_data['id']
+    asset_props.view_id = asset_data['view_id']
+    asset_props.view_workspace = asset_data['workspace']
+    asset_props.name = asset_data['name']
+    asset_props.tags = ','.join(asset_data['tags'])
+    asset_props.description = asset_data['description']
 
     jobs = render_tools.get_render_jobs(asset_data['asset_type'], asset_data['view_id'])
-    asset.hana3d.render_data['jobs'] = jobs
+    asset_props.render_data['jobs'] = jobs
 
     if 'tags' in asset_data:
-        types.update_tags_list(asset.hana3d, bpy.context)
+        types.update_tags_list(asset_props, bpy.context)
         for tag in asset_data['tags']:
-            asset.hana3d.tags_list[tag].selected = True
+            asset_props.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
-        libraries_list = asset.hana3d.libraries_list
-        types.update_libraries_list(asset.hana3d, bpy.context)
+        libraries_list = asset_props.libraries_list
+        types.update_libraries_list(asset_props, bpy.context)
         for library in asset_data['libraries']:
             libraries_list[library["name"]].selected = True
             if 'metadata' in library and library['metadata'] is not None:
                 for view_prop in libraries_list[library["name"]].metadata['view_props']:
                     name = f'{libraries_list[library["name"]].name} {view_prop["name"]}'
                     slug = view_prop['slug']
-                    if name not in asset.hana3d.custom_props:
-                        asset.hana3d.custom_props_info[name] = {
+                    if name not in asset_props.custom_props:
+                        asset_props.custom_props_info[name] = {
                             'slug': slug,
                             'library_name': libraries_list[library["name"]].name,
                             'library_id': libraries_list[library["name"]].id_
@@ -518,9 +527,9 @@ def set_asset_props(asset, asset_data):
                         'view_props' in library['metadata']
                         and slug in library['metadata']['view_props']
                     ):
-                        asset.hana3d.custom_props[name] = library['metadata']['view_props'][slug]
+                        asset_props.custom_props[name] = library['metadata']['view_props'][slug]  # noqa E501
                     else:
-                        asset.hana3d.custom_props[name] = ''
+                        asset_props.custom_props[name] = ''
 
 
 def append_asset(asset_data: dict, **kwargs):
@@ -541,14 +550,15 @@ def append_asset(asset_data: dict, **kwargs):
     elif asset_data['asset_type'] == 'material':
         asset = import_material(asset_data, file_names, **kwargs)
 
-    wm['assets used'] = wm.get('assets used', {})
-    wm['assets used'][asset_data['view_id']] = asset_data.copy()
+    wm[f'{HANA3D_NAME}_assets_used'] = wm.get(f'{HANA3D_NAME}_assets_used', {})
+    wm[f'{HANA3D_NAME}_assets_used'][asset_data['view_id']] = asset_data.copy()
 
     set_asset_props(asset, asset_data)
     if asset_data['view_id'] in download_threads:
         download_threads.pop(asset_data['view_id'])
 
-    bpy.ops.wm.undo_push_context(message='add %s to scene' % asset_data['name'])
+    undo_push_context_op = getattr(bpy.ops.wm, f"{HANA3D_NAME}_undo_push_context")
+    undo_push_context_op(message='add %s to scene' % asset_data['name'])
 
 
 def append_asset_safe(asset_data: dict, **kwargs):
@@ -560,7 +570,7 @@ def check_asset_in_scene(asset_data):
     '''checks if the asset is already in scene. If yes,
     modifies asset data so the asset can be reached again.'''
     wm = bpy.context.window_manager
-    au = wm.get('assets used', {})
+    au = wm.get(f'{HANA3D_NAME}_assets_used', {})
 
     id = asset_data.get('view_id')
     if id in au.keys():
@@ -618,8 +628,8 @@ asset_types = (
 class Hana3DKillDownloadOperator(bpy.types.Operator):
     """Kill a download"""
 
-    bl_idname = "scene.hana3d_download_kill"
-    bl_label = "Hana3D Kill Asset Download"
+    bl_idname = f"scene.{HANA3D_NAME}_download_kill"
+    bl_label = f"{HANA3D_DESCRIPTION} Kill Asset Download"
     bl_options = {'REGISTER', 'INTERNAL'}
 
     view_id: StringProperty()
@@ -644,8 +654,8 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
 class Hana3DDownloadOperator(bpy.types.Operator):
     """Download and link asset to scene. Only link if asset already available locally."""
 
-    bl_idname = "scene.hana3d_download"
-    bl_label = "Hana3D Asset Download"
+    bl_idname = f"scene.{HANA3D_NAME}_download"
+    bl_label = f"{HANA3D_DESCRIPTION} Asset Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     asset_type: EnumProperty(
@@ -685,13 +695,13 @@ class Hana3DDownloadOperator(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         wm = context.window_manager
-        sr = wm['search results']
+        sr = wm[f'{HANA3D_NAME}_search_results']
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
         asset_data = sr[self.asset_index].to_dict()
-        au = wm.get('assets used')
+        au = wm.get(f'{HANA3D_NAME}_assets_used')
         if au is None:
-            wm['assets used'] = {}
+            wm[f'{HANA3D_NAME}_assets_used'] = {}
 
         atype = asset_data['asset_type']
         if (
@@ -733,8 +743,8 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 class Hana3DBatchDownloadOperator(bpy.types.Operator):
     """Download and link all preview assets to scene."""
 
-    bl_idname = "scene.hana3d_batch_download"
-    bl_label = "Hana3D Batch Download"
+    bl_idname = f"scene.{HANA3D_NAME}_batch_download"
+    bl_label = f"{HANA3D_DESCRIPTION} Batch Download"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     object_count: IntProperty(
@@ -780,9 +790,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         if self.reset is True:
             self.object_count = 0
         wm = context.window_manager
-        if 'search results' not in wm:
+        if f'{HANA3D_NAME}_search_results' not in wm:
             return {'CANCELLED'}
-        sr = wm['search results']
+        sr = wm[f'{HANA3D_NAME}_search_results']
 
         for index, result in zip(range(self.batch_size), sr[self.object_count:]):
             asset_data = result.to_dict()

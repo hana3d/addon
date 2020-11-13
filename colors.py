@@ -16,7 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-# this module defines color palette for Hana3D UI
+# this module defines color palette for the UI
 
 TEXT = (0.9, 0.9, 0.9, 0.6)
 GREEN = (0.9, 1, 0.9, 0.6)

@@ -27,7 +27,15 @@ import bpy
 from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from hana3d import paths, rerequests, tasks_queue
+from . import paths, rerequests, tasks_queue
+from .config import (
+    HANA3D_NAME,
+    HANA3D_PROFILE,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+    HANA3D_MATERIALS,
+    HANA3D_UI,
+)
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -75,7 +83,7 @@ def get_active_model(context=None, view_id=None):
     models = [
         ob
         for ob in context.blend_data.objects
-        if ob.hana3d.view_id == view_id
+        if getattr(ob, HANA3D_NAME).view_id == view_id
     ]
     return models[0]
 
@@ -94,14 +102,14 @@ def get_selected_models():
             while (
                 ob.parent is not None
                 and ob not in done
-                and ob.hana3d.view_id != ''
+                and getattr(ob, HANA3D_NAME).view_id != ''
                 and ob.instance_collection is not None
             ):
                 done[ob] = True
                 ob = ob.parent
 
             if ob not in parents and ob not in done:
-                if ob.hana3d.name != '' or ob.instance_collection is not None:
+                if getattr(ob, HANA3D_NAME).name != '' or ob.instance_collection is not None:
                     parents.append(ob)
             done[ob] = True
 
@@ -115,25 +123,25 @@ def get_search_props():
     scene = bpy.context.window_manager
     if scene is None:
         return
-    uiprops = scene.Hana3DUI
+    uiprops = getattr(scene, HANA3D_UI)
     props = None
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'hana3d_models'):
+        if not hasattr(scene, HANA3D_MODELS):
             return
-        props = scene.hana3d_models
+        props = getattr(scene, HANA3D_MODELS)
     if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'hana3d_scene'):
+        if not hasattr(scene, HANA3D_SCENES):
             return
-        props = scene.hana3d_scene
+        props = getattr(scene, HANA3D_SCENES)
     if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'hana3d_mat'):
+        if not hasattr(scene, HANA3D_MATERIALS):
             return
-        props = scene.hana3d_mat
+        props = getattr(scene, HANA3D_MATERIALS)
     return props
 
 
 def get_active_asset():
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.asset_type == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model(bpy.context)
@@ -155,18 +163,18 @@ def get_upload_props():
     active_asset = get_active_asset()
     if active_asset is None:
         return None
-    return active_asset.hana3d
+    return getattr(active_asset, HANA3D_NAME)
 
 
 def previmg_name(index, fullsize=False):
     if not fullsize:
-        return '.hana3d_preview_' + str(index).zfill(2)
+        return f'.{HANA3D_NAME}_preview_' + str(index).zfill(2)
     else:
-        return '.hana3d_preview_full_' + str(index).zfill(2)
+        return f'.{HANA3D_NAME}_preview_full_' + str(index).zfill(2)
 
 
 def load_prefs():
-    user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     # if user_preferences.api_key == '':
     fpath = paths.HANA3D_SETTINGS_FILENAME
     if os.path.exists(fpath):
@@ -183,7 +191,7 @@ def load_prefs():
 def save_prefs(self, context):
     # first check context, so we don't do this on registration or blender startup
     if not bpy.app.background:  # (hasattr kills blender)
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         # we test the api key for length, so not a random accidentally typed sequence gets saved.
         lk = len(user_preferences.api_key)
         if 0 < lk < 25:
@@ -219,7 +227,7 @@ def update_profile():
     r = rerequests.get(url, headers=headers)
     assert r.ok, f'Failed to get profile data: {r.text}'
 
-    bpy.context.window_manager['hana3d profile'] = r.json()
+    bpy.context.window_manager[HANA3D_PROFILE] = r.json()
 
 
 def update_profile_async():
@@ -230,7 +238,7 @@ def get_hidden_image(
         thumbnail_path: str,
         image_name: str,
         force_reload: bool = False,
-        default_image: str = 'thumbnail_notready.jpg'):
+        default_image: str = 'thumbnail_notready.png'):
     if thumbnail_path.startswith('//'):
         thumbnail_path = bpy.path.abspath(thumbnail_path)
     if not os.path.exists(thumbnail_path) or thumbnail_path == '':
@@ -411,11 +419,11 @@ def get_headers(
     if correlation_id:
         headers['X-Correlation-Id'] = correlation_id
     if api_key is None:
-        api_key = bpy.context.preferences.addons['hana3d'].preferences.api_key
+        api_key = bpy.context.preferences.addons[HANA3D_NAME].preferences.api_key
     if api_key != '':
         headers["Authorization"] = "Bearer %s" % api_key
     if include_id_token:
-        id_token = bpy.context.preferences.addons['hana3d'].preferences.id_token
+        id_token = bpy.context.preferences.addons[HANA3D_NAME].preferences.id_token
         headers['X-ID-Token'] = id_token
     return headers
 
@@ -438,7 +446,7 @@ def scale_uvs(ob, scale=1.0, pivot=Vector((0.5, 0.5))):
 # map uv cubic and switch of auto tex space and set it to 1,1,1
 def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False, just_scale=False):
     wm = bpy.context.window_manager
-    mat_props = wm.hana3d_mat
+    mat_props = getattr(wm, HANA3D_MATERIALS)
     if mat_props.automap:
         tob = bpy.data.objects[target_object]
         # only automap mesh models
@@ -495,7 +503,7 @@ def automap(target_object=None, target_slot=None, tex_size=1, bg_exception=False
 
 def name_update():
     asset = get_active_asset()
-    props = asset.hana3d
+    props = getattr(asset, HANA3D_NAME)
     if asset is None:
         return
     if props.name_old != props.name:
@@ -544,14 +552,14 @@ def dict_to_params(inputs, parameters=None):
 
 
 def user_logged_in():
-    a = bpy.context.window_manager.get('hana3d profile')
+    a = bpy.context.window_manager.get(HANA3D_PROFILE)
     if a is not None:
         return True
     return False
 
 
 def profile_is_validator():
-    a = bpy.context.window_manager.get('hana3d profile')
+    a = bpy.context.window_manager.get(HANA3D_PROFILE)
     if a is not None and a['user'].get('exmenu'):
         return True
     return False
@@ -560,9 +568,9 @@ def profile_is_validator():
 def guard_from_crash():
     '''Blender tends to crash when trying to run some functions
     with the addon going through unregistration process.'''
-    if bpy.context.preferences.addons.get('hana3d') is None:
+    if bpy.context.preferences.addons.get(HANA3D_NAME) is None:
         return False
-    if bpy.context.preferences.addons['hana3d'].preferences is None:
+    if bpy.context.preferences.addons[HANA3D_NAME].preferences is None:
         return False
     return True
 
@@ -705,7 +713,7 @@ def check_meshprops(props, obs) -> Tuple[int, int]:
 def fill_object_metadata(obj: bpy.types.Object):
     """ call all analysis functions """
     obs = get_hierarchy(obj)
-    props = obj.hana3d
+    props = getattr(obj, HANA3D_NAME)
 
     dim, bbox_min, bbox_max = get_dimensions(obs)
     props.dimensions = dim
@@ -776,13 +784,13 @@ def generate_tooltip(
 
 
 def get_addon_version():
-    import hana3d
-    return hana3d.bl_info['version']
+    from . import bl_info
+    return bl_info['version']
 
 
 def get_addon_blender_version():
-    import hana3d
-    return hana3d.bl_info['blender']
+    from . import bl_info
+    return bl_info['blender']
 
 
 def append_array_inside_prop(prop: IDPropertyGroup, list_name: str, item: any):

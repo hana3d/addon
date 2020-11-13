@@ -34,7 +34,7 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from hana3d import (
+from . import (
     autothumb,
     colors,
     paths,
@@ -44,7 +44,8 @@ from hana3d import (
     ui,
     utils
 )
-from hana3d.report_tools import execute_wrapper
+from .report_tools import execute_wrapper
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION, HANA3D_RENDER
 
 render_threads = []
 upload_threads = []
@@ -437,7 +438,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
 class RenderScene(Operator):
     """Render Scene online at notrenderfarm.com"""
 
-    bl_idname = "hana3d.render_scene"
+    bl_idname = f"{HANA3D_NAME}.render_scene"
     bl_label = "Render Scene"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -461,7 +462,7 @@ class RenderScene(Operator):
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
 
-        render_props = context.window_manager.Hana3DRender
+        render_props = getattr(context.window_manager, HANA3D_RENDER)
         if render_props.cameras == 'VISIBLE_CAMERAS':
             cameras = [ob.name_full for ob in context.scene.objects
                        if ob.type == 'CAMERA' and ob.visible_get()]
@@ -487,7 +488,7 @@ class RenderScene(Operator):
 class CancelJob(Operator):
     """Render Scene online at notrenderfarm.com"""
 
-    bl_idname = "hana3d.cancel_render_job"
+    bl_idname = f"{HANA3D_NAME}.cancel_render_job"
     bl_label = "Render Scene"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -517,7 +518,7 @@ class CancelJob(Operator):
 class ImportRender(Operator):
     """Import finished render job"""
 
-    bl_idname = "hana3d.import_render"
+    bl_idname = f"{HANA3D_NAME}.import_render"
     bl_label = "Import render to scene"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -554,7 +555,7 @@ class ImportRender(Operator):
 class RemoveRender(Operator):
     """Remove finished render job"""
 
-    bl_idname = "hana3d.remove_render"
+    bl_idname = f"{HANA3D_NAME}.remove_render"
     bl_label = "Remove render"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -575,7 +576,7 @@ class RemoveRender(Operator):
         if job.get('image') is not None:  # Case when image was not imported to scene
             bpy.data.images.remove(job['image'])
 
-        self.remove_from_hana3d_backend(id_job)
+        self.remove_from_backend(id_job)
 
         name = job['job_name']  # Get name before job is de-referenced
         self.remove_from_props(id_job, props)
@@ -585,7 +586,7 @@ class RemoveRender(Operator):
         return {'FINISHED'}
 
     @staticmethod
-    def remove_from_hana3d_backend(id_job: str):
+    def remove_from_backend(id_job: str):
         url = paths.get_api_url('renders', id_job)
         response = rerequests.delete(url, headers=utils.get_headers())
         assert response.ok, f'Error deleting render using DELETE on {url}: {response.text}'
@@ -610,7 +611,7 @@ class RemoveRender(Operator):
 class OpenImage(Operator):
     """Open image from computer"""
 
-    bl_idname = "hana3d.open_image"
+    bl_idname = f"{HANA3D_NAME}.open_image"
     bl_label = "Open image"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -755,8 +756,8 @@ class UploadThread(UploadFileMixin, threading.Thread):
 class UploadImage(Operator):
     """Upload existing render image"""
 
-    bl_idname = "hana3d.upload_render_image"
-    bl_label = "Upload to Hana3D"
+    bl_idname = f"{HANA3D_NAME}.upload_render_image"
+    bl_label = f"Upload to {HANA3D_DESCRIPTION}"
     bl_options = {'REGISTER', 'UNDO'}
     bl_icon = 'EXPORT'
 

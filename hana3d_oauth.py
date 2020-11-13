@@ -22,8 +22,9 @@ import time
 import bpy
 import requests
 
-from hana3d import colors, oauth, paths, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import colors, oauth, paths, ui, utils
+from .report_tools import execute_wrapper
+from .config import HANA3D_NAME, HANA3D_PROFILE, HANA3D_DESCRIPTION
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -42,7 +43,7 @@ def login(authenticator: oauth.OAuthAuthenticator):
 
 
 def refresh_token(immediate: bool = False) -> dict:
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     if preferences.refresh_in_progress:
         ui.add_report('Already Refreshing token, will be ready soon.')
         return
@@ -75,7 +76,7 @@ def write_tokens(oauth_response: dict):
     utils.p('writing tokens')
     utils.p(oauth_response)
 
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.api_key_refresh = oauth_response['refresh_token']
     preferences.api_key = oauth_response['access_token']
     preferences.api_key_timeout = time.time() + oauth_response['expires_in']
@@ -86,12 +87,12 @@ def write_tokens(oauth_response: dict):
     props = utils.get_search_props()
     if props is not None:
         props.report = ''
-    ui.add_report('Hana3D Re-Login success')
+    ui.add_report(f"{HANA3D_DESCRIPTION} Re-Login success")
     utils.update_profile_async()
 
 
 def reset_tokens():
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.api_key_refresh = ''
     preferences.api_key = ''
     preferences.api_key_timeout = 0
@@ -99,15 +100,15 @@ def reset_tokens():
     preferences.id_token = ''
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    if 'hana3d profile' in bpy.context.window_manager.keys():
-        del bpy.context.window_manager['hana3d profile']
+    if HANA3D_PROFILE in bpy.context.window_manager.keys():
+        del bpy.context.window_manager[HANA3D_PROFILE]
 
 
 class RegisterLoginOnline(bpy.types.Operator):
     """Login online on hana3d webpage"""
 
-    bl_idname = "wm.hana3d_login"
-    bl_label = "hana3d login or signup"
+    bl_idname = f"wm.{HANA3D_NAME}_login"
+    bl_label = f"{HANA3D_DESCRIPTION} login or signup"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -116,7 +117,7 @@ class RegisterLoginOnline(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         preferences.login_attempt = True
         self.start_login_thread()
         return {'FINISHED'}
@@ -140,8 +141,8 @@ class RegisterLoginOnline(bpy.types.Operator):
 class Logout(bpy.types.Operator):
     """Logout from hana3d immediately"""
 
-    bl_idname = "wm.hana3d_logout"
-    bl_label = "hana3d logout"
+    bl_idname = f"wm.{HANA3D_NAME}_logout"
+    bl_label = f"{HANA3D_DESCRIPTION} logout"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -157,8 +158,8 @@ class Logout(bpy.types.Operator):
 class CancelLoginOnline(bpy.types.Operator):
     """Cancel login attempt."""
 
-    bl_idname = "wm.hana3d_login_cancel"
-    bl_label = "hana3d login cancel"
+    bl_idname = f"wm.{HANA3D_NAME}_login_cancel"
+    bl_label = f"{HANA3D_DESCRIPTION} login cancel"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -168,7 +169,7 @@ class CancelLoginOnline(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         global active_authenticator
-        preferences = bpy.context.preferences.addons['hana3d'].preferences
+        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         preferences.login_attempt = False
         try:
             if active_authenticator is not None:

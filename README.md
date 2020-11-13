@@ -2,7 +2,24 @@
 
 Store, manage and search your 3D assets easily.
 
+### Getting started
+
+Run the following command and restart Blender. The addon will be updated.
+
+```
+# export STAGE=dev (or local) to build to a target other than `production`
+
+make clean build install
+```
+
 ### Testing
+
+##### Automated
+
+```
+make lint
+make test
+```
 
 ##### Manual
 

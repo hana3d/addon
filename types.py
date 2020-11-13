@@ -33,7 +33,17 @@ from bpy.props import (
 )
 from bpy.types import PropertyGroup
 
-from hana3d import paths, render, search, utils
+from . import paths, render, search, utils
+from .config import (
+    HANA3D_PROFILE,
+    HANA3D_NAME,
+    HANA3D_DESCRIPTION,
+    HANA3D_MODELS,
+    HANA3D_SCENES,
+    HANA3D_MATERIALS,
+    HANA3D_UI,
+    HANA3D_RENDER,
+)
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -60,18 +70,9 @@ thumbnail_resolutions = (
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
         wm = context.window_manager
-        if self.asset_type == 'MODEL':
-            wm['search results'] = wm.get('hana3d model search')
-            wm['search results orig'] = wm.get('hana3d model search orig')
-        elif self.asset_type == 'SCENE':
-            wm['search results'] = wm.get('hana3d scene search')
-            wm['search results orig'] = wm.get('hana3d scene search orig')
-        elif self.asset_type == 'MATERIAL':
-            wm['search results'] = wm.get('hana3d material search')
-            wm['search results orig'] = wm.get('hana3d material search orig')
-        elif self.asset_type == 'HDR':
-            wm['search results'] = wm.get('hana3d hdr search')
-            wm['search results orig'] = wm.get('hana3d hdr search orig')
+        # TODO remove inconsistency between e.g. `model` and `MODEL`
+        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type.lower()}_search') # noqa E501
+        wm[f'{HANA3D_NAME}_search_results_orig'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig') # noqa E501
         search.load_previews()
 
     def switch_active_asset_type(self, context):
@@ -83,32 +84,32 @@ class Hana3DUIProps(PropertyGroup):
                 (
                     'MODEL',
                     'Find Models',
-                    'Find models in the Hana3D online database',
+                    f"Find models in the {HANA3D_DESCRIPTION} online database",
                     'OBJECT_DATAMODE',
                     0,
                 ),
                 (
                     'SCENE',
                     'Find Scenes',
-                    'Find scenes in the Hana3D online database',
+                    f"Find scenes in the {HANA3D_DESCRIPTION} online database",
                     'SCENE_DATA',
                     1,
                 ),
                 (
                     'MATERIAL',
                     'Find Materials',
-                    'Find materials in the Hana3D online database',
+                    f"Find materials in the {HANA3D_DESCRIPTION} online database",
                     'MATERIAL',
                     2,
                 ),
-                # ('HDR', 'Find HDRs', 'Find HDRs in the Hana3D online database', 'WORLD_DATA', 3),
+                # ("HDR", "Find HDRs", f"Find HDRs in the {HANA3D_DESCRIPTION} online database", "WORLD_DATA", 3), # noqa E501
             )
         else:
             items = (
-                ('MODEL', 'Upload Model', 'Upload a model to Hana3D', 'OBJECT_DATAMODE', 0),
-                ('SCENE', 'Upload Scene', 'Upload a scene to Hana3D', 'SCENE_DATA', 1),
-                ('MATERIAL', 'Upload Material', 'Upload a material to Hana3D', 'MATERIAL', 2),
-                # ('HDR', 'Upload HDR', 'Upload a HDR to Hana3D', 'WORLD_DATA', 3),
+                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0), # noqa E501
+                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1), # noqa E501
+                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2), # noqa E501
+                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3),
             )
         return items
 
@@ -122,14 +123,14 @@ class Hana3DUIProps(PropertyGroup):
         default="SEARCH",
     )
     asset_type: EnumProperty(
-        name="Hana3D Active Asset Type",
+        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
         items=asset_type_callback,
         description="Activate asset in UI",
         default=None,
         update=switch_search_results,
     )
     asset_type_render: EnumProperty(
-        name="Hana3D Active Asset Type",
+        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
         items=(
             (
                 'MODEL',
@@ -213,7 +214,7 @@ class Hana3DUIProps(PropertyGroup):
     thumbnail_image = StringProperty(
         name="Thumbnail Image",
         description="",
-        default=paths.get_addon_thumbnail_path('thumbnail_notready.jpg'),
+        default=paths.get_addon_thumbnail_path('thumbnail_notready.png'),
     )
 
 
@@ -225,7 +226,7 @@ class Hana3DRenderProps(PropertyGroup):
         return ''
 
     def get_balance(self) -> str:
-        profile = bpy.context.window_manager.get('hana3d profile')
+        profile = bpy.context.window_manager.get(HANA3D_PROFILE)
         if not profile:
             return 'N/A'
         balance = profile['user'].get('nrf_balance')
@@ -281,7 +282,7 @@ class Hana3DRenderProps(PropertyGroup):
 
 
 def workspace_items(self, context):
-    profile = bpy.context.window_manager.get('hana3d profile')
+    profile = bpy.context.window_manager.get(HANA3D_PROFILE)
     if profile is not None:
         user = profile.get('user')
         if user is not None:
@@ -295,7 +296,7 @@ def workspace_items(self, context):
 def search_update(self, context):
     utils.p('search updater')
     # if self.search_keywords != '':
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
     search.search()
@@ -304,7 +305,7 @@ def search_update(self, context):
 def update_tags_list(props, context):
     props.tags_list.clear()
     current_workspace = props.workspace
-    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for tag in workspace['tags']:
                 new_tag = props.tags_list.add()
@@ -314,7 +315,7 @@ def update_tags_list(props, context):
 def update_libraries_list(props, context):
     props.libraries_list.clear()
     current_workspace = props.workspace
-    for workspace in context.window_manager['hana3d profile']['user']['workspaces']:
+    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for library in workspace['libraries']:
                 new_library = props.libraries_list.add()
@@ -1010,34 +1011,34 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.WindowManager.Hana3DUI = PointerProperty(type=Hana3DUIProps)
-    bpy.types.WindowManager.Hana3DRender = PointerProperty(type=Hana3DRenderProps)
+    setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
+    setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
 
     # MODELS
-    bpy.types.WindowManager.hana3d_models = PointerProperty(type=Hana3DModelSearchProps)
-    bpy.types.Object.hana3d = PointerProperty(type=Hana3DModelUploadProps)
+    setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))
+    setattr(bpy.types.Object, HANA3D_NAME, PointerProperty(type=Hana3DModelUploadProps))
 
     # SCENES
-    bpy.types.WindowManager.hana3d_scene = PointerProperty(type=Hana3DSceneSearchProps)
-    bpy.types.Scene.hana3d = PointerProperty(type=Hana3DSceneUploadProps)
+    setattr(bpy.types.WindowManager, HANA3D_SCENES, PointerProperty(type=Hana3DSceneSearchProps))
+    setattr(bpy.types.Scene, HANA3D_NAME, PointerProperty(type=Hana3DSceneUploadProps))
 
     # MATERIALS
-    bpy.types.WindowManager.hana3d_mat = PointerProperty(type=Hana3DMaterialSearchProps)
-    bpy.types.Material.hana3d = PointerProperty(type=Hana3DMaterialUploadProps)
+    setattr(bpy.types.WindowManager, HANA3D_MATERIALS, PointerProperty(type=Hana3DMaterialSearchProps))  # noqa E501
+    setattr(bpy.types.Material, HANA3D_NAME, PointerProperty(type=Hana3DMaterialUploadProps))
 
 
 def unregister():
-    del bpy.types.Material.hana3d
-    del bpy.types.WindowManager.hana3d_mat
+    delattr(bpy.types.Material, HANA3D_NAME)
+    delattr(bpy.types.WindowManager, HANA3D_MATERIALS)
 
-    del bpy.types.Scene.hana3d
-    del bpy.types.WindowManager.hana3d_scene
+    delattr(bpy.types.Scene, HANA3D_NAME)
+    delattr(bpy.types.WindowManager, HANA3D_SCENES)
 
-    del bpy.types.Object.hana3d
-    del bpy.types.WindowManager.hana3d_models
+    delattr(bpy.types.Object, HANA3D_NAME)
+    delattr(bpy.types.WindowManager, HANA3D_MODELS)
 
-    del bpy.types.WindowManager.Hana3DRender
-    del bpy.types.WindowManager.Hana3DUI
+    delattr(bpy.types.WindowManager, HANA3D_RENDER)
+    delattr(bpy.types.WindowManager, HANA3D_UI)
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

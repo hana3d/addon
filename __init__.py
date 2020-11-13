@@ -44,14 +44,15 @@ from . import (
     upload,
     utils
 )
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION, HANA3D_UI
 
 bl_info = {
     "name": "Hana3D",
-    "author": "Vilem Duha, Petr Dlouhy, Real2U",
-    "version": (0, 6, 9),
-    "blender": (2, 83, 0),
-    "location": "View3D > Properties > hana3d",
-    "description": "Online hana3d library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
+    "author": "Vilem Duha, Petr Dlouhy, R2U",
+    "version": (0, 6, 10),
+    "blender": (2, 90, 0),
+    "location": "View3D > Properties > Hana3D",
+    "description": "Online Hana3D library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
     "warning": "",
     "category": "3D View",
 }
@@ -60,10 +61,10 @@ bl_info = {
 @persistent
 def scene_load(context):
     search.load_previews()
-    ui_props = bpy.context.window_manager.Hana3DUI
+    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
     ui_props.turn_off = False
-    preferences = bpy.context.preferences.addons['hana3d'].preferences
+    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
 
@@ -96,20 +97,20 @@ def check_timers_timer():
 class Hana3DAddonPreferences(AddonPreferences):
     # this must match the addon name, use '__package__'
     # when defining this in a submodule of a python package.
-    bl_idname = __name__
+    bl_idname = HANA3D_NAME
 
     default_global_dict = paths.default_global_dict()
 
     api_key: StringProperty(
-        name="Hana3D API Key",
-        description="Your Hana3D API Key. Get it from your page on the website",
+        name=f"{HANA3D_DESCRIPTION} API Key",
+        description=f"Your {HANA3D_DESCRIPTION} API Key. Get it from your page on the website",
         default="",
         subtype="PASSWORD",
         update=utils.save_prefs,
     )
 
     api_key_refresh: StringProperty(
-        name="hana3d refresh API Key",
+        name=f"{HANA3D_DESCRIPTION} refresh API Key",
         description="API key used to refresh the token regularly.",
         default="",
         subtype="PASSWORD",
@@ -130,7 +131,7 @@ class Hana3DAddonPreferences(AddonPreferences):
     )
 
     id_token: StringProperty(
-        name="Hana3D ID Token",
+        name=f"{HANA3D_DESCRIPTION} ID Token",
         default="",
         subtype="PASSWORD",
         update=utils.save_prefs,
@@ -144,7 +145,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
     login_attempt: BoolProperty(
         name="Login/Signup attempt",
-        description="When this is on, hana3d is trying to connect and login",
+        description=f"When this is on, {HANA3D_DESCRIPTION} is trying to connect and login",
         default=False,
     )
 
@@ -273,7 +274,7 @@ class Hana3DAddonPreferences(AddonPreferences):
         if self.api_key.strip() == '':
             ui_panels.draw_login_buttons(layout)
         else:
-            layout.operator("wm.hana3d_logout", text="Logout", icon='URL')
+            layout.operator(f"wm.{HANA3D_NAME}_logout", text="Logout", icon='URL')
 
         layout.prop(self, "api_key", text='Your API Key')
         layout.prop(self, "global_dir")

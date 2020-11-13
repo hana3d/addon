@@ -21,13 +21,21 @@ import logging
 import os
 import sys
 import time
+from importlib import import_module
 
 import bpy
 import requests
 
-from hana3d import append_link, bg_blender, paths, rerequests, utils
 
-HANA3D_EXPORT_DATA = sys.argv[-1]
+HANA3D_NAME = sys.argv[-1]
+HANA3D_EXPORT_DATA = sys.argv[-2]
+
+module = import_module(HANA3D_NAME)
+append_link = module.append_link
+bg_blender = module.bg_blender
+utils = module.utils
+paths = module.paths
+rerequests = module.rerequests
 
 
 def start_logging():
@@ -189,7 +197,8 @@ if __name__ == "__main__":
 
             bpy.ops.file.pack_all()
 
-            main_source.hana3d.uploading = False
+            main_source_props = getattr(main_source, HANA3D_NAME)
+            main_source_props.uploading = False
             fpath = os.path.join(data['temp_dir'], upload_data['viewId'] + '.blend')
 
             bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)

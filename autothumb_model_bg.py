@@ -20,16 +20,21 @@ import json
 import math
 import sys
 from pathlib import Path
+from importlib import import_module
 
 import bpy
 import mathutils
 
-from hana3d import append_link, bg_blender, utils
+HANA3D_NAME = sys.argv[-1]
+HANA3D_EXPORT_TEMP_DIR = sys.argv[-2]
+HANA3D_THUMBNAIL_PATH = sys.argv[-3]
+HANA3D_EXPORT_FILE_INPUT = sys.argv[-4]
+HANA3D_EXPORT_DATA = sys.argv[-5]
 
-HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
-HANA3D_THUMBNAIL_PATH = sys.argv[-2]
-HANA3D_EXPORT_FILE_INPUT = sys.argv[-3]
-HANA3D_EXPORT_DATA = sys.argv[-4]
+module = import_module(HANA3D_NAME)
+append_link = module.append_link
+bg_blender = module.bg_blender
+utils = module.utils
 
 
 def get_obnames():
@@ -80,7 +85,7 @@ if __name__ == "__main__":
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
         bg_blender.progress('preparing thumbnail scene')
         obnames = get_obnames()
@@ -121,6 +126,7 @@ if __name__ == "__main__":
         collection.hide_select = False
 
         main_object.rotation_euler = (0, 0, 0)
+        # material declared on thumbnailer.blend
         bpy.data.materials['hana3d background'].node_tree.nodes['Value'].outputs[
             'Value'
         ].default_value = data['thumbnail_background_lightness']

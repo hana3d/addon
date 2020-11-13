@@ -19,15 +19,20 @@
 import json
 import sys
 from pathlib import Path
+from importlib import import_module
 
 import bpy
 
-from hana3d import append_link, bg_blender, utils
+HANA3D_NAME = sys.argv[-1]
+HANA3D_EXPORT_TEMP_DIR = sys.argv[-2]
+HANA3D_THUMBNAIL_PATH = sys.argv[-3]
+HANA3D_EXPORT_FILE_INPUT = sys.argv[-4]
+HANA3D_EXPORT_DATA = sys.argv[-5]
 
-HANA3D_EXPORT_TEMP_DIR = sys.argv[-1]
-HANA3D_THUMBNAIL_PATH = sys.argv[-2]
-HANA3D_EXPORT_FILE_INPUT = sys.argv[-3]
-HANA3D_EXPORT_DATA = sys.argv[-4]
+module = import_module(HANA3D_NAME)
+append_link = module.append_link
+bg_blender = module.bg_blender
+utils = module.utils
 
 
 def unhide_collection(cname):
@@ -52,7 +57,7 @@ if __name__ == "__main__":
             fake_user=False
         )
 
-        user_preferences = bpy.context.preferences.addons['hana3d'].preferences
+        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
         s = bpy.context.scene
 

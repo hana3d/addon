@@ -28,10 +28,11 @@ import requests
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from hana3d import bg_blender, paths, render, rerequests, types, ui, utils
-from hana3d.report_tools import execute_wrapper
+from . import bg_blender, paths, render, rerequests, types, ui, utils
+from .report_tools import execute_wrapper
+from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
-HANA3D_EXPORT_DATA_FILE = "data.json"
+HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 
 
 def get_upload_location(props, context):
@@ -126,8 +127,8 @@ def get_export_data(
         raise Exception(f'Unexpected asset_type={props.asset_type}')
 
     bg_process_params = {
-        'eval_path_computing': f'{eval_path}.hana3d.{path_computing}',
-        'eval_path_state': f'{eval_path}.hana3d.{path_state}',
+        'eval_path_computing': f'{eval_path}.{HANA3D_NAME}.{path_computing}',
+        'eval_path_state': f'{eval_path}.{HANA3D_NAME}.{path_state}',
         'eval_path': eval_path,
     }
 
@@ -190,8 +191,8 @@ asset_types = (
 class UploadOperator(Operator):
     """Tooltip"""
 
-    bl_idname = "object.hana3d_upload"
-    bl_description = "Upload or re-upload asset + thumbnail + metadata"
+    bl_idname = f"object.{HANA3D_NAME}_upload"
+    bl_description = f"Upload or re-upload asset + thumbnail + metadata to {HANA3D_DESCRIPTION}"
 
     bl_label = "hana3d asset upload"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
@@ -225,7 +226,7 @@ class UploadOperator(Operator):
     @execute_wrapper
     def execute(self, context):
         obj = utils.get_active_asset()
-        props = obj.hana3d
+        props = getattr(obj, HANA3D_NAME)
 
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(obj)
@@ -369,7 +370,8 @@ class UploadOperator(Operator):
                     "--python",
                     os.path.join(script_path, "upload_bg.py"),
                     "--",
-                    datafile,  # ,filepath, tempdir
+                    datafile,
+                    HANA3D_NAME,
                 ],
                 bufsize=5000,
                 stdout=subprocess.PIPE,
