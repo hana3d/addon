@@ -14,7 +14,8 @@ jobs:
         python-version: '3.7'
     - run: pip install flake8
     - run: pip install isort
-    - run: make lint
+    - run: flake8 .
+    - run: isort .
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
