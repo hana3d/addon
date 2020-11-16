@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+    - run: pip install flake8
+    - run: pip install isort
+    - run: make lint
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+    - run: scripts/tests/install-blender
+      env:
+        BLENDER_VERSION: '2.90'
+    - run: scripts/tests/install-addon
+      env:
+        BLENDER_VERSION: '2.90'
+        STAGE: ${{ env.STAGE }}
+    - run: make test
+  release:
+    name: Release
+    needs: [lint, integration-tests]
+    if: github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set version
+      run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.VERSION }}
+        release_name: Release ${{ env.VERSION }}
+        draft: false
+        prerelease: false
+  e2e:
+    name: Run E2E tests
+    needs: [lint, integration-tests]
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set stage
+      run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - run: make e2e
+      env:
+        STAGE: ${{ env.STAGE }}
+        HANA3D_BOT_ACCESS_TOKEN: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}

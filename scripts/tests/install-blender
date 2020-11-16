@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+
+set -eux
+
+echo "BLENDER_VERSION=$BLENDER_VERSION"
+
+export DEBIAN_FRONTEND=noninteractive
+apt -q update && apt install --no-install-recommends -y -q libglu1-mesa libxi6 libpcre3
+pip install pytest
+BLENDER_URL=https://download.blender.org/release/Blender$BLENDER_VERSION/blender-$BLENDER_VERSION.0-linux64.tar.xz
+echo "Installing Blender 2.${BLENDER_VERSION}"
+mkdir /opt/blender
+echo "Downloading from $BLENDER_URL"
+curl -SL "$BLENDER_URL" | tar -Jx -C /opt/blender --strip-components=1
+sudo ln -s /opt/blender/blender /usr/local/bin/blender
+PATH="/opt/blender/blender:${PATH}"
+sudo ln -s /lib64/libpcre.so.3 /lib64/libpcre.so.1

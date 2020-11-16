@@ -39,6 +39,7 @@ help: ## show this message
 
 lint: ## lint code
 	python3 -m flake8
+	python3 -m isort
 
 
 test: ## test code
@@ -68,3 +69,7 @@ build: ## build addon according to stage
 install: ## install the addon on blender
 	mkdir -p $(BLENDER_SCRIPTS_PATH)/addons
 	unzip -q hana3d_$(STAGE).zip -d $(BLENDER_SCRIPTS_PATH)/addons
+
+
+e2e: ## run E2E tests
+	curl -H "Authorization: token $(HANA3D_BOT_ACCESS_TOKEN)" --request POST --data '{"event_type": "$(STAGE)"}' https://api.github.com/repos/hana3d/e2e-tests/dispatches

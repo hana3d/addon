@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+set -eux
+
+echo "BLENDER_VERSION=$BLENDER_VERSION"
+export BLENDER_SCRIPTS_PATH="/opt/blender/$BLENDER_VERSION/scripts"
+
+make clean build install
