@@ -26,7 +26,6 @@ from importlib import import_module
 import bpy
 import requests
 
-
 HANA3D_NAME = sys.argv[-1]
 HANA3D_EXPORT_DATA = sys.argv[-2]
 

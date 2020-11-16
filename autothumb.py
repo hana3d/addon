@@ -24,8 +24,8 @@ import tempfile
 import bpy
 
 from . import bg_blender, colors, paths, ui, utils
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
 HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
 

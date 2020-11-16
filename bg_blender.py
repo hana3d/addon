@@ -24,9 +24,9 @@ import threading
 import bpy
 from bpy.props import EnumProperty
 
-from . import utils, tasks_queue
-from .report_tools import execute_wrapper
+from . import tasks_queue, utils
 from .config import HANA3D_NAME
+from .report_tools import execute_wrapper
 
 bg_processes = []
 

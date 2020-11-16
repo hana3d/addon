@@ -19,19 +19,15 @@
 import bpy
 from bpy.types import Panel
 
-from . import (
-    download,
-    utils,
-    addon_updater_ops
-)
+from . import addon_updater_ops, download, utils
 from .config import (
-    HANA3D_NAME,
-    HANA3D_MODELS,
-    HANA3D_SCENES,
-    HANA3D_MATERIALS,
     HANA3D_DESCRIPTION,
-    HANA3D_UI,
+    HANA3D_MATERIALS,
+    HANA3D_MODELS,
+    HANA3D_NAME,
     HANA3D_RENDER,
+    HANA3D_SCENES,
+    HANA3D_UI
 )
 
 

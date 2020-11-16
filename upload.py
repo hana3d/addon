@@ -29,8 +29,8 @@ from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
 from . import bg_blender, paths, render, rerequests, types, ui, utils
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME, HANA3D_DESCRIPTION
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 

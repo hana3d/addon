@@ -36,13 +36,13 @@ from bpy.props import (
 )
 
 from . import append_link, colors, paths, render_tools, types, ui, utils
-from .report_tools import execute_wrapper
 from .config import (
-    HANA3D_NAME,
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
-    HANA3D_SCENES,
+    HANA3D_NAME,
+    HANA3D_SCENES
 )
+from .report_tools import execute_wrapper
 
 download_threads = {}
 append_tasks_queue = Queue()

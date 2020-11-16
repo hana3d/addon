@@ -19,12 +19,12 @@
 import datetime
 import functools
 import getpass
-import requests
 import traceback
 import uuid
 
 import addon_utils
 import bpy
+import requests
 
 from . import paths
 from .config import HANA3D_DESCRIPTION

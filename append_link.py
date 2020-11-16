@@ -18,15 +18,9 @@
 
 import bpy
 
-from . import (
-    render_settings,
-    utils
-)
+from . import render_settings, utils
+from .config import HANA3D_NAME, HANA3D_SCENES
 from .report_tools import execute_wrapper
-from .config import (
-    HANA3D_NAME,
-    HANA3D_SCENES,
-)
 
 
 def append_material(file_name, matname=None, link=False, fake_user=True):

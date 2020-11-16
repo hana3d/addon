@@ -37,13 +37,8 @@ from . import (
     ui_bgl,
     utils
 )
+from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
-from .config import (
-    HANA3D_NAME,
-    HANA3D_DESCRIPTION,
-    HANA3D_MODELS,
-    HANA3D_UI,
-)
 
 handler_2d = None
 handler_3d = None

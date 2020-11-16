@@ -20,8 +20,9 @@ import os
 
 import bpy
 from bpy.app.handlers import persistent
-from .report_tools import execute_wrapper
+
 from .config import HANA3D_NAME
+from .report_tools import execute_wrapper
 
 # updater import, import safely
 # Prevents popups for users with invalid python installs e.g. missing libraries

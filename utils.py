@@ -29,12 +29,12 @@ from mathutils import Vector
 
 from . import paths, rerequests, tasks_queue
 from .config import (
+    HANA3D_MATERIALS,
+    HANA3D_MODELS,
     HANA3D_NAME,
     HANA3D_PROFILE,
-    HANA3D_MODELS,
     HANA3D_SCENES,
-    HANA3D_MATERIALS,
-    HANA3D_UI,
+    HANA3D_UI
 )
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
