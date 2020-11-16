@@ -67,8 +67,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./hana3d_${{ steps.STAGE }}.zip
-        asset_name: hana3d_${{ steps.STAGE }}.zip
+        asset_path: ./hana3d_${{ env.STAGE }}.zip
+        asset_name: hana3d_${{ env.STAGE }}.zip
         asset_content_type: application/zip
   e2e:
     name: Run E2E tests
