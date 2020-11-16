@@ -20,14 +20,15 @@ import os
 import urllib.parse
 
 import bpy
+
 from .config import (
-    HANA3D_NAME,
-    HANA3D_AUTH_URL,
-    HANA3D_AUTH_CLIENT_ID,
     HANA3D_AUTH_AUDIENCE,
-    HANA3D_PLATFORM_URL,
+    HANA3D_AUTH_CLIENT_ID,
     HANA3D_AUTH_LANDING,
-    HANA3D_URL,
+    HANA3D_AUTH_URL,
+    HANA3D_NAME,
+    HANA3D_PLATFORM_URL,
+    HANA3D_URL
 )
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")

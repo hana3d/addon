@@ -28,16 +28,16 @@ from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
 from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
-from .report_tools import execute_wrapper
 from .config import (
-    HANA3D_PROFILE,
-    HANA3D_NAME,
     HANA3D_DESCRIPTION,
-    HANA3D_MODELS,
-    HANA3D_SCENES,
     HANA3D_MATERIALS,
-    HANA3D_UI,
+    HANA3D_MODELS,
+    HANA3D_NAME,
+    HANA3D_PROFILE,
+    HANA3D_SCENES,
+    HANA3D_UI
 )
+from .report_tools import execute_wrapper
 
 search_start_time = 0
 prev_time = 0

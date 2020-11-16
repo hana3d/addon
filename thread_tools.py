@@ -19,6 +19,7 @@
 import queue
 
 import bpy
+
 from .config import HANA3D_NAME
 
 state_update_queue = queue.Queue()

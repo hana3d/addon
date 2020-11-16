@@ -23,8 +23,8 @@ import bpy
 import requests
 
 from . import colors, oauth, paths, ui, utils
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME, HANA3D_PROFILE, HANA3D_DESCRIPTION
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()

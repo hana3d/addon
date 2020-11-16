@@ -44,8 +44,8 @@ from . import (
     ui,
     utils
 )
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
-from .config import HANA3D_NAME, HANA3D_DESCRIPTION, HANA3D_RENDER
 
 render_threads = []
 upload_threads = []

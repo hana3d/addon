@@ -38,8 +38,8 @@ help: ## show this message
 
 
 lint: ## lint code
-	python3 -m flake8
-	python3 -m isort
+	python3 -m flake8 .
+	python3 -m isort .
 
 
 test: ## test code
