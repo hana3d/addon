@@ -37,15 +37,22 @@ jobs:
       env:
         STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
   release:
-    name: Release
+    name: Release ${{ github.ref == 'refs/heads/production' && 'production' || 'dev' }}
     needs: [lint, integration-tests]
-    if: github.ref == 'refs/heads/production'
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Set stage
+      run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: Build project
+      run: make build
+      env:
+        STAGE: ${{ env.STAGE }}
     - name: Set version
       run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
     - name: Create Release
+      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,7 +60,16 @@ jobs:
         tag_name: ${{ env.VERSION }}
         release_name: Release ${{ env.VERSION }}
         draft: false
-        prerelease: false
+        prerelease: ${{ env.STAGE == 'dev' }}
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./hana3d_${{ steps.STAGE }}.zip
+        asset_name: hana3d_${{ steps.STAGE }}.zip
+        asset_content_type: application/zip
   e2e:
     name: Run E2E tests
     needs: [lint, integration-tests]

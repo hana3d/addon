@@ -1278,8 +1278,8 @@ def register(bl_info):
     updater.clear_state()  # clear internal vars, avoids reloading oddities
 
     # confirm your updater "engine" (Github is default if not specified)
-    # updater.engine = "Github"
-    updater.engine = "GitLab"
+    updater.engine = "Github"
+    # updater.engine = "GitLab"
     # updater.engine = "Bitbucket"
 
     # If using private repository, indicate the token here
@@ -1290,15 +1290,15 @@ def register(bl_info):
     updater.private_token = None  # "tokenstring"
 
     # choose your own username, must match website (not needed for GitLab)
-    updater.user = "h7seiji"
+    updater.user = "hana3d"
 
     # choose your own repository, must match git name
-    updater.repo = "19263001"
+    updater.repo = "hana3d"
 
     # updater.addon = # define at top of module, MUST be done first
 
     # Website for manual addon download, optional but recommended to set
-    updater.website = "https://gitlab.com/real2u/hana3d/-/releases"
+    updater.website = "https://github.com/hana3d/hana3d/releases"
 
     # Addon subfolder path
     # "sample/path/to/addon"
@@ -1386,7 +1386,7 @@ def register(bl_info):
     # which enables pulling down release logs/notes, as well as specify installs from
     # release-attached zips (instead of just the auto-packaged code generated with
     # a release/tag). Setting has no impact on BitBucket or GitLab repos
-    updater.use_releases = False
+    updater.use_releases = True
     # note: Releases always have a tag, but a tag may not always be a release
     # Therefore, setting True above will filter out any non-annoted tags
     # note 2: Using this option will also display the release name instead of
