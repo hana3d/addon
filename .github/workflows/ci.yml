@@ -24,13 +24,15 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: '3.7'
+    - name: Set stage
+      run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
     - run: scripts/tests/install-blender
       env:
         BLENDER_VERSION: '2.90'
     - run: scripts/tests/install-addon
       env:
         BLENDER_VERSION: '2.90'
-        STAGE: ${{ env.STAGE }}
+        STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
     - run: make test
   release:
     name: Release
