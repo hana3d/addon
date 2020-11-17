@@ -49,7 +49,7 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 bl_info = {
     "name": "Hana3D",
     "author": "Vilem Duha, Petr Dlouhy, R2U",
-    "version": (0, 7, 3),
+    "version": (0, 7, 4),
     "blender": (2, 90, 0),
     "location": "View3D > Properties > Hana3D",
     "description": "Online Hana3D library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
