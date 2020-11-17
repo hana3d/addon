@@ -1194,8 +1194,8 @@ def skip_tag_function(self, tag):
     # ---- write any custom code here, return true to disallow version ---- #
     #
     # # Filter out e.g. if 'beta' is in name of release
-    # if 'beta' in tag.lower():
-    #     return True
+    if 'beta' in tag.lower():
+        return True
     # ---- write any custom code above, return true to disallow version --- #
 
     if self.include_branches is True:

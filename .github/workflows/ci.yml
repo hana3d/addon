@@ -51,13 +51,15 @@ jobs:
         STAGE: ${{ env.STAGE }}
     - name: Set version
       run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
+    - name: Set version tag
+      run: echo "TAG_NAME=${{ env.VERSION }}${{ env.STAGE == 'production' && '' || '-beta' }}" >> $GITHUB_ENV
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ env.VERSION }}
+        tag_name: ${{ env.TAG_NAME }}
         release_name: Release ${{ env.VERSION }}
         draft: false
         prerelease: ${{ env.STAGE == 'dev' }}
