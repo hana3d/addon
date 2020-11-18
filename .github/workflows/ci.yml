@@ -72,6 +72,19 @@ jobs:
         asset_path: ./hana3d_${{ env.STAGE }}.zip
         asset_name: hana3d_${{ env.STAGE }}.zip
         asset_content_type: application/zip
+  notify:
+    name: Notify release on slack
+    # needs: [lint, integration-tests, release]
+    if: contains(github.event.head_commit.message, 'NOTIFY_SLACK')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Slack notification
+      uses: Ilshidur/action-slack@2.0.2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: test
+        SLACK_AVATAR: repository
   e2e:
     name: Run E2E tests
     needs: [lint, integration-tests]
