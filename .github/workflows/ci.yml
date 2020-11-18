@@ -90,7 +90,7 @@ jobs:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       uses: pullreminders/slack-action@master
       with:
-        args: '{\"channel\":\"test\",\"mrkdwn\":true,\"text\":\"<${{ github.event.head_commit.message }}|${{ github.event.repository.url }}/releases/tag/${{ env.TAG_NAME }}>\n\n${{ github.event.head_commit.message }}\"}'
+        args: '{\"channel\":\"test\",\"mrkdwn\":true,\"text\":\"<${{ env.TAG_NAME }}|${{ github.event.repository.url }}/releases/tag/${{ env.TAG_NAME }}>\n\n${{ github.event.head_commit.message }}\"}'
   e2e:
     name: Run E2E tests
     needs: [lint, integration-tests]
