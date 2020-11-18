@@ -51,7 +51,7 @@ jobs:
         STAGE: ${{ env.STAGE }}
     - name: Set version
       run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
-    - name: Set version tag
+    - name: Set tag name
       run: echo "TAG_NAME=${{ env.VERSION }}${{ env.STAGE == 'dev' && '-beta' || '' }}" >> $GITHUB_ENV
     - name: Create Release
       id: create_release
@@ -73,18 +73,26 @@ jobs:
         asset_name: hana3d_${{ env.STAGE }}.zip
         asset_content_type: application/zip
   notify:
-    name: Notify release on slack
+    name: Notify Slack
     # needs: [lint, integration-tests, release]
     if: contains(github.event.head_commit.message, 'NOTIFY_SLACK')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Set stage
+      run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: Set version
+      run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
+    - name: Set tag name
+      run: echo "TAG_NAME=${{ env.VERSION }}${{ env.STAGE == 'dev' && '-beta' || '' }}" >> $GITHUB_ENV
     - name: Slack notification
       uses: Ilshidur/action-slack@2.0.2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         SLACK_CHANNEL: test
         SLACK_AVATAR: repository
+      with:
+        args: "<${{ github.event.pull_request.title }}|${{ github.event.repo.url }}/releases/tag/${{ env.TAG_NAME }}>\n${{ github.event.head_commit.message }}"
   e2e:
     name: Run E2E tests
     needs: [lint, integration-tests]
