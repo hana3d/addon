@@ -92,7 +92,7 @@ jobs:
         SLACK_CHANNEL: test
         SLACK_AVATAR: repository
       with:
-        args: "<${{ github.event.pull_request.title }}|${{ github.event.repo.url }}/releases/tag/${{ env.TAG_NAME }}>\n${{ github.event.head_commit.message }}"
+        args: "```<${{ github.event.pull_request.title }}|${{ github.event.repository.url }}/releases/tag/${{ env.TAG_NAME }}>\n${{ github.event.pull_request.body }}```"
   e2e:
     name: Run E2E tests
     needs: [lint, integration-tests]
