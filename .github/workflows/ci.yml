@@ -60,8 +60,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ env.TAG_NAME }}
-        release_name: Release ${{ env.TAG_NAME }}
-        draft: false
+        release_name: ${{ env.TAG_NAME }}
+        body: ${{ github.event.head_commit.message }}
+        draft: ${{ env.STAGE == 'production' }}
         prerelease: ${{ env.STAGE == 'dev' }}
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
