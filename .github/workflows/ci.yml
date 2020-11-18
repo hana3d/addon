@@ -85,13 +85,12 @@ jobs:
       run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
     - name: Set tag name
       run: echo "TAG_NAME=${{ env.VERSION }}${{ env.STAGE == 'dev' && '-beta' || '' }}" >> $GITHUB_ENV
-    - name: Slack notification
-      uses: Ilshidur/action-slack@2.0.2
+    - name: Notify slack
       env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        SLACK_CHANNEL: test
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      uses: pullreminders/slack-action@master
       with:
-        args: "<${{ github.event.head_commit.message }}|${{ github.event.repository.url }}/releases/tag/${{ env.TAG_NAME }}>\n\n${{ github.event.head_commit.message }}"
+        args: '{\"channel\":\"test\",\"mrkdwn\":true,\"text\":\"<${{ github.event.head_commit.message }}|${{ github.event.repository.url }}/releases/tag/${{ env.TAG_NAME }}>\n\n${{ github.event.head_commit.message }}\"}'
   e2e:
     name: Run E2E tests
     needs: [lint, integration-tests]
