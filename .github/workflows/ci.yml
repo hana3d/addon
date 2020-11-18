@@ -85,7 +85,7 @@ jobs:
       run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
     - name: Set tag name
       run: echo "TAG_NAME=${{ env.VERSION }}${{ env.STAGE == 'dev' && '-beta' || '' }}" >> $GITHUB_ENV
-    - run: echo ${{ github.event.pull_request.body }}
+    - run: echo ${{ github.event }}
     - name: Slack notification
       uses: Ilshidur/action-slack@2.0.2
       env:
