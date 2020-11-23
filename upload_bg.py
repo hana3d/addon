@@ -63,6 +63,7 @@ def upload_file(upload_data, f, correlation_id):
         upload_info['viewId'] = upload_data['viewId']
         if 'id_parent' in upload_data:
             upload_info['id_parent'] = upload_data['id_parent']
+        upload_info['multiple_uvs'] = any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes)
     upload_create_url = paths.get_api_url('uploads')
     response = rerequests.post(upload_create_url, json=upload_info, headers=headers)
     upload = response.json()
