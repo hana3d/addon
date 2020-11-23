@@ -13,9 +13,7 @@ jobs:
       with:
         python-version: '3.7'
     - run: pip install -r requirements.txt
-    - run: flakehell lint .
-    - run: isort .
-    - run: xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py,ui.py,search.py
+    - run: make lint
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
