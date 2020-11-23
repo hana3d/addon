@@ -38,7 +38,7 @@ help: ## show this message
 
 
 lint: ## lint code
-	flake8 .
+	flake8 --diff .
 	isort .
 	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py,ui.py,search.py
 
