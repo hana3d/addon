@@ -59,11 +59,12 @@ def upload_file(upload_data, f, correlation_id):
     }
     if 'workspace' in upload_data:
         upload_info['workspace'] = upload_data['workspace']
+    multiple_uvs = False
     if f['type'] == 'blend':
         upload_info['viewId'] = upload_data['viewId']
         if 'id_parent' in upload_data:
             upload_info['id_parent'] = upload_data['id_parent']
-        upload_info['multiple_uvs'] = any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes)
+        multiple_uvs = any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes)
     upload_create_url = paths.get_api_url('uploads')
     response = rerequests.post(upload_create_url, json=upload_info, headers=headers)
     upload = response.json()
@@ -93,7 +94,12 @@ def upload_file(upload_data, f, correlation_id):
                 time.sleep(1)
 
             # confirm single file upload to hana3d server
-            upload_done_url = paths.get_api_url('uploads_s3', upload['id'], 'upload-file')
+            upload_done_url = paths.get_api_url(
+                'uploads_s3',
+                upload['id'],
+                'upload-file',
+                {'multiple_uvs': multiple_uvs}
+            )
             upload_response = rerequests.post(upload_done_url, headers=headers)
             dict_response = upload_response.json()
             if type(dict_response) == dict:
