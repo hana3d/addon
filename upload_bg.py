@@ -26,8 +26,9 @@ from importlib import import_module
 import bpy
 import requests
 
-HANA3D_NAME = sys.argv[-1]
-HANA3D_EXPORT_DATA = sys.argv[-2]
+SKIP_POST_PROCESS = sys.argv[-1].lower() == 'true'
+HANA3D_NAME = sys.argv[-2]
+HANA3D_EXPORT_DATA = sys.argv[-3]
 
 module = import_module(HANA3D_NAME)
 append_link = module.append_link
@@ -59,12 +60,10 @@ def upload_file(upload_data, f, correlation_id):
     }
     if 'workspace' in upload_data:
         upload_info['workspace'] = upload_data['workspace']
-    skip_post_process = False
     if f['type'] == 'blend':
         upload_info['viewId'] = upload_data['viewId']
         if 'id_parent' in upload_data:
             upload_info['id_parent'] = upload_data['id_parent']
-        skip_post_process = any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes)
     upload_create_url = paths.get_api_url('uploads')
     response = rerequests.post(upload_create_url, json=upload_info, headers=headers)
     upload = response.json()
@@ -98,7 +97,7 @@ def upload_file(upload_data, f, correlation_id):
                 'uploads_s3',
                 upload['id'],
                 'upload-file',
-                {'skip_post_process': skip_post_process}
+                query = {'skip_post_process': SKIP_POST_PROCESS}
             )
             upload_response = rerequests.post(upload_done_url, headers=headers)
             dict_response = upload_response.json()
