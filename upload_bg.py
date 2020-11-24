@@ -97,7 +97,7 @@ def upload_file(upload_data, f, correlation_id):
                 'uploads_s3',
                 upload['id'],
                 'upload-file',
-                query = {'skip_post_process': SKIP_POST_PROCESS}
+                query={'skip_post_process': SKIP_POST_PROCESS}
             )
             upload_response = rerequests.post(upload_done_url, headers=headers)
             dict_response = upload_response.json()

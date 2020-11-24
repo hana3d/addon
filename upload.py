@@ -363,7 +363,7 @@ class UploadOperator(Operator):
 
             skip_post_process = 'false'
             if any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes):
-                ui.add_report('Will skip post process because at least 1 mesh has more than 1 UV Map')
+                ui.add_report('Skipping post process: at least 1 mesh has more than 1 UV Map')
                 skip_post_process = 'true'
 
             proc = subprocess.Popen(
