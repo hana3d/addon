@@ -20,7 +20,7 @@ import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-from . import paths, rerequests, _types, utils
+from . import hana_types, paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 
@@ -98,11 +98,11 @@ class RefreshLibraries(bpy.types.Operator):
     def execute(self, context):
         search_props = utils.get_search_props()
         update_libraries(search_props.workspace)
-        _types.update_libraries_list(search_props, context)
+        hana_types.update_libraries_list(search_props, context)
 
         upload_props = utils.get_upload_props()
         update_libraries(upload_props.workspace)
-        _types.update_libraries_list(upload_props, context)
+        hana_types.update_libraries_list(upload_props, context)
 
         utils.show_popup('Libraries updated!')
         return {'FINISHED'}
