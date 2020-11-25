@@ -51,7 +51,7 @@ from .src.authentication.authentication import Authentication
 bl_info = {
     "name": "Hana3D",
     "author": "Vilem Duha, Petr Dlouhy, R2U",
-    "version": (0, 7, 7),
+    "version": (0, 7, 8),
     "blender": (2, 90, 0),
     "location": "View3D > Properties > Hana3D",
     "description": "Online Hana3D library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
