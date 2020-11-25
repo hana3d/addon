@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
 import os
 import sys
@@ -24,9 +23,8 @@ import uuid
 from typing import List, Tuple
 
 import bpy
-from mathutils import Vector
-
 from idprop.types import IDPropertyGroup
+from mathutils import Vector
 
 from . import paths, rerequests, tasks_queue
 from .config import (

@@ -35,10 +35,9 @@ import urllib.request
 import zipfile
 from datetime import datetime, timedelta
 
+import addon_utils
 # blender imports, used in limited cases
 import bpy
-
-import addon_utils
 
 # -----------------------------------------------------------------------------
 # Define error messages/notices & hard coded globals
