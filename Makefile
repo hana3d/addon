@@ -24,6 +24,7 @@ endef
 export PYTHON=python
 export PRINT_HELP_PYSCRIPT
 export BLENDER_VERSION=2.90
+SHELL=/bin/bash -o pipefail
 BLENDER_SCRIPTS_PATH ?= $(shell dirname $(shell readlink -f $(shell which blender)))/$(BLENDER_VERSION)/scripts/
 STAGE ?= production
 HANA3D_DESCRIPTION=$(shell sed -e 's/HANA3D_DESCRIPTION: \(.*\)/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).yml)
