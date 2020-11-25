@@ -39,7 +39,7 @@ help: ## show this message
 
 
 lint: ## lint code
-	git diff -U0 $(STAGE).. -- | flake8 --diff
+	git diff -U0 origin/$(STAGE).. -- | flake8 --diff
 	isort *.py
 	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py,ui.py,search.py
 
