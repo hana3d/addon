@@ -1,86 +1,89 @@
 name: CI
 
-on:
-  push
+on: push
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.7'
-    - run: pip install -r requirements.txt
-    - run: make lint
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Set stage
+        run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - run: pip install -r requirements.txt
+      - run: make lint
+        env:
+          STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.7'
-    - name: Set stage
-      run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - run: scripts/tests/install-blender
-      env:
-        BLENDER_VERSION: '2.90'
-    - run: scripts/tests/install-addon
-      env:
-        BLENDER_VERSION: '2.90'
-        STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
-    - run: make test
-      env:
-        STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Set stage
+        run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - run: scripts/tests/install-blender
+        env:
+          BLENDER_VERSION: "2.90"
+      - run: scripts/tests/install-addon
+        env:
+          BLENDER_VERSION: "2.90"
+          STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
+      - run: make test
+        env:
+          STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
   release:
     name: Release ${{ github.ref == 'refs/heads/production' && 'production' || 'dev' }}
     needs: [lint, integration-tests]
     if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set stage
-      run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - name: Build project
-      run: make build
-      env:
-        STAGE: ${{ env.STAGE }}
-    - name: Set version
-      run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
-    - name: Set tag name
-      run: echo "TAG_NAME=${{ env.VERSION }}${{ env.STAGE == 'dev' && '-beta' || '' }}" >> $GITHUB_ENV
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ env.TAG_NAME }}
-        release_name: ${{ env.TAG_NAME }}
-        body: ${{ github.event.head_commit.message }}
-        draft: ${{ env.STAGE == 'dev' }}
-        prerelease: ${{ env.STAGE == 'dev' }}
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./hana3d_${{ env.STAGE }}.zip
-        asset_name: hana3d_${{ env.STAGE }}.zip
-        asset_content_type: application/zip
+      - uses: actions/checkout@v2
+      - name: Set stage
+        run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build project
+        run: make build
+        env:
+          STAGE: ${{ env.STAGE }}
+      - name: Set version
+        run: echo "VERSION=$(grep 'version.*[0-9]\+,\s\?[0-9]\+,\s\?[0-9]\+' __init__.py | sed 's/.*\([0-9]\+\),\s\?\([0-9]\+\),\s\?\([0-9]\+\).*/\1.\2.\3/')" >> $GITHUB_ENV
+      - name: Set tag name
+        run: echo "TAG_NAME=${{ env.VERSION }}${{ env.STAGE == 'dev' && '-beta' || '' }}" >> $GITHUB_ENV
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: ${{ env.TAG_NAME }}
+          body: ${{ github.event.head_commit.message }}
+          draft: ${{ env.STAGE == 'dev' }}
+          prerelease: ${{ env.STAGE == 'dev' }}
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hana3d_${{ env.STAGE }}.zip
+          asset_name: hana3d_${{ env.STAGE }}.zip
+          asset_content_type: application/zip
   e2e:
     name: Run E2E tests
     needs: [lint, integration-tests]
     if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set stage
-      run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - run: make e2e
-      env:
-        STAGE: ${{ env.STAGE }}
-        HANA3D_BOT_ACCESS_TOKEN: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
+      - uses: actions/checkout@v2
+      - name: Set stage
+        run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - run: make e2e
+        env:
+          STAGE: ${{ env.STAGE }}
+          HANA3D_BOT_ACCESS_TOKEN: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
