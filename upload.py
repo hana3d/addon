@@ -54,7 +54,8 @@ def get_upload_location(props, context):
 def get_export_data(
     props: hana_types.Props,
     path_computing: str = 'uploading',
-    path_state: str = 'upload_state'):
+    path_state: str = 'upload_state',
+):
     export_data = {
         "type": props.asset_type,
         "thumbnail_path": bpy.path.abspath(props.thumbnail),
