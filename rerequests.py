@@ -79,6 +79,17 @@ def get_headers(
     api_key: str = None,
     include_id_token: bool = False,
 ) -> dict:
+    """Get Headers for API request.
+
+    Args:
+        correlation_id (str): The correlation id between multiple requests
+        api_key (str): The backend API key
+        include_id_token (bool): Determines if the request should include the API id token
+
+
+    Returns:
+        dict: headers
+    """
     headers = {
         'accept': 'application/json',
         'X-Request-Id': str(uuid.uuid4()),
