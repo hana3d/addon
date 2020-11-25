@@ -52,9 +52,9 @@ def get_upload_location(props, context):
 
 
 def get_export_data(
-        props: hana_types.Props,
-        path_computing: str = 'uploading',
-        path_state: str = 'upload_state'):
+    props: hana_types.Props,
+    path_computing: str = 'uploading',
+    path_state: str = 'upload_state'):
     export_data = {
         "type": props.asset_type,
         "thumbnail_path": bpy.path.abspath(props.thumbnail),
@@ -254,7 +254,8 @@ class UploadOperator(Operator):
             layout.label(text="Do this only when you create a new asset from an old one.")
             layout.label(text="For updates of thumbnail or model use reupload.")
 
-    def start_upload(self, context, props: types.Props, upload_set: List[str]):
+    # TODO: remove the ignored lint errors
+    def start_upload(self, context, props: hana_types.Props, upload_set: List[str]): # noqa D102, WPS212, WPS210, WPS213, WPS231
         utils.name_update()
 
         location = get_upload_location(props, context)
