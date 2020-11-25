@@ -4,6 +4,7 @@ local/
 .vscode
 .DS_Store
 env/
+venv/
 __pycache__
 *.pyc
 hana3d_updater_status.json

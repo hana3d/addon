@@ -22,7 +22,7 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
-from . import (
+from . import (  # noqa: WPS235
     addon_updater_ops,
     append_link,
     asset,
@@ -45,16 +45,18 @@ from . import (
     utils
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .src.application.application import Application
+from .src.authentication.authentication import Authentication
 
 bl_info = {
-    "name": "Hana3D",
-    "author": "Vilem Duha, Petr Dlouhy, R2U",
-    "version": (0, 7, 7),
-    "blender": (2, 90, 0),
-    "location": "View3D > Properties > Hana3D",
-    "description": "Online Hana3D library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
-    "warning": "",
-    "category": "3D View",
+    'name': 'Hana3D',
+    'author': 'Vilem Duha, Petr Dlouhy, R2U',
+    'version': (0, 7, 8),
+    'blender': (2, 90, 0),
+    'location': 'View3D > Properties > Hana3D',
+    'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
+    'warning': '',
+    'category': '3D View',
 }
 
 
@@ -67,6 +69,12 @@ def scene_load(context):
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
+
+    application = Application()
+    authentication = Authentication()
+    if not application.background():
+        if not bpy.app.timers.is_registered(authentication.refresh_token_timer):
+            bpy.app.timers.register(authentication.refresh_token_timer)
 
 
 @bpy.app.handlers.persistent
