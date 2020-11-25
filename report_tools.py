@@ -22,9 +22,10 @@ import getpass
 import traceback
 import uuid
 
-import addon_utils
 import bpy
 import requests
+
+import addon_utils
 
 from . import paths
 from .config import HANA3D_DESCRIPTION

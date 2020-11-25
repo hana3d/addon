@@ -24,8 +24,9 @@ import uuid
 from typing import List, Tuple
 
 import bpy
-from idprop.types import IDPropertyGroup
 from mathutils import Vector
+
+from idprop.types import IDPropertyGroup
 
 from . import paths, rerequests, tasks_queue
 from .config import (
