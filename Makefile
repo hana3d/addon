@@ -60,7 +60,7 @@ build: ## build addon according to stage
 	# copy relevant files to addon folder
 	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' -o -name '*.yml' \) | xargs cp --parents -t hana3d_$(STAGE)
 	# replace addon description strings: static properties are evaluated before runtime
-	LC_ALL=C sed -i "s/\(\".*\)Hana3D\(.*\"\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
+	LC_ALL=C sed -i "s/\(\'.*\)Hana3D\(.*\'\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
 	# zip addon folder
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
 	# copy to ~/Downloads for easy manual install
