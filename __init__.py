@@ -22,6 +22,8 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
+from .src.application.application import Application
+from .src.authentication.authentication import Authentication
 from . import (
     addon_updater_ops,
     append_link,
@@ -67,6 +69,12 @@ def scene_load(context):
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
+
+    application = Application()
+    authentication = Authentication()
+    if not application.background():
+        if not bpy.app.timers.is_registered(authentication.refresh_token_timer):
+            bpy.app.timers.register(authentication.refresh_token_timer)
 
 
 @bpy.app.handlers.persistent

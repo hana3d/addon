@@ -65,35 +65,6 @@ thumb_full_download_threads = {}
 reports = ''
 
 
-def refresh_token_timer():
-    ''' this timer gets run every time the token needs refresh. '''
-    utils.p('refresh timer')
-    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
-    fetch_server_data()
-
-    return user_preferences.api_key_life
-
-
-@persistent
-def scene_load(context):
-    if not bpy.app.timers.is_registered(refresh_token_timer):
-        bpy.app.timers.register(refresh_token_timer)
-
-
-def fetch_server_data():
-    if not bpy.app.background:
-        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
-        api_key = user_preferences.api_key
-        # Only refresh new type of tokens(by length), and only one hour before the token timeouts.
-        if (
-            len(user_preferences.api_key) > 0
-            and user_preferences.api_key_timeout < time.time()
-        ):
-            hana3d_oauth.refresh_token(immediate=False)
-        if api_key != '' and bpy.context.window_manager.get(HANA3D_PROFILE) is None:
-            utils.update_profile_async()
-
-
 first_time = True
 last_clipboard = ''
 
@@ -238,7 +209,7 @@ def timer_update():
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count']) # noqa #501
+                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count'])  # noqa #501
                 if len(wm[f'{HANA3D_NAME}_search_results']) == 0:
                     tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 
@@ -677,8 +648,6 @@ classes = [SearchOperator]
 
 
 def register():
-    bpy.app.handlers.load_post.append(scene_load)
-
     for cls in classes:
         bpy.utils.register_class(cls)
 
@@ -686,8 +655,6 @@ def register():
 
 
 def unregister():
-    bpy.app.handlers.load_post.remove(scene_load)
-
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
     if bpy.app.timers.is_registered(timer_update):
