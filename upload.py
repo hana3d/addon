@@ -28,7 +28,7 @@ import requests
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from . import bg_blender, paths, render, rerequests, types, ui, utils
+from . import bg_blender, paths, render, rerequests, _types, ui, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
 
@@ -52,7 +52,7 @@ def get_upload_location(props, context):
 
 
 def get_export_data(
-        props: types.Props,
+        props: _types.Props,
         path_computing: str = 'uploading',
         path_state: str = 'upload_state'):
     export_data = {

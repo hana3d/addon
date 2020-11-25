@@ -43,6 +43,9 @@ lint: ## lint code
 	isort . --check
 	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py,ui.py,search.py
 
+mypy:
+	mypy src/**/*.py
+
 
 test: ## test code
 	HANA3D_ENV=$(STAGE) blender -b -P tests/install.py -noaudio
