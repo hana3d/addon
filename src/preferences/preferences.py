@@ -7,10 +7,6 @@ import bpy
 from ...config import HANA3D_NAME
 
 
-
-
-
-
 class Preferences(object):
     """Hana3D addon preferences."""
 
