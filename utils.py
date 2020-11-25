@@ -19,7 +19,6 @@ import json
 import os
 import sys
 import time
-import uuid
 from typing import List, Tuple
 
 import bpy
@@ -218,21 +217,6 @@ def save_prefs(self, context):
             print(e)
 
 
-def update_profile():
-    p('update_profile')
-    url = paths.get_api_url('me')
-    headers = get_headers(include_id_token=True)
-
-    r = rerequests.get(url, headers=headers)
-    assert r.ok, f'Failed to get profile data: {r.text}'
-
-    bpy.context.window_manager[HANA3D_PROFILE] = r.json()
-
-
-def update_profile_async():
-    tasks_queue.add_task(update_profile)
-
-
 def get_hidden_image(
         thumbnail_path: str,
         image_name: str,
@@ -404,27 +388,6 @@ def get_dimensions(obs):
     bbmax = Vector((maxx, maxy, maxz))
     dim = Vector((maxx - minx, maxy - miny, maxz - minz))
     return dim, bbmin, bbmax
-
-
-def get_headers(
-        correlation_id: str = None,
-        api_key: str = None,
-        include_id_token: bool = False,
-) -> dict:
-    headers = {
-        'accept': 'application/json',
-        'X-Request-Id': str(uuid.uuid4())
-    }
-    if correlation_id:
-        headers['X-Correlation-Id'] = correlation_id
-    if api_key is None:
-        api_key = bpy.context.preferences.addons[HANA3D_NAME].preferences.api_key
-    if api_key != '':
-        headers["Authorization"] = "Bearer %s" % api_key
-    if include_id_token:
-        id_token = bpy.context.preferences.addons[HANA3D_NAME].preferences.id_token
-        headers['X-ID-Token'] = id_token
-    return headers
 
 
 def scale_2d(v, s, p):

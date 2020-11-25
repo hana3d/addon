@@ -309,7 +309,7 @@ class Searcher(threading.Thread):
         tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
         json_filepath = os.path.join(tempdir, '%s_searchresult.json' % query['asset_type'])
 
-        headers = utils.get_headers()
+        headers = rerequests.get_headers()
 
         rdata = {}
         rdata['results'] = []

@@ -91,7 +91,7 @@ class UploadFileMixin:
         self.upload_state = ''
 
         correlation_id = str(uuid.uuid4())
-        self.headers = utils.get_headers(correlation_id)
+        self.headers = rerequests.get_headers(correlation_id)
 
         self.finished = False
 
@@ -588,7 +588,7 @@ class RemoveRender(Operator):
     @staticmethod
     def remove_from_backend(id_job: str):
         url = paths.get_api_url('renders', id_job)
-        response = rerequests.delete(url, headers=utils.get_headers())
+        response = rerequests.delete(url, headers=rerequests.get_headers())
         assert response.ok, f'Error deleting render using DELETE on {url}: {response.text}'
 
     @staticmethod

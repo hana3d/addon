@@ -1,8 +1,7 @@
 """Hana3D Profile."""
-
 import bpy
 
-from ...config import HANA3D_PROFILE
+from ... import config, paths, rerequests, tasks_queue
 
 
 class Profile(object):
@@ -11,10 +10,26 @@ class Profile(object):
     def __init__(self):
         """Create a Profile object."""
 
-    def user_profile(self):
+    def get(self):
         """Get User Profile object.
 
         Returns:
             dict: user_profile
         """
-        return bpy.context.window_manager.get(HANA3D_PROFILE)
+        return bpy.context.window_manager.get(config.HANA3D_PROFILE)
+
+    def update_async(self):
+        """Update the User Profile asynchronously."""
+        tasks_queue.add_task(self._update_async_task)
+
+    def _update_async_task(self):
+        """Task to Update the User Profile asynchronously."""
+        print('update_profile')  # noqa: WPS421
+        url = paths.get_api_url('me')
+        headers = rerequests.get_headers(include_id_token=True)
+        response = rerequests.get(url, headers=headers)
+
+        if not response.ok:
+            print(f'Failed to get profile data: {response.text}')  # noqa: WPS421
+
+        bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
