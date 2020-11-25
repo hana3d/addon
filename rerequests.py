@@ -15,8 +15,9 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-import requests
 import uuid
+
+import requests
 
 from . import hana3d_oauth, ui, utils
 from .config import HANA3D_DESCRIPTION
@@ -54,28 +55,23 @@ def rerequest(method, url, **kwargs):
 
 
 def delete(url, **kwargs):
-    response = rerequest('delete', url, **kwargs)
-    return response
+    return rerequest('delete', url, **kwargs)
 
 
 def get(url, **kwargs):
-    response = rerequest('get', url, **kwargs)
-    return response
+    return rerequest('get', url, **kwargs)
 
 
 def post(url, **kwargs):
-    response = rerequest('post', url, **kwargs)
-    return response
+    return rerequest('post', url, **kwargs)
 
 
 def put(url, **kwargs):
-    response = rerequest('put', url, **kwargs)
-    return response
+    return rerequest('put', url, **kwargs)
 
 
 def patch(url, **kwargs):
-    response = rerequest('patch', url, **kwargs)
-    return response
+    return rerequest('patch', url, **kwargs)
 
 
 def get_headers(

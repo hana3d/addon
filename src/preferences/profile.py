@@ -29,6 +29,7 @@ class Profile(object):
         headers = rerequests.get_headers(include_id_token=True)
         response = rerequests.get(url, headers=headers)
 
-        assert response.ok, f'Failed to get profile data: {response.text}'
+        if not response.ok:
+            print(f'Failed to get profile data: {response.text}')  # noqa: WPS421
 
         bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
