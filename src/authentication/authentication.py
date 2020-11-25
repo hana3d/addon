@@ -3,9 +3,9 @@
 import time
 
 from ...hana3d_oauth import refresh_token
+from ...utils import update_profile_async
 from ..preferences.preferences import Preferences
 from ..preferences.profile import Profile
-from ...utils import update_profile_async
 
 
 class Authentication(object):

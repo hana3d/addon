@@ -22,9 +22,7 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
-from .src.application.application import Application
-from .src.authentication.authentication import Authentication
-from . import (
+from . import (  # noqa: WPS235
     addon_updater_ops,
     append_link,
     asset,
@@ -47,6 +45,8 @@ from . import (
     utils
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .src.application.application import Application
+from .src.authentication.authentication import Authentication
 
 bl_info = {
     "name": "Hana3D",
