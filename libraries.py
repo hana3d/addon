@@ -31,7 +31,7 @@ def update_libraries(workspace):
         'workspace_id': workspace
     }
     url = paths.get_api_url('libraries', query=query)
-    headers = utils.get_headers()
+    headers = rerequests.get_headers()
 
     r = rerequests.get(url, headers=headers)
     assert r.ok, f'Failed to get library data: {r.text}'

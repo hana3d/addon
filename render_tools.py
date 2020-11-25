@@ -40,7 +40,7 @@ def get_render_jobs(asset_type: str, view_id: str, job_id: str = None) -> List[d
     if job_id:
         query['job_id'] = job_id
     url = paths.get_api_url('renders', query=query)
-    response = rerequests.get(url, headers=utils.get_headers())
+    response = rerequests.get(url, headers=rerequests.get_headers())
     assert response.ok, response.text
 
     jobs = response.json()

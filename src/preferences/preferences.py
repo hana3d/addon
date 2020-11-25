@@ -13,7 +13,7 @@ class Preferences(object):
     def __init__(self):
         """Create a Preferences object."""
 
-    def user_preferences(self):
+    def get(self):
         """Get User Preferences object.
 
         Returns:
@@ -30,3 +30,4 @@ class UserPreferences(object):
     api_key: str
     api_key_timeout: int
     api_key_life: str
+    id_token: str

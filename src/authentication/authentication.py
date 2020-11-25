@@ -3,7 +3,6 @@
 import time
 
 from ...hana3d_oauth import refresh_token
-from ...utils import update_profile_async
 from ..preferences.preferences import Preferences
 from ..preferences.profile import Profile
 
@@ -24,13 +23,13 @@ class Authentication(object):
         """
         print('refresh_token_timer')  # noqa: WPS421
         self.update_tokens()
-        return self.preferences.user_preferences().api_key_life
+        return self.preferences.get().api_key_life
 
     def update_tokens(self):
         """Refresh the API key token."""
-        api_key_exists = self.preferences.user_preferences().api_key
-        api_key_has_timed_out = self.preferences.user_preferences().api_key_timeout < time.time()
+        api_key_exists = self.preferences.get().api_key
+        api_key_has_timed_out = self.preferences.get().api_key_timeout < time.time()
         if (api_key_exists and api_key_has_timed_out):
             refresh_token(immediate=False)
-        if api_key_exists and self.profile.user_profile() is None:
-            update_profile_async()
+        if api_key_exists and self.profile.get() is None:
+            self.profile.update_async()

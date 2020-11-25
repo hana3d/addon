@@ -47,7 +47,7 @@ def start_logging():
 
 
 def upload_file(upload_data, f, correlation_id):
-    headers = utils.get_headers(correlation_id)
+    headers = rerequests.get_headers(correlation_id)
     bg_blender.progress('uploading %s' % f['type'])
     upload_info = {
         'assetId': upload_data['id'],
@@ -241,7 +241,7 @@ if __name__ == "__main__":
                 confirm_data = {"verificationStatus": "uploaded"}
 
                 url = paths.get_api_url('assets', upload_data['id'])
-                headers = utils.get_headers(correlation_id)
+                headers = rerequests.get_headers(correlation_id)
                 rerequests.patch(url, json=confirm_data, headers=headers)
 
             bg_blender.progress('upload finished successfully')

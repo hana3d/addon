@@ -15,11 +15,12 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import requests
+import uuid
 
 from . import hana3d_oauth, ui, utils
 from .config import HANA3D_DESCRIPTION
+from .src.preferences.preferences import Preferences
 
 
 def rerequest(method, url, **kwargs):
@@ -46,7 +47,7 @@ def rerequest(method, url, **kwargs):
             ui.add_report(f"Refreshing token. If this fails, please login in {HANA3D_DESCRIPTION} Login panel.", 10)  # noqa E501
 
             oauth_response = hana3d_oauth.refresh_token(immediate=immediate)
-            updated_headers = utils.get_headers(api_key=oauth_response['access_token'])
+            updated_headers = get_headers(api_key=oauth_response['access_token'])
             kwargs['headers'].update(updated_headers)
             response = requests.request(method, url, **kwargs)
     return response
@@ -75,3 +76,25 @@ def put(url, **kwargs):
 def patch(url, **kwargs):
     response = rerequest('patch', url, **kwargs)
     return response
+
+
+def get_headers(
+    correlation_id: str = None,
+    api_key: str = None,
+    include_id_token: bool = False,
+) -> dict:
+    headers = {
+        'accept': 'application/json',
+        'X-Request-Id': str(uuid.uuid4()),
+    }
+    preferences = Preferences()
+    if correlation_id:
+        headers['X-Correlation-Id'] = correlation_id
+    if api_key is None:
+        api_key = preferences.get().api_key
+    if api_key != '':
+        headers['Authorization'] = f'Bearer {api_key}'
+    if include_id_token:
+        id_token = preferences.get().id_token
+        headers['X-ID-Token'] = id_token
+    return headers
