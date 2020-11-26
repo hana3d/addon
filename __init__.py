@@ -327,7 +327,6 @@ def register():
         module.register()
 
     utils.load_prefs()
-    logger.setup_logger()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
     bpy.app.handlers.load_post.append(scene_load)
@@ -342,3 +341,6 @@ def unregister():
 
     bpy.utils.unregister_class(Hana3DAddonPreferences)
     addon_updater_ops.unregister()
+
+
+logger.setup_logger()
