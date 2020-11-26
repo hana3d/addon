@@ -32,6 +32,6 @@ class Profile(object):
         response = rerequests.get(url, headers=headers)
 
         if not response.ok:
-            logging.errpr(f'Failed to get profile data: {response.text}')  # noqa: WPS421
+            logging.error(f'Failed to get profile data: {response.text}')  # noqa: WPS421
 
         bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
