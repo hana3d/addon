@@ -291,7 +291,7 @@ class UploadOperator(Operator):
             return {'CANCELLED'}
 
         correlation_id = str(uuid.uuid4())
-        headers = utils.get_headers(correlation_id)
+        headers = rerequests.get_headers(correlation_id)
 
         global reports
         if props.id == '':
