@@ -26,8 +26,9 @@ from importlib import import_module
 import bpy
 import requests
 
-HANA3D_NAME = sys.argv[-1]
-HANA3D_EXPORT_DATA = sys.argv[-2]
+SKIP_POST_PROCESS = sys.argv[-1].lower() == 'true'
+HANA3D_NAME = sys.argv[-2]
+HANA3D_EXPORT_DATA = sys.argv[-3]
 
 module = import_module(HANA3D_NAME)
 append_link = module.append_link
@@ -46,7 +47,7 @@ def start_logging():
 
 
 def upload_file(upload_data, f, correlation_id):
-    headers = utils.get_headers(correlation_id)
+    headers = rerequests.get_headers(correlation_id)
     bg_blender.progress('uploading %s' % f['type'])
     upload_info = {
         'assetId': upload_data['id'],
@@ -92,7 +93,12 @@ def upload_file(upload_data, f, correlation_id):
                 time.sleep(1)
 
             # confirm single file upload to hana3d server
-            upload_done_url = paths.get_api_url('uploads_s3', upload['id'], 'upload-file')
+            upload_done_url = paths.get_api_url(
+                'uploads_s3',
+                upload['id'],
+                'upload-file',
+                query={'skip_post_process': SKIP_POST_PROCESS}
+            )
             upload_response = rerequests.post(upload_done_url, headers=headers)
             dict_response = upload_response.json()
             if type(dict_response) == dict:
@@ -235,7 +241,7 @@ if __name__ == "__main__":
                 confirm_data = {"verificationStatus": "uploaded"}
 
                 url = paths.get_api_url('assets', upload_data['id'])
-                headers = utils.get_headers(correlation_id)
+                headers = rerequests.get_headers(correlation_id)
                 rerequests.patch(url, json=confirm_data, headers=headers)
 
             bg_blender.progress('upload finished successfully')

@@ -1,2 +1,6 @@
-fake-bpy-module-2.82
-pylint
+flake8==3.8.4
+isort==5.0.0
+wemake-python-styleguide==0.14.1
+xenon==0.7.1
+autopep8==1.5.4
+flake8-isort==4.0
