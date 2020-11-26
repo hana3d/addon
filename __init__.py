@@ -307,6 +307,7 @@ modules = (
     hana3d_oauth,
     icons,
     libraries,
+    logger,
     render,
     search,
     tags,
@@ -326,6 +327,7 @@ def register():
         module.register()
 
     utils.load_prefs()
+    logger.setup_logger()
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
     bpy.app.handlers.load_post.append(scene_load)

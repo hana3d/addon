@@ -8,7 +8,6 @@ import bpy
 
 from .config import HANA3D_LOG_LEVEL, HANA3D_NAME
 from .report_tools import execute_wrapper
-from .ui import AppendInfo
 
 
 def setup_logger():
@@ -53,9 +52,38 @@ class BlenderHandler(logging.StreamHandler):
                 text = record.msg
                 type = record.levelname
                 hana = getattr(bpy.ops, f'{HANA3D_NAME}')
-                hana.info(text=f"{type}: {text}")
+                hana.info_report(text=f"{type}: {text}")
         except Exception:
             pass
 
 
-setup_logger()
+class AppendInfo(bpy.types.Operator):
+    """Append report on info tab"""
+
+    bl_idname = f'{HANA3D_NAME}.info_report'
+    bl_label = 'Append Report'
+    bl_options = {'REGISTER'}
+
+    type: bpy.props.StringProperty(
+        name='type',
+        default=''
+    )
+    text: bpy.props.StringProperty(
+        name='text',
+        default=''
+    )
+
+    @execute_wrapper
+    def execute(self, context):
+        # self.report({self.type}, self.text)
+        return {'FINISHED'}
+
+
+classes = (
+    AppendInfo,
+)
+
+
+def register():
+    for c in classes:
+        bpy.utils.register_class(c)

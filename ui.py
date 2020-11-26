@@ -134,32 +134,6 @@ class Report:
             ui_bgl.draw_text(self.text, x, y + 8, 16, self.draw_color)
 
 
-class AppendInfo(Operator):
-    """Append report on info tab"""
-
-    bl_idname = f'{HANA3D_NAME}.info'
-    bl_label = 'Append Report'
-    bl_options = {'REGISTER'}
-
-    type: bpy.props.StringProperty(
-        name='type',
-        default=''
-    )
-    text: bpy.props.StringProperty(
-        name='text',
-        default=''
-    )
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    @execute_wrapper
-    def execute(self, context):
-        # self.report({self.type}, self.text)
-        return {'FINISHED'}
-
-
 def get_asset_under_mouse(mousex, mousey):
     wm = bpy.context.window_manager
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
@@ -1823,7 +1797,6 @@ class RunAssetBarWithContext(bpy.types.Operator):
 
 
 classes = (
-    AppendInfo,
     AssetBarOperator,
     DefaultNamesOperator,
     RunAssetBarWithContext,
