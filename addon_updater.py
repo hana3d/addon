@@ -100,7 +100,6 @@ class Singleton_updater(object):
         self._check_interval_minutes = 0
 
         # runtime variables, initial conditions
-        self._verbose = False
         self._fake_install = False
         self._async_checking = False  # only true when async daemon started
         self._update_ready = None
@@ -454,18 +453,6 @@ class Singleton_updater(object):
             self._user = str(value)
         except Exception:
             raise ValueError("User must be a string value")
-
-    @property
-    def verbose(self):
-        return self._verbose
-
-    @verbose.setter
-    def verbose(self, value):
-        try:
-            self._verbose = bool(value)
-            logging.debug(self._addon + " updater verbose is enabled")
-        except Exception:
-            raise ValueError("Verbose must be a boolean value")
 
     @property
     def version_max_update(self):

@@ -35,7 +35,6 @@ except Exception as e:
     class Singleton_updater_none(object):
         def __init__(self):
             self.addon = None
-            self.verbose = False
             self.invalidupdater = True  # used to distinguish bad install
             self.error = None
             self.error_msg = None
@@ -43,7 +42,6 @@ except Exception as e:
 
         def clear_state(self):
             self.addon = None
-            self.verbose = False
             self.invalidupdater = True
             self.error = None
             self.error_msg = None
@@ -216,8 +214,7 @@ class addon_updater_install_popup(bpy.types.Operator):
             atr = addon_updater_install_popup.bl_idname.split(".")
             getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
         else:
-            if updater.verbose:
-                logging.info("Doing nothing, not ready for update")
+            logging.debug("Doing nothing, not ready for update")
         return {'FINISHED'}
 
 
@@ -242,8 +239,7 @@ class addon_updater_check_now(bpy.types.Operator):
         # apply the UI settings
         settings = get_user_preferences(context)
         if not settings:
-            if updater.verbose:
-                logging.info("Could not get {} preferences, update check skipped".format(__package__))
+            logging.debug("Could not get {} preferences, update check skipped".format(__package__))
             return {'CANCELLED'}
         updater.set_check_interval(
             enable=settings.auto_check_update,
@@ -1303,10 +1299,6 @@ def register(bl_info):
     # this demo has this set via UI properties.
     # updater.set_check_interval(
     #         enable=False,months=0,days=0,hours=0,minutes=2)
-
-    # Optional, consider turning off for production or allow as an option
-    # This will print out additional debugging info to the console
-    updater.verbose = True  # make False for production default
 
     # Optional, customize where the addon updater processing subfolder is,
     # essentially a staging folder used by the updater on its own
