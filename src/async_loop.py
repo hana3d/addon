@@ -27,8 +27,6 @@ import typing
 
 import bpy
 
-# from ..config import HANA3D_NAME
-
 log = logging.getLogger(__name__)
 
 # Keeps track of whether a loop-kicking operator is already running.
@@ -53,10 +51,6 @@ def setup_asyncio_executor():
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
     loop.set_default_executor(executor)
     # loop.set_debug(True)
-
-    # from . import pillar
-    # # No more than this many Pillar calls should be made simultaneously
-    # pillar.pillar_semaphore = asyncio.Semaphore(3, loop=loop)
 
 
 def kick_async_loop(*args) -> bool:
