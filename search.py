@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import json
+import logging
 import os
 import threading
 import time
@@ -45,7 +46,7 @@ prev_time = 0
 
 def check_errors(rdata):
     if rdata.get('status_code') == 401:
-        utils.p(rdata)
+        logging.debug(rdata)
         if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
             if user_preferences.api_key != '':
@@ -53,7 +54,7 @@ def check_errors(rdata):
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     elif rdata.get('status_code') == 403:
-        utils.p(rdata)
+        logging.debug(rdata)
         if rdata.get('code') == 'invalid_permissions':
             return False, rdata.get('description')
     return True, ''
@@ -214,7 +215,7 @@ def timer_update():
                     tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 
             else:
-                print('error', error)
+                logging.error(error)
                 props.report = error
                 props.search_error = True
 
@@ -329,11 +330,11 @@ class Searcher(threading.Thread):
         if not params['get_next']:
             urlquery = paths.get_api_url('search', query=self.query)
         try:
-            utils.p(urlquery)
+            logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
             reports = ''
         except requests.exceptions.RequestException as e:
-            print(e)
+            logging.error(e)
             reports = e
             # props.report = e
             return
@@ -343,12 +344,12 @@ class Searcher(threading.Thread):
             rdata['status_code'] = r.status_code
         except Exception as inst:
             reports = r.text
-            print(inst)
+            logging.error(inst)
 
         mt('data parsed ')
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug('stopping search : ' + str(query))
             return
 
         mt('search finished')
@@ -406,7 +407,7 @@ class Searcher(threading.Thread):
         # TODO do the killing/ stopping here! remember threads might have finished inbetween!
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug('stopping search : ' + str(query))
             return
 
         # this loop handles downloading of small thumbnails
@@ -426,12 +427,12 @@ class Searcher(threading.Thread):
                         for tk, thread in threads_copy.items():
                             if not thread.is_alive():
                                 thread.join()
-                                # utils.p(x)
+                                # logging.debug(x)
                                 del thumb_sml_download_threads[tk]
-                                # utils.p('fetched thumbnail ', i)
+                                # logging.debug('fetched thumbnail ', i)
                                 i += 1
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug('stopping search : ' + str(query))
             return
 
         while len(thumb_sml_download_threads) > 0:
@@ -444,7 +445,7 @@ class Searcher(threading.Thread):
                     i += 1
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug('stopping search : ' + str(query))
             return
 
         # start downloading full thumbs in the end
@@ -514,7 +515,7 @@ def mt(text):
     alltime = time.time() - search_start_time
     since_last = time.time() - prev_time
     prev_time = time.time()
-    utils.p(text, alltime, since_last)
+    logging.debug(f'{text}, {alltime}, {since_last}')
 
 
 def add_search_process(query, params):

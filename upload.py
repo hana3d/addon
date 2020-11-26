@@ -304,10 +304,10 @@ class UploadOperator(Operator):
                 ui.add_report('uploaded metadata')
 
                 dict_response = response.json()
-                utils.pprint(dict_response)
+                logging.debug(dict_response)
                 props.id = dict_response['id']
             except requests.exceptions.RequestException as e:
-                print(e)
+                logging.error(e)
                 props.upload_state = str(e)
                 props.uploading = False
                 return {'CANCELLED'}
@@ -322,7 +322,7 @@ class UploadOperator(Operator):
                 )
                 ui.add_report('uploaded metadata')
             except requests.exceptions.RequestException as e:
-                print(e)
+                logging.error(e)
                 props.upload_state = str(e)
                 props.uploading = False
                 return {'CANCELLED'}
@@ -399,7 +399,7 @@ class UploadOperator(Operator):
         except Exception as e:
             props.upload_state = str(e)
             props.uploading = False
-            print(e)
+            logging.error(e)
             return {'CANCELLED'}
 
         if props.remote_thumbnail:

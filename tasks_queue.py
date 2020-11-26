@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import queue
+import logging
 
 import bpy
 from bpy.app.handlers import persistent
@@ -87,8 +88,8 @@ def queue_worker():
             try:
                 task.command(*task.arguments)
             except Exception as e:
-                utils.p('task failed:')
-                print(e)
+                logging.warning('task failed:')
+                logging.error(e)
     for task in back_to_queue:
         q.put(task)
     return 2.0

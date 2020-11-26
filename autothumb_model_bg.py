@@ -81,7 +81,7 @@ def center_obs_for_thumbnail(obs):
 
 if __name__ == "__main__":
     try:
-        print('autothumb_model_bg')
+        logging.info('autothumb_model_bg')
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 

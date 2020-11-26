@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import os
 import urllib.parse
 
@@ -104,10 +104,10 @@ def get_temp_dir(subdir=None):
             if not os.path.exists(tempdir):
                 os.makedirs(tempdir)
     except Exception:
-        print('Cache directory not found. Resetting Cache folder path.')
+        logging.error('Cache directory not found. Resetting Cache folder path.')
         p = default_global_dict()
         if p == user_preferences.global_dir:
-            print('Global dir was already default, please set a global directory in addon preferences to a dir where you have write permissions.')  # noqa E501
+            logging.error('Global dir was already default, please set a global directory in addon preferences to a dir where you have write permissions.')  # noqa E501
             return None
         user_preferences.global_dir = p
         tempdir = get_temp_dir(subdir=subdir)

@@ -21,6 +21,7 @@ import functools
 import os
 import shutil
 import threading
+import logging
 from queue import Queue
 
 import bpy
@@ -105,19 +106,19 @@ class Downloader(threading.Thread):
             # where another check should occur,
             # since the file might be corrupted.
             tcom.downloaded = 100
-            utils.p('not downloading, trying to append again')
+            logging.debug('not downloading, trying to append again')
             return
 
         file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
         # for k in asset_data:
-        #    print(asset_data[k])
+        #    logging.info(asset_data[k])
         if self.stopped():
-            utils.p('stopping download: ' + asset_data['name'])
+            logging.debug('stopping download: ' + asset_data['name'])
             return
 
         tmp_file = file_name + '_tmp'
         with open(tmp_file, "wb") as f:
-            print("Downloading %s" % file_name)
+            logging.info("Downloading %s" % file_name)
 
             response = requests.get(asset_data['download_url'], stream=True)
             total_length = response.headers.get('Content-Length')
@@ -133,7 +134,7 @@ class Downloader(threading.Thread):
                     tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
                     f.write(data)
                     if self.stopped():
-                        utils.p('stopping download: ' + asset_data['name'])
+                        logging.debug('stopping download: ' + asset_data['name'])
                         f.close()
                         os.remove(tmp_file)
                         return
@@ -184,7 +185,7 @@ def check_unused():
 
     for library in bpy.data.libraries:
         if library not in used_libs:
-            print('attempt to remove this library: ', library.filepath)
+            logging.info('attempt to remove this library: ', library.filepath)
             # have to unlink all groups, since the file is a 'user'
             # even if the groups aren't used at all...
             for user_id in library.users_id:
@@ -224,7 +225,7 @@ def set_thumbnail(asset_data, asset):
 def update_downloaded_progress(downloader: Downloader):
     sr = bpy.context.window_manager.get(f'{HANA3D_NAME}_search_results')
     if sr is None:
-        utils.p(f'{HANA3D_NAME}_search_results not found')
+        logging.debug(f'{HANA3D_NAME}_search_results not found')
         return
     for r in sr:
         if r.get('view_id') == downloader.asset_data['view_id']:
@@ -236,7 +237,7 @@ def remove_file(filepath):
     try:
         os.remove(filepath)
     except Exception as e:
-        utils.p(f'Error when removing {filepath}: {e}')
+        logging.error(f'Error when removing {filepath}: {e}')
 
 
 def process_finished_thread(downloader: Downloader):
@@ -534,7 +535,7 @@ def set_asset_props(asset, asset_data):
 
 def append_asset(asset_data: dict, **kwargs):
     asset_name = asset_data['name']
-    utils.p(f'appending asset {asset_name}')
+    logging.debug(f'appending asset {asset_name}')
 
     file_names = paths.get_download_filenames(asset_data)
     if len(file_names) == 0 or not os.path.isfile(file_names[-1]):

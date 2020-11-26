@@ -18,6 +18,7 @@
 
 import math
 import os
+import logging
 from typing import Union
 
 import bpy
@@ -294,7 +295,7 @@ def workspace_items(self, context):
 
 
 def search_update(self, context):
-    utils.p('search updater')
+    logging.debug('search updater')
     # if self.search_keywords != '':
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.down_up != 'SEARCH':

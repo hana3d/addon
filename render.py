@@ -114,7 +114,7 @@ class UploadFileMixin:
         color = colors.RED if error else colors.GREEN
         if self.add_report:
             ui.add_report(text, color=color)
-        print(text)
+        logging.info(text)
 
     @property
     def upload_progress(self):
@@ -450,7 +450,7 @@ class RenderScene(Operator):
     @execute_wrapper
     def execute(self, context):
         if context.scene.camera is None:
-            self.report({'WARNING'}, "No active camera found in scene")
+            logging.warning("No active camera found in scene")
             return {'CANCELLED'}
         props = utils.get_upload_props()
 
@@ -548,7 +548,7 @@ class ImportRender(Operator):
             context.window_manager.popup_menu(draw, title='Success')
 
             return {'FINISHED'}
-        print(f'Cound not find render job id={job["id"]}')
+        logging.info(f'Cound not find render job id={job["id"]}')
         return {'CANCELLED'}
 
 

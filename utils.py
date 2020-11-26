@@ -16,6 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import json
+import logging
 import os
 import sys
 import time
@@ -214,7 +215,7 @@ def save_prefs(self, context):
             with open(fpath, 'w') as s:
                 json.dump(prefs, s)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
 
 def get_hidden_image(
@@ -254,17 +255,6 @@ def get_thumbnail(name):
         img.name = name
 
     return img
-
-
-def p(text, text1='', text2='', text3='', text4='', text5=''):
-    '''debug printing depending on blender's debug value'''
-    if os.getenv('HANA3D_ENV') in ('local', 'dev'):
-        print(text, text1, text2, text3, text4, text5)
-
-
-def pprint(data):
-    '''pretty print jsons'''
-    p(json.dumps(data, indent=4, sort_keys=True))
 
 
 def get_hierarchy(ob):
@@ -772,7 +762,7 @@ def save_file(filepath, **kwargs):
         except RuntimeError as e:
             if n == n_tries - 1:
                 raise e
-            print(f'Error when saving file ({e}), retrying...')
+            logging.error(f'Error when saving file ({e}), retrying...')
             time.sleep(1)
 
 

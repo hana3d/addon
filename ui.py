@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import math
 import os
 import time
@@ -25,6 +25,7 @@ import mathutils
 from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
+from bpy.types import Operator
 from mathutils import Vector
 
 from . import (
@@ -131,6 +132,32 @@ class Report:
     def draw(self, x, y):
         if bpy.context.area == active_area:
             ui_bgl.draw_text(self.text, x, y + 8, 16, self.draw_color)
+
+
+class AppendInfo(Operator):
+    """Append report on info tab"""
+
+    bl_idname = f'{HANA3D_NAME}.info'
+    bl_label = 'Append Report'
+    bl_options = {'REGISTER'}
+
+    type: bpy.props.StringProperty(
+        name='type',
+        default=''
+    )
+    text: bpy.props.StringProperty(
+        name='text',
+        default=''
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    @execute_wrapper
+    def execute(self, context):
+        # self.report({self.type}, self.text)
+        return {'FINISHED'}
 
 
 def get_asset_under_mouse(mousex, mousey):
@@ -1101,7 +1128,7 @@ class AssetBarOperator(bpy.types.Operator):
             or self.area.type != 'VIEW_3D'
             or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
         ):
-            # print('search areas')   bpy.context.area.spaces[0].region_quadviews
+            # logging.info('search areas')   bpy.context.area.spaces[0].region_quadviews
             # stopping here model by now - because of:
             #   switching layouts or maximizing area now fails to assign new area throwing the bug
             #   internal error: modal gizmo-map handler has invalid area
@@ -1147,8 +1174,8 @@ class AssetBarOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         if context.region != self.region:
-            # print(time.time(), 'pass through because of region')
-            # print(context.region.type, self.region.type)
+            # logging.info(time.time(), 'pass through because of region')
+            # logging.info(context.region.type, self.region.type)
             return {'PASS_THROUGH'}
 
         if ui_props.down_up == 'UPLOAD':
@@ -1248,8 +1275,8 @@ class AssetBarOperator(bpy.types.Operator):
 
             # note - TRACKPADPAN is unsupported in blender by now.
             # if event.type == 'TRACKPADPAN' :
-            #     print(dir(event))
-            #     print(event.value, event.oskey, event.)
+            #     logging.debug(dir(event))
+            #     logging.debug(event.value, event.oskey, event.)
             if (
                 (event.type == 'WHEELDOWNMOUSE')
                 and len(sr) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount)
@@ -1511,7 +1538,7 @@ class AssetBarOperator(bpy.types.Operator):
                                 target_slot = temp_mesh.polygons[face_index].material_index
                                 object_eval.to_mesh_clear()
                             else:
-                                self.report({'WARNING'}, "Invalid or library object as input:")
+                                logging.warning("Invalid or library object as input:")
                                 target_object = ''
                                 target_slot = ''
 
@@ -1617,7 +1644,7 @@ class AssetBarOperator(bpy.types.Operator):
             bpy.context.window_manager[f'{HANA3D_NAME}_search_results'] = []
 
         if context.area.type != 'VIEW_3D':
-            self.report({'WARNING'}, "View3D not found, cannot run operator")
+            logging.warning("View3D not found, cannot run operator")
             return {'CANCELLED'}
 
         # the arguments we pass the the callback
@@ -1796,6 +1823,7 @@ class RunAssetBarWithContext(bpy.types.Operator):
 
 
 classes = (
+    AppendInfo,
     AssetBarOperator,
     DefaultNamesOperator,
     RunAssetBarWithContext,

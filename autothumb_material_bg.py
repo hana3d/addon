@@ -129,7 +129,7 @@ if __name__ == "__main__":
         bg_blender.progress('background autothumbnailer finished successfully')
 
     except Exception as e:
-        print(e)
+        logging.error(e)
         import traceback
 
         traceback.print_exc()

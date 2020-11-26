@@ -32,6 +32,7 @@ from . import (  # noqa: WPS235
     hana3d_oauth,
     icons,
     libraries,
+    logger,
     paths,
     render,
     search,

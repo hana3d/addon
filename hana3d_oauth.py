@@ -15,6 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import logging
 import threading
 import time
 
@@ -38,7 +39,7 @@ active_authenticator = None
 
 def login(authenticator: oauth.OAuthAuthenticator):
     oauth_response = authenticator.get_new_token(redirect_url=REDIRECT_URL)
-    utils.p('tokens retrieved')
+    logging.debug('tokens retrieved')
     write_tokens(oauth_response)
 
 
@@ -73,8 +74,8 @@ def refresh_token(immediate: bool = False) -> dict:
 
 
 def write_tokens(oauth_response: dict):
-    utils.p('writing tokens')
-    utils.p(oauth_response)
+    logging.debug('writing tokens')
+    logging.debug(oauth_response)
 
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.api_key_refresh = oauth_response['refresh_token']
@@ -177,8 +178,8 @@ class CancelLoginOnline(bpy.types.Operator):
                 requests.get(active_authenticator.redirect_uri)
                 active_authenticator = None
         except Exception as e:
-            print('stopped login attempt')
-            print(e)
+            logging.error('stopped login attempt')
+            logging.error(e)
         return {'FINISHED'}
 
 
