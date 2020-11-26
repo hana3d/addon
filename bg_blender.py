@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import os
 import re
 import sys
@@ -82,7 +82,7 @@ def threadread(tcom: threadCom):
             tcom.output_msg = line[start + 13: end]
             break
         if len(line) > 3:
-            logging.info(line, len(line))
+            logging.info(f'{line} {len(line)}')
 
 
 class upload_in_chunks:
