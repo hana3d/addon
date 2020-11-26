@@ -16,6 +16,8 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+import sys
+
 import bpy
 import bpy.utils.previews
 from bpy.app.handlers import persistent
@@ -26,7 +28,7 @@ from . import (
     addon_updater_ops,
     append_link,
     asset,
-    autothumb,
+    # autothumb,
     bg_blender,
     download,
     hana3d_oauth,
@@ -45,6 +47,30 @@ from . import (
     utils
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+
+# # Support reloading
+# if HANA3D_NAME in sys.modules:
+#     import importlib
+
+#     def reload_mod(name):
+#         modname = '%s.%s' % (HANA3D_NAME, name)
+#         try:
+#             old_module = sys.modules[modname]
+#         except KeyError:
+#             # Wasn't loaded before -- can happen after an upgrade.
+#             new_module = importlib.import_module(modname)
+#         else:
+#             new_module = importlib.reload(old_module)
+
+#         sys.modules[modname] = new_module
+#         return new_module
+
+#     async_loop = reload_mod('async_loop')
+#     # autothumb = reload_mod('autothumb')
+# else:
+#     from src import async_loop  # , autothumb
+
+from .src import async_loop, autothumb
 
 bl_info = {
     "name": "Hana3D",
@@ -290,6 +316,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 
 modules = (
+    async_loop,
     append_link,
     asset,
     autothumb,
