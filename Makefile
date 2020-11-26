@@ -42,8 +42,6 @@ lint: ## lint code
 	git diff -U0 origin/$(STAGE).. | flake8 --diff
 	isort . --check
 	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py,ui.py,search.py
-
-mypy:
 	mypy src/**/*.py
 
 
@@ -62,6 +60,8 @@ build: ## build addon according to stage
 	mkdir hana3d_$(STAGE)
 	# copy relevant files to addon folder
 	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' -o -name '*.yml' \) | xargs cp --parents -t hana3d_$(STAGE)
+	# correct paths
+	find hana3d_$(STAGE) -name '*.py' | xargs sed -i -E 's/(import|from) hana3d/\1 hana3d_$(STAGE)/'
 	# replace addon description strings: static properties are evaluated before runtime
 	LC_ALL=C sed -i "s/\(\'.*\)Hana3D\(.*\'\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
 	# zip addon folder
