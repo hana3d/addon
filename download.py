@@ -36,7 +36,7 @@ from bpy.props import (
     StringProperty
 )
 
-from . import append_link, colors, paths, render_tools, types, ui, utils
+from . import append_link, colors, paths, render_tools, types, ui, utils, logger
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -306,10 +306,9 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             continue
 
         if downloader.tcom.error:
-            sprops = utils.get_search_props()
-            sprops.report = downloader.tcom.report
             downloader.mark_remove()
-            ui.add_report(f'Error when downloading {asset_data["name"]}', color=colors.RED)
+            text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
+            logger.show_report(utils.get_search_props(), text=text, color=colors.RED)
             continue
 
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):

@@ -28,7 +28,7 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
+from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils, logger
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -107,10 +107,6 @@ def timer_update():
             json_filepath = os.path.join(icons_dir, f'{asset_type}_searchresult.json')
             wm[search_name] = []
 
-            global reports
-            if reports != '':
-                props.report = str(reports)
-                return 0.2
             with open(json_filepath, 'r') as data_file:
                 rdata = json.load(data_file)
 
@@ -210,13 +206,12 @@ def timer_update():
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count'])  # noqa #501
-                if len(wm[f'{HANA3D_NAME}_search_results']) == 0:
-                    tasks_queue.add_task(ui.add_report, ('No matching results found.',))
+                text = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count'])  # noqa #501
+                logger.show_report(props, text=text)
 
             else:
                 logging.error(error)
-                props.report = error
+                logger.show_report(props, text=error)
                 props.search_error = True
 
             mt('preview loading finished')
@@ -304,7 +299,6 @@ class Searcher(threading.Thread):
         maxthreads = 50
         query = self.query
         params = self.params
-        global reports
 
         mt('search thread started')
         tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
@@ -332,19 +326,18 @@ class Searcher(threading.Thread):
         try:
             logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
-            reports = ''
+            logger.show_report(utils.get_search_props(), text='')
         except requests.exceptions.RequestException as e:
             logging.error(e)
-            reports = e
-            # props.report = e
+            logger.show_report(utils.get_search_props(), text=e)
             return
         mt('response is back ')
         try:
             rdata = r.json()
             rdata['status_code'] = r.status_code
         except Exception as inst:
-            reports = r.text
             logging.error(inst)
+            logger.show_report(utils.get_search_props(), text=r.text)
 
         mt('data parsed ')
 
@@ -515,7 +508,7 @@ def mt(text):
     alltime = time.time() - search_start_time
     since_last = time.time() - prev_time
     prev_time = time.time()
-    logging.debug(f'{text}, {alltime}, {since_last}')
+    logging.debug(f'{text} {alltime} {since_last}')
 
 
 def add_search_process(query, params):
@@ -589,9 +582,7 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    tasks_queue.add_task(ui.add_report, (f'{HANA3D_DESCRIPTION} searching...', 2))
-
-    props.report = f'{HANA3D_DESCRIPTION} searching...'
+    logger.show_report(props, text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
 
 class SearchOperator(Operator):

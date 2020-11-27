@@ -291,7 +291,6 @@ class UploadOperator(Operator):
         correlation_id = str(uuid.uuid4())
         headers = rerequests.get_headers(correlation_id)
 
-        global reports
         if props.id == '':
             url = paths.get_api_url('assets')
             try:

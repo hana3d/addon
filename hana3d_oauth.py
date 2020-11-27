@@ -22,7 +22,7 @@ import time
 import bpy
 import requests
 
-from . import colors, oauth, paths, ui, utils
+from . import colors, oauth, paths, ui, utils, logger
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.preferences.profile import Profile
@@ -85,10 +85,7 @@ def write_tokens(oauth_response: dict):
     preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    props = utils.get_search_props()
-    if props is not None:
-        props.report = ''
-    ui.add_report(f"{HANA3D_DESCRIPTION} Re-Login success")
+    logger.show_report(utils.get_search_props(), text=f"{HANA3D_DESCRIPTION} Re-Login success")
     profile = Profile()
     profile.update_async()
 

@@ -26,7 +26,7 @@ import bpy
 from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from . import paths, rerequests, tasks_queue
+from . import paths, rerequests, tasks_queue, logger
 from .config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -197,8 +197,7 @@ def save_prefs(self, context):
             # reset the api key in case the user writes some nonsense,
             # e.g. a search string instead of the Key
             user_preferences.api_key = ''
-            props = get_search_props()
-            props.report = 'Login failed. Please paste a correct API Key.'
+            logger.show_report(get_search_props(), text='Login failed. Please paste a correct API Key.')
 
         prefs = {
             'API_key': user_preferences.api_key,
