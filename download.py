@@ -35,7 +35,7 @@ from bpy.props import (
     StringProperty
 )
 
-from . import append_link, colors, hana_types, paths, render_tools, ui, utils
+from . import append_link, colors, hana3d_types, paths, render_tools, ui, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -504,13 +504,13 @@ def set_asset_props(asset, asset_data):
     asset_props.render_data['jobs'] = jobs
 
     if 'tags' in asset_data:
-        hana_types.update_tags_list(asset_props, bpy.context)
+        hana3d_types.update_tags_list(asset_props, bpy.context)
         for tag in asset_data['tags']:
             asset_props.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
         libraries_list = asset_props.libraries_list
-        hana_types.update_libraries_list(asset_props, bpy.context)
+        hana3d_types.update_libraries_list(asset_props, bpy.context)
         for library in asset_data['libraries']:
             libraries_list[library["name"]].selected = True
             if 'metadata' in library and library['metadata'] is not None:
