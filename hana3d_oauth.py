@@ -85,7 +85,7 @@ def write_tokens(oauth_response: dict):
     preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    logger.show_report(utils.get_search_props(), text=f"{HANA3D_DESCRIPTION} Re-Login success")
+    logger.show_report(utils.get_search_props(), text=f'{HANA3D_DESCRIPTION} Re-Login success')
     profile = Profile()
     profile.update_async()
 

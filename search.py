@@ -342,7 +342,7 @@ class Searcher(threading.Thread):
         mt('data parsed ')
 
         if self.stopped():
-            logging.debug('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         mt('search finished')
@@ -400,7 +400,7 @@ class Searcher(threading.Thread):
         # TODO do the killing/ stopping here! remember threads might have finished inbetween!
 
         if self.stopped():
-            logging.debug('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         # this loop handles downloading of small thumbnails
@@ -425,7 +425,7 @@ class Searcher(threading.Thread):
                                 # logging.debug('fetched thumbnail ', i)
                                 i += 1
         if self.stopped():
-            logging.debug('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         while len(thumb_sml_download_threads) > 0:
@@ -438,7 +438,7 @@ class Searcher(threading.Thread):
                     i += 1
 
         if self.stopped():
-            logging.debug('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         # start downloading full thumbs in the end

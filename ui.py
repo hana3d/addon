@@ -1512,7 +1512,7 @@ class AssetBarOperator(bpy.types.Operator):
                                 target_slot = temp_mesh.polygons[face_index].material_index
                                 object_eval.to_mesh_clear()
                             else:
-                                logging.warning("Invalid or library object as input:")
+                                logging.warning('Invalid or library object as input:')
                                 target_object = ''
                                 target_slot = ''
 
@@ -1618,7 +1618,7 @@ class AssetBarOperator(bpy.types.Operator):
             bpy.context.window_manager[f'{HANA3D_NAME}_search_results'] = []
 
         if context.area.type != 'VIEW_3D':
-            logging.warning("View3D not found, cannot run operator")
+            logging.warning('View3D not found, cannot run operator')
             return {'CANCELLED'}
 
         # the arguments we pass the the callback

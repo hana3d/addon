@@ -29,7 +29,7 @@ from .report_tools import execute_wrapper
 try:
     from .addon_updater import Updater as updater
 except Exception as e:
-    logging.error("ERROR INITIALIZING UPDATER")
+    logging.error('ERROR INITIALIZING UPDATER')
     logging.error(str(e))
 
     class Singleton_updater_none(object):
@@ -204,9 +204,9 @@ class addon_updater_install_popup(bpy.types.Operator):
             )
             # should return 0, if not something happened
             if res == 0:
-                logging.debug("Updater returned successful")
+                logging.debug('Updater returned successful')
             else:
-                logging.debug("Updater returned {}, error occurred".format(res))
+                logging.debug('Updater returned {}, error occurred'.format(res))
         elif updater.update_ready is None:
             _ = updater.check_for_update(now=True)
 
@@ -214,7 +214,7 @@ class addon_updater_install_popup(bpy.types.Operator):
             atr = addon_updater_install_popup.bl_idname.split(".")
             getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
         else:
-            logging.debug("Doing nothing, not ready for update")
+            logging.debug('Doing nothing, not ready for update')
         return {'FINISHED'}
 
 
@@ -239,7 +239,7 @@ class addon_updater_check_now(bpy.types.Operator):
         # apply the UI settings
         settings = get_user_preferences(context)
         if not settings:
-            logging.debug("Could not get {} preferences, update check skipped".format(__package__))
+            logging.debug('Could not get {} preferences, update check skipped'.format(__package__))
             return {'CANCELLED'}
         updater.set_check_interval(
             enable=settings.auto_check_update,
@@ -294,9 +294,9 @@ class addon_updater_update_now(bpy.types.Operator):
 
                 # should return 0, if not something happened
                 if res == 0:
-                    logging.debug("Updater returned successful")
+                    logging.debug('Updater returned successful')
                 else:
-                    logging.debug("Updater returned " + str(res) + ", error occurred")
+                    logging.debug(f'Updater returned {str(res)}, error occurred')
             except Exception as e:
                 updater._error = "Error trying to run update"
                 updater._error_msg = str(e)
@@ -309,9 +309,9 @@ class addon_updater_update_now(bpy.types.Operator):
             getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
 
         elif updater.update_ready is False:
-            logging.info( "Nothing to update")
+            logging.info('Nothing to update')
         else:
-            logging.error("Encountered problem while trying to update")
+            logging.error('Encountered problem while trying to update')
 
         return {'FINISHED'}
 
@@ -387,9 +387,9 @@ class addon_updater_update_target(bpy.types.Operator):
 
         # should return 0, if not something happened
         if res == 0:
-            logging.debug("Updater returned successful")
+            logging.debug('Updater returned successful')
         else:
-            logging.debug("Updater returned " + str(res) + ", error occurred")
+            logging.debug(f'Updater returned {str(res)}, error occurred')
             return {'CANCELLED'}
 
         return {'FINISHED'}
@@ -571,7 +571,7 @@ class addon_updater_ignore(bpy.types.Operator):
         if updater.invalidupdater is True:
             return {'CANCELLED'}
         updater.ignore_update()
-        logging.info("Open addon preferences for updater options")
+        logging.info('Open addon preferences for updater options')
         return {'FINISHED'}
 
 
@@ -657,7 +657,7 @@ def updater_run_install_popup_handler(scene):
         if ver_tuple < updater.current_version:
             # user probably manually installed to get the up to date addon
             # in here. Clear out the update flag using this function
-            logging.debug("{} updater: appears user updated, clearing flag".format(updater.addon))
+            logging.debug('{} updater: appears user updated, clearing flag'.format(updater.addon))
             updater.json_reset_restore()
             return
     atr = addon_updater_install_popup.bl_idname.split(".")
@@ -701,7 +701,7 @@ def post_update_callback(module_name, res=None):
     if res is None:
         # this is the same code as in conditional at the end of the register function
         # ie if "auto_reload_post_update" is True, comment out this code
-        logging.debug("{} updater: Running post update callback".format(updater.addon))
+        logging.debug('{} updater: Running post update callback'.format(updater.addon))
         # bpy.app.handlers.scene_update_post.append(updater_run_success_popup_handler)
 
         atr = addon_updater_updated_successful.bl_idname.split(".")
@@ -756,7 +756,7 @@ def check_for_update_background():
     # input is an optional callback function
     # this function should take a bool input, if true: update ready
     # if false, no update ready
-    logging.debug("{} updater: Running background check for update".format(updater.addon))
+    logging.debug('{} updater: Running background check for update'.format(updater.addon))
     updater.check_for_update_async(background_update_callback)
     ran_background_check = True
 
@@ -770,7 +770,7 @@ def check_for_update_nonthreaded(self, context):
     # should be the async wrapper call here
     settings = get_user_preferences(bpy.context)
     if not settings:
-        logging.debug("Could not get {} preferences, update check skipped".format(__package__))
+        logging.debug('Could not get {} preferences, update check skipped'.format(__package__))
         return
     updater.set_check_interval(
         enable=settings.auto_check_update,
@@ -785,8 +785,8 @@ def check_for_update_nonthreaded(self, context):
         atr = addon_updater_install_popup.bl_idname.split(".")
         getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
     else:
-        logging.debug("No update ready")
-        logging.info("No update ready")
+        logging.debug('No update ready')
+        logging.info('No update ready')
 
 
 def showReloadPopup():
@@ -1260,7 +1260,7 @@ def register(bl_info):
     """Registering the operators in this module"""
     # safer failure in case of issue loading module
     if updater.error:
-        logging.error("Exiting updater registration, " + updater.error)
+        logging.error(f'Exiting updater registration, {updater.error}')
         return
     updater.clear_state()  # clear internal vars, avoids reloading oddities
 

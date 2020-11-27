@@ -450,7 +450,7 @@ class RenderScene(Operator):
     @execute_wrapper
     def execute(self, context):
         if context.scene.camera is None:
-            logging.warning("No active camera found in scene")
+            logging.warning('No active camera found in scene')
             return {'CANCELLED'}
         props = utils.get_upload_props()
 

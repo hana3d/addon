@@ -194,7 +194,7 @@ def link_collection(file_name, obnames=[], location=(0, 0, 0), link=False, paren
 
     with bpy.data.libraries.load(file_name, link=link, relative=True) as (data_from, data_to):
         for col in data_from.collections:
-            logging.info('linking this ' + col)
+            logging.info(f'linking this {col}')
             if col == kwargs['name']:
                 data_to.collections = [col]
 

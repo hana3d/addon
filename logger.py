@@ -62,7 +62,7 @@ class BlenderHandler(logging.StreamHandler):
                 text = record.msg
                 type = record.levelname
                 hana = getattr(bpy.ops, f'{HANA3D_NAME}')
-                hana.log_info(text=f"{type}: {text}")
+                hana.log_info(text=f'{type}: {text}')
         except Exception:
             pass
 
@@ -96,9 +96,9 @@ def show_report(
         color: Tuple = colors.GREEN):
     ui.add_report(text=text, timeout=timeout, color=color)
     hana_type = str(type(props))
-    if "SearchProps" in hana_type:
+    if 'SearchProps' in hana_type:
         props.report = text
-    elif "UploadProps" in hana_type:
+    elif 'UploadProps' in hana_type:
         props.upload_state = text
 
 

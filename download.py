@@ -113,12 +113,12 @@ class Downloader(threading.Thread):
         # for k in asset_data:
         #    logging.info(asset_data[k])
         if self.stopped():
-            logging.debug('stopping download: ' + asset_data['name'])
+            logging.debug(f'stopping download: {asset_data["name"]}')
             return
 
         tmp_file = file_name + '_tmp'
         with open(tmp_file, "wb") as f:
-            logging.info("Downloading %s" % file_name)
+            logging.info(f'Downloading {file_name}')
 
             response = requests.get(asset_data['download_url'], stream=True)
             total_length = response.headers.get('Content-Length')
@@ -134,7 +134,7 @@ class Downloader(threading.Thread):
                     tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
                     f.write(data)
                     if self.stopped():
-                        logging.debug('stopping download: ' + asset_data['name'])
+                        logging.debug(f'stopping download: {asset_data['name']}')
                         f.close()
                         os.remove(tmp_file)
                         return
@@ -185,7 +185,7 @@ def check_unused():
 
     for library in bpy.data.libraries:
         if library not in used_libs:
-            logging.info('attempt to remove this library: ' + library.filepath)
+            logging.info(f'attempt to remove this library: {library.filepath}')
             # have to unlink all groups, since the file is a 'user'
             # even if the groups aren't used at all...
             for user_id in library.users_id:
