@@ -329,7 +329,7 @@ class Searcher(threading.Thread):
             logger.show_report(utils.get_search_props(), text='')
         except requests.exceptions.RequestException as e:
             logging.error(e)
-            logger.show_report(utils.get_search_props(), text=e)
+            logger.show_report(utils.get_search_props(), text=str(e))
             return
         mt('response is back ')
         try:
