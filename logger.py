@@ -53,8 +53,8 @@ def setup_logger():
     logger.addHandler(console_handler)
     logger.addHandler(blender_handler)
 
-    logger = logging.getLogger('urllib3')
-    logger.setLevel(max(logging.root.level, logging.INFO))
+    url_logger = logging.getLogger('urllib3')
+    url_logger.setLevel(max(logger.level, logging.INFO))
 
 
 class BlenderHandler(logging.StreamHandler):
