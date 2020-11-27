@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import bpy
 
-from hana3d.config import HANA3D_NAME
+from ...config import HANA3D_NAME
 
 
 class Preferences(object):
@@ -13,7 +13,7 @@ class Preferences(object):
     def __init__(self):
         """Create a Preferences object."""
 
-    def get(self) -> UserPreferences:
+    def get(self):
         """Get User Preferences object.
 
         Returns:

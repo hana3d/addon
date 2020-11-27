@@ -1,7 +1,7 @@
 """Hana3D Profile."""
 import bpy
 
-from hana3d import config, paths, rerequests, tasks_queue
+from ... import config, paths, rerequests, tasks_queue
 
 
 class Profile(object):

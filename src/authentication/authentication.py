@@ -2,9 +2,9 @@
 
 import time
 
-from hana3d.hana3d_oauth import refresh_token
-from hana3d.src.preferences.preferences import Preferences
-from hana3d.src.preferences.profile import Profile
+from ...hana3d_oauth import refresh_token
+from ..preferences.preferences import Preferences
+from ..preferences.profile import Profile
 
 
 class Authentication(object):
