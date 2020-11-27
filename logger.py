@@ -82,13 +82,16 @@ class AppendInfo(bpy.types.Operator):
 
 
 def show_report(
-        props,
+        props=None,
         text: str = '',
         timeout: int = 5,
         color: Tuple = colors.GREEN):
     ui.add_report(text=text, timeout=timeout, color=color)
-    if props is not None:
+    hana_type = str(type(props))
+    if "SearchProps" in hana_type:
         props.report = text
+    elif "UploadProps" in hana_type:
+        props.upload_state = text
 
 
 classes = (

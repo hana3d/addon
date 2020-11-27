@@ -28,7 +28,7 @@ import requests
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from . import bg_blender, paths, render, rerequests, types, ui, utils
+from . import bg_blender, paths, render, rerequests, types, ui, utils, logger
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
 
@@ -258,7 +258,7 @@ class UploadOperator(Operator):
         utils.name_update()
 
         location = get_upload_location(props, context)
-        props.upload_state = 'preparing upload'
+        logger.show_report(props, text='preparing upload')
 
         if 'jobs' not in props.render_data:
             props.render_data['jobs'] = []
@@ -284,7 +284,7 @@ class UploadOperator(Operator):
         datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
         if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
-            props.upload_state = 'Thumbnail not found'
+            logger.show_report(props, text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
 
@@ -300,14 +300,14 @@ class UploadOperator(Operator):
                     headers=headers,
                     immediate=True
                 )
-                ui.add_report('uploaded metadata')
+                logger.show_report(props, text='uploaded metadata')
 
                 dict_response = response.json()
                 logging.debug(dict_response)
                 props.id = dict_response['id']
             except requests.exceptions.RequestException as e:
                 logging.error(e)
-                props.upload_state = str(e)
+                logger.show_report(props, text=str(e))
                 props.uploading = False
                 return {'CANCELLED'}
         else:
@@ -319,16 +319,16 @@ class UploadOperator(Operator):
                     headers=headers,
                     immediate=True
                 )
-                ui.add_report('uploaded metadata')
+                logger.show_report(props, text='uploaded metadata')
             except requests.exceptions.RequestException as e:
                 logging.error(e)
-                props.upload_state = str(e)
+                logger.show_report(props, text=str(e))
                 props.uploading = False
                 return {'CANCELLED'}
 
         if upload_set == ['METADATA']:
             props.uploading = False
-            props.upload_state = 'upload finished successfully'
+            logger.show_report(props, text='upload finished successfully')
             props.view_workspace = workspace
             return {'FINISHED'}
 
@@ -396,7 +396,7 @@ class UploadOperator(Operator):
                 bpy.ops.file.autopack_toggle()
 
         except Exception as e:
-            props.upload_state = str(e)
+            logger.show_report(props, text=str(e))
             props.uploading = False
             logging.error(e)
             return {'CANCELLED'}
