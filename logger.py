@@ -19,8 +19,8 @@ def setup_logger():
     logger.setLevel(logging.DEBUG)
 
     dir_path = os.path.join(os.getcwd(), 'hana3d_logs')
-    log_file_path = os.path.join(dir_path, 'hana3d_logs.log')
-    report_file_path = os.path.join(dir_path, 'hana3d_report.log')
+    log_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_logs.log')
+    report_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_report.log')
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
 
@@ -41,7 +41,7 @@ def setup_logger():
     blender_handler = BlenderHandler()
     blender_handler.setLevel(log_level)
 
-    log_format = f'[%(asctime)s] %(hana3d_name)s - %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s'
+    log_format = '[%(asctime)s] %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s'
     formatter = logging.Formatter(log_format)
     log_file_handler.setFormatter(formatter)
     report_file_handler.setFormatter(formatter)
@@ -52,8 +52,6 @@ def setup_logger():
     logger.addHandler(report_file_handler)
     logger.addHandler(console_handler)
     logger.addHandler(blender_handler)
-
-    logger.addFilter(ContextFilter())
 
     url_logger = logging.getLogger('urllib3')
     url_logger.setLevel(max(logger.level, logging.INFO))
@@ -69,12 +67,6 @@ class BlenderHandler(logging.StreamHandler):
                 hana.log_info(text=f"{type}: {text}")
         except Exception:
             pass
-
-
-class ContextFilter(logging.Filter):
-    def filter(self, record):
-        record.hana3d_name = HANA3D_NAME
-        return True
 
 
 class AppendInfo(bpy.types.Operator):
