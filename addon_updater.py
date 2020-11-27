@@ -633,7 +633,6 @@ class Singleton_updater(object):
     # all API calls to base url
 
     def get_raw(self, url):
-        # logging.debug("Raw request:", url)
         request = urllib.request.Request(
             url,
             headers={
@@ -838,7 +837,6 @@ class Singleton_updater(object):
         try:
             shutil.rmtree(outdir)
             # os.makedirs(outdir)
-            # logging.debug("Source folder cleared and recreated")
             logging.debug('Source folder cleared')
         except Exception:
             pass
@@ -1084,10 +1082,8 @@ class Singleton_updater(object):
         while 1:
             data = urlfile.read(chunk)
             if not data:
-                # logging.info("done.")
                 break
             f.write(data)
-            # logging.info("Read %s bytes"%len(data))
         f.close()
 
     def version_tuple_from_text(self, text):
