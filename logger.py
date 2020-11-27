@@ -1,5 +1,3 @@
-import json
-import pathlib
 import os
 import logging
 from logging.handlers import RotatingFileHandler
