@@ -15,7 +15,7 @@ from .report_tools import execute_wrapper
 def setup_logger():
 
     log_level = HANA3D_LOG_LEVEL
-    logger = logging.getLogger(HANA3D_NAME)
+    logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
 
     dir_path = os.path.join(os.getcwd(), 'hana3d_logs')
@@ -41,7 +41,7 @@ def setup_logger():
     blender_handler = BlenderHandler()
     blender_handler.setLevel(log_level)
 
-    log_format = f'[%(asctime)s] {HANA3D_NAME} - %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s'
+    log_format = f'[%(asctime)s] %(hana3d_name)s - %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s'
     formatter = logging.Formatter(log_format)
     log_file_handler.setFormatter(formatter)
     report_file_handler.setFormatter(formatter)
@@ -52,6 +52,8 @@ def setup_logger():
     logger.addHandler(report_file_handler)
     logger.addHandler(console_handler)
     logger.addHandler(blender_handler)
+
+    logger.addFilter(ContextFilter())
 
     url_logger = logging.getLogger('urllib3')
     url_logger.setLevel(max(logger.level, logging.INFO))
@@ -67,6 +69,12 @@ class BlenderHandler(logging.StreamHandler):
                 hana.log_info(text=f"{type}: {text}")
         except Exception:
             pass
+
+
+class ContextFilter(logging.Filter):
+    def filter(self, record):
+        record.hana3d_name = HANA3D_NAME
+        return True
 
 
 class AppendInfo(bpy.types.Operator):
