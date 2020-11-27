@@ -185,7 +185,7 @@ def check_unused():
 
     for library in bpy.data.libraries:
         if library not in used_libs:
-            logging.info('attempt to remove this library: ', library.filepath)
+            logging.info('attempt to remove this library: ' + library.filepath)
             # have to unlink all groups, since the file is a 'user'
             # even if the groups aren't used at all...
             for user_id in library.users_id:
