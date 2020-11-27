@@ -15,17 +15,25 @@ from .report_tools import execute_wrapper
 def setup_logger():
 
     log_level = HANA3D_LOG_LEVEL
-
-    logger = logging.getLogger('')
+    logger = logging.getLogger(HANA3D_NAME)
     logger.setLevel(logging.DEBUG)
 
-    dir_path = os.path.join(os.getcwd(), 'logs')
-    file_path = os.path.join(dir_path, 'hana3d.log')
+    dir_path = os.path.join(os.getcwd(), 'hana3d_logs')
+    log_file_path = os.path.join(dir_path, 'hana3d_logs.log')
+    report_file_path = os.path.join(dir_path, 'hana3d_report.log')
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
 
-    file_handler = RotatingFileHandler(file_path, mode='a', maxBytes=5 * 1024 * 1024, backupCount=2)
-    file_handler.setLevel(logging.DEBUG)
+    report_file_handler = logging.FileHandler(report_file_path, mode='w')
+    report_file_handler.setLevel(logging.DEBUG)
+
+    log_file_handler = RotatingFileHandler(
+        log_file_path,
+        mode='a',
+        maxBytes=5 * 1024 * 1024,
+        backupCount=2
+    )
+    log_file_handler.setLevel(logging.DEBUG)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(log_level)
@@ -35,11 +43,13 @@ def setup_logger():
 
     log_format = f'[%(asctime)s] {HANA3D_NAME} - %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s'
     formatter = logging.Formatter(log_format)
-    file_handler.setFormatter(formatter)
+    log_file_handler.setFormatter(formatter)
+    report_file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
     blender_handler.setFormatter(formatter)
 
-    logger.addHandler(file_handler)
+    logger.addHandler(log_file_handler)
+    logger.addHandler(report_file_handler)
     logger.addHandler(console_handler)
     logger.addHandler(blender_handler)
 
