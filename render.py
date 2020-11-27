@@ -33,7 +33,6 @@ import requests
 from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
-from .src.preferences.profile import Profile
 
 from . import (
     autothumb,
@@ -47,6 +46,7 @@ from . import (
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
+from .src.preferences.profile import Profile
 
 render_threads = []
 upload_threads = []
