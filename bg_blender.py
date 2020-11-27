@@ -210,7 +210,6 @@ class KillBgProcess(bpy.types.Operator):
         if self.process_type == 'THUMBNAILER':
             props.is_generating_thumbnail = False
         global hana3d_bg_process
-        # logging.info('killing', self.process_source, self.process_type)
         # then go kill the process. this wasn't working for unsetting props
         # and that was the reason for changing to the method above.
 

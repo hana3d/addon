@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
 import logging
 import os
@@ -28,7 +27,7 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils, logger
+from . import hana3d_oauth, logger, paths, rerequests, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -420,9 +419,7 @@ class Searcher(threading.Thread):
                         for tk, thread in threads_copy.items():
                             if not thread.is_alive():
                                 thread.join()
-                                # logging.debug(x)
                                 del thumb_sml_download_threads[tk]
-                                # logging.debug('fetched thumbnail ', i)
                                 i += 1
         if self.stopped():
             logging.debug(f'stopping search : {str(query)}')

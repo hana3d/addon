@@ -728,7 +728,7 @@ class Singleton_updater(object):
                 error = "failed to create staging directory"
 
         if error is not None:
-            logging.debug('Error: Aborting update, ' + error)
+            logging.debug(f'Error: Aborting update, {error}')
             self._error = "Update aborted, staging path error"
             self._error_msg = "Error: {}".format(error)
             return False

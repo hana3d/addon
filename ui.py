@@ -25,7 +25,6 @@ import mathutils
 from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
-from bpy.types import Operator
 from mathutils import Vector
 
 from . import (
@@ -1148,8 +1147,6 @@ class AssetBarOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         if context.region != self.region:
-            # logging.info(time.time(), 'pass through because of region')
-            # logging.info(context.region.type, self.region.type)
             return {'PASS_THROUGH'}
 
         if ui_props.down_up == 'UPLOAD':
@@ -1247,10 +1244,6 @@ class AssetBarOperator(bpy.types.Operator):
             if not mouse_in_asset_bar(mx, my):
                 return {'PASS_THROUGH'}
 
-            # note - TRACKPADPAN is unsupported in blender by now.
-            # if event.type == 'TRACKPADPAN' :
-            #     logging.debug(dir(event))
-            #     logging.debug(event.value, event.oskey, event.)
             if (
                 (event.type == 'WHEELDOWNMOUSE')
                 and len(sr) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount)

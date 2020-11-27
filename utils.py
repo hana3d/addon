@@ -26,7 +26,7 @@ import bpy
 from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from . import paths, rerequests, tasks_queue, logger
+from . import logger, paths
 from .config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,

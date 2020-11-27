@@ -22,7 +22,7 @@ import time
 import bpy
 import requests
 
-from . import colors, oauth, paths, ui, utils, logger
+from . import colors, logger, oauth, paths, ui, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.preferences.profile import Profile

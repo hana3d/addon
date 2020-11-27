@@ -110,8 +110,7 @@ class Downloader(threading.Thread):
             return
 
         file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
-        # for k in asset_data:
-        #    logging.info(asset_data[k])
+
         if self.stopped():
             logging.debug(f'stopping download: {asset_data["name"]}')
             return
