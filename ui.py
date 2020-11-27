@@ -96,7 +96,7 @@ def add_report(text='', timeout=5, color=colors.GREEN):
     # check for same reports and just make them longer by the timeout.
     for old_report in reports:
         if old_report.text == text:
-            old_report.timeout = old_report.age + timeout
+            old_report.timeout = timeout
             return
     report = Report(text=text, timeout=timeout, color=color)
     reports.append(report)
