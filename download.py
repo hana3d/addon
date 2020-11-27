@@ -133,7 +133,7 @@ class Downloader(threading.Thread):
                     tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
                     f.write(data)
                     if self.stopped():
-                        logging.debug(f'stopping download: {asset_data['name']}')
+                        logging.debug(f'stopping download: {asset_data["name"]}')
                         f.close()
                         os.remove(tmp_file)
                         return
