@@ -981,7 +981,7 @@ class Singleton_updater(object):
 
             except Exception as err:
                 error = "failed to create clean existing addon folder"
-                logging.error(f"{error} {str(err)}"")
+                logging.error(f"{error} {str(err)}")
 
         # Walk through the base addon folder for rules on pre-removing
         # but avoid removing/altering backup and updater file
