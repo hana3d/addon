@@ -88,7 +88,7 @@ def queue_worker():
             try:
                 task.command(*task.arguments)
             except Exception as e:
-                logging.warning('task failed:')
+                logging.error('task failed:')
                 logging.error(e)
     for task in back_to_queue:
         q.put(task)
