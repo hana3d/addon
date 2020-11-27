@@ -33,6 +33,7 @@ import requests
 from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
+from .src.preferences.profile import Profile
 
 from . import (
     autothumb,
@@ -243,7 +244,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self._set_running_flag(False)
             time.sleep(5)
             self.update_state(self.log_state_name, '')
-            utils.update_profile()
+            profile = Profile()
+            profile.update_async()
 
     def _set_running_flag(self, flag: bool):
         if self.is_thumbnail:
