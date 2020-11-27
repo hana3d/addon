@@ -623,12 +623,12 @@ class Singleton_updater(object):
         else:
             if self._include_branches is False:
                 self._tag_latest = self._tags[0]
-                logging.debug("Most recent tag found:", self._tags[0]['name'])
+                logging.debug(f"Most recent tag found: {self._tags[n]['name']}")
             else:
                 # don't return branch if in list
                 n = len(self._include_branch_list)
                 self._tag_latest = self._tags[n]  # guaranteed at least len()=n+1
-                logging.debug("Most recent tag found:", self._tags[n]['name'])
+                logging.debug(f"Most recent tag found: {self._tags[n]['name']}")
 
     # all API calls to base url
 
@@ -860,7 +860,7 @@ class Singleton_updater(object):
             self._error_msg = "Failed to create extract directory"
             return -1
 
-        logging.debug("Begin extracting source from zip:", self._source_zip)
+        logging.debug(f"Begin extracting source from zip: {self._source_zip}")
         zfile = zipfile.ZipFile(self._source_zip, "r")
 
         if not zfile:
@@ -943,7 +943,7 @@ class Singleton_updater(object):
     def deepMergeDirectory(self, base, merger, clean=False):
         """Merge folder 'merger' into folder 'base' without deleting existing"""
         if not os.path.exists(base):
-            logging.debug("Base path does not exist:", base)
+            logging.debug(f"Base path does not exist: {base}")
             return -1
         elif not os.path.exists(merger):
             logging.debug("Merger path does not exist")
@@ -981,7 +981,7 @@ class Singleton_updater(object):
 
             except Exception as err:
                 error = "failed to create clean existing addon folder"
-                logging.error(error, str(err))
+                logging.error(f"{error} {str(err)}"")
 
         # Walk through the base addon folder for rules on pre-removing
         # but avoid removing/altering backup and updater file
@@ -1109,7 +1109,7 @@ class Singleton_updater(object):
             segments.append(int(tmp))
 
         if len(segments) == 0:
-            logging.debug("No version strings found text: ", text)
+            logging.debug(f"No version strings found text: {text}")
             if self._include_branches is False:
                 return ()
             else:
