@@ -16,12 +16,6 @@ CAMERA_DEFAULT_ROTATION = (1.1122483015060425, -8.048914423852693e-08, -0.780015
 LIGHT_DEFAULT_LOCATION = (2, -4.76656, 3.33653)
 
 
-def thumbnailer_done(task):
-    filepath, props = task.result()
-    props.is_generating_thumbnail = False
-    print('Task result: ', task.result())
-
-
 class ModelThumbnailerOperator(async_loop.AsyncModalOperatorMixin, bpy.types.Operator):
     """Generate Cycles thumbnail for model assets"""
 

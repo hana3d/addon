@@ -1,180 +1,144 @@
-import asyncio
-import json
 import math
-import os
-import subprocess
-import tempfile
 import uuid
 
 import bpy
+import bmesh
 from mathutils import Euler, Vector
 
 from .. import async_loop
-from ... import bg_blender, paths, utils
+from ... import paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
-from ...report_tools import execute_wrapper
+# from ...report_tools import execute_wrapper
 
-HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
-
-
-def generate_material_thumbnail(
-        props=None,
-        asset_name: str = None,
-        save_only: bool = False,
-        blend_filepath: str = ''):
-    if props is None:
-        props = getattr(bpy.data.materials[asset_name], HANA3D_NAME)
-        update_state = False
-    else:
-        update_state = True
-    mat = utils.get_active_material()
-    material_props = getattr(mat, HANA3D_NAME)
-    assert material_props.view_id == props.view_id, 'Error when checking active material'
-    if update_state:
-        material_props.is_generating_thumbnail = True
-        material_props.thumbnail_generating_state = 'starting blender instance'
-
-    binary_path = bpy.app.binary_path
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    basename, ext = os.path.splitext(bpy.data.filepath)
-    if not basename:
-        basename = os.path.join(basename, "temp")
-    if not ext:
-        ext = ".blend"
-    asset_name = mat.name
-    tempdir = tempfile.mkdtemp()
-
-    file_dir = os.path.dirname(bpy.data.filepath)
-
-    thumb_path = os.path.join(file_dir, asset_name)
-    rel_thumb_path = os.path.join('//', mat.name)
-    i = 0
-    while os.path.isfile(thumb_path + '.png'):
-        thumb_path = os.path.join(file_dir, mat.name + '_' + str(i).zfill(4))
-        rel_thumb_path = os.path.join('//', mat.name + '_' + str(i).zfill(4))
-        i += 1
-
-    filepath = os.path.join(tempdir, "material_thumbnailer_cycles" + ext)
-    tfpath = paths.get_material_thumbnailer_filepath()
-    datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
-
-    utils.save_file(filepath, compress=False, copy=True)
-
-    with open(datafile, 'w') as s:
-        json.dump(
-            {
-                "type": "material",
-                "material": mat.name,
-                "thumbnail_type": props.thumbnail_generator_type,
-                "thumbnail_scale": props.thumbnail_scale,
-                "thumbnail_background": props.thumbnail_background,
-                "thumbnail_background_lightness": props.thumbnail_background_lightness,
-                "thumbnail_resolution": props.thumbnail_resolution,
-                "thumbnail_samples": props.thumbnail_samples,
-                "thumbnail_denoising": props.thumbnail_denoising,
-                "adaptive_subdivision": props.adaptive_subdivision,
-                "texture_size_meters": props.texture_size_meters,
-                "save_only": save_only,
-                "blend_filepath": blend_filepath,
-            },
-            s,
-        )
-
-    proc = subprocess.Popen(
-        [
-            binary_path,
-            "--background",
-            "-noaudio",
-            tfpath,
-            "--python",
-            os.path.join(script_path, "autothumb_material_bg.py"),
-            "--",
-            datafile,
-            filepath,
-            thumb_path,
-            tempdir,
-            HANA3D_NAME,
-        ],
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        creationflags=utils.get_process_flags(),
-    )
-
-    eval_path_computing = "getattr(bpy.data.materials['%s'], '%s').is_generating_thumbnail" % (mat.name, HANA3D_NAME)  # noqa: E501
-    eval_path_state = "getattr(bpy.data.materials['%s'], '%s').thumbnail_generating_state" % (mat.name, HANA3D_NAME)  # noqa: E501
-    eval_path = "bpy.data.materials['%s']" % mat.name
-
-    bg_blender.add_bg_process(
-        eval_path_computing=eval_path_computing,
-        eval_path_state=eval_path_state,
-        eval_path=eval_path,
-        process_type='THUMBNAILER',
-        process=proc,
-    )
-
-    if not save_only and update_state:
-        material_props.thumbnail = rel_thumb_path + '.png'
-    if update_state:
-        material_props.thumbnail_generating_state = 'Saving .blend file'
+BACKGROUND_DEFAULT_COLOR = (1, 1, 1, 1)
+CAMERA_DEFAULT_LOCATION = (-3.1068, -3.14043, 2.3688)
+CAMERA_DEFAULT_ROTATION = (1.1122483015060425, -8.048914423852693e-08, -0.7800155878067017)
+LIGHT_DEFAULT_LOCATION = (2, -4.76656, 3.33653)
 
 
-class GenerateMaterialThumbnailOperator(bpy.types.Operator):
-    """Generate Cycles thumbnail for materials"""
+class MaterialThumbnailerOperator(async_loop.AsyncModalOperatorMixin, bpy.types.Operator):
+    """Generate Cycles thumbnail for model assets"""
 
-    bl_idname = f"material.{HANA3D_NAME}_thumbnail"
-    bl_label = f"{HANA3D_DESCRIPTION} Material Thumbnail Generator"
+    bl_idname = f'material.{HANA3D_NAME}_thumbnail'
+    bl_label = f'{HANA3D_DESCRIPTION} Thumbnail Generator'
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    @classmethod
-    def poll(cls, context):
-        return bpy.context.view_layer.objects.active is not None
+    async def prepare_scene(self, context):
+        self.scene = bpy.data.scenes.new('thumbnailer_scene')
 
-    def check(self, context):
-        return True
+        self.world = bpy.data.worlds.new('thumbnailer_world')
+        self.world.use_nodes = True
+        node_tree = self.world.node_tree
+        node_tree.nodes['Background'].inputs['Color'].default_value = BACKGROUND_DEFAULT_COLOR
+        self.scene.world = self.world
 
-    def draw(self, context):
-        layout = self.layout
-        props = getattr(utils.get_active_material(context), HANA3D_NAME)
-        layout.prop(props, 'thumbnail_generator_type')
-        layout.prop(props, 'thumbnail_scale')
-        layout.prop(props, 'thumbnail_background')
-        if props.thumbnail_background:
-            layout.prop(props, 'thumbnail_background_lightness')
-        layout.prop(props, 'thumbnail_resolution')
-        layout.prop(props, 'thumbnail_samples')
-        layout.prop(props, 'thumbnail_denoising')
-        layout.prop(props, 'adaptive_subdivision')
-        preferences = context.preferences.addons[HANA3D_NAME].preferences
-        layout.prop(preferences, "thumbnail_use_gpu")
+        self.light_data = bpy.data.lights.new('thumbnailer_light_data', 'POINT')
+        self.light = bpy.data.objects.new('thumbnailer_light', self.light_data)
+        self.light_axis = bpy.data.objects.new('thumbnailer_light_axis', None)
+        self.scene.collection.objects.link(self.light)
+        self.scene.collection.objects.link(self.light_axis)
+        self.light.location.x = LIGHT_DEFAULT_LOCATION[0]
+        self.light.location.y = LIGHT_DEFAULT_LOCATION[1]
+        self.light.location.z = LIGHT_DEFAULT_LOCATION[2]
+        self.light.parent = self.light_axis
 
-    @execute_wrapper
-    def execute(self, context):
-        try:
-            props = getattr(utils.get_active_material(context), HANA3D_NAME)
-            generate_material_thumbnail(props)
-        except Exception as e:
-            props.is_generating_thumbnail = False
-            props.thumbnail_generating_state = ''
-            self.report({'WARNING'}, "Error while packing file: %s" % str(e))
-            return {'CANCELLED'}
-        return {'FINISHED'}
+        self.camera_data = bpy.data.cameras.new('thumbnailer_camera_data')
+        self.camera = bpy.data.objects.new('thumbnailer_camera', self.camera_data)
+        self.camera_axis = bpy.data.objects.new('thumbnailer_camera_axis', None)
+        self.scene.collection.objects.link(self.camera)
+        self.scene.collection.objects.link(self.camera_axis)
+        self.scene.camera = self.camera
+        self.camera.location.x = CAMERA_DEFAULT_LOCATION[0]
+        self.camera.location.y = CAMERA_DEFAULT_LOCATION[1]
+        self.camera.location.z = CAMERA_DEFAULT_LOCATION[2]
+        self.camera.rotation_mode = 'XYZ'
+        self.camera.rotation_euler = Euler(CAMERA_DEFAULT_ROTATION, 'XYZ')
+        self.camera.parent = self.camera_axis
 
-    def invoke(self, context, event):
-        wm = context.window_manager
-        if bpy.data.filepath == '':
-            title = "Can't render thumbnail"
-            message = "please save your file first"
-            utils.show_pop_menu(message, title)
+        self.scene.render.engine = 'CYCLES'
+        if context.preferences.addons[HANA3D_NAME].preferences.thumbnail_use_gpu:
+            self.scene.cycles.device = 'GPU'
+        self.scene.render.resolution_x = 512
+        self.scene.render.resolution_y = 512
+        self.scene.render.image_settings.file_format = 'JPEG'
 
-            return {'CANCELLED'}
+    async def add_material_sphere(self, material):
+        self.sphere_data = bpy.data.meshes.new('thumbnailer_sphere_data')
+        self.sphere = bpy.data.objects.new('thumbnailer_sphere', self.sphere_data)
 
-        return wm.invoke_props_dialog(self)
+        bm = bmesh.new()
+        bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, diameter=1)
+        bm.to_mesh(self.sphere_data)
+        bm.free()
+
+        self.sphere.active_material = material
+
+        self.scene.collection.objects.link(self.sphere)
+
+    async def center_objs_for_thumbnail(self):
+        self.sphere.rotation_euler = (0, 0, 0)
+
+        minx, miny, minz, maxx, maxy, maxz = utils.get_bounds_worldspace(self.copies)
+
+        cx = (maxx - minx) / 2 + minx
+        cy = (maxy - miny) / 2 + miny
+
+        self.sphere.location += Vector((-cx, -cy, -minz))
+
+        self.camera.location.z = (maxz - minz) / 2
+        self.light.location.z = (maxz - minz) / 2
+        dx = maxx - minx
+        dy = maxy - miny
+        dz = maxz - minz
+        r = math.sqrt(dx * dx + dy * dy + dz * dz)
+
+        coef = 0.7
+        r *= coef
+        self.camera.scale = (r, r, r)
+        self.light.scale = (r, r, r)
+        bpy.context.view_layer.update()
+
+    async def render(self):
+        filepath = f'{paths.get_temp_dir("thumbnailer")}/{uuid.uuid4()}.png'
+        self.scene.render.filepath = filepath
+        bpy.ops.render.render(write_still=True, animation=False, scene=self.scene.name)
+
+    async def remove_scene(self):
+        bpy.data.objects.remove(self.sphere)
+        bpy.data.mesh.remove(self.sphere_data)
+        bpy.data.worlds.remove(self.world)
+        bpy.data.objects.remove(self.camera_axis)
+        bpy.data.objects.remove(self.camera)
+        bpy.data.cameras.remove(self.camera_data)
+        bpy.data.objects.remove(self.light_axis)
+        bpy.data.objects.remove(self.light)
+        bpy.data.lights.remove(self.light_data)
+        bpy.data.scenes.remove(self.scene)
+
+    async def async_execute(self, context):
+
+        material = utils.get_active_material(context)
+        props = getattr(model, HANA3D_NAME)
+        props.is_generating_thumbnail = True
+        props.thumbnail_generating_state = 'preparing thumbnail scene'
+        await self.prepare_scene(context)
+        props.thumbnail_generating_state = 'creating material sphere'
+        await self.copy_objects(material)
+        props.thumbnail_generating_state = 'positioning objects'
+        await self.center_objs_for_thumbnail()
+        props.thumbnail_generating_state = 'rendering thumbnail'
+        await self.render()
+        props.thumbnail_generating_state = 'cleaning duplicates'
+        await self.remove_scene()
+        props.thumbnail_generating_state = 'thumbnailer finished successfully'
+        props.is_generating_thumbnail = False
+
+        self._state = 'QUIT'
 
 
 def register():
-    bpy.utils.register_class(GenerateMaterialThumbnailOperator)
+    bpy.utils.register_class(MaterialThumbnailerOperator)
 
 
 def unregister():
-    bpy.utils.unregister_class(GenerateMaterialThumbnailOperator)
+    bpy.utils.unregister_class(MaterialThumbnailerOperator)
