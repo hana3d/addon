@@ -1,4 +1,4 @@
-import asyncio
+# import asyncio
 import math
 import uuid
 
@@ -8,7 +8,7 @@ from mathutils import Euler, Vector
 from .. import async_loop
 from ... import paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
-from ...report_tools import execute_wrapper
+# from ...report_tools import execute_wrapper
 
 BACKGROUND_DEFAULT_COLOR = (1, 1, 1, 1)
 CAMERA_DEFAULT_LOCATION = (-3.1068, -3.14043, 2.3688)
@@ -34,7 +34,8 @@ class ModelThumbnailerOperator(async_loop.AsyncModalOperatorMixin, bpy.types.Ope
 
         self.world = bpy.data.worlds.new('thumbnailer_world')
         self.world.use_nodes = True
-        self.world.node_tree.nodes['Background'].inputs['Color'].default_value = BACKGROUND_DEFAULT_COLOR
+        node_tree = self.world.node_tree
+        node_tree.nodes['Background'].inputs['Color'].default_value = BACKGROUND_DEFAULT_COLOR
         self.scene.world = self.world
 
         self.light_data = bpy.data.lights.new('thumbnailer_light_data', 'POINT')
@@ -140,6 +141,7 @@ class ModelThumbnailerOperator(async_loop.AsyncModalOperatorMixin, bpy.types.Ope
         props.thumbnail_generating_state = 'cleaning duplicates'
         await self.remove_scene()
         props.thumbnail_generating_state = 'thumbnailer finished successfully'
+        props.is_generating_thumbnail = False
 
         self._state = 'QUIT'
 

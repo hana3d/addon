@@ -146,10 +146,10 @@ def draw_panel_common_upload(layout, context):
     if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
         row = box.row()
         row.label(text=props.thumbnail_generating_state)
-        if props.is_generating_thumbnail:
-            op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text="", icon='CANCEL')
-            op.process_source = asset_type
-            op.process_type = 'THUMBNAILER'
+        # if props.is_generating_thumbnail:
+        #     op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text="", icon='CANCEL')
+        #     op.process_source = asset_type
+        #     op.process_type = 'THUMBNAILER'
     box.prop(props, 'description')
     # box.prop(props, 'is_public')  # Commented out until feature is needed
 
