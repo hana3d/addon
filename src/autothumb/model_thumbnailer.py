@@ -89,8 +89,8 @@ class ModelThumbnailerOperator(async_loop.AsyncModalOperatorMixin, bpy.types.Ope
 
         parent.location += Vector((-cx, -cy, -minz))
 
-        self.camera.location.z = (maxz - minz) / 2
-        self.light.location.z = (maxz - minz) / 2
+        self.camera_axis.location.z = (maxz - minz) / 2
+        self.light_axis.location.z = (maxz - minz) / 2
         dx = maxx - minx
         dy = maxy - miny
         dz = maxz - minz
@@ -98,8 +98,8 @@ class ModelThumbnailerOperator(async_loop.AsyncModalOperatorMixin, bpy.types.Ope
 
         coef = 0.7
         r *= coef
-        self.camera.scale = (r, r, r)
-        self.light.scale = (r, r, r)
+        self.camera_axis.scale = (r, r, r)
+        self.light_axis.scale = (r, r, r)
         bpy.context.view_layer.update()
 
     async def render(self):

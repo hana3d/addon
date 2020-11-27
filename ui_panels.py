@@ -136,13 +136,12 @@ def draw_panel_common_upload(layout, context):
         col.enabled = False
     row = col.row(align=True)
     prop_needed(row, props, 'thumbnail', props.has_thumbnail, False)
-    if bpy.context.scene.render.engine in ('CYCLES', 'BLENDER_EEVEE'):
-        if asset_type == 'MODEL':
-            row.operator(f'object.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-        elif asset_type == 'SCENE':
-            row.operator(f'scene.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-        elif asset_type == 'MATERIAL':
-            row.operator(f'material.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
+    if asset_type == 'MODEL':
+        row.operator(f'object.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
+    elif asset_type == 'SCENE':
+        row.operator(f'scene.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
+    elif asset_type == 'MATERIAL':
+        row.operator(f'material.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
     if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
         row = box.row()
         row.label(text=props.thumbnail_generating_state)
