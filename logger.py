@@ -7,7 +7,7 @@ from typing import Tuple
 
 import bpy
 
-from . import colors, ui, types
+from . import colors, ui
 from .config import HANA3D_LOG_LEVEL, HANA3D_NAME
 from .report_tools import execute_wrapper
 
@@ -82,7 +82,7 @@ class AppendInfo(bpy.types.Operator):
 
 
 def show_report(
-        props: types.Hana3DModelSearchProps,
+        props,
         text: str = '',
         timeout: int = 5,
         color: Tuple = colors.GREEN):
