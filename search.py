@@ -196,7 +196,7 @@ def timer_update():
                                 assets_used = bpy.context.window_manager.get(  # noqa : WPS220
                                     f'{HANA3D_NAME}_assets_used', {},
                                 )
-                                if view_id in assets_used.keys():
+                                if view_id in assets_used.keys():  # noqa : WPS220
                                     asset_data['downloaded'] = 100  # noqa : WPS220
 
                                 result_field.append(asset_data)  # noqa : WPS220
@@ -239,9 +239,9 @@ def load_previews():
 
     if search_results is not None:
         index = 0
-        for result in search_results:
+        for search_result in search_results:
 
-            tpath = os.path.join(directory, result['thumbnail_small'])
+            tpath = os.path.join(directory, search_result['thumbnail_small'])
 
             iname = utils.previmg_name(index)
 
