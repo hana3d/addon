@@ -9,7 +9,7 @@ class Application(object):
     def __init__(self):
         """Create an Application object."""
 
-    def background(self):
+    def background(self) -> bool:
         """Return True when blender is running without a user interface (started withk -b).
 
         Returns:

@@ -12,7 +12,7 @@ class Profile(object):
     def __init__(self):
         """Create a Profile object."""
 
-    def get(self):
+    def get(self) -> dict:
         """Get User Profile object.
 
         Returns:
@@ -20,11 +20,11 @@ class Profile(object):
         """
         return bpy.context.window_manager.get(config.HANA3D_PROFILE)
 
-    def update_async(self):
+    def update_async(self) -> None:
         """Update the User Profile asynchronously."""
         tasks_queue.add_task(self._update_async_task)
 
-    def _update_async_task(self):
+    def _update_async_task(self) -> None:
         """Task to Update the User Profile asynchronously."""
         logging.info('update_profile')  # noqa: WPS421
         url = paths.get_api_url('me')

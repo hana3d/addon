@@ -28,7 +28,16 @@ import requests
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from . import bg_blender, logger, paths, render, rerequests, types, ui, utils
+from . import (
+    bg_blender,
+    hana3d_types,
+    logger,
+    paths,
+    render,
+    rerequests,
+    ui,
+    utils
+)
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
 
@@ -52,7 +61,7 @@ def get_upload_location(props, context):
 
 
 def get_export_data(
-    props: types.Props,
+    props: hana3d_types.Props,
     path_computing: str = 'uploading',
     path_state: str = 'upload_state',
 ):
@@ -255,7 +264,7 @@ class UploadOperator(Operator):
             layout.label(text="Do this only when you create a new asset from an old one.")
             layout.label(text="For updates of thumbnail or model use reupload.")
 
-    def start_upload(self, context, props: types.Props, upload_set: List[str]): # noqa D102,WPS212,WPS210,WPS213,WPS231,E501
+    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]): # noqa D102,WPS212,WPS210,WPS213,WPS231,E501
         utils.name_update()
 
         location = get_upload_location(props, context)

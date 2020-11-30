@@ -46,6 +46,7 @@ from . import (
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
+from .src.preferences.profile import Profile
 
 render_threads = []
 upload_threads = []
@@ -243,7 +244,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self._set_running_flag(False)
             time.sleep(5)
             self.update_state(self.log_state_name, '')
-            utils.update_profile()
+            profile = Profile()
+            profile.update_async()
 
     def _set_running_flag(self, flag: bool):
         if self.is_thumbnail:

@@ -15,7 +15,7 @@ class Authentication(object):
         self.preferences = Preferences()
         self.profile = Profile()
 
-    def refresh_token_timer(self):
+    def refresh_token_timer(self) -> str:
         """Refresh the API key token.
 
         Returns:
@@ -25,7 +25,7 @@ class Authentication(object):
         self.update_tokens()
         return self.preferences.get().api_key_life
 
-    def update_tokens(self):
+    def update_tokens(self) -> None:
         """Refresh the API key token."""
         api_key_exists = self.preferences.get().api_key
         api_key_has_timed_out = self.preferences.get().api_key_timeout < time.time()
