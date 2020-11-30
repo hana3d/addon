@@ -18,12 +18,13 @@
 
 import json
 import os
+from .src.search.asset_search import AssetSearch
+from .src.search.search import Search
 import threading
 import time
 
 import bpy
 import requests
-from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
@@ -33,7 +34,6 @@ from .config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,
     HANA3D_NAME,
-    HANA3D_PROFILE,
     HANA3D_SCENES,
     HANA3D_UI
 )
@@ -93,18 +93,18 @@ def timer_update():
         if not thread[0].is_alive():
             search_threads.remove(thread)
             icons_dir = thread[1]
-            wm = bpy.context.window_manager
             asset_type = thread[2]
             if asset_type == 'model':
-                props = getattr(wm, HANA3D_MODELS)
+                props = getattr(bpy.context.window_manager, HANA3D_MODELS)
             if asset_type == 'scene':
-                props = getattr(wm, HANA3D_SCENES)
+                props = getattr(bpy.context.window_manager, HANA3D_SCENES)
             if asset_type == 'material':
-                props = getattr(wm, HANA3D_MATERIALS)
+                props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
 
-            search_name = f'{HANA3D_NAME}_{asset_type}_search'
+            search_object = Search(bpy.context)
+            asset_search = AssetSearch(bpy.context, asset_type)
+            asset_search.results = []  # noqa : WPS110
             json_filepath = os.path.join(icons_dir, f'{asset_type}_searchresult.json')
-            wm[search_name] = []
 
             global reports
             if reports != '':
@@ -194,23 +194,23 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if view_id in wm.get(f'{HANA3D_NAME}_assets_used', {}).keys():
+                                if view_id in bpy.context.window_manager.get(f'{HANA3D_NAME}_assets_used', {}).keys():
                                     asset_data['downloaded'] = 100
 
                                 result_field.append(asset_data)
 
-                wm[search_name] = result_field
-                wm[f'{HANA3D_NAME}_search_results'] = result_field
-                wm[search_name + ' orig'] = rdata
-                wm[f'{HANA3D_NAME}_search_results_orig'] = rdata
+                asset_search.results = result_field  # noqa : WPS110
+                asset_search.results_orig = rdata
+                search_object.results = result_field  # noqa : WPS110
+                search_object.results_orig = rdata
                 load_previews()
                 ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count'])  # noqa #501
-                if len(wm[f'{HANA3D_NAME}_search_results']) == 0:
+                props.report = 'Found %i results. ' % (search_object.results_orig['count'])  # noqa #501
+                if len(search_object.results) == 0:
                     tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 
             else:
@@ -232,14 +232,14 @@ def load_previews():
     props = getattr(bpy.context.window_manager, HANA3D_UI)
 
     directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
-    wm = bpy.context.window_manager
-    results = wm.get(f'{HANA3D_NAME}_search_results')
-    #
-    if results is not None:
-        i = 0
-        for r in results:
+    search_object = Search(bpy.context)
+    search_results = search_object.results
 
-            tpath = os.path.join(directory, r['thumbnail_small'])
+    if search_results is not None:
+        i = 0
+        for result in search_results:
+
+            tpath = os.path.join(directory, result['thumbnail_small'])
 
             iname = utils.previmg_name(i)
 

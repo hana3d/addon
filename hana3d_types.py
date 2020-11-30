@@ -18,6 +18,8 @@
 
 import math
 import os
+from .src.search.asset_search import AssetSearch
+from .src.search.search import Search
 from typing import Union
 
 import bpy
@@ -69,10 +71,10 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        wm = context.window_manager
-        # TODO remove inconsistency between e.g. `model` and `MODEL`
-        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type.lower()}_search') # noqa E501
-        wm[f'{HANA3D_NAME}_search_results_orig'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig') # noqa E501
+        asset_search = AssetSearch(context, self.asset_type)
+        search_object = Search(context)
+        search_object.results = asset_search.results  # noqa : WPS110
+        search_object.results_orig = asset_search.results_orig
         search.load_previews()
 
     def switch_active_asset_type(self, context):
@@ -106,9 +108,9 @@ class Hana3DUIProps(PropertyGroup):
             )
         else:
             items = (
-                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0), # noqa E501
-                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1), # noqa E501
-                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2), # noqa E501
+                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0),  # noqa E501
+                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1),  # noqa E501
+                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2),  # noqa E501
                 # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3),
             )
         return items

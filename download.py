@@ -222,13 +222,14 @@ def set_thumbnail(asset_data, asset):
 
 
 def update_downloaded_progress(downloader: Downloader):
-    sr = bpy.context.window_manager.get(f'{HANA3D_NAME}_search_results')
-    if sr is None:
-        utils.p(f'{HANA3D_NAME}_search_results not found')
+    search = Search(bpy.context)
+    search_results = search.results
+    if search_results is None:
+        print('Empty search results')
         return
-    for r in sr:
-        if r.get('view_id') == downloader.asset_data['view_id']:
-            r['downloaded'] = downloader.tcom.progress
+    for result in search_results:
+        if result.get('view_id') == downloader.asset_data['view_id']:
+            result['downloaded'] = downloader.tcom.progress
             return
 
 
@@ -694,14 +695,14 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        wm = context.window_manager
-        sr = wm[f'{HANA3D_NAME}_search_results']
+        search = Search(context)
+        search_results = search.results
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
-        asset_data = sr[self.asset_index].to_dict()
-        au = wm.get(f'{HANA3D_NAME}_assets_used')
+        asset_data = search_results[self.asset_index].to_dict()
+        au = context.window_manager.get(f'{HANA3D_NAME}_assets_used')
         if au is None:
-            wm[f'{HANA3D_NAME}_assets_used'] = {}
+            context.window_manager[f'{HANA3D_NAME}_assets_used'] = {}
 
         atype = asset_data['asset_type']
         if (
@@ -794,8 +795,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         if self.reset is True:
             self.object_count = 0
         search = Search(context)
-        search_results = search.results()
+        search_results = search.results
         if not search_results:
+            print('Empty search results')
             return {'CANCELLED'}
 
         for result in search_results[self.object_count:]:
