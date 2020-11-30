@@ -225,11 +225,11 @@ def update_downloaded_progress(downloader: Downloader):
     search = Search(bpy.context)
     search_results = search.results
     if search_results is None:
-        print('Empty search results')
+        print('Empty search results')  # noqa : WPS421:230
         return
-    for result in search_results:
-        if result.get('view_id') == downloader.asset_data['view_id']:
-            result['downloaded'] = downloader.tcom.progress
+    for search_result in search_results:
+        if search_result.get('view_id') == downloader.asset_data['view_id']:
+            search_result['downloaded'] = downloader.tcom.progress
             return
 
 
@@ -797,11 +797,11 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         search = Search(context)
         search_results = search.results
         if not search_results:
-            print('Empty search results')
+            print('Empty search results')  # noqa : WPS421
             return {'CANCELLED'}
 
-        for result in search_results[self.object_count:]:
-            asset_data = result.to_dict()
+        for search_result in search_results[self.object_count:]:
+            asset_data = search_result.to_dict()
             location = self._get_location()
             kwargs = {
                 'cast_parent': "",

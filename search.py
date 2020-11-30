@@ -15,11 +15,8 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
 import os
-from .src.search.asset_search import AssetSearch
-from .src.search.search import Search
 import threading
 import time
 
@@ -38,6 +35,8 @@ from .config import (
     HANA3D_UI
 )
 from .report_tools import execute_wrapper
+from .src.search.asset_search import AssetSearch
+from .src.search.search import Search
 
 search_start_time = 0
 prev_time = 0
@@ -195,7 +194,7 @@ def timer_update():
 
                                 asset_data.update(tdict)
                                 if view_id in bpy.context.window_manager.get(f'{HANA3D_NAME}_assets_used', {}).keys():
-                                    asset_data['downloaded'] = 100
+                                    asset_data['downloaded'] = 100  # noqa : WPS220
 
                                 result_field.append(asset_data)
 
@@ -210,7 +209,7 @@ def timer_update():
                 props.is_searching = False
                 props.search_error = False
                 props.report = 'Found %i results. ' % (search_object.results_orig['count'])  # noqa #501
-                if len(search_object.results) == 0:
+                if not search_object.results:
                     tasks_queue.add_task(ui.add_report, ('No matching results found.',))
 
             else:
@@ -236,12 +235,12 @@ def load_previews():
     search_results = search_object.results
 
     if search_results is not None:
-        i = 0
+        index = 0
         for result in search_results:
 
             tpath = os.path.join(directory, result['thumbnail_small'])
 
-            iname = utils.previmg_name(i)
+            iname = utils.previmg_name(index)
 
             if os.path.exists(tpath):  # sometimes we are unlucky...
                 img = bpy.data.images.get(iname)
@@ -255,7 +254,7 @@ def load_previews():
                     img.filepath = tpath
                     img.reload()
                 img.colorspace_settings.name = 'Linear'
-            i += 1
+            index += 1
 
 
 class ThumbDownloader(threading.Thread):

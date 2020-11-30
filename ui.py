@@ -15,10 +15,8 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import math
 import os
-from .src.search.search import Search
 import time
 
 import bpy
@@ -40,6 +38,7 @@ from . import (
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.search.search import Search
 
 handler_2d = None
 handler_3d = None
@@ -612,7 +611,7 @@ def draw_callback_2d_search(self, context):
     wm = context.window_manager
     ui_props = getattr(wm, HANA3D_UI)
 
-    r = self.region
+    search_result = self.region
     # hc = bpy.context.preferences.themes[0].view_3d.space.header
     # hc = bpy.context.preferences.themes[0].user_interface.wcol_menu_back.inner
     # hc = (hc[0], hc[1], hc[2], .2)
@@ -661,7 +660,7 @@ def draw_callback_2d_search(self, context):
                     context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
                 pagination_text = \
                     f'{page_start} - {page_end} of {search_object.results_orig["count"]}'  # noqa E501
-                ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
+                ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width  # noqa : WPS317
                                  - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
                 # arrows
                 arrow_y = (
@@ -779,8 +778,8 @@ def draw_callback_2d_search(self, context):
             directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
             search_results = search_object.results
             if search_results is not None and -1 < ui_props.active_index < len(search_results):
-                r = search_results[ui_props.active_index]
-                tpath = os.path.join(directory, r['thumbnail'])
+                search_result = search_results[ui_props.active_index]
+                tpath = os.path.join(directory, search_result['thumbnail'])
 
                 img = bpy.data.images.get(iname)
                 if img is None or img.filepath != tpath:
@@ -807,7 +806,8 @@ def draw_callback_2d_search(self, context):
                 gimg = None
                 atip = ''
                 if bpy.context.window_manager.get(f'{HANA3D_NAME}_authors') is not None:
-                    a = bpy.context.window_manager[f'{HANA3D_NAME}_authors'].get(r['author_id'])
+                    a = bpy.context.window_manager[f'{HANA3D_NAME}_authors'].get(
+                        search_result['author_id'])
                     if a is not None and a != '':
                         if a.get('gravatarImg') is not None:
                             gimg = utils.get_hidden_image(a['gravatarImg'], a['gravatarHash'])
@@ -1203,7 +1203,7 @@ class AssetBarOperator(bpy.types.Operator):
         # If there aren't any results, we need no interaction(yet)
         if search_results is None:
             return {'PASS_THROUGH'}
-        if len(search_results) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount) + 10:
+        if len(search_results) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount) + 10:  # noqa : WPS221,WPS204
             self.search_more()
         if (
             event.type == 'WHEELUPMOUSE'
@@ -1257,15 +1257,14 @@ class AssetBarOperator(bpy.types.Operator):
             #     print(event.value, event.oskey, event.)
             if (
                 (event.type == 'WHEELDOWNMOUSE')
-                and len(search_results) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount)
+                and len(search_results) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount)  # noqa : E501
             ):
                 if ui_props.hcount > 1:
                     ui_props.scrolloffset += ui_props.wcount
                 else:
                     ui_props.scrolloffset += 1
-                if len(search_results) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount):
-                    ui_props.scrolloffset = len(search_results) - \
-                        (ui_props.wcount * ui_props.hcount)
+                if len(search_results) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount):  # noqa : N400
+                    ui_props.scrolloffset = len(search_results) - (ui_props.wcount * ui_props.hcount)  # noqa : E501
 
             if event.type == 'WHEELUPMOUSE' and ui_props.scrolloffset > 0:
                 if ui_props.hcount > 1:
@@ -1368,10 +1367,10 @@ class AssetBarOperator(bpy.types.Operator):
                     # happen anymore, but there might exists scenes
                     # which have this problem for some reason.
                     if ui_props.active_index < len(search_results) and ui_props.active_index > -1:
-                        ui_props.draw_snapped_bounds = True
-                        active_mod = search_results[ui_props.active_index]
-                        ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])
-                        ui_props.snapped_bbox_max = Vector(active_mod['bbox_max'])
+                        ui_props.draw_snapped_bounds = True  # noqa : WPS220
+                        active_mod = search_results[ui_props.active_index]  # noqa : WPS220
+                        ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])  # noqa : WPS220
+                        ui_props.snapped_bbox_max = Vector(active_mod['bbox_max'])  # noqa : WPS220
 
                 else:
                     ui_props.draw_snapped_bounds = False
@@ -1546,7 +1545,7 @@ class AssetBarOperator(bpy.types.Operator):
                             rotation = (0, 0, 0)
 
                             asset_data = search_results[asset_search_index]
-                            download_op = getattr(bpy.ops.scene, HANA3D_NAME + "_download")
+                            download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                             download_op(
                                 True,
                                 asset_type=ui_props.asset_type,
@@ -1623,7 +1622,7 @@ class AssetBarOperator(bpy.types.Operator):
         search_results = search_object.results
         if search_results is None:
             search_object = Search(bpy.context)
-            search_object.results = []
+            search_object.results = []  # noqa : WPS110
 
         if context.area.type != 'VIEW_3D':
             self.report({'WARNING'}, "View3D not found, cannot run operator")

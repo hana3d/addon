@@ -1,6 +1,5 @@
 """Asset Search."""
 
-from dataclasses import dataclass
 from typing import List
 
 from ...config import HANA3D_NAME
@@ -40,9 +39,9 @@ class AssetSearch(object):
         return self.context.window_manager.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig')
 
     @results.setter
-    def results(self, results_value: List):  # noqa : WPS110
-        self.context.window_manager[f'{HANA3D_NAME}_{self.asset_type}_search'] = results_value
+    def results(self, results: List):  # noqa : WPS110
+        self.context.window_manager[f'{HANA3D_NAME}_{self.asset_type}_search'] = results
 
     @results_orig.setter
-    def results_orig(self, results_orig_value: List):
-        self.context.window_manager[f'{HANA3D_NAME}_{self.asset_type}_search_orig'] = results_orig_value
+    def results_orig(self, results_orig: List):
+        self.context.window_manager[f'{HANA3D_NAME}_{self.asset_type}_search_orig'] = results_orig

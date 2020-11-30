@@ -15,11 +15,8 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import math
 import os
-from .src.search.asset_search import AssetSearch
-from .src.search.search import Search
 from typing import Union
 
 import bpy
@@ -46,6 +43,8 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI
 )
+from .src.search.asset_search import AssetSearch
+from .src.search.search import Search
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -111,7 +110,7 @@ class Hana3DUIProps(PropertyGroup):
                 ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0),  # noqa E501
                 ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1),  # noqa E501
                 ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2),  # noqa E501
-                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3),
+                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3), # noqa : E800
             )
         return items
 
