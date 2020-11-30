@@ -1505,7 +1505,7 @@ class AssetBarOperator(bpy.types.Operator):
                                 target_slot = temp_mesh.polygons[face_index].material_index
                                 object_eval.to_mesh_clear()
                             else:
-                                logging.warning('Invalid or library object as input:')
+                                logging.warning('Invalid or library object as input:') # noqa WPS220
                                 target_object = ''
                                 target_slot = ''
 

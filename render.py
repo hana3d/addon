@@ -548,7 +548,7 @@ class ImportRender(Operator):
             context.window_manager.popup_menu(draw, title='Success')
 
             return {'FINISHED'}
-        logging.info(f'Cound not find render job id={job["id"]}')
+        logging.info(f'Cound not find render job id={job["id"]}') # noqa WPS441
         return {'CANCELLED'}
 
 

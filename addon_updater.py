@@ -606,8 +606,8 @@ class Singleton_updater(object):
         elif self._prefiltered_tag_count == 0 and self._include_branches is True:
             if not self._error:
                 self._tag_latest = self._tags[0]
-            branch = self._include_branch_list[0]
-            logging.debug('{} branch found, no releases'.format(branch), self._tags[0])
+            branch = self._include_branch_list[0] # noqa WPS440
+            logging.debug(f'{branch} branch found, no releases {self._tags[0]}') # noqa WPS441
         elif (
             (
                 len(self._tags) - len(self._include_branch_list) == 0
@@ -662,7 +662,7 @@ class Singleton_updater(object):
         except urllib.error.HTTPError as e:
             if str(e.code) == "403":
                 self._error = 'HTTP error (access denied) '
-                self._error_msg = str(e.code) + ' - server error response'
+                self._error_msg = f'{str(e.code)} - server error response'
                 logging.error(self._error + self._error_msg)
             else:
                 self._error = 'HTTP error '
@@ -970,12 +970,14 @@ class Singleton_updater(object):
 
                 for f in files:
                     os.remove(os.path.join(base, f))
-                    logging.info('Clean removing file {}'.format(os.path.join(base, f)))
+                    logging.info('Clean removing file {0}'.format(os.path.join(base, f)))
                 for f in folders:
                     if os.path.join(base, f) == self._updater_path:
                         continue
                     shutil.rmtree(os.path.join(base, f))
-                    logging.info('Clean removing folder and contents {}'.format(os.path.join(base, f)))
+                    logging.info('Clean removing folder and contents {0}'.format(
+                        os.path.join(base, f), # noqa WPS441
+                    ))
 
             except Exception as err:
                 error = "failed to create clean existing addon folder"
@@ -992,9 +994,9 @@ class Singleton_updater(object):
                         try:
                             fl = os.path.join(path, file)
                             os.remove(fl)
-                            logging.debug(f'Pre-removed file {file}')
+                            logging.debug(f'Pre-removed file {file}') # noqa WPS220
                         except OSError:
-                            logging.error(f'Failed to pre-remove {file}')
+                            logging.error(f'Failed to pre-remove {file}') # noqa WPS220
 
         # Walk through the temp addon sub folder for replacements
         # this implements the overwrite rules, which apply after
@@ -1024,12 +1026,12 @@ class Singleton_updater(object):
                     if replaced:
                         os.remove(destFile)
                         os.rename(srcFile, destFile)
-                        logging.debug(f'Overwrote file {os.path.basename(destFile)}')
+                        logging.debug(f'Overwrote file {os.path.basename(destFile)}')  # noqa WPS220
                     else:
-                        logging.debug(
+                        logging.debug( # noqa WPS220
                             'Pattern not matched to '
                             + os.path.basename(destFile)
-                            + ', not overwritten'
+                            + ', not overwritten',
                         )
                 else:
                     # file did not previously exist, simply move it over
@@ -1390,15 +1392,14 @@ class Singleton_updater(object):
 
             delta = (now - offset) - last_check
             if delta.total_seconds() > 0:
-                logging.debug('{} Updater: Time to check for updates!'.format(self._addon))
+                logging.debug('{0} Updater: Time to check for updates!'.format(self._addon))
                 return True
-            else:
-                logging.debug(
-                    "{} Updater: Determined it's not yet time to check for updates".format(
-                        self._addon
-                    )
+            logging.debug(
+                "{0} Updater: Determined it's not yet time to check for updates".format(
+                    self._addon,
                 )
-                return False
+            )
+            return False
 
     def get_json_path(self):
         """Returns the full path to the JSON state file used by this updater.
@@ -1432,7 +1433,7 @@ class Singleton_updater(object):
         if os.path.isfile(jpath):
             with open(jpath) as data_file:
                 self._json = json.load(data_file)
-                logging.debug('{} Updater: Read in JSON settings from file'.format(self._addon))
+                logging.debug('{0} Updater: Read in JSON settings from file'.format(self._addon))
         else:
             # set data structure
             self._json = {
@@ -1493,7 +1494,7 @@ class Singleton_updater(object):
         """Start a background thread which will check for updates"""
         if self._async_checking is True:
             return
-        logging.debug('{} updater: Starting background checking thread'.format(self._addon))
+        logging.debug('{0} updater: Starting background checking thread'.format(self._addon))
         check_thread = threading.Thread(target=self.async_check_update, args=(now, callback,))
         check_thread.daemon = True
         self._check_thread = check_thread
@@ -1502,7 +1503,7 @@ class Singleton_updater(object):
     def async_check_update(self, now, callback=None):
         """Perform update check, run as target of background thread"""
         self._async_checking = True
-        logging.debug('{} BG thread: Checking for update now in background'.format(self._addon))
+        logging.debug('{0} BG thread: Checking for update now in background'.format(self._addon))
 
         try:
             self.check_for_update(now=now)
@@ -1519,7 +1520,9 @@ class Singleton_updater(object):
         self._async_checking = False
         self._check_thread = None
 
-        logging.debug('{} BG thread: Finished checking for update, doing callback'.format(self._addon))
+        logging.debug('{0} BG thread: Finished checking for update, doing callback'.format(
+            self._addon
+        ))
         if callback:
             callback(self._update_ready)
 

@@ -206,7 +206,7 @@ class addon_updater_install_popup(bpy.types.Operator):
             if res == 0:
                 logging.debug('Updater returned successful')
             else:
-                logging.debug('Updater returned {}, error occurred'.format(res))
+                logging.debug('Updater returned {0}, error occurred'.format(res))
         elif updater.update_ready is None:
             _ = updater.check_for_update(now=True)
 
@@ -239,7 +239,7 @@ class addon_updater_check_now(bpy.types.Operator):
         # apply the UI settings
         settings = get_user_preferences(context)
         if not settings:
-            logging.debug('Could not get {} preferences, update check skipped'.format(__package__))
+            logging.debug('Could not get {0} preferences, update check skipped'.format(__package__))
             return {'CANCELLED'}
         updater.set_check_interval(
             enable=settings.auto_check_update,
@@ -657,7 +657,7 @@ def updater_run_install_popup_handler(scene):
         if ver_tuple < updater.current_version:
             # user probably manually installed to get the up to date addon
             # in here. Clear out the update flag using this function
-            logging.debug('{} updater: appears user updated, clearing flag'.format(updater.addon))
+            logging.debug('{0} updater: appears user updated, clearing flag'.format(updater.addon))
             updater.json_reset_restore()
             return
     atr = addon_updater_install_popup.bl_idname.split(".")
@@ -701,7 +701,7 @@ def post_update_callback(module_name, res=None):
     if res is None:
         # this is the same code as in conditional at the end of the register function
         # ie if "auto_reload_post_update" is True, comment out this code
-        logging.debug('{} updater: Running post update callback'.format(updater.addon))
+        logging.debug('{0} updater: Running post update callback'.format(updater.addon))
         # bpy.app.handlers.scene_update_post.append(updater_run_success_popup_handler)
 
         atr = addon_updater_updated_successful.bl_idname.split(".")
@@ -756,7 +756,7 @@ def check_for_update_background():
     # input is an optional callback function
     # this function should take a bool input, if true: update ready
     # if false, no update ready
-    logging.debug('{} updater: Running background check for update'.format(updater.addon))
+    logging.debug('{0} updater: Running background check for update'.format(updater.addon))
     updater.check_for_update_async(background_update_callback)
     ran_background_check = True
 
@@ -770,7 +770,7 @@ def check_for_update_nonthreaded(self, context):
     # should be the async wrapper call here
     settings = get_user_preferences(bpy.context)
     if not settings:
-        logging.debug('Could not get {} preferences, update check skipped'.format(__package__))
+        logging.debug('Could not get {0} preferences, update check skipped'.format(__package__))
         return
     updater.set_check_interval(
         enable=settings.auto_check_update,

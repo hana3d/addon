@@ -1,3 +1,5 @@
+'''Logging configs.'''
+
 import logging
 import os
 from logging.handlers import RotatingFileHandler
@@ -10,8 +12,8 @@ from .config import HANA3D_LOG_LEVEL, HANA3D_NAME
 from .report_tools import execute_wrapper
 
 
-def setup_logger():
-
+def setup_logger(): # noqa WPS210,WPS213
+    '''Logger setup.'''
     log_level = HANA3D_LOG_LEVEL
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
@@ -29,7 +31,7 @@ def setup_logger():
         log_file_path,
         mode='a',
         maxBytes=5 * 1024 * 1024,
-        backupCount=2
+        backupCount=2,
     )
     log_file_handler.setLevel(logging.DEBUG)
 
@@ -39,7 +41,7 @@ def setup_logger():
     blender_handler = BlenderHandler()
     blender_handler.setLevel(log_level)
 
-    log_format = '[%(asctime)s] %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s'
+    log_format = '[%(asctime)s] %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s' # noqa WPS323
     formatter = logging.Formatter(log_format)
     log_file_handler.setFormatter(formatter)
     report_file_handler.setFormatter(formatter)
@@ -56,44 +58,49 @@ def setup_logger():
 
 
 class BlenderHandler(logging.StreamHandler):
+    '''Logging handler that shows logs on Blender Info Tab'''
     def emit(self, record):
+        '''Emit.'''
         try:
-            if hasattr(bpy.context.area, 'type'):
+            if bpy.context.area.type:
                 text = record.msg
-                type = record.levelname
+                level = record.levelname
                 hana = getattr(bpy.ops, f'{HANA3D_NAME}')
-                hana.log_info(text=f'{type}: {text}')
-        except Exception:
-            pass
+                hana.log_info(text=f'{level}: {text}')
+        except Exception: # noqa S110
+            '''Don't show on wrong context'''
 
 
 class AppendInfo(bpy.types.Operator):
-    """Append report on info tab"""
+    """Append report on info tab."""
 
     bl_idname = f'{HANA3D_NAME}.log_info'
     bl_label = 'Append Report'
     bl_options = {'REGISTER'}
 
-    type: bpy.props.StringProperty(
+    level: bpy.props.StringProperty(
         name='type',
-        default=''
+        default='',
     )
     text: bpy.props.StringProperty(
         name='text',
-        default=''
+        default='',
     )
 
     @execute_wrapper
     def execute(self, context):
-        # self.report({self.type}, self.text)
+        '''Execute.'''
+        # noqa E800 # self.report({self.level}, self.text)
         return {'FINISHED'}
 
 
 def show_report(
-        props=None,
-        text: str = '',
-        timeout: int = 5,
-        color: Tuple = colors.GREEN):
+    props=None,
+    text: str = '',
+    timeout: int = 5,
+    color: Tuple = colors.GREEN,
+):
+    """Show report on UI and Addon."""
     ui.add_report(text=text, timeout=timeout, color=color)
     hana_type = str(type(props))
     if 'SearchProps' in hana_type:
@@ -108,5 +115,6 @@ classes = (
 
 
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    '''Register.'''
+    for cl in classes:
+        bpy.utils.register_class(cl)

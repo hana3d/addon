@@ -197,7 +197,10 @@ def save_prefs(self, context):
             # reset the api key in case the user writes some nonsense,
             # e.g. a search string instead of the Key
             user_preferences.api_key = ''
-            logger.show_report(get_search_props(), text='Login failed. Please paste a correct API Key.')
+            logger.show_report(
+                get_search_props(),
+                text='Login failed. Please paste a correct API Key.',
+            )
 
         prefs = {
             'API_key': user_preferences.api_key,
