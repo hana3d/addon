@@ -1,5 +1,8 @@
 """Asset Search."""
 
+
+from ..asset.asset_type import AssetType
+
 from typing import List
 
 from ...config import HANA3D_NAME
@@ -8,16 +11,15 @@ from ...config import HANA3D_NAME
 class AssetSearch(object):
     """Hana3D search information by asset type (TODO: merge this class with `Search`)."""
 
-    def __init__(self, context, asset_type):
+    def __init__(self, context, asset_type: AssetType):
         """Create a Search object by asset type.
 
         Args:
             context: Blender context.
-            asset_type: model | material | scene
+            asset_type: an asset type
         """
         self.context = context
-        # TODO remove inconsistency between e.g. `model` and `MODEL`
-        self.asset_type = asset_type.lower()
+        self.asset_type = asset_type
 
     @property  # noqa : WPS110
     def results(self) -> List:  # noqa : WPS110

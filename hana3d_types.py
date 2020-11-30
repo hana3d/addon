@@ -70,7 +70,7 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        asset_search = AssetSearch(context, self.asset_type)
+        asset_search = AssetSearch(context, self.asset_type.lower())
         search_object = Search(context)
         search_object.results = asset_search.results  # noqa : WPS110
         search_object.results_orig = asset_search.results_orig
