@@ -3,6 +3,8 @@
 
 from typing import List
 
+from bpy.types import Context
+
 from .search import SearchResult
 from ..asset.asset_type import AssetType
 from ...config import HANA3D_NAME
@@ -11,7 +13,7 @@ from ...config import HANA3D_NAME
 class AssetSearch(object):
     """Hana3D search information by asset type (TODO: merge this class with `Search`)."""
 
-    def __init__(self, context, asset_type: AssetType):
+    def __init__(self, context: Context, asset_type: AssetType):
         """Create a Search object by asset type.
 
         Args:
