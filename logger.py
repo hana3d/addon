@@ -2,6 +2,7 @@
 
 import logging
 import os
+from os.path import expanduser
 from logging.handlers import RotatingFileHandler
 from typing import Tuple
 
@@ -18,7 +19,7 @@ def setup_logger(): # noqa WPS210,WPS213
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
 
-    dir_path = os.path.join(os.getcwd(), 'hana3d_logs')
+    dir_path = os.path.join(expanduser('~'), 'hana3d_logs')
     log_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_logs.log')
     report_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_report.log')
     if not os.path.isdir(dir_path):
@@ -141,3 +142,9 @@ def register():
     """Register."""
     for cl in classes:
         bpy.utils.register_class(cl)
+
+
+def unregister():
+    """Unregister."""
+    for cl in classes:
+        bpy.utils.unregister_class(cl)
