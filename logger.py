@@ -2,8 +2,8 @@
 
 import logging
 import os
-from os.path import expanduser
 from logging.handlers import RotatingFileHandler
+from os.path import expanduser
 from typing import Tuple
 
 import bpy
@@ -51,8 +51,10 @@ def setup_logger(): # noqa WPS210,WPS213
 
     logger.addHandler(log_file_handler)
     logger.addHandler(report_file_handler)
-    logger.addHandler(console_handler)
-    logger.addHandler(blender_handler)
+
+    if len(logger.handlers) < 3:
+        logger.addHandler(console_handler)
+        logger.addHandler(blender_handler)
 
     url_logger = logging.getLogger('urllib3')
     url_logger.setLevel(max(logger.level, logging.INFO))
