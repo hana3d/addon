@@ -18,10 +18,10 @@
 
 import copy
 import functools
+import logging
 import os
 import shutil
 import threading
-import logging
 from queue import Queue
 
 import bpy
@@ -36,7 +36,16 @@ from bpy.props import (
     StringProperty
 )
 
-from . import append_link, colors, paths, render_tools, types, ui, utils, logger
+from . import (
+    append_link,
+    colors,
+    logger,
+    paths,
+    render_tools,
+    types,
+    ui,
+    utils
+)
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -112,7 +121,7 @@ class Downloader(threading.Thread):
         file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
 
         if self.stopped():
-            logging.debug(f'stopping download: {asset_data["name"]}')
+            logging.debug(f'stopping download: {asset_data["name"]}') # noqa WPS204
             return
 
         tmp_file = file_name + '_tmp'
@@ -124,7 +133,7 @@ class Downloader(threading.Thread):
 
             if total_length is None:  # no content length header
                 f.write(response.content)
-            else:
+            else: # noqa WPS220
                 tcom.file_size = int(total_length)
                 dl = 0
                 for data in response.iter_content(chunk_size=4096):

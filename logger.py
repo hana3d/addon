@@ -1,4 +1,4 @@
-'''Logging configs.'''
+"""Logging configs."""
 
 import logging
 import os
@@ -13,7 +13,7 @@ from .report_tools import execute_wrapper
 
 
 def setup_logger(): # noqa WPS210,WPS213
-    '''Logger setup.'''
+    """Logger setup."""
     log_level = HANA3D_LOG_LEVEL
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
@@ -58,9 +58,15 @@ def setup_logger(): # noqa WPS210,WPS213
 
 
 class BlenderHandler(logging.StreamHandler):
-    '''Logging handler that shows logs on Blender Info Tab'''
+    """Logging handler that shows logs on Blender Info Tab."""
+
     def emit(self, record):
-        '''Emit.'''
+        """
+        Emit.
+
+        Parameters:
+            record: automatically added from logging
+        """
         try:
             if bpy.context.area.type:
                 text = record.msg
@@ -68,7 +74,7 @@ class BlenderHandler(logging.StreamHandler):
                 hana = getattr(bpy.ops, f'{HANA3D_NAME}')
                 hana.log_info(text=f'{level}: {text}')
         except Exception: # noqa S110
-            '''Don't show on wrong context'''
+            """Don't show on wrong context"""
 
 
 class AppendInfo(bpy.types.Operator):
@@ -89,8 +95,9 @@ class AppendInfo(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        '''Execute.'''
-        # noqa E800 # self.report({self.level}, self.text)
+        """Execute."""
+        # self.report({self.level}, self.text)
+        pass # noqa S110 
         return {'FINISHED'}
 
 
@@ -100,7 +107,15 @@ def show_report(
     timeout: int = 5,
     color: Tuple = colors.GREEN,
 ):
-    """Show report on UI and Addon."""
+    """
+    Show report on UI and Addon.
+
+    Parameters:
+        props: props related to the right part of the addon
+        text: text of the report
+        timeout: seconds it will be displayed on UI
+        color: color that will be displayed on UI
+    """
     ui.add_report(text=text, timeout=timeout, color=color)
     hana_type = str(type(props))
     if 'SearchProps' in hana_type:
@@ -115,6 +130,6 @@ classes = (
 
 
 def register():
-    '''Register.'''
+    """Register."""
     for cl in classes:
         bpy.utils.register_class(cl)

@@ -1397,7 +1397,7 @@ class Singleton_updater(object):
             logging.debug(
                 "{0} Updater: Determined it's not yet time to check for updates".format(
                     self._addon,
-                )
+                ),
             )
             return False
 
@@ -1521,7 +1521,7 @@ class Singleton_updater(object):
         self._check_thread = None
 
         logging.debug('{0} BG thread: Finished checking for update, doing callback'.format(
-            self._addon
+            self._addon,
         ))
         if callback:
             callback(self._update_ready)
