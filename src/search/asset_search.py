@@ -1,6 +1,5 @@
 """Asset Search."""
 
-
 from typing import List
 
 from bpy.types import Context
