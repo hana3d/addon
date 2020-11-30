@@ -3,5 +3,5 @@ isort==5.0.0
 wemake-python-styleguide==0.14.1
 xenon==0.7.1
 autopep8==1.5.4
-flake8-isort==4.0
+flake8-isort==3.0.1
 mypy==0.790
