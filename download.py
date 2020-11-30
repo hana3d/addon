@@ -44,7 +44,7 @@ from . import (
     render_tools,
     types,
     ui,
-    utils,
+    utils # noqa C812
 )
 from .config import (
     HANA3D_DESCRIPTION,
