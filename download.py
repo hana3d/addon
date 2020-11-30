@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import copy
 import functools
 import os
@@ -43,6 +42,7 @@ from .config import (
     HANA3D_SCENES
 )
 from .report_tools import execute_wrapper
+from .src.search.search import Search
 
 download_threads = {}
 append_tasks_queue = Queue()
@@ -222,13 +222,13 @@ def set_thumbnail(asset_data, asset):
 
 
 def update_downloaded_progress(downloader: Downloader):
-    sr = bpy.context.window_manager.get(f'{HANA3D_NAME}_search_results')
-    if sr is None:
-        utils.p(f'{HANA3D_NAME}_search_results not found')
+    search = Search(bpy.context)
+    if search.results is None:
+        print('Empty search results')  # noqa : WPS421:230
         return
-    for r in sr:
-        if r.get('view_id') == downloader.asset_data['view_id']:
-            r['downloaded'] = downloader.tcom.progress
+    for search_result in search.results:
+        if search_result.get('view_id') == downloader.asset_data['view_id']:
+            search_result['downloaded'] = downloader.tcom.progress
             return
 
 
@@ -694,14 +694,13 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        wm = context.window_manager
-        sr = wm[f'{HANA3D_NAME}_search_results']
+        search = Search(context)
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
-        asset_data = sr[self.asset_index].to_dict()
-        au = wm.get(f'{HANA3D_NAME}_assets_used')
-        if au is None:
-            wm[f'{HANA3D_NAME}_assets_used'] = {}
+        asset_data = search.results[self.asset_index].to_dict()
+        assets_used = context.window_manager.get(f'{HANA3D_NAME}_assets_used')
+        if assets_used is None:
+            context.window_manager[f'{HANA3D_NAME}_assets_used'] = {}
 
         atype = asset_data['asset_type']
         if (
@@ -757,16 +756,20 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     grid_distance: FloatProperty(
         name="Grid Distance",
         description='distance between objects on the grid',
+        precision=1,
+        step=0.5,
         default=3
     )
 
     reset: BoolProperty(
-        name="Reset Count",
-        description='reset counter and download previews from zero',
+        name='Reset Count',
+        description='reset counter and restart download from zero',
         default=False
     )
 
     batch_size: IntProperty(
+        name='Batch Size',
+        description='number of objects to download in parallel',
         default=20
     )
 
@@ -789,13 +792,13 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     def execute(self, context):
         if self.reset is True:
             self.object_count = 0
-        wm = context.window_manager
-        if f'{HANA3D_NAME}_search_results' not in wm:
+        search = Search(context)
+        if not search.results:
+            print('Empty search results')  # noqa : WPS421
             return {'CANCELLED'}
-        sr = wm[f'{HANA3D_NAME}_search_results']
 
-        for index, result in zip(range(self.batch_size), sr[self.object_count:]):
-            asset_data = result.to_dict()
+        for search_result in search.results[self.object_count:]:
+            asset_data = search_result.to_dict()
             location = self._get_location()
             kwargs = {
                 'cast_parent': "",
