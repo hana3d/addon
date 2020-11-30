@@ -98,7 +98,7 @@ class AppendInfo(bpy.types.Operator):
         """
         Execute.
 
-        Parametes:
+        Parameters:
             context: blender context
 
         Returns:
