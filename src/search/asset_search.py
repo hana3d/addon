@@ -6,8 +6,7 @@ from ...config import HANA3D_NAME
 
 
 class AssetSearch(object):
-    # TODO: merge this class with `Search`
-    """Hana3D search information by asset type."""
+    """Hana3D search information by asset type (TODO: merge this class with `Search`)."""
 
     def __init__(self, context, asset_type):
         """Create a Search object by asset type.
@@ -31,7 +30,7 @@ class AssetSearch(object):
 
     @property
     def results_orig(self) -> List:
-        """Get original search results by asset type (FIXME).
+        """Get original search results by asset type (TODO: refactor this logic).
 
         Returns:
             List: original search results by asset type

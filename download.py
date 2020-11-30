@@ -698,8 +698,8 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
         asset_data = search.results[self.asset_index].to_dict()
-        au = context.window_manager.get(f'{HANA3D_NAME}_assets_used')
-        if au is None:
+        assets_used = context.window_manager.get(f'{HANA3D_NAME}_assets_used')
+        if assets_used is None:
             context.window_manager[f'{HANA3D_NAME}_assets_used'] = {}
 
         atype = asset_data['asset_type']
