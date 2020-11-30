@@ -31,7 +31,7 @@ from bpy.types import Operator
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
 
-from . import bg_blender, hana3d_types, logger, paths, render, rerequests, ui, utils # isort:skip
+from . import bg_blender, hana3d_types, logger, paths, render, rerequests, ui, utils  # isort:skip
 
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"

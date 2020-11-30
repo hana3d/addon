@@ -43,7 +43,7 @@ from .config import (
 )
 from .report_tools import execute_wrapper
 
-from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils # isort:skip
+from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # isort:skip
 
 
 download_threads = {}
