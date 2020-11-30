@@ -1,10 +1,10 @@
 """Asset Search."""
 
 
-from ..asset.asset_type import AssetType
-
 from typing import List
 
+from .search import SearchResult
+from ..asset.asset_type import AssetType
 from ...config import HANA3D_NAME
 
 
@@ -22,7 +22,7 @@ class AssetSearch(object):
         self.asset_type = asset_type
 
     @property  # noqa : WPS110
-    def results(self) -> List:  # noqa : WPS110
+    def results(self) -> List[SearchResult]:  # noqa : WPS110
         """Get search results by asset type.
 
         Returns:
@@ -31,7 +31,7 @@ class AssetSearch(object):
         return self.context.window_manager.get(f'{HANA3D_NAME}_{self.asset_type}_search')
 
     @property
-    def results_orig(self) -> List:
+    def results_orig(self) -> List[SearchResult]:
         """Get original search results by asset type (TODO: refactor this logic).
 
         Returns:
@@ -40,9 +40,9 @@ class AssetSearch(object):
         return self.context.window_manager.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig')
 
     @results.setter  # noqa : WPS110
-    def results(self, results: List):  # noqa : WPS110
+    def results(self, results: List[SearchResult]):  # noqa : WPS110
         self.context.window_manager[f'{HANA3D_NAME}_{self.asset_type}_search'] = results
 
     @results_orig.setter
-    def results_orig(self, results_orig: List):
+    def results_orig(self, results_orig: List[SearchResult]):
         self.context.window_manager[f'{HANA3D_NAME}_{self.asset_type}_search_orig'] = results_orig

@@ -3,13 +3,24 @@
 from dataclasses import dataclass
 from typing import List
 
+from bpy.types import Context
+
 from ...config import HANA3D_NAME
+
+
+@dataclass
+class SearchResult(object):
+    """Hana3D search result."""
+
+    downloaded: float
+    thumbnail: str
+    author_id: str
 
 
 class Search(object):
     """Hana3D search information."""
 
-    def __init__(self, context):
+    def __init__(self, context: Context):
         """Create a Search object.
 
         Args:
@@ -18,7 +29,7 @@ class Search(object):
         self.context = context
 
     @property  # noqa : WPS110
-    def results(self) -> List:  # noqa : WPS110
+    def results(self) -> List[SearchResult]:  # noqa : WPS110
         """Get search results.
 
         Returns:
@@ -29,7 +40,7 @@ class Search(object):
         return self.context.window_manager[f'{HANA3D_NAME}_search_results']
 
     @property
-    def results_orig(self) -> List:
+    def results_orig(self) -> List[SearchResult]:
         """Get original search results (FIXME).
 
         Returns:
@@ -40,16 +51,9 @@ class Search(object):
         return self.context.window_manager[f'{HANA3D_NAME}_search_results_orig']
 
     @results.setter  # noqa : WPS110
-    def results(self, results_value: List):  # noqa : WPS110
+    def results(self, results_value: List[SearchResult]):  # noqa : WPS110
         self.context.window_manager[f'{HANA3D_NAME}_search_results'] = results_value
 
     @results_orig.setter
-    def results_orig(self, results_orig_value: List):
+    def results_orig(self, results_orig_value: List[SearchResult]):
         self.context.window_manager[f'{HANA3D_NAME}_search_results_orig'] = results_orig_value
-
-
-@dataclass
-class SearchResult(object):
-    """Hana3D search result."""
-
-    todo: str

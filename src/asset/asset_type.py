@@ -1,4 +1,4 @@
-"""Asset Type"""
+"""Asset Type."""
 
 from enum import Enum
 
