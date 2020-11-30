@@ -19,6 +19,7 @@
 import math
 import os
 import time
+from typing import List
 
 import bpy
 import mathutils
@@ -39,15 +40,15 @@ from . import (
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.ui.report import Report
 
 handler_2d = None
 handler_3d = None
 active_area = None
-active_area = None
 active_window = None
 active_region = None
 
-reports = []
+reports: List[Report] = []
 
 mappingdict = {
     'MODEL': 'model',
@@ -92,45 +93,14 @@ def get_approximate_text_width(st):
 
 def add_report(text='', timeout=5, color=colors.GREEN):
     global reports
+    global active_area
     # check for same reports and just make them longer by the timeout.
     for old_report in reports:
         if old_report.text == text:
             old_report.timeout = old_report.age + timeout
             return
-    report = Report(text=text, timeout=timeout, color=color)
+    report = Report(active_area, text=text, timeout=timeout, color=color)
     reports.append(report)
-
-
-class Report:
-    def __init__(self, text='', timeout=5, color=(0.5, 1, 0.5, 1)):
-        self.text = text
-        self.timeout = timeout
-        self.start_time = time.time()
-        self.color = color
-        self.draw_color = color
-        self.age = 0
-
-    def fade(self):
-        fade_time = 1
-        self.age = time.time() - self.start_time
-        if self.age + fade_time > self.timeout:
-            alpha_multiplier = (self.timeout - self.age) / fade_time
-            self.draw_color = (
-                self.color[0],
-                self.color[1],
-                self.color[2],
-                self.color[3] * alpha_multiplier,
-            )
-            if self.age > self.timeout:
-                global reports
-                try:
-                    reports.remove(self)
-                except Exception:
-                    pass
-
-    def draw(self, x, y):
-        if bpy.context.area == active_area:
-            ui_bgl.draw_text(self.text, x, y + 8, 16, self.draw_color)
 
 
 def get_asset_under_mouse(mousex, mousey):
@@ -577,7 +547,8 @@ def draw_callback_2d_progress(self, context):
     for report in reports:
         report.draw(x, y - index * 30)
         index += 1
-        report.fade()
+        if report.fade():
+            reports.remove(report)
 
 
 def draw_callback_2d_upload_preview(self, context):
