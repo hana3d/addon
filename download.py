@@ -36,7 +36,7 @@ from bpy.props import (
     StringProperty
 )
 
-from . import (
+from . import (  # noqa C812
     append_link,
     colors,
     hana3d_types,
