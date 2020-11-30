@@ -44,7 +44,7 @@ from . import (
     render_tools,
     types,
     ui,
-    utils
+    utils,
 )
 from .config import (
     HANA3D_DESCRIPTION,
@@ -142,7 +142,7 @@ class Downloader(threading.Thread):
                     tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
                     f.write(data)
                     if self.stopped():
-                        logging.debug(f'stopping download: {asset_data["name"]}')
+                        logging.debug(f'stopping download: {asset_data["name"]}') # noqa WPS220
                         f.close()
                         os.remove(tmp_file)
                         return

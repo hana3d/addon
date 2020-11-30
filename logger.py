@@ -74,7 +74,7 @@ class BlenderHandler(logging.StreamHandler):
                 hana = getattr(bpy.ops, f'{HANA3D_NAME}')
                 hana.log_info(text=f'{level}: {text}')
         except Exception: # noqa S110
-            """Don't show on wrong context"""
+            pass # noqa WPS420
 
 
 class AppendInfo(bpy.types.Operator):
@@ -95,8 +95,16 @@ class AppendInfo(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        """Execute."""
-        # self.report({self.level}, self.text)
+        """
+        Execute.
+
+        Parametes:
+            context: blender context
+
+        Returns:
+            state: blender state
+        """
+        # noqa E800 self.report({self.level}, self.text)
         pass # noqa S110 
         return {'FINISHED'}
 
