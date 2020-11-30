@@ -213,7 +213,7 @@ def draw_panel_common_search(layout, context):
         layout.label(text='Import method:')
         layout.prop(props, 'append_method', expand=True, icon_only=False)
         row = layout.row(align=True)
-        row.operator(f"scene.{HANA3D_NAME}_batch_download")
+        row.operator(f'scene.{HANA3D_NAME}_batch_download')
     # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge
     #     layout.separator()
     #     layout.label(text='Import method:')

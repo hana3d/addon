@@ -757,18 +757,19 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
     grid_distance: FloatProperty(
         name="Grid Distance",
         description='distance between objects on the grid',
+        precision=1,
         step=0.5,
         default=3
     )
 
     reset: BoolProperty(
-        name="Reset Count",
+        name='Reset Count',
         description='reset counter and restart download from zero',
         default=False
     )
 
     batch_size: IntProperty(
-        name="Batch Size",
+        name='Batch Size',
         description='number of objects to download in parallel',
         default=20
     )
@@ -793,10 +794,11 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         if self.reset is True:
             self.object_count = 0
         search = Search(context)
-        if not search.results():
+        search_results = search.results()
+        if not search_results:
             return {'CANCELLED'}
 
-        for index, result in zip(range(self.batch_size), search.results()[self.object_count:]):
+        for result in search_results[self.object_count:]:
             asset_data = result.to_dict()
             location = self._get_location()
             kwargs = {
