@@ -208,7 +208,7 @@ def timer_update():
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                text = f'Found {search_object.results_orig['count']} results. '  # noqa #501
+                text = f'Found {search_object.results_orig["count"]} results. '  # noqa #501
                 logger.show_report(props, text=text)
 
             else:
