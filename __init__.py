@@ -46,7 +46,7 @@ from . import (  # noqa: WPS235
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
-from .src import async_loop, autothumb
+from .src import async_loop, autothumb, request_test
 
 bl_info = {
     'name': 'Hana3D',
@@ -316,6 +316,7 @@ modules = (
     ui,
     ui_panels,
     upload,
+    request_test
 )
 
 

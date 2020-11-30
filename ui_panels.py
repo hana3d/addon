@@ -113,6 +113,8 @@ def draw_selected_libraries(layout, props, operator):
 
 
 def draw_panel_common_upload(layout, context):
+    layout.operator('test.request', text='TEST')
+
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
     asset_type = uiprops.asset_type
     props = utils.get_upload_props()
