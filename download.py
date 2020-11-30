@@ -36,16 +36,8 @@ from bpy.props import (
     StringProperty
 )
 
-from . import (
-    append_link,
-    colors,
-    logger,
-    paths,
-    render_tools,
-    types,
-    ui,
-    utils # noqa C812
-)
+from . import utils  # noqa C812
+from . import append_link, colors, logger, paths, render_tools, types, ui
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
