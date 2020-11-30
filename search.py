@@ -193,10 +193,13 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if view_id in bpy.context.window_manager.get(f'{HANA3D_NAME}_assets_used', {}).keys():
+                                assets_used = bpy.context.window_manager.get(  # noqa : WPS220
+                                    f'{HANA3D_NAME}_assets_used', {},
+                                )
+                                if view_id in assets_used.keys():
                                     asset_data['downloaded'] = 100  # noqa : WPS220
 
-                                result_field.append(asset_data)
+                                result_field.append(asset_data)  # noqa : WPS220
 
                 asset_search.results = result_field  # noqa : WPS110
                 asset_search.results_orig = rdata
@@ -230,7 +233,7 @@ def load_previews():
     # FIRST START SEARCH
     props = getattr(bpy.context.window_manager, HANA3D_UI)
 
-    directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
+    directory = paths.get_temp_dir(f'{mappingdict[props.asset_type]}_search')
     search_object = Search(bpy.context)
     search_results = search_object.results
 

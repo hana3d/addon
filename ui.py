@@ -806,8 +806,9 @@ def draw_callback_2d_search(self, context):
                 gimg = None
                 atip = ''
                 if bpy.context.window_manager.get(f'{HANA3D_NAME}_authors') is not None:
-                    a = bpy.context.window_manager[f'{HANA3D_NAME}_authors'].get(
-                        search_result['author_id'])
+                    a = bpy.context.window_manager[f'{HANA3D_NAME}_authors'].get(  # noqa : WPS111,WPS440
+                        search_result['author_id'],
+                    )
                     if a is not None and a != '':
                         if a.get('gravatarImg') is not None:
                             gimg = utils.get_hidden_image(a['gravatarImg'], a['gravatarHash'])
@@ -1067,6 +1068,7 @@ class AssetBarOperator(bpy.types.Operator):
         return properties.tooltip
 
     def search_more(self):
+        """Search more results."""
         search_object = Search(bpy.context)
         search_results_orig = search_object.results_orig
         if search_results_orig is not None and search_results_orig.get('next') is not None:
@@ -1142,7 +1144,7 @@ class AssetBarOperator(bpy.types.Operator):
                     bpy.context.window_manager['appendable'] = False
 
         self.area.tag_redraw()
-        s = context.scene
+        scene = context.scene
 
         if ui_props.turn_off:
             ui_props.turn_off = False
@@ -1195,8 +1197,7 @@ class AssetBarOperator(bpy.types.Operator):
 
         # TODO add one more condition here to take less performance.
         r = self.region
-        s = bpy.context.scene
-        wm = context.window_manager
+        scene = bpy.context.scene
         search_object = Search(context)
         search_results = search_object.results
         search_results_orig = search_object.results_orig
@@ -1217,7 +1218,7 @@ class AssetBarOperator(bpy.types.Operator):
             if ui_props.dragging and not mouse_in_asset_bar(mx, my):
                 # and my < r.height - ui_props.bar_height \
                 # and mx > 0 and mx < r.width and my > 0:
-                sprops = getattr(wm, HANA3D_MODELS)
+                sprops = getattr(context.window_manager, HANA3D_MODELS)
                 if event.type == 'WHEELUPMOUSE':
                     sprops.offset_rotation_amount += sprops.offset_rotation_step
                 elif event.type == 'WHEELDOWNMOUSE':
@@ -1309,7 +1310,7 @@ class AssetBarOperator(bpy.types.Operator):
             if not ui_props.dragging:
                 bpy.context.window.cursor_set("DEFAULT")
 
-                if (
+                if (  # noqa : WPS337
                     search_results is not None
                     and ui_props.wcount * ui_props.hcount > len(search_results)
                     and ui_props.scrolloffset > 0
@@ -1366,7 +1367,7 @@ class AssetBarOperator(bpy.types.Operator):
                     # submitted by a user, so this situation shouldn't
                     # happen anymore, but there might exists scenes
                     # which have this problem for some reason.
-                    if ui_props.active_index < len(search_results) and ui_props.active_index > -1:
+                    if ui_props.active_index < len(search_results) and ui_props.active_index > -1:  # noqa : WPS333
                         ui_props.draw_snapped_bounds = True  # noqa : WPS220
                         active_mod = search_results[ui_props.active_index]  # noqa : WPS220
                         ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])  # noqa : WPS220
@@ -1419,7 +1420,7 @@ class AssetBarOperator(bpy.types.Operator):
 
                 # scroll by a whole page
                 if (
-                    mx > ui_props.bar_x + ui_props.bar_width - 50
+                    mx > ui_props.bar_x + ui_props.bar_width - 50  # noqa : WPS432
                     and len(search_results) - ui_props.scrolloffset > ui_props.wcount * ui_props.hcount
                 ):
                     ui_props.scrolloffset = min(
@@ -1525,7 +1526,7 @@ class AssetBarOperator(bpy.types.Operator):
                 else:
                     asset_search_index = get_asset_under_mouse(mx, my)
 
-                    if ui_props.asset_type in ('MATERIAL', 'MODEL',):
+                    if ui_props.asset_type in ('MATERIAL', 'MODEL',):  # noqa : WPS220
                         ao = bpy.context.active_object
                         if ao is not None and not ao.is_library_indirect:
                             target_object = bpy.context.active_object.name
@@ -1544,7 +1545,7 @@ class AssetBarOperator(bpy.types.Operator):
                             loc = ui_props.snapped_location
                             rotation = (0, 0, 0)
 
-                            asset_data = search_results[asset_search_index]
+                            asset_data = search_results[asset_search_index] # noqa : WPS220
                             download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                             download_op(
                                 True,
@@ -1561,8 +1562,8 @@ class AssetBarOperator(bpy.types.Operator):
                             loc = ui_props.snapped_location
                             rotation = ui_props.snapped_rotation
                         else:
-                            loc = s.cursor.location
-                            rotation = s.cursor.rotation_euler
+                            loc = scene.cursor.location
+                            rotation = scene.cursor.rotation_euler
 
                         download_op = getattr(bpy.ops.scene, HANA3D_NAME + "_download")
                         download_op(
