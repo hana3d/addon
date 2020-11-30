@@ -17,7 +17,7 @@ class Search(object):
         """
         self.context = context
 
-    @property
+    @property  # noqa : WPS110
     def results(self) -> List:  # noqa : WPS110
         """Get search results.
 
@@ -39,7 +39,7 @@ class Search(object):
             return []
         return self.context.window_manager[f'{HANA3D_NAME}_search_results_orig']
 
-    @results.setter
+    @results.setter  # noqa : WPS110
     def results(self, results_value: List):  # noqa : WPS110
         self.context.window_manager[f'{HANA3D_NAME}_search_results'] = results_value
 

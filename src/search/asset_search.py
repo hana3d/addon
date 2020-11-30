@@ -20,7 +20,7 @@ class AssetSearch(object):
         # TODO remove inconsistency between e.g. `model` and `MODEL`
         self.asset_type = asset_type.lower()
 
-    @property
+    @property  # noqa : WPS110
     def results(self) -> List:  # noqa : WPS110
         """Get search results by asset type.
 
@@ -38,7 +38,7 @@ class AssetSearch(object):
         """
         return self.context.window_manager.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig')
 
-    @results.setter
+    @results.setter  # noqa : WPS110
     def results(self, results: List):  # noqa : WPS110
         self.context.window_manager[f'{HANA3D_NAME}_{self.asset_type}_search'] = results
 
