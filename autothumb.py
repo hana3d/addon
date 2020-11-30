@@ -15,8 +15,8 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-import logging
 import json
+import logging
 import os
 import subprocess
 import tempfile
