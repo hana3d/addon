@@ -35,6 +35,16 @@ from bpy.props import (
     StringProperty
 )
 
+from . import (  # isort:skip
+    append_link,
+    colors,
+    hana3d_types,
+    logger,
+    paths,
+    render_tools,
+    ui,
+    utils
+)
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -42,9 +52,6 @@ from .config import (
     HANA3D_SCENES
 )
 from .report_tools import execute_wrapper
-
-from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # isort:skip
-
 
 download_threads = {}
 append_tasks_queue = Queue()
