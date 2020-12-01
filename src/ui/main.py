@@ -1,4 +1,2 @@
+"""Hana3D Blender UI class."""
 # TODO: define this as a singleton
-class UI:
-    def __init__(self):
-        self.tmp = ''

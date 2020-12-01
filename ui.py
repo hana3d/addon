@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import math
 import os
 import time
@@ -28,18 +27,10 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from . import (
-    bg_blender,
-    colors,
-    download,
-    paths,
-    render,
-    search,
-    ui_bgl,
-    utils
-)
+from . import bg_blender, colors, download, paths, render, search, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.ui import bgl_helper
 from .src.ui.report import Report
 
 handler_2d = None
@@ -93,13 +84,13 @@ def get_approximate_text_width(st):
 
 def add_report(text='', timeout=5, color=colors.GREEN):
     global reports
-    global active_area
+    global active_area  # noqa: WPS420
     # check for same reports and just make them longer by the timeout.
     for old_report in reports:
         if old_report.text == text:
             old_report.timeout = old_report.age + timeout
             return
-    report = Report(active_area, text=text, timeout=timeout, color=color)
+    report = Report(active_area, text, timeout=timeout, color=color)
     reports.append(report)
 
 
@@ -178,7 +169,7 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
         [0, 8],
         [1, 8],
     ]
-    ui_bgl.draw_lines(vertices, lines, color)
+    bgl_helper.draw_lines(vertices, lines, color)
     if progress is not None:
         color = (color[0], color[1], color[2], 0.2)
         progress = progress * 0.01
@@ -188,7 +179,7 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
         vz3 = (v7 - v3) * progress + v3
         rects = ((v0, v1, vz1, vz0), (v1, v2, vz2, vz1), (v2, v3, vz3, vz2), (v3, v0, vz0, vz3))
         for r in rects:
-            ui_bgl.draw_rect_3d(r, color)
+            bgl_helper.draw_rect3d(r, color)
 
 
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
@@ -252,7 +243,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     textcol_strong = (textcol[0] * 1.3, textcol[1] * 1.3, textcol[2] * 1.3, 1)
 
     # background
-    ui_bgl.draw_rect(
+    bgl_helper.draw_rect(
         x - ttipmargin,
         y - 2 * ttipmargin - isizey,
         isizex + ttipmargin * 2,
@@ -260,10 +251,10 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
         bgcol,
     )
     # main preview image
-    ui_bgl.draw_image(x, y - isizey - ttipmargin, isizex, isizey, img, 1)
+    bgl_helper.draw_image(x, y - isizey - ttipmargin, isizex, isizey, img, 1)
 
     # text overlay background
-    ui_bgl.draw_rect(
+    bgl_helper.draw_rect(
         x - ttipmargin,
         y - 2 * ttipmargin - isizey,
         isizex + ttipmargin * 2,
@@ -273,7 +264,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     # draw gravatar
     gsize = 40
     if gravatar is not None:
-        ui_bgl.draw_image(
+        bgl_helper.draw_image(
             x + isizex / 2 + textmargin,
             y - isizey + texth - gsize - nameline_height - textmargin,
             gsize,
@@ -311,7 +302,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
             fsize = font_height
         i += 1
         column_lines += 1
-        ui_bgl.draw_text(line, xtext, ytext, fsize, tcol)
+        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
     xtext += int(isizex / ncolumns)
 
     column_lines = 1
@@ -344,7 +335,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
             fsize = font_height
         i += 1
         column_lines += 1
-        ui_bgl.draw_text(line, xtext, ytext, fsize, tcol)
+        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
 
 
 def draw_tooltip_old(x, y, text='', author='', img=None):
@@ -402,7 +393,7 @@ def draw_tooltip_old(x, y, text='', author='', img=None):
     textcol = (textcol[0], textcol[1], textcol[2], 1)
     textcol1 = (textcol[0] * 0.8, textcol[1] * 0.8, textcol[2] * 0.8, 1)
 
-    ui_bgl.draw_rect(
+    bgl_helper.draw_rect(
         x - ttipmargin,
         y - texth - 2 * ttipmargin - isizey,
         isizex + ttipmargin * 2,
@@ -431,8 +422,8 @@ def draw_tooltip_old(x, y, text='', author='', img=None):
             fsize = font_height
         i += 1
         column_lines += 1
-        ui_bgl.draw_text(line, xtext, ytext, fsize, tcol)
-    ui_bgl.draw_image(x, y - texth - isizey - ttipmargin, isizex, isizey, img, 1)
+        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
+    bgl_helper.draw_image(x, y - texth - isizey - ttipmargin, isizex, isizey, img, 1)
 
 
 def draw_callback_2d(self, context):
@@ -464,14 +455,14 @@ def draw_callback_2d(self, context):
 
 def draw_downloader(x, y, percent=0, img=None):
     if img is not None:
-        ui_bgl.draw_image(x, y, 50, 50, img, 0.5)
-    ui_bgl.draw_rect(x, y, 50, int(0.5 * percent), (0.2, 1, 0.2, 0.3))
-    ui_bgl.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))
+        bgl_helper.draw_image(x, y, 50, 50, img, 0.5)
+    bgl_helper.draw_rect(x, y, 50, int(0.5 * percent), (0.2, 1, 0.2, 0.3))
+    bgl_helper.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))
 
 
 def draw_progress(x, y, text='', percent=None, color=colors.GREEN):
-    ui_bgl.draw_rect(x, y, percent, 5, color)
-    ui_bgl.draw_text(text, x, y + 8, 16, color)
+    bgl_helper.draw_rect(x, y, percent, 5, color)
+    bgl_helper.draw_text(text, x, y + 8, 16, color)
 
 
 def draw_callback_3d_progress(self, context):
@@ -607,7 +598,7 @@ def draw_callback_2d_search(self, context):
         else:
             bar_width = ui_props.bar_width
         row_height = ui_props.thumb_size + ui_props.margin
-        ui_bgl.draw_rect(
+        bgl_helper.draw_rect(
             ui_props.bar_x,
             ui_props.bar_y - ui_props.bar_height,
             bar_width,
@@ -630,7 +621,7 @@ def draw_callback_2d_search(self, context):
                     context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
                 pagination_text = \
                     f'{page_start} - {page_end} of {wm[f"{HANA3D_NAME}_search_results_orig"]["count"]}' # noqa E501
-                ui_bgl.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
+                bgl_helper.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width
                                  - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
                 # arrows
                 arrow_y = (
@@ -641,7 +632,7 @@ def draw_callback_2d_search(self, context):
                 if ui_props.scrolloffset > 0:
 
                     if ui_props.active_index == -2:
-                        ui_bgl.draw_rect(
+                        bgl_helper.draw_rect(
                             ui_props.bar_x,
                             ui_props.bar_y - ui_props.bar_height,
                             25,
@@ -649,14 +640,14 @@ def draw_callback_2d_search(self, context):
                             highlight,
                         )
                     img = utils.get_thumbnail('arrow_left.png')
-                    ui_bgl.draw_image(ui_props.bar_x, arrow_y, 25, ui_props.thumb_size, img, 1)
+                    bgl_helper.draw_image(ui_props.bar_x, arrow_y, 25, ui_props.thumb_size, img, 1)
 
                 if (
                     search_results_orig['count'] - ui_props.scrolloffset
                     > (ui_props.wcount * ui_props.hcount) + 1
                 ):
                     if ui_props.active_index == -1:
-                        ui_bgl.draw_rect(
+                        bgl_helper.draw_rect(
                             ui_props.bar_x + ui_props.bar_width - 25,
                             ui_props.bar_y - ui_props.bar_height,
                             25,
@@ -664,7 +655,7 @@ def draw_callback_2d_search(self, context):
                             highlight,
                         )
                     img1 = utils.get_thumbnail('arrow_right.png')
-                    ui_bgl.draw_image(
+                    bgl_helper.draw_image(
                         ui_props.bar_x + ui_props.bar_width - 25,
                         arrow_y,
                         25,
@@ -700,9 +691,9 @@ def draw_callback_2d_search(self, context):
                         offset = (1 - img.size[1] / img.size[0]) / 2
                         crop = (offset, 0, 1 - offset, 1)
                     if img is not None:
-                        ui_bgl.draw_image(x, y, w, w, img, 1, crop=crop)
+                        bgl_helper.draw_image(x, y, w, w, img, 1, crop=crop)
                         if index == ui_props.active_index:
-                            ui_bgl.draw_rect(
+                            bgl_helper.draw_rect(
                                 x - ui_props.highlight_margin,
                                 y - ui_props.highlight_margin,
                                 w + 2 * ui_props.highlight_margin,
@@ -714,18 +705,18 @@ def draw_callback_2d_search(self, context):
                         #               w + 2*highlight_margin, h + 2*highlight_margin , highlight)
 
                     else:
-                        ui_bgl.draw_rect(x, y, w, h, white)
+                        bgl_helper.draw_rect(x, y, w, h, white)
 
                     result = search_results[index]
                     if result['downloaded'] > 0:
-                        ui_bgl.draw_rect(x, y - 2, int(w * result['downloaded'] / 100.0), 2, green)
+                        bgl_helper.draw_rect(x, y - 2, int(w * result['downloaded'] / 100.0), 2, green)
                     # object type icons - just a test..., adds clutter/ not so userfull:
                     # icons = ('type_finished.png', 'type_template.png', 'type_particle_system.png')
 
                     v_icon = verification_icons[result.get('verification_status', 'validated')]
                     if v_icon is not None:
                         img = utils.get_thumbnail(v_icon)
-                        ui_bgl.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
+                        bgl_helper.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
 
             # if user_preferences.api_key == '':
             #     report = 'Register on Hana3D website to upload your own assets.'
@@ -799,7 +790,7 @@ def draw_callback_2d_search(self, context):
         iname = utils.previmg_name(ui_props.active_index)
         img = bpy.data.images.get(iname)
         linelength = 35
-        ui_bgl.draw_image(
+        bgl_helper.draw_image(
             ui_props.mouse_x + linelength,
             ui_props.mouse_y - linelength - ui_props.thumb_size,
             ui_props.thumb_size,
@@ -807,7 +798,7 @@ def draw_callback_2d_search(self, context):
             img,
             1,
         )
-        ui_bgl.draw_line2d(
+        bgl_helper.draw_line2d(
             ui_props.mouse_x,
             ui_props.mouse_y,
             ui_props.mouse_x + linelength,
