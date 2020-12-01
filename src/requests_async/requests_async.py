@@ -3,6 +3,7 @@
 import asyncio
 import functools
 import requests
+import uuid
 
 from ..preferences.preferences import Preferences
 from ...config import HANA3D_DESCRIPTION

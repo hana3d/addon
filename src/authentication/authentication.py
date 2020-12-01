@@ -1,12 +1,11 @@
 """Hana3D authentication using Auth0."""
 
-import asyncio
 import time
 
 from ...hana3d_oauth import refresh_token
 from ..preferences.preferences import Preferences
 from ..preferences.profile import Profile
-from ..async_loop import ensure_async_loop
+from ..async_loop import run_async_function
 
 
 class Authentication(object):
@@ -34,5 +33,4 @@ class Authentication(object):
         if (api_key_exists and api_key_has_timed_out):
             refresh_token(immediate=False)
         if api_key_exists and self.profile.get() is None:
-            asyncio.ensure_future(self.profile.update_async())
-            ensure_async_loop()
+            run_async_function(self.profile.update_async)

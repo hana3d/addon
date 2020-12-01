@@ -124,6 +124,24 @@ def erase_async_loop():
     loop.stop()
 
 
+def run_async_function(
+        async_function: typing.Callable,
+        done_callback: typing.Optional[typing.Callable[[typing.Callable], typing.Any]] = None,
+        **kwargs
+):
+    """Start an asynchronous task defined by async_function and
+    run done_callback when it is done, done_callback can only accept task as argument:
+
+    def done_callback(task):
+        print('Task result: ', task.result())
+    """
+
+    async_task = asyncio.ensure_future(async_function(**kwargs))
+    if done_callback is not None:
+        async_task.add_done_callback(done_callback)
+    ensure_async_loop()
+
+
 class AsyncLoopModalOperator(bpy.types.Operator):
     bl_idname = f'asyncio.{HANA3D_NAME}_loop'
     bl_label = 'Runs the asyncio main loop'
