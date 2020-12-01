@@ -770,6 +770,12 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         default=3
     )
 
+    batch_size: IntProperty(
+        name='Batch Size',
+        description='number of objects to download in parallel',
+        default=20
+    )
+
     def _get_location(self):
         x = y = 0
         dx = 0
@@ -797,10 +803,11 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         if query.updated_at:
             updated_at = query.updated_at.isoformat()
             if self.search_query_updated_at != updated_at:
+                if self.search_query_updated_at == '':
+                    self.object_count = 0
                 self.search_query_updated_at = updated_at
-                self.object_count = 0
 
-        for search_result in search.results[self.object_count:]:
+        for _, search_result in zip(range(self.batch_size), search.results[self.object_count:]):
             asset_data = search_result.to_dict()
             location = self._get_location()
             kwargs = {
@@ -813,7 +820,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
             }
 
             start_download(asset_data, **kwargs)
-        self.reset = False
+
         return {'FINISHED'}
 
 

@@ -19,6 +19,8 @@ class Query(object):
     verification_status: str = None
     public: bool = False
     workspace: str = None
+    tags: str = None
+    libraries: str = None
 
     def __init__(self, context: Context = None, props: Dict = None):
         """Create a Search Query object.
