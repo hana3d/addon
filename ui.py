@@ -90,8 +90,7 @@ def add_report(text='', timeout=5, color=colors.GREEN):
     global active_area  # noqa: WPS420
     # check for same reports and just make them longer by the timeout.
     for old_report in reports:
-        if old_report.text == text:
-            old_report.timeout = timeout
+        if old_report.check_refresh(text, timeout):
             return
     logging.info(f'Message showed to the user: {text}')
     report = Report(active_area, text, timeout=timeout, color=color)
