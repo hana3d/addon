@@ -20,7 +20,6 @@ import os
 import urllib.parse
 
 import bpy
-from .src.search.query import Query
 
 from .config import (
     HANA3D_AUTH_AUDIENCE,
@@ -31,6 +30,7 @@ from .config import (
     HANA3D_PLATFORM_URL,
     HANA3D_URL
 )
+from .src.search.query import Query
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
 HANA3D_SETTINGS_FILENAME = os.path.join(_presets, f"{HANA3D_NAME}.json")

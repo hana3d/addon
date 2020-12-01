@@ -16,11 +16,9 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import copy
-from datetime import datetime
 import functools
 import os
 import shutil
-from .src.search.query import Query
 import threading
 from queue import Queue
 
@@ -44,6 +42,7 @@ from .config import (
     HANA3D_SCENES
 )
 from .report_tools import execute_wrapper
+from .src.search.query import Query
 from .src.search.search import Search
 
 download_threads = {}
@@ -431,7 +430,7 @@ def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
                 bmax = asset_data['bbox_max']
                 size_min = min(
                     1.0,
-                    (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3
+                    (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,
                 )
                 parent.empty_display_size = size_min
 
@@ -523,7 +522,7 @@ def set_asset_props(asset, asset_data):
                         asset_props.custom_props_info[name] = {
                             'slug': slug,
                             'library_name': libraries_list[library["name"]].name,
-                            'library_id': libraries_list[library["name"]].id_
+                            'library_id': libraries_list[library["name"]].id_,
                         }
                     if (
                         'view_props' in library['metadata']
@@ -669,19 +668,19 @@ class Hana3DDownloadOperator(bpy.types.Operator):
     asset_index: IntProperty(
         name="Asset Index",
         description='asset index in search results',
-        default=-1
+        default=-1,
     )
 
     target_object: StringProperty(
         name="Target Object",
         description="Material or object target for replacement",
-        default=""
+        default="",
     )
 
     material_target_slot: IntProperty(
         name="Asset Index",
         description='asset index in search results',
-        default=0
+        default=0,
     )
     model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))
     model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))
@@ -689,7 +688,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
     replace: BoolProperty(
         name='Replace',
         description='replace selection with the asset',
-        default=False
+        default=False,
     )
 
     cast_parent: StringProperty(name="Particles Target Object", description="", default="")
@@ -752,14 +751,14 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         name="Object Count",
         description='number of objects imported to scene',
         default=0,
-        options={'HIDDEN'}
+        options={'HIDDEN'},
     )
 
     search_query_updated_at: StringProperty(
         name='Search Query Updated At',
         description='time when search query updated',
         default='',
-        options={'HIDDEN'}
+        options={'HIDDEN'},
     )
 
     grid_distance: FloatProperty(
@@ -767,13 +766,13 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         description='distance between objects on the grid',
         precision=1,
         step=0.5,
-        default=3
+        default=3,
     )
 
     batch_size: IntProperty(
         name='Batch Size',
         description='number of objects to download in parallel',
-        default=20
+        default=20,
     )
 
     def _get_location(self):
@@ -781,7 +780,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         dx = 0
         dy = -1
         for _ in range(self.object_count):
-            if x == y or (x < 0 and x == -y) or (x > 0 and x == 1 - y):
+            if x == y or (x < 0 and x == -y) or (x > 0 and x == 1 - y):  # noqa : WPS220,WPS221
                 dx, dy = -dy, dx
             x, y = x + dx, y + dy
         self.object_count += 1
@@ -807,7 +806,10 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
                 self.object_count = 0
                 self.search_query_updated_at = updated_at
 
-        for _, search_result in zip(range(self.batch_size), search.results[self.object_count:]):
+        for _, search_result in zip(
+            range(self.batch_size),
+            search.results[self.object_count:],
+        ):
             asset_data = search_result.to_dict()
             location = self._get_location()
             kwargs = {
@@ -827,7 +829,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
 classes = (
     Hana3DDownloadOperator,
     Hana3DBatchDownloadOperator,
-    Hana3DKillDownloadOperator
+    Hana3DKillDownloadOperator,
 )
 
 

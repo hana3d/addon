@@ -256,7 +256,7 @@ class UploadOperator(Operator):
             layout.label(text="For updates of thumbnail or model use reupload.")
 
     # TODO: remove the ignored lint errors
-    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]): # noqa D102, WPS212, WPS210, WPS213, WPS231
+    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]):  # noqa D102, WPS212, WPS210, WPS213, WPS231
         utils.name_update()
 
         location = get_upload_location(props, context)
