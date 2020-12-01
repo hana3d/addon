@@ -16,7 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import logging
-import threading
 import time
 
 import bpy
@@ -60,19 +59,9 @@ def refresh_token(immediate: bool = False) -> dict:
     oauth_response = authenticator.get_refreshed_token(preferences.api_key_refresh)
     if oauth_response['access_token'] is not None and oauth_response['refresh_token'] is not None:
         write_tokens(oauth_response)
-        # if immediate:
-        #     write_tokens(oauth_response)
-        # else:
-        #     thread = threading.Thread(target=write_tokens, args=(oauth_response,), daemon=True)
-        #     thread.start()
     else:
         ui.add_report('Auto-Login failed, please login manually', color=colors.RED)
         reset_tokens()
-        # if immediate:
-        #     reset_tokens()
-        # else:
-        #     thread = threading.Thread(target=reset_tokens, daemon=True)
-        #     thread.start()
     return oauth_response
 
 
@@ -90,7 +79,7 @@ def write_tokens(oauth_response: dict):
     preferences.refresh_in_progress = False
     logger.show_report(utils.get_search_props(), text=f'{HANA3D_DESCRIPTION} Re-Login success')
     profile = Profile()
-    run_async_function(profile.async_function)
+    run_async_function(profile.update_async)
 
 
 def reset_tokens():
@@ -136,8 +125,7 @@ class RegisterLoginOnline(bpy.types.Operator):
         )
         # we store authenticator globally to be able to ping the server if connection fails.
         active_authenticator = authenticator
-        thread = threading.Thread(target=login, args=(authenticator,), daemon=True)
-        thread.start()
+        login(authenticator)
 
 
 class Logout(bpy.types.Operator):

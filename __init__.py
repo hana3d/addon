@@ -46,7 +46,7 @@ from . import (  # noqa: WPS235
     utils
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from .src import async_loop, test_request
+from .src import async_loop
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 
@@ -319,13 +319,13 @@ modules = (
     ui,
     ui_panels,
     upload,
-    test_request
 )
 
 
 def register():
     addon_updater_ops.register(bl_info)
     bpy.utils.register_class(Hana3DAddonPreferences)
+    async_loop.setup_asyncio_executor()
     for module in modules:
         module.register()
 

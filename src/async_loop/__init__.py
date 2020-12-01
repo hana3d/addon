@@ -136,6 +136,8 @@ def run_async_function(
         print('Task result: ', task.result())
     """
 
+    log.debug(f'Running async function {async_function}')
+
     async_task = asyncio.ensure_future(async_function(**kwargs))
     if done_callback is not None:
         async_task.add_done_callback(done_callback)

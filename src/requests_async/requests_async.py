@@ -2,11 +2,12 @@
 
 import asyncio
 import functools
+import logging
 import requests
 import uuid
 
 from ..preferences.preferences import Preferences
-from ...config import HANA3D_DESCRIPTION
+from ... import hana3d_oauth, logger
 
 
 class Request(object):
@@ -19,35 +20,31 @@ class Request(object):
     async def _request(self, method, url, **kwargs):
         loop = asyncio.get_event_loop()
 
-        # first get any additional args from kwargs
-        immediate = False
-        if kwargs.get('immediate'):
-            immediate = kwargs['immediate']
-            kwargs.pop('immediate')
         # first normal attempt
         partial = functools.partial(requests.request, method, url, **kwargs)
         response = await loop.run_in_executor(None, partial)
-        # response = requests.request(method, url, **kwargs)
 
-        print(method.upper(), url)
-        print(response.status_code)
+        logging.debug(f'{method.upper()}: {url}')
+        logging.debug(response.status_code)
 
-        # if not response.ok:
-        #     # ui.add_report(f'{method} request failed ({response.status_code}): {response.text}')
-        #     try:
-        #         code = response.json()['code']
-        #     except Exception:
-        #         code = None
+        if not response.ok:
+            logger.show_report(f'{method} request failed ({response.status_code}): {response.text}')
+            try:
+                code = response.json()['code']
+            except Exception:
+                code = None
 
-        #     if response.status_code == 401 and code == 'token_expired':
-        #         utils.p('refreshing token')
-        #         ui.add_report(f"Refreshing token. If this fails, please login in {HANA3D_DESCRIPTION} Login panel.", 10)  # noqa E501
+            if response.status_code == 401 and code == 'token_expired':
+                logging.debug('refreshing token')
+                logger.show_report(
+                    f"Refreshing token. If this fails, login in {HANA3D_DESCRIPTION} Login panel.",
+                    10)
 
-        #         oauth_response = hana3d_oauth.refresh_token(immediate=immediate)
-        #         updated_headers = self._get_headers(api_key=oauth_response['access_token'])
-        #         kwargs['headers'].update(updated_headers)
-        #         partial = functools.partial(requests.request, method, url, **kwargs)
-        #         response = await loop.run_in_executor(None, partial)
+                oauth_response = hana3d_oauth.refresh_token(immediate=immediate)
+                updated_headers = self._get_headers(api_key=oauth_response['access_token'])
+                kwargs['headers'].update(updated_headers)
+                partial = functools.partial(requests.request, method, url, **kwargs)
+                response = await loop.run_in_executor(None, partial)
         return response
 
     async def delete(self, url, **kwargs):
