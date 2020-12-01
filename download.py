@@ -118,7 +118,7 @@ class Downloader(threading.Thread):
             logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS204
             return
 
-        tmp_file_name = file_name + '_tmp'
+        tmp_file_name = f'{file_name}_tmp'
         with open(tmp_file_name, 'wb') as tmp_file:
             logging.info(f'Downloading {file_name}')
 
@@ -137,8 +137,8 @@ class Downloader(threading.Thread):
                     tmp_file.write(data)
                     if self.stopped():
                         logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS220
-                        tmp_file.close()
-                        os.remove(tmp_file_name)
+                        tmp_file.close()  # noqa : WPS220
+                        os.remove(tmp_file_name)  # noqa : WPS220
                         return
         os.rename(tmp_file_name, file_name)
 
@@ -513,7 +513,7 @@ def set_asset_props(asset, asset_data):
     if 'libraries' in asset_data:
         libraries_list = asset_props.libraries_list
         hana3d_types.update_libraries_list(asset_props, bpy.context)
-        for asset_library in asset_data['libraries']:
+        for asset_library in asset_data['libraries']:  # noqa : WPS529
             library = libraries_list[asset_library['name']]
             library.selected = True
             if 'metadata' in asset_library and asset_library['metadata'] is not None:

@@ -125,7 +125,7 @@ def timer_update():
                                 if f['fileType'] == 'thumbnail':
                                     tname = paths.extract_filename_from_url(f['fileThumbnailLarge'])
                                     small_tname = paths.extract_filename_from_url(
-                                        f['fileThumbnail']
+                                        f['fileThumbnail'],
                                     )
                                     allthumbs.append(tname)
 
@@ -155,7 +155,7 @@ def timer_update():
                                     'author_id': str(r['author']['id']),
                                     'description': r['description'] or '',
                                     'render_jobs': r.get('render_jobs', []),
-                                    'workspace': r.get('workspace', '')
+                                    'workspace': r.get('workspace', ''),
                                 }
                                 asset_data['downloaded'] = 0
 
@@ -286,7 +286,7 @@ class ThumbDownloader(threading.Thread):
 class Searcher(threading.Thread):
     query = None
 
-    def __init__(self, query: Query, params):
+    def __init__(self, query: Query, params):  # noqa : D107,WPS110
         super(Searcher, self).__init__()
         self.query = query
         self.params = params
@@ -461,7 +461,7 @@ def mt(text):
     logging.debug(f'{text} {alltime} {since_last}')
 
 
-def add_search_process(query: Query, params):
+def add_search_process(query: Query, params):  # noqa : D103,WPS110
     global search_threads
 
     while len(search_threads) > 0:
@@ -491,15 +491,15 @@ def search(get_next=False, author_id=''):
     props = None
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(bpy.context.window_manager, HANA3D_MODELS):
+        if not hasattr(bpy.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
             return
         props = getattr(bpy.context.window_manager, HANA3D_MODELS)
     elif uiprops.asset_type == 'SCENE':
-        if not hasattr(bpy.context.window_manager, HANA3D_SCENES):
+        if not hasattr(bpy.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
             return
         props = getattr(bpy.context.window_manager, HANA3D_SCENES)
     elif uiprops.asset_type == 'MATERIAL':
-        if not hasattr(bpy.context.window_manager, HANA3D_MATERIALS):
+        if not hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
             return
         props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
     else:
@@ -522,31 +522,31 @@ def search(get_next=False, author_id=''):
 class SearchOperator(Operator):
     """Tooltip"""
 
-    bl_idname = f"view3d.{HANA3D_NAME}_search"
-    bl_label = f"{HANA3D_DESCRIPTION} asset search"
-    bl_description = "Search online for assets"
+    bl_idname = f'view3d.{HANA3D_NAME}_search'
+    bl_label = f'{HANA3D_DESCRIPTION} asset search'
+    bl_description = 'Search online for assets'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-    own: BoolProperty(name="own assets only", description="Find all own assets", default=False)
+    own: BoolProperty(name='own assets only', description='Find all own assets', default=False)
 
     author_id: StringProperty(
-        name="Author ID",
-        description="Author ID - search only assets by this author",
-        default="",
+        name='Author ID',
+        description='Author ID - search only assets by this author',
+        default='',
         options={'SKIP_SAVE'},
     )
 
     get_next: BoolProperty(
-        name="next page",
-        description="get next page from previous search",
+        name='next page',
+        description='get next page from previous search',
         default=False,
         options={'SKIP_SAVE'},
     )
 
     keywords: StringProperty(
-        name="Keywords",
-        description="Keywords",
-        default="",
-        options={'SKIP_SAVE'}
+        name='Keywords',
+        description='Keywords',
+        default='',
+        options={'SKIP_SAVE'},
     )
 
     @classmethod
