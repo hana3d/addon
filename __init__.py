@@ -43,7 +43,7 @@ from . import (  # noqa: WPS235
     ui,
     ui_panels,
     upload,
-    utils
+    utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src import async_loop
@@ -325,7 +325,6 @@ modules = (
 def register():
     addon_updater_ops.register(bl_info)
     bpy.utils.register_class(Hana3DAddonPreferences)
-    async_loop.setup_asyncio_executor()
     for module in modules:
         module.register()
 
