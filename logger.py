@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 from logging.handlers import RotatingFileHandler
 from os.path import expanduser
 from typing import Tuple
@@ -74,7 +75,8 @@ class BlenderHandler(logging.StreamHandler):
             if bpy.context.area.type:
                 text = record.msg
                 level = record.levelname
-                hana = getattr(bpy.ops, f'{HANA3D_NAME}')
+                stage = re.match(r'.*(hana3d_.*)\\.*', record.pathname)
+                hana = getattr(bpy.ops, stage.groups(0)[0])
                 hana.log_info(text=f'{level}: {text}')
         except Exception: # noqa S110
             pass # noqa WPS420
