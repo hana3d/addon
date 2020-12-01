@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import bpy
 from bpy.types import Panel
 
@@ -27,7 +26,7 @@ from .config import (
     HANA3D_NAME,
     HANA3D_RENDER,
     HANA3D_SCENES,
-    HANA3D_UI
+    HANA3D_UI,
 )
 
 

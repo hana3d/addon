@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import bpy
 import bpy.utils.previews
 from bpy.app.handlers import persistent
@@ -43,7 +42,7 @@ from . import (  # noqa: WPS235
     ui,
     ui_panels,
     upload,
-    utils
+    utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src.application.application import Application

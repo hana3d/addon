@@ -1,12 +1,11 @@
 """Search Query."""
-
 from datetime import datetime
 from typing import Dict
 
 from bpy.types import Context
 
-from ..asset.asset_type import AssetType
 from ...config import HANA3D_NAME
+from ..asset.asset_type import AssetType
 
 
 class Query(object):  # noqa : WPS230,WPS214
