@@ -43,23 +43,28 @@ class Query(object):
     def updated_at(self) -> datetime:
         """Get the datetime when the search query was updated.
 
+        Will return None if context or props were not provided on Query creation.
+
         Returns:
-            datetime: time when the search query was updated if context was provided
+            datetime: time when the search query was updated
         """
         if not self.context:
             return None
 
-        updated_at = self.context.window_manager[f'{HANA3D_NAME}_search_query_updated_at']
-        if updated_at is not None:
-            return datetime.fromisoformat(updated_at)
-        else:
+        if f'{HANA3D_NAME}_search_query_updated_at' not in self.context.window_manager:
             return None
+        updated_at = self.context.window_manager[f'{HANA3D_NAME}_search_query_updated_at']
+        if updated_at is None:
+            return None
+        return datetime.fromisoformat(updated_at)
 
     @updated_at.setter
     def updated_at(self, updated_at_value: datetime):
         if updated_at_value is not None and self.context is not None:
-            self.context.window_manager[f'{HANA3D_NAME}_search_query_updated_at'] = updated_at_value.isoformat(
-            )
+            # avoid unnecessary updates because of threads
+            if not self.updated_at or (updated_at_value - self.updated_at).total_seconds() > 20:
+                self.context.window_manager[f'{HANA3D_NAME}_search_query_updated_at'] = updated_at_value.isoformat(
+                )
 
     def _add_view_id_search_term(self, props: Dict):
         keywords = props.search_keywords
