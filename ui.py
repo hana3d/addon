@@ -337,7 +337,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
             fsize = font_height
         i += 1
         column_lines += 1
-        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)  # noqa: WPS441
+        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
 
 
 def draw_tooltip_old(x, y, text='', author='', img=None):
@@ -461,11 +461,22 @@ def draw_downloader(x, y, percent=0, img=None):
         width = 50
         height = 50
         bgl_helper.draw_image(x, y, width, height, img, 0.5)
+    width = 50
+    height = int(0.5 * percent)
     bgl_helper.draw_rect(x, y, 50, int(0.5 * percent), (0.2, 1, 0.2, 0.3))
     bgl_helper.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))
 
 
-def draw_progress(x, y, text='', percent=None, color=colors.GREEN):
+def draw_progress(x, y, text='', percent=None, color=colors.GREEN):  # noqa: WPS111
+    """Draw progress bar on screen.
+
+    Parameters:
+        x: x-coordinate where the progress bar should be drawn
+        y: y-coordinate where the progress bar should be drawn
+        text: Text to be displayed with the progress bar
+        percent: Progress percentage
+        colors: color in which the progress bar should be drawn
+    """
     bgl_helper.draw_rect(x, y, percent, 5, color)
     bgl_helper.draw_text(text, x, y + 8, 16, color)
 
@@ -518,7 +529,7 @@ def draw_callback_2d_progress(self, context):
             draw_progress(
                 x,
                 y - index * line_size,
-                text='downloading %s' % asset_data['name'],
+                text=f'downloading {asset_data.name}',
                 percent=tcom.progress
             )
             index += 1
@@ -529,16 +540,19 @@ def draw_callback_2d_progress(self, context):
     for thread in render.render_threads:
         if thread.uploading:
             text = thread.render_state
-            draw_progress(x, y - index * line_size, text, int(thread.upload_progress * 100))
+            percentage_progress = int(thread.upload_progress * 100)
+            draw_progress(x, y - index * line_size, text, percentage_progress)
             index += 1
         elif thread.job_running:
             text = thread.render_state
-            draw_progress(x, y - index * line_size, text, int(thread.job_progress * 100))
+            percentage_progress = int(thread.job_progress * 100)
+            draw_progress(x, y - index * line_size, text, percentage_progress)
             index += 1
     for thread in render.upload_threads:
         if thread.uploading_render:
             text = thread.upload_state
-            draw_progress(x, y - index * line_size, text, int(thread.upload_progress * 100))
+            percentage_progress = int(thread.upload_progress * 100)
+            draw_progress(x, y - index * line_size, text, percentage_progress)
             index += 1
     global reports  # noqa: WPS420
     for report in reports:
@@ -610,22 +624,22 @@ def draw_callback_2d_search(self, context):
             ui_props.bar_y - ui_props.bar_height,
             bar_width,
             ui_props.bar_height,
-            hc
+            hc,
         )
 
         if search_results is not None:
-            if (
-                ui_props.scrolloffset > 0
-                or ui_props.wcount * ui_props.hcount < len(search_results)
-            ):
+            count = ui_props.wcount * ui_props.hcount
+            if ui_props.scrolloffset > 0 or count < len(search_results):
                 ui_props.drawoffset = 35
             else:
                 ui_props.drawoffset = 0
 
-            if ui_props.wcount * ui_props.hcount < len(search_results):
+            if count < len(search_results):
                 page_start = ui_props.scrolloffset + 1
-                page_end = (ui_props.scrolloffset + ui_props.wcount
-                    * context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows)
+                page_end = (
+                    ui_props.scrolloffset + ui_props.wcount
+                    * context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
+                )
                 pagination_text = \
                     f'{page_start} - {page_end} of {search_object.results_orig["count"]}'  # noqa E501
                 bgl_helper.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width  # noqa : WPS317
@@ -639,20 +653,18 @@ def draw_callback_2d_search(self, context):
                 if ui_props.scrolloffset > 0:
 
                     if ui_props.active_index == -2:
+                        width = 25
                         bgl_helper.draw_rect(
                             ui_props.bar_x,
                             ui_props.bar_y - ui_props.bar_height,
-                            25,
+                            width,
                             ui_props.bar_height,
                             highlight,
                         )
                     img = utils.get_thumbnail('arrow_left.png')
                     bgl_helper.draw_image(ui_props.bar_x, arrow_y, 25, ui_props.thumb_size, img, 1)
 
-                if (
-                    search_results_orig['count'] - ui_props.scrolloffset
-                    > (ui_props.wcount * ui_props.hcount) + 1
-                ):
+                if search_results_orig['count'] - ui_props.scrolloffset > count + 1:
                     if ui_props.active_index == -1:
                         bgl_helper.draw_rect(
                             ui_props.bar_x + ui_props.bar_width - 25,
@@ -686,25 +698,25 @@ def draw_callback_2d_search(self, context):
                         + ui_props.drawoffset
                     )
 
-                    #
                     index = a + ui_props.scrolloffset + b * ui_props.wcount
                     iname = utils.previmg_name(index)
                     img = bpy.data.images.get(iname)
 
-                    w = int(ui_props.thumb_size * img.size[0] / max(img.size[0], img.size[1]))
-                    h = int(ui_props.thumb_size * img.size[1] / max(img.size[0], img.size[1]))
+                    max_size = max(img.size[0], img.size[1])
+                    width = int(ui_props.thumb_size * img.size[0] / max_size)
+                    height = int(ui_props.thumb_size * img.size[1] / max_size))
                     crop = (0, 0, 1, 1)
                     if img.size[0] > img.size[1]:
                         offset = (1 - img.size[1] / img.size[0]) / 2
-                        crop = (offset, 0, 1 - offset, 1)  # noqa: WPS220
+                        crop=(offset, 0, 1 - offset, 1)  # noqa: WPS220
                     if img is not None:
-                        bgl_helper.draw_image(x, y, w, w, img, 1, crop=crop)
+                        bgl_helper.draw_image(x, y, width, width, img, 1, crop = crop)
                         if index == ui_props.active_index:
                             bgl_helper.draw_rect(
                                 x - ui_props.highlight_margin,
                                 y - ui_props.highlight_margin,
-                                w + 2 * ui_props.highlight_margin,
-                                w + 2 * ui_props.highlight_margin,
+                                width + 2 * ui_props.highlight_margin,
+                                width + 2 * ui_props.highlight_margin,
                                 highlight,
                             )
                         # if index == ui_props.active_index:
@@ -712,7 +724,7 @@ def draw_callback_2d_search(self, context):
                         #               w + 2*highlight_margin, h + 2*highlight_margin , highlight)
 
                     else:
-                        bgl_helper.draw_rect(x, y, w, h, white)  # noqa: WPS220
+                        bgl_helper.draw_rect(x, y, width, height, white)  # noqa: WPS220
 
                     result = search_results[index]
                     if result['downloaded'] > 0:
@@ -791,30 +803,27 @@ def draw_callback_2d_search(self, context):
                     gravatar=gimg,
                 )
 
-    if (
-        ui_props.dragging
-        and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds)
-        and ui_props.active_index > -1
-    ):
-        iname = utils.previmg_name(ui_props.active_index)
-        img = bpy.data.images.get(iname)
-        linelength = 35
-        bgl_helper.draw_image(
-            ui_props.mouse_x + linelength,
-            ui_props.mouse_y - linelength - ui_props.thumb_size,
-            ui_props.thumb_size,
-            ui_props.thumb_size,
-            img,
-            1,
-        )
-        bgl_helper.draw_line2d(
-            ui_props.mouse_x,
-            ui_props.mouse_y,
-            ui_props.mouse_x + linelength,
-            ui_props.mouse_y - linelength,
-            2,
-            white,
-        )
+    if ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):
+        if ui_props.active_index > -1:
+            iname = utils.previmg_name(ui_props.active_index)
+            img = bpy.data.images.get(iname)
+            linelength = 35
+            bgl_helper.draw_image(
+                ui_props.mouse_x + linelength,
+                ui_props.mouse_y - linelength - ui_props.thumb_size,
+                ui_props.thumb_size,
+                ui_props.thumb_size,
+                img,
+                1,
+            )
+            bgl_helper.draw_line2d(
+                ui_props.mouse_x,
+                ui_props.mouse_y,
+                ui_props.mouse_x + linelength,
+                ui_props.mouse_y - linelength,
+                2,
+                white,
+            )
 
 
 def draw_callback_3d(self, context):
