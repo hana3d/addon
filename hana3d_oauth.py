@@ -15,6 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import asyncio
 import threading
 import time
 
@@ -24,6 +25,7 @@ import requests
 from . import colors, oauth, paths, ui, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
+from .src import async_loop
 from .src.preferences.profile import Profile
 
 AUTH_URL = paths.get_auth_url()
@@ -89,7 +91,8 @@ def write_tokens(oauth_response: dict):
         props.report = ''
     ui.add_report(f"{HANA3D_DESCRIPTION} Re-Login success")
     profile = Profile()
-    profile.update_async()
+    asyncio.ensure_future(profile.update_async())
+    async_loop.ensure_async_loop()
 
 
 def reset_tokens():

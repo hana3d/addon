@@ -35,7 +35,9 @@ class TestRequest(async_loop.AsyncModalOperatorMixin, bpy.types.Operator):
 
         request = Request()
 
-        await request.get('https://api.hana3d.com')
+        response = await request.get('https://api.hana3d.com')
+
+        print(f'response: {response}')
 
         self._state = 'QUIT'
 

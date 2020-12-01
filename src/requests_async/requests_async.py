@@ -49,7 +49,22 @@ class Request(object):
         #         response = await loop.run_in_executor(None, partial)
         return response
 
-    def _get_headers(
+    async def delete(self, url, **kwargs):
+        return await self._request('delete', url, **kwargs)
+
+    async def get(self, url, **kwargs):
+        return await self._request('get', url, **kwargs)
+
+    async def post(self, url, **kwargs):
+        return await self._request('post', url, **kwargs)
+
+    async def put(self, url, **kwargs):
+        return await self._request('put', url, **kwargs)
+
+    async def patch(self, url, **kwargs):
+        return await self._request('patch', url, **kwargs)
+
+    def get_headers(
         self,
         correlation_id: str = None,
         api_key: str = None,
@@ -80,21 +95,3 @@ class Request(object):
             id_token = self.preferences.get().id_token
             headers['X-ID-Token'] = id_token
         return headers
-
-    async def delete(self, url, **kwargs):
-        await self._request('delete', url, **kwargs)
-
-    async def get(self, url, **kwargs):
-        # asyncio.ensure_future(self._request('get', url, **kwargs))
-        # async_loop.ensure_async_loop()
-        # return self._request('get', url, **kwargs)
-        await self._request('get', url, **kwargs)
-
-    async def post(self, url, **kwargs):
-        await self._request('post', url, **kwargs)
-
-    async def put(self, url, **kwargs):
-        await self._request('put', url, **kwargs)
-
-    async def patch(self, url, **kwargs):
-        await self._request('patch', url, **kwargs)

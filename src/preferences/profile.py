@@ -1,7 +1,8 @@
 """Hana3D Profile."""
 import bpy
 
-from ... import config, paths, rerequests, tasks_queue
+from ..requests_async.requests_async import Request
+from ... import config, paths, rerequests
 
 
 class Profile(object):
@@ -18,16 +19,13 @@ class Profile(object):
         """
         return bpy.context.window_manager.get(config.HANA3D_PROFILE)
 
-    def update_async(self) -> None:
-        """Update the User Profile asynchronously."""
-        tasks_queue.add_task(self._update_async_task)
-
-    def _update_async_task(self) -> None:
-        """Task to Update the User Profile asynchronously."""
+    async def update_async(self) -> None:
+        """Update the User Profile asynchronously."""`
+        request = Request()
         print('update_profile')  # noqa: WPS421
         url = paths.get_api_url('me')
-        headers = rerequests.get_headers(include_id_token=True)
-        response = rerequests.get(url, headers=headers)
+        headers = requests.get_headers(include_id_token=True)
+        await request.get(url, headers=headers)
 
         if not response.ok:
             print(f'Failed to get profile data: {response.text}')  # noqa: WPS421

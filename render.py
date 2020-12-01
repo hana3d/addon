@@ -16,6 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+import asyncio
 import os
 import shutil
 import tempfile
@@ -46,6 +47,7 @@ from . import (
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
+from .src import async_loop
 from .src.preferences.profile import Profile
 
 render_threads = []
@@ -245,7 +247,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             time.sleep(5)
             self.update_state(self.log_state_name, '')
             profile = Profile()
-            profile.update_async()
+            asyncio.ensure_future(profile.update_async())
+            async_loop.ensure_async_loop()
 
     def _set_running_flag(self, flag: bool):
         if self.is_thumbnail:
