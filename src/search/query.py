@@ -12,16 +12,6 @@ from ...config import HANA3D_NAME
 class Query(object):  # noqa : WPS230,WPS214
     """Hana3D search query."""
 
-    asset_type: AssetType
-    view_id: str
-    job_id: str
-    search_term: str
-    verification_status: str
-    public: bool
-    workspace: str
-    tags: str
-    libraries: str
-
     def __init__(self, context: Context = None, props: Dict = None):
         """Create a Search Query object.
 
@@ -30,6 +20,16 @@ class Query(object):  # noqa : WPS230,WPS214
             props: Search properties.
         """
         self.context = context
+
+        self.asset_type: AssetType = None
+        self.view_id: str = None
+        self.job_id: str = None
+        self.search_term: str = None
+        self.verification_status: str = None
+        self.public: bool = False
+        self.workspace: str = None
+        self.tags: str = None
+        self.libraries: str = None
 
         if props is not None:
             self.updated_at = datetime.now()
@@ -83,8 +83,7 @@ class Query(object):  # noqa : WPS230,WPS214
             self.verification_status = props.search_verification_status.lower()
 
     def _add_public(self, props: Dict):
-        if props.public_only:
-            self.public = True
+        self.public = bool(props.public_only)
 
     def _add_workspace(self, props: Dict):
         if props.workspace != '' and not props.public_only:
