@@ -59,7 +59,7 @@ def get_api_url(*paths: str, query: Query = None) -> str:
     url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
     if query is None:
         return url
-    query.public = 'true' if query.public else 'false'
+    query.public = 'true' if query.get('public') else 'false'
     query_string = urllib.parse.urlencode(vars(query))  # noqa : WPS421
     return f'{url}?{query_string}'
 
