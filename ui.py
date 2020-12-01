@@ -458,11 +458,10 @@ def draw_callback_2d(self, context):
 
 
 def draw_downloader(x, y, percent=0, img=None):
+    width = 50
     if img is not None:
-        width = 50
         height = 50
         bgl_helper.draw_image(x, y, width, height, img, 0.5)
-    width = 50
     height = int(0.5 * percent)
     bgl_helper.draw_rect(x, y, width, height, (0.2, 1, 0.2, 0.3))
     bgl_helper.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))  # noqa: WPS221
@@ -532,7 +531,7 @@ def draw_callback_2d_progress(self, context):
                 x,
                 y - index * line_size,  # noqa: WPS204
                 text=f'downloading {asset_data.name}',
-                percent=tcom.progress
+                percent=tcom.progress,
             )
             index += 1
     for process in bg_blender.bg_processes:
@@ -548,7 +547,7 @@ def draw_callback_2d_progress(self, context):
         text = thread.render_state
         draw_progress(x, y - index * line_size, text, percentage_progress)
         index += 1
-    for thread in render.upload_threads:
+    for thread in render.upload_threads:  # noqa: WPS440
         if thread.uploading_render:
             text = thread.upload_state
             percentage_progress = int(thread.upload_progress * 100)
@@ -720,7 +719,7 @@ def draw_callback_2d_search(self, context):
                         crop = (offset, 0, 1 - offset, 1)  # noqa: WPS220
                     if img is not None:
                         bgl_helper.draw_image(x, y, width, width, img, 1, crop=crop)  # noqa: WPS220
-                        if index == ui_props.active_index:
+                        if index == ui_props.active_index:  # noqa: WPS220
                             bgl_helper.draw_rect(  # noqa: WPS220
                                 x - ui_props.highlight_margin,
                                 y - ui_props.highlight_margin,
