@@ -17,7 +17,7 @@ class Query(object):  # noqa : WPS230,WPS214
     job_id: str
     search_term: str
     verification_status: str
-    public: bool
+    public: bool = False
     workspace: str
     tags: str
     libraries: str
@@ -83,8 +83,7 @@ class Query(object):  # noqa : WPS230,WPS214
             self.verification_status = props.search_verification_status.lower()
 
     def _add_public(self, props: Dict):
-        if props.public_only:
-            self.public = True
+        self.public = True if props.public_only else False
 
     def _add_workspace(self, props: Dict):
         if props.workspace != '' and not props.public_only:
