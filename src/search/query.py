@@ -63,8 +63,7 @@ class Query(object):
         if updated_at_value is not None and self.context is not None:
             # avoid unnecessary updates because of threads
             if not self.updated_at or (updated_at_value - self.updated_at).total_seconds() > 20:
-                self.context.window_manager[f'{HANA3D_NAME}_search_query_updated_at'] = updated_at_value.isoformat(
-                )
+                self.context.window_manager[f'{HANA3D_NAME}_search_query_updated_at'] = updated_at_value.isoformat()
 
     def _add_view_id_search_term(self, props: Dict):
         keywords = props.search_keywords
