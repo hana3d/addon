@@ -1,6 +1,7 @@
 """Search."""
 
 from dataclasses import dataclass
+from ..asset.asset_type import AssetType
 from typing import List
 
 from bpy.types import Context
@@ -12,9 +13,10 @@ from ...config import HANA3D_NAME
 class SearchResult(object):
     """Hana3D search result."""
 
-    downloaded: float
-    thumbnail: str
-    author_id: str
+    view_id: str
+    file_name: str
+    download_url: str
+    asset_type: AssetType
 
 
 class Search(object):
