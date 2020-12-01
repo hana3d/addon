@@ -1,5 +1,5 @@
 """Hana3D authentication using Auth0."""
-
+import logging
 import time
 
 from ...hana3d_oauth import refresh_token
@@ -22,7 +22,7 @@ class Authentication(object):
         Returns:
             str: api_key_life
         """
-        print('refresh_token_timer')  # noqa: WPS421
+        logging.info('refresh_token_timer')  # noqa: WPS421
         self.update_tokens()
         return self.preferences.get().api_key_life
 

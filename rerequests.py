@@ -15,6 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import logging
 import uuid
 
 import requests
@@ -33,8 +34,8 @@ def rerequest(method, url, **kwargs):
     # first normal attempt
     response = requests.request(method, url, **kwargs)
 
-    utils.p(method.upper(), url)
-    utils.p(response.status_code)
+    logging.debug(f'{method.upper()} {url}')
+    logging.debug(response.status_code)
 
     if not response.ok:
         ui.add_report(f'{method} request failed ({response.status_code}): {response.text}')
@@ -44,7 +45,7 @@ def rerequest(method, url, **kwargs):
             code = None
 
         if response.status_code == 401 and code == 'token_expired':
-            utils.p('refreshing token')
+            logging.debug('refreshing token')
             ui.add_report(f"Refreshing token. If this fails, please login in {HANA3D_DESCRIPTION} Login panel.", 10)  # noqa E501
 
             oauth_response = hana3d_oauth.refresh_token(immediate=immediate)

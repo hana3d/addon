@@ -12,3 +12,4 @@ HANA3D_AUTH_AUDIENCE: https://staging-hana3d.com
 HANA3D_PLATFORM_URL: https://dev.hana3d.com
 HANA3D_AUTH_LANDING: /landing
 HANA3D_URL: https://dev-api.hana3d.com
+HANA3D_LOG_LEVEL: DEBUG

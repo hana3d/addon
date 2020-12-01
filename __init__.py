@@ -33,6 +33,7 @@ from . import (  # noqa: WPS235
     hana3d_types,
     icons,
     libraries,
+    logger,
     paths,
     render,
     search,
@@ -52,7 +53,7 @@ from .src.authentication.authentication import Authentication
 bl_info = {
     'name': 'Hana3D',
     'author': 'Vilem Duha, Petr Dlouhy, R2U',
-    'version': (0, 7, 9),
+    'version': (0, 7, 10),
     'blender': (2, 90, 0),
     'location': 'View3D > Properties > Hana3D',
     'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
@@ -308,6 +309,7 @@ modules = (
     hana3d_oauth,
     icons,
     libraries,
+    logger,
     render,
     search,
     tags,
@@ -342,3 +344,6 @@ def unregister():
 
     bpy.utils.unregister_class(Hana3DAddonPreferences)
     addon_updater_ops.unregister()
+
+
+logger.setup_logger()

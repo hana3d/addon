@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import queue
 
 import bpy
@@ -87,8 +87,8 @@ def queue_worker():
             try:
                 task.command(*task.arguments)
             except Exception as e:
-                utils.p('task failed:')
-                print(e)
+                logging.error('task failed:')
+                logging.error(e)
     for task in back_to_queue:
         q.put(task)
     return 2.0

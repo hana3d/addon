@@ -15,29 +15,30 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
+import logging
 import os
 import threading
 import time
 
 import bpy
 import requests
-from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
+from . import hana3d_oauth, logger, paths, rerequests, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
     HANA3D_MODELS,
     HANA3D_NAME,
-    HANA3D_PROFILE,
     HANA3D_SCENES,
-    HANA3D_UI
+    HANA3D_UI,
 )
 from .report_tools import execute_wrapper
+from .src.search.asset_search import AssetSearch
+from .src.search.query import Query
+from .src.search.search import Search
 
 search_start_time = 0
 prev_time = 0
@@ -45,7 +46,7 @@ prev_time = 0
 
 def check_errors(rdata):
     if rdata.get('status_code') == 401:
-        utils.p(rdata)
+        logging.debug(rdata)
         if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
             if user_preferences.api_key != '':
@@ -53,7 +54,7 @@ def check_errors(rdata):
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     elif rdata.get('status_code') == 403:
-        utils.p(rdata)
+        logging.debug(rdata)
         if rdata.get('code') == 'invalid_permissions':
             return False, rdata.get('description')
     return True, ''
@@ -93,23 +94,19 @@ def timer_update():
         if not thread[0].is_alive():
             search_threads.remove(thread)
             icons_dir = thread[1]
-            wm = bpy.context.window_manager
             asset_type = thread[2]
             if asset_type == 'model':
-                props = getattr(wm, HANA3D_MODELS)
+                props = getattr(bpy.context.window_manager, HANA3D_MODELS)
             if asset_type == 'scene':
-                props = getattr(wm, HANA3D_SCENES)
+                props = getattr(bpy.context.window_manager, HANA3D_SCENES)
             if asset_type == 'material':
-                props = getattr(wm, HANA3D_MATERIALS)
+                props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
 
-            search_name = f'{HANA3D_NAME}_{asset_type}_search'
+            search_object = Search(bpy.context)
+            asset_search = AssetSearch(bpy.context, asset_type)
+            asset_search.results = []  # noqa : WPS110
             json_filepath = os.path.join(icons_dir, f'{asset_type}_searchresult.json')
-            wm[search_name] = []
 
-            global reports
-            if reports != '':
-                props.report = str(reports)
-                return 0.2
             with open(json_filepath, 'r') as data_file:
                 rdata = json.load(data_file)
 
@@ -128,7 +125,7 @@ def timer_update():
                                 if f['fileType'] == 'thumbnail':
                                     tname = paths.extract_filename_from_url(f['fileThumbnailLarge'])
                                     small_tname = paths.extract_filename_from_url(
-                                        f['fileThumbnail']
+                                        f['fileThumbnail'],
                                     )
                                     allthumbs.append(tname)
 
@@ -158,7 +155,7 @@ def timer_update():
                                     'author_id': str(r['author']['id']),
                                     'description': r['description'] or '',
                                     'render_jobs': r.get('render_jobs', []),
-                                    'workspace': r.get('workspace', '')
+                                    'workspace': r.get('workspace', ''),
                                 }
                                 asset_data['downloaded'] = 0
 
@@ -194,28 +191,30 @@ def timer_update():
                                     asset_data.update(bbox)
 
                                 asset_data.update(tdict)
-                                if view_id in wm.get(f'{HANA3D_NAME}_assets_used', {}).keys():
-                                    asset_data['downloaded'] = 100
+                                assets_used = bpy.context.window_manager.get(  # noqa : WPS220
+                                    f'{HANA3D_NAME}_assets_used', {},
+                                )
+                                if view_id in assets_used.keys():  # noqa : WPS220
+                                    asset_data['downloaded'] = 100  # noqa : WPS220
 
-                                result_field.append(asset_data)
+                                result_field.append(asset_data)  # noqa : WPS220
 
-                wm[search_name] = result_field
-                wm[f'{HANA3D_NAME}_search_results'] = result_field
-                wm[search_name + ' orig'] = rdata
-                wm[f'{HANA3D_NAME}_search_results_orig'] = rdata
+                asset_search.results = result_field  # noqa : WPS110
+                asset_search.results_orig = rdata
+                search_object.results = result_field  # noqa : WPS110
+                search_object.results_orig = rdata
                 load_previews()
                 ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
                 if len(result_field) < ui_props.scrolloffset:
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (wm[f'{HANA3D_NAME}_search_results_orig']['count'])  # noqa #501
-                if len(wm[f'{HANA3D_NAME}_search_results']) == 0:
-                    tasks_queue.add_task(ui.add_report, ('No matching results found.',))
+                text = f'Found {search_object.results_orig["count"]} results. '  # noqa #501
+                logger.show_report(props, text=text)
 
             else:
-                print('error', error)
-                props.report = error
+                logging.error(error)
+                logger.show_report(props, text=error)
                 props.search_error = True
 
             mt('preview loading finished')
@@ -231,17 +230,17 @@ def load_previews():
     # FIRST START SEARCH
     props = getattr(bpy.context.window_manager, HANA3D_UI)
 
-    directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
-    wm = bpy.context.window_manager
-    results = wm.get(f'{HANA3D_NAME}_search_results')
-    #
-    if results is not None:
-        i = 0
-        for r in results:
+    directory = paths.get_temp_dir(f'{mappingdict[props.asset_type]}_search')
+    search_object = Search(bpy.context)
+    search_results = search_object.results
 
-            tpath = os.path.join(directory, r['thumbnail_small'])
+    if search_results is not None:
+        index = 0
+        for search_result in search_results:
 
-            iname = utils.previmg_name(i)
+            tpath = os.path.join(directory, search_result['thumbnail_small'])
+
+            iname = utils.previmg_name(index)
 
             if os.path.exists(tpath):  # sometimes we are unlucky...
                 img = bpy.data.images.get(iname)
@@ -255,7 +254,7 @@ def load_previews():
                     img.filepath = tpath
                     img.reload()
                 img.colorspace_settings.name = 'Linear'
-            i += 1
+            index += 1
 
 
 class ThumbDownloader(threading.Thread):
@@ -287,7 +286,7 @@ class ThumbDownloader(threading.Thread):
 class Searcher(threading.Thread):
     query = None
 
-    def __init__(self, query, params):
+    def __init__(self, query: Query, params):  # noqa : D107,WPS110
         super(Searcher, self).__init__()
         self.query = query
         self.params = params
@@ -303,11 +302,10 @@ class Searcher(threading.Thread):
         maxthreads = 50
         query = self.query
         params = self.params
-        global reports
 
         mt('search thread started')
-        tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
-        json_filepath = os.path.join(tempdir, '%s_searchresult.json' % query['asset_type'])
+        tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
+        json_filepath = os.path.join(tempdir, f'{query.asset_type}_searchresult.json')
 
         headers = rerequests.get_headers()
 
@@ -329,26 +327,25 @@ class Searcher(threading.Thread):
         if not params['get_next']:
             urlquery = paths.get_api_url('search', query=self.query)
         try:
-            utils.p(urlquery)
+            logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
-            reports = ''
+            logger.show_report(utils.get_search_props(), text='')
         except requests.exceptions.RequestException as e:
-            print(e)
-            reports = e
-            # props.report = e
+            logging.error(e)
+            logger.show_report(utils.get_search_props(), text=str(e))
             return
         mt('response is back ')
         try:
             rdata = r.json()
             rdata['status_code'] = r.status_code
         except Exception as inst:
-            reports = r.text
-            print(inst)
+            logging.error(inst)
+            logger.show_report(utils.get_search_props(), text=r.text)
 
         mt('data parsed ')
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         mt('search finished')
@@ -406,7 +403,7 @@ class Searcher(threading.Thread):
         # TODO do the killing/ stopping here! remember threads might have finished inbetween!
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         # this loop handles downloading of small thumbnails
@@ -426,12 +423,10 @@ class Searcher(threading.Thread):
                         for tk, thread in threads_copy.items():
                             if not thread.is_alive():
                                 thread.join()
-                                # utils.p(x)
                                 del thumb_sml_download_threads[tk]
-                                # utils.p('fetched thumbnail ', i)
                                 i += 1
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         while len(thumb_sml_download_threads) > 0:
@@ -444,7 +439,7 @@ class Searcher(threading.Thread):
                     i += 1
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         # start downloading full thumbs in the end
@@ -458,66 +453,15 @@ class Searcher(threading.Thread):
         mt('thumbnails finished')
 
 
-def build_query_common(query, props):
-    '''add shared parameters to query'''
-    keywords = props.search_keywords
-    if keywords != '':
-        if keywords.startswith('view_id:'):
-            query['view_id'] = keywords.replace('view_id:', '')
-        else:
-            query['search_term'] = keywords
-
-    if props.search_verification_status != 'ALL':
-        query['verification_status'] = props.search_verification_status.lower()
-
-    if props.public_only:
-        query['public'] = True
-
-
-def build_query_model():
-    '''use all search input to request results from server'''
-
-    props = getattr(bpy.context.window_manager, HANA3D_MODELS)
-    query = {
-        "asset_type": 'model',
-    }
-
-    build_query_common(query, props)
-
-    return query
-
-
-def build_query_scene():
-    '''use all search input to request results from server'''
-
-    props = getattr(bpy.context.window_manager, HANA3D_SCENES)
-    query = {
-        "asset_type": 'scene',
-    }
-    build_query_common(query, props)
-    return query
-
-
-def build_query_material():
-    props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
-    query = {
-        "asset_type": 'material',
-    }
-
-    build_query_common(query, props)
-
-    return query
-
-
 def mt(text):
     global search_start_time, prev_time
     alltime = time.time() - search_start_time
     since_last = time.time() - prev_time
     prev_time = time.time()
-    utils.p(text, alltime, since_last)
+    logging.debug(f'{text} {alltime} {since_last}')
 
 
-def add_search_process(query, params):
+def add_search_process(query: Query, params):  # noqa : D103,WPS110
     global search_threads
 
     while len(search_threads) > 0:
@@ -526,11 +470,11 @@ def add_search_process(query, params):
         # TODO CARE HERE FOR ALSO KILLING THE THREADS...
         # AT LEAST NOW SEARCH DONE FIRST WON'T REWRITE AN OLDER ONE
 
-    tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
+    tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
     thread = Searcher(query, params)
     thread.start()
 
-    search_threads.append([thread, tempdir, query['asset_type']])
+    search_threads.append([thread, tempdir, query.asset_type])
 
     mt('thread started')
 
@@ -541,86 +485,68 @@ def search(get_next=False, author_id=''):
 
     search_start_time = time.time()
     # mt('start')
-    wm = bpy.context.window_manager
-    uiprops = getattr(wm, HANA3D_UI)
+    uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
+    asset_type = uiprops.asset_type.lower()
+
+    props = None
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(wm, HANA3D_MODELS):
+        if not hasattr(bpy.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
             return
-        props = getattr(wm, HANA3D_MODELS)
-        query = build_query_model()
+        props = getattr(bpy.context.window_manager, HANA3D_MODELS)
+    elif uiprops.asset_type == 'SCENE':
+        if not hasattr(bpy.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
+            return
+        props = getattr(bpy.context.window_manager, HANA3D_SCENES)
+    elif uiprops.asset_type == 'MATERIAL':
+        if not hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
+            return
+        props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
+    else:
+        return
 
-    if uiprops.asset_type == 'SCENE':
-        if not hasattr(wm, HANA3D_SCENES):
-            return
-        props = getattr(wm, HANA3D_SCENES)
-        query = build_query_scene()
-
-    if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(wm, HANA3D_MATERIALS):
-            return
-        props = getattr(wm, HANA3D_MATERIALS)
-        query = build_query_material()
+    query = Query(bpy.context, props)
+    query.asset_type = asset_type
 
     if props.is_searching and get_next:
         return
-
-    if author_id != '':
-        query['author_id'] = author_id
-
-    if props.workspace != '' and not props.public_only:
-        query['workspace'] = props.workspace
-
-    tags = []
-    for tag in props.tags_list.keys():
-        if props.tags_list[tag].selected is True:
-            tags.append(tag)
-    query['tags'] = ','.join(tags)
-
-    libraries = []
-    for library in props.libraries_list.keys():
-        if props.libraries_list[library].selected is True:
-            libraries.append(props.libraries_list[library].id_)
-    query['libraries'] = ','.join(libraries)
 
     props.is_searching = True
 
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    tasks_queue.add_task(ui.add_report, (f'{HANA3D_DESCRIPTION} searching...', 2))
-
-    props.report = f'{HANA3D_DESCRIPTION} searching...'
+    logger.show_report(props, text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
 
 class SearchOperator(Operator):
     """Tooltip"""
 
-    bl_idname = f"view3d.{HANA3D_NAME}_search"
-    bl_label = f"{HANA3D_DESCRIPTION} asset search"
-    bl_description = "Search online for assets"
+    bl_idname = f'view3d.{HANA3D_NAME}_search'
+    bl_label = f'{HANA3D_DESCRIPTION} asset search'
+    bl_description = 'Search online for assets'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-    own: BoolProperty(name="own assets only", description="Find all own assets", default=False)
+    own: BoolProperty(name='own assets only', description='Find all own assets', default=False)
 
     author_id: StringProperty(
-        name="Author ID",
-        description="Author ID - search only assets by this author",
-        default="",
+        name='Author ID',
+        description='Author ID - search only assets by this author',
+        default='',
         options={'SKIP_SAVE'},
     )
 
     get_next: BoolProperty(
-        name="next page",
-        description="get next page from previous search",
+        name='next page',
+        description='get next page from previous search',
         default=False,
         options={'SKIP_SAVE'},
     )
 
     keywords: StringProperty(
-        name="Keywords",
-        description="Keywords",
-        default="",
-        options={'SKIP_SAVE'}
+        name='Keywords',
+        description='Keywords',
+        default='',
+        options={'SKIP_SAVE'},
     )
 
     @classmethod
