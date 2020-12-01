@@ -15,6 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import logging
 
 import bpy
 from bpy.props import StringProperty
@@ -26,7 +27,7 @@ from .report_tools import execute_wrapper
 
 
 def update_libraries(workspace):
-    utils.p('update_libraries')
+    logging.debug('update_libraries')
     query = {
         'workspace_id': workspace
     }

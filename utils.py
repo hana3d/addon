@@ -16,6 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import json
+import logging
 import os
 import sys
 import time
@@ -25,7 +26,7 @@ import bpy
 from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from . import paths, rerequests, tasks_queue
+from . import logger, paths
 from .config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -196,8 +197,10 @@ def save_prefs(self, context):
             # reset the api key in case the user writes some nonsense,
             # e.g. a search string instead of the Key
             user_preferences.api_key = ''
-            props = get_search_props()
-            props.report = 'Login failed. Please paste a correct API Key.'
+            logger.show_report(
+                get_search_props(),
+                text='Login failed. Please paste a correct API Key.',
+            )
 
         prefs = {
             'API_key': user_preferences.api_key,
@@ -214,7 +217,7 @@ def save_prefs(self, context):
             with open(fpath, 'w') as s:
                 json.dump(prefs, s)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
 
 def get_hidden_image(
@@ -254,17 +257,6 @@ def get_thumbnail(name):
         img.name = name
 
     return img
-
-
-def p(text, text1='', text2='', text3='', text4='', text5=''):
-    '''debug printing depending on blender's debug value'''
-    if os.getenv('HANA3D_ENV') in ('local', 'dev'):
-        print(text, text1, text2, text3, text4, text5)
-
-
-def pprint(data):
-    '''pretty print jsons'''
-    p(json.dumps(data, indent=4, sort_keys=True))
 
 
 def get_hierarchy(ob):
@@ -772,7 +764,7 @@ def save_file(filepath, **kwargs):
         except RuntimeError as e:
             if n == n_tries - 1:
                 raise e
-            print(f'Error when saving file ({e}), retrying...')
+            logging.error(f'Error when saving file ({e}), retrying...')
             time.sleep(1)
 
 
