@@ -45,7 +45,7 @@ from .report_tools import execute_wrapper
 from .src.search.query import Query
 from .src.search.search import Search
 
-from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # noqa E501 isort:skip 
+from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # noqa E501 isort:skip
 
 
 download_threads = {}
@@ -115,7 +115,7 @@ class Downloader(threading.Thread):
         file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
 
         if self.stopped():
-            logging.debug(f'stopping download: {asset_data["name"]}') # noqa WPS204
+            logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS204
             return
 
         tmp_file = file_name + '_tmp'
@@ -127,7 +127,7 @@ class Downloader(threading.Thread):
 
             if total_length is None:  # no content length header
                 f.write(response.content)
-            else: # noqa WPS220
+            else:  # noqa WPS220
                 tcom.file_size = int(total_length)
                 dl = 0
                 for data in response.iter_content(chunk_size=4096):
@@ -136,7 +136,7 @@ class Downloader(threading.Thread):
                     tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
                     f.write(data)
                     if self.stopped():
-                        logging.debug(f'stopping download: {asset_data["name"]}') # noqa WPS220
+                        logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS220
                         f.close()
                         os.remove(tmp_file)
                         return
@@ -431,7 +431,7 @@ def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
                 bmax = asset_data['bbox_max']
                 size_min = min(
                     1.0,
-                    (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,
+                    (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,  # noqa : WPS221
                 )
                 parent.empty_display_size = size_min
 
