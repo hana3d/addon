@@ -165,7 +165,7 @@ def get_export_data(
             library_id = props.libraries_list[library].id_
             library = {}
             library.update({
-                'id': library_id
+                'id': library_id,
             })
             if props.custom_props.keys() != []:
                 custom_props = {}
@@ -257,7 +257,7 @@ class UploadOperator(Operator):
             layout.label(text="Do this only when you create a new asset from an old one.")
             layout.label(text="For updates of thumbnail or model use reupload.")
 
-    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]): # noqa D102,WPS212,WPS210,WPS213,WPS231,E501
+    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]):  # noqa D102,WPS212,WPS210,WPS213,WPS231,E501
         utils.name_update()
 
         location = get_upload_location(props, context)
@@ -301,7 +301,7 @@ class UploadOperator(Operator):
                     url,
                     json=upload_data,
                     headers=headers,
-                    immediate=True
+                    immediate=True,
                 )
                 logger.show_report(props, text='uploaded metadata')
 
@@ -320,7 +320,7 @@ class UploadOperator(Operator):
                     url,
                     json=upload_data,
                     headers=headers,
-                    immediate=True
+                    immediate=True,
                 )
                 logger.show_report(props, text='uploaded metadata')
             except requests.exceptions.RequestException as e:
@@ -366,7 +366,7 @@ class UploadOperator(Operator):
             skip_post_process = 'false'
             if any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes):
                 ui.add_report(
-                    'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map'
+                    'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map',
                 )
                 skip_post_process = 'true'
 

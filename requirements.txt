@@ -5,3 +5,6 @@ xenon==0.7.1
 autopep8==1.5.4
 flake8-isort==3.0.1
 mypy==0.790
+fake-bpy-module-2.90==20200907
+add-trailing-comma==2.0.1
+unify==0.5
