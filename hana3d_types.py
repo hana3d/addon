@@ -15,6 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import logging
 import math
 import os
 from typing import Union
@@ -295,7 +296,7 @@ def workspace_items(self, context):
 
 
 def search_update(self, context):
-    utils.p('search updater')
+    logging.debug('search updater')
     # if self.search_keywords != '':
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.down_up != 'SEARCH':

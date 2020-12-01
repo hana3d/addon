@@ -15,13 +15,14 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import logging
 import threading
 import time
 
 import bpy
 import requests
 
-from . import colors, oauth, paths, ui, utils
+from . import colors, logger, oauth, paths, ui, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.preferences.profile import Profile
@@ -38,7 +39,7 @@ active_authenticator = None
 
 def login(authenticator: oauth.OAuthAuthenticator):
     oauth_response = authenticator.get_new_token(redirect_url=REDIRECT_URL)
-    utils.p('tokens retrieved')
+    logging.debug('tokens retrieved')
     write_tokens(oauth_response)
 
 
@@ -73,8 +74,8 @@ def refresh_token(immediate: bool = False) -> dict:
 
 
 def write_tokens(oauth_response: dict):
-    utils.p('writing tokens')
-    utils.p(oauth_response)
+    logging.debug('writing tokens')
+    logging.debug(oauth_response)
 
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.api_key_refresh = oauth_response['refresh_token']
@@ -84,10 +85,7 @@ def write_tokens(oauth_response: dict):
     preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    props = utils.get_search_props()
-    if props is not None:
-        props.report = ''
-    ui.add_report(f"{HANA3D_DESCRIPTION} Re-Login success")
+    logger.show_report(utils.get_search_props(), text=f'{HANA3D_DESCRIPTION} Re-Login success')
     profile = Profile()
     profile.update_async()
 
@@ -177,8 +175,8 @@ class CancelLoginOnline(bpy.types.Operator):
                 requests.get(active_authenticator.redirect_uri)
                 active_authenticator = None
         except Exception as e:
-            print('stopped login attempt')
-            print(e)
+            logging.error('stopped login attempt')
+            logging.error(e)
         return {'FINISHED'}
 
 

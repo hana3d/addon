@@ -38,14 +38,6 @@ paths = module.paths
 rerequests = module.rerequests
 
 
-def start_logging():
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(logging.DEBUG)
-    requests_log.propagate = True
-
-
 def upload_file(upload_data, f, correlation_id):
     headers = rerequests.get_headers(correlation_id)
     bg_blender.progress('uploading %s' % f['type'])
@@ -69,7 +61,7 @@ def upload_file(upload_data, f, correlation_id):
     upload = response.json()
     #
     chunk_size = 1024 * 1024 * 2
-    utils.pprint(upload)
+    logging.debug(upload)
     # file gets uploaded here:
     uploaded = False
     # s3 upload is now the only option
@@ -85,10 +77,10 @@ def upload_file(upload_data, f, correlation_id):
                 if upload_response.status_code == 200:
                     uploaded = True
                 else:
-                    print(upload_response.text)
+                    logging.error(upload_response.text)
                     bg_blender.progress(f'Upload failed, retry. {a}')
             except Exception as e:
-                print(e)
+                logging.error(e)
                 bg_blender.progress('Upload %s failed, retrying' % f['type'])
                 time.sleep(1)
 
