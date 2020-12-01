@@ -16,9 +16,11 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import copy
+from datetime import datetime
 import functools
 import os
 import shutil
+from .src.search.query import Query
 import threading
 from queue import Queue
 
@@ -740,7 +742,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
 
 class Hana3DBatchDownloadOperator(bpy.types.Operator):
-    """Download and link all preview assets to scene."""
+    """Download and link all searched preview assets to scene."""
 
     bl_idname = f"scene.{HANA3D_NAME}_batch_download"
     bl_label = f"{HANA3D_DESCRIPTION} Batch Download"
@@ -753,6 +755,13 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         options={'HIDDEN'}
     )
 
+    search_query_updated_at: StringProperty(
+        name='Search Query Updated At',
+        description='time when search query updated',
+        default='',
+        options={'HIDDEN'}
+    )
+
     grid_distance: FloatProperty(
         name="Grid Distance",
         description='distance between objects on the grid',
@@ -761,23 +770,11 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         default=3
     )
 
-    reset: BoolProperty(
-        name='Reset Count',
-        description='reset counter and restart download from zero',
-        default=False
-    )
-
-    batch_size: IntProperty(
-        name='Batch Size',
-        description='number of objects to download in parallel',
-        default=20
-    )
-
     def _get_location(self):
         x = y = 0
         dx = 0
         dy = -1
-        for i in range(self.object_count):
+        for _ in range(self.object_count):
             if x == y or (x < 0 and x == -y) or (x > 0 and x == 1 - y):
                 dx, dy = -dy, dx
             x, y = x + dx, y + dy
@@ -790,12 +787,18 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        if self.reset is True:
-            self.object_count = 0
         search = Search(context)
         if not search.results:
             print('Empty search results')  # noqa : WPS421
             return {'CANCELLED'}
+
+        query = Query(context)
+
+        if query.updated_at:
+            updated_at = query.updated_at.isoformat()
+            if self.search_query_updated_at != updated_at:
+                self.search_query_updated_at = updated_at
+                self.object_count = 0
 
         for search_result in search.results[self.object_count:]:
             asset_data = search_result.to_dict()

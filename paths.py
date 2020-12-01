@@ -20,6 +20,7 @@ import os
 import urllib.parse
 
 import bpy
+from .src.search.query import Query
 
 from .config import (
     HANA3D_AUTH_AUDIENCE,
@@ -44,22 +45,14 @@ def find_in_local(text=''):
     return fs
 
 
-def get_api_url(*paths: str, query: dict = None) -> str:
+def get_api_url(*paths: str, query: Query = None) -> str:
     base_url = HANA3D_URL + '/v1/'
     url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
     if query is None:
         return url
-    correct_bool(query)
-    query_string = urllib.parse.urlencode(query)
+    query.public = 'true' if query.public else 'false'
+    query_string = urllib.parse.urlencode(vars(query))
     return f'{url}?{query_string}'
-
-
-def correct_bool(query):
-    if isinstance(query.get('public'), bool):
-        if query['public']:
-            query['public'] = 'true'
-        else:
-            query['public'] = 'false'
 
 
 def get_auth_url():

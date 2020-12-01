@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import json
 import os
+from .src.search.query import Query
 import threading
 import time
 
@@ -289,7 +290,7 @@ class ThumbDownloader(threading.Thread):
 class Searcher(threading.Thread):
     query = None
 
-    def __init__(self, query, params):
+    def __init__(self, query: Query, params):
         super(Searcher, self).__init__()
         self.query = query
         self.params = params
@@ -308,8 +309,8 @@ class Searcher(threading.Thread):
         global reports
 
         mt('search thread started')
-        tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
-        json_filepath = os.path.join(tempdir, '%s_searchresult.json' % query['asset_type'])
+        tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
+        json_filepath = os.path.join(tempdir, f'{query.asset_type}_searchresult.json')
 
         headers = rerequests.get_headers()
 
@@ -460,57 +461,6 @@ class Searcher(threading.Thread):
         mt('thumbnails finished')
 
 
-def build_query_common(query, props):
-    '''add shared parameters to query'''
-    keywords = props.search_keywords
-    if keywords != '':
-        if keywords.startswith('view_id:'):
-            query['view_id'] = keywords.replace('view_id:', '')
-        else:
-            query['search_term'] = keywords
-
-    if props.search_verification_status != 'ALL':
-        query['verification_status'] = props.search_verification_status.lower()
-
-    if props.public_only:
-        query['public'] = True
-
-
-def build_query_model():
-    '''use all search input to request results from server'''
-
-    props = getattr(bpy.context.window_manager, HANA3D_MODELS)
-    query = {
-        "asset_type": 'model',
-    }
-
-    build_query_common(query, props)
-
-    return query
-
-
-def build_query_scene():
-    '''use all search input to request results from server'''
-
-    props = getattr(bpy.context.window_manager, HANA3D_SCENES)
-    query = {
-        "asset_type": 'scene',
-    }
-    build_query_common(query, props)
-    return query
-
-
-def build_query_material():
-    props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
-    query = {
-        "asset_type": 'material',
-    }
-
-    build_query_common(query, props)
-
-    return query
-
-
 def mt(text):
     global search_start_time, prev_time
     alltime = time.time() - search_start_time
@@ -519,7 +469,7 @@ def mt(text):
     utils.p(text, alltime, since_last)
 
 
-def add_search_process(query, params):
+def add_search_process(query: Query, params):
     global search_threads
 
     while len(search_threads) > 0:
@@ -528,11 +478,11 @@ def add_search_process(query, params):
         # TODO CARE HERE FOR ALSO KILLING THE THREADS...
         # AT LEAST NOW SEARCH DONE FIRST WON'T REWRITE AN OLDER ONE
 
-    tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
+    tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
     thread = Searcher(query, params)
     thread.start()
 
-    search_threads.append([thread, tempdir, query['asset_type']])
+    search_threads.append([thread, tempdir, query.asset_type])
 
     mt('thread started')
 
@@ -543,47 +493,31 @@ def search(get_next=False, author_id=''):
 
     search_start_time = time.time()
     # mt('start')
-    wm = bpy.context.window_manager
-    uiprops = getattr(wm, HANA3D_UI)
+    uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
+    asset_type = uiprops.asset_type.lower()
+
+    props = None
 
     if uiprops.asset_type == 'MODEL':
-        if not hasattr(wm, HANA3D_MODELS):
+        if not hasattr(bpy.context.window_manager, HANA3D_MODELS):
             return
-        props = getattr(wm, HANA3D_MODELS)
-        query = build_query_model()
+        props = getattr(bpy.context.window_manager, HANA3D_MODELS)
+    elif uiprops.asset_type == 'SCENE':
+        if not hasattr(bpy.context.window_manager, HANA3D_SCENES):
+            return
+        props = getattr(bpy.context.window_manager, HANA3D_SCENES)
+    elif uiprops.asset_type == 'MATERIAL':
+        if not hasattr(bpy.context.window_manager, HANA3D_MATERIALS):
+            return
+        props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
+    else:
+        return
 
-    if uiprops.asset_type == 'SCENE':
-        if not hasattr(wm, HANA3D_SCENES):
-            return
-        props = getattr(wm, HANA3D_SCENES)
-        query = build_query_scene()
-
-    if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(wm, HANA3D_MATERIALS):
-            return
-        props = getattr(wm, HANA3D_MATERIALS)
-        query = build_query_material()
+    query = Query(bpy.context, props)
+    query.asset_type = asset_type
 
     if props.is_searching and get_next:
         return
-
-    if author_id != '':
-        query['author_id'] = author_id
-
-    if props.workspace != '' and not props.public_only:
-        query['workspace'] = props.workspace
-
-    tags = []
-    for tag in props.tags_list.keys():
-        if props.tags_list[tag].selected is True:
-            tags.append(tag)
-    query['tags'] = ','.join(tags)
-
-    libraries = []
-    for library in props.libraries_list.keys():
-        if props.libraries_list[library].selected is True:
-            libraries.append(props.libraries_list[library].id_)
-    query['libraries'] = ','.join(libraries)
 
     props.is_searching = True
 
