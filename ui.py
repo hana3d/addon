@@ -93,6 +93,7 @@ def add_report(text='', timeout=5, color=colors.GREEN):
         if old_report.text == text:
             old_report.timeout = timeout
             return
+    logging.info(f'Message showed to the user: {text}')
     report = Report(active_area, text, timeout=timeout, color=color)
     reports.append(report)
 
