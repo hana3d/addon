@@ -9,7 +9,7 @@ from ..asset.asset_type import AssetType
 from ...config import HANA3D_NAME
 
 
-class Query(object):
+class Query(object):  # noqa : WPS230,WPS214
     """Hana3D search query."""
 
     def __init__(self, context: Context = None, props: Dict = None):
