@@ -21,14 +21,14 @@ class Query(object):  # noqa : WPS230,WPS214
         self.context = context
 
         self.asset_type: AssetType = None
-        self.view_id: str = None
-        self.job_id: str = None
-        self.search_term: str = None
-        self.verification_status: str = None
+        self.view_id: str = ''
+        self.job_id: str = ''
+        self.search_term: str = ''
+        self.verification_status: str = ''
         self.public: bool = False
-        self.workspace: str = None
-        self.tags: str = None
-        self.libraries: str = None
+        self.workspace: str = ''
+        self.tags: str = ''
+        self.libraries: str = ''
 
         if props is not None:
             self.updated_at = datetime.now()
