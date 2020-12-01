@@ -18,7 +18,6 @@
 import json
 import logging
 import os
-from .src.search.query import Query
 import threading
 import time
 
@@ -34,10 +33,11 @@ from .config import (
     HANA3D_MODELS,
     HANA3D_NAME,
     HANA3D_SCENES,
-    HANA3D_UI
+    HANA3D_UI,
 )
 from .report_tools import execute_wrapper
 from .src.search.asset_search import AssetSearch
+from .src.search.query import Query
 from .src.search.search import Search
 
 search_start_time = 0

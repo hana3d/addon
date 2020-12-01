@@ -17,13 +17,13 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import os
-from .src.search.query import Query
 import threading
 from typing import List
 
 import requests
 
 from . import paths, rerequests, utils
+from .src.search.query import Query
 
 
 def download_file(file_path: str, url: str) -> str:

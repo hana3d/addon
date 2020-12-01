@@ -118,15 +118,15 @@ class Downloader(threading.Thread):
             logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS204
             return
 
-        tmp_file = file_name + '_tmp'
-        with open(tmp_file, 'wb') as f:
+        tmp_file_name = file_name + '_tmp'
+        with open(tmp_file_name, 'wb') as tmp_file:
             logging.info(f'Downloading {file_name}')
 
             response = requests.get(asset_data['download_url'], stream=True)
             total_length = response.headers.get('Content-Length')
 
             if total_length is None:  # no content length header
-                f.write(response.content)
+                tmp_file.write(response.content)
             else:  # noqa WPS220
                 tcom.file_size = int(total_length)
                 dl = 0
@@ -134,13 +134,13 @@ class Downloader(threading.Thread):
                     dl += len(data)
                     tcom.downloaded = dl
                     tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
-                    f.write(data)
+                    tmp_file.write(data)
                     if self.stopped():
                         logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS220
-                        f.close()
-                        os.remove(tmp_file)
+                        tmp_file.close()
+                        os.remove(tmp_file_name)
                         return
-        os.rename(tmp_file, file_name)
+        os.rename(tmp_file_name, file_name)
 
 
 def check_missing():
@@ -513,23 +513,24 @@ def set_asset_props(asset, asset_data):
     if 'libraries' in asset_data:
         libraries_list = asset_props.libraries_list
         hana3d_types.update_libraries_list(asset_props, bpy.context)
-        for library in asset_data['libraries']:
-            libraries_list[library['name']].selected = True
-            if 'metadata' in library and library['metadata'] is not None:
-                for view_prop in libraries_list[library['name']].metadata['view_props']:
-                    name = f'{libraries_list[library["name"]].name} {view_prop["name"]}'
+        for asset_library in asset_data['libraries']:
+            library = libraries_list[asset_library['name']]
+            library.selected = True
+            if 'metadata' in asset_library and asset_library['metadata'] is not None:
+                for view_prop in library.metadata['view_props']:
+                    name = f'{library.name} {view_prop["name"]}'
                     slug = view_prop['slug']
                     if name not in asset_props.custom_props:
                         asset_props.custom_props_info[name] = {
                             'slug': slug,
-                            'library_name': libraries_list[library['name']].name,
-                            'library_id': libraries_list[library['name']].id_,
+                            'library_name': library.name,
+                            'library_id': library.id_,
                         }
                     if (
-                        'view_props' in library['metadata']
-                        and slug in library['metadata']['view_props']
+                        'view_props' in asset_library['metadata']
+                        and slug in asset_library['metadata']['view_props']
                     ):
-                        asset_props.custom_props[name] = library['metadata']['view_props'][slug]  # noqa E501
+                        asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]  # noqa E501
                     else:
                         asset_props.custom_props[name] = ''
 
@@ -741,7 +742,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class Hana3DBatchDownloadOperator(bpy.types.Operator):
+class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     """Download and link all searched preview assets to scene."""
 
     bl_idname = f'scene.{HANA3D_NAME}_batch_download'

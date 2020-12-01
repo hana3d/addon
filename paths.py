@@ -60,7 +60,7 @@ def get_api_url(*paths: str, query: Query = None) -> str:
     if query is None:
         return url
     query.public = 'true' if query.public else 'false'
-    query_string = urllib.parse.urlencode(vars(query))
+    query_string = urllib.parse.urlencode(vars(query))  # noqa : WPS421
     return f'{url}?{query_string}'
 
 
@@ -209,7 +209,7 @@ def get_download_filenames(asset_data):
 
 def get_clean_filepath():
     script_path = os.path.dirname(os.path.realpath(__file__))
-    subpath = 'blendfiles' + os.sep + 'cleaned.blend'
+    subpath = f'blendfiles{os.sep}cleaned.blend'
     cp = os.path.join(script_path, subpath)
     return cp
 
@@ -217,14 +217,14 @@ def get_clean_filepath():
 def get_thumbnailer_filepath():
     script_path = os.path.dirname(os.path.realpath(__file__))
     # fpath = os.path.join(p, subpath)
-    subpath = 'blendfiles' + os.sep + 'thumbnailer.blend'
+    subpath = f'blendfiles{os.sep}thumbnailer.blend'
     return os.path.join(script_path, subpath)
 
 
 def get_material_thumbnailer_filepath():
     script_path = os.path.dirname(os.path.realpath(__file__))
     # fpath = os.path.join(p, subpath)
-    subpath = 'blendfiles' + os.sep + 'material_thumbnailer_cycles.blend'
+    subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
     return os.path.join(script_path, subpath)
     """
     for p in bpy.utils.script_paths():
@@ -249,5 +249,5 @@ def get_addon_thumbnail_path(name):
     next = ''
     if not (ext == 'jpg' or ext == 'png'):  # already has ext?
         next = '.jpg'
-    subpath = 'thumbnails' + os.sep + name + next
+    subpath = f'thumbnails{os.sep}{name}{next}'
     return os.path.join(script_path, subpath)
