@@ -31,6 +31,7 @@ from mathutils import Vector
 from . import bg_blender, colors, download, paths, render, search, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.preferences.preferences import Preferences
 from .src.search.search import Search
 from .src.ui import bgl_helper
 from .src.ui.report import Report
@@ -463,8 +464,8 @@ def draw_downloader(x, y, percent=0, img=None):
         bgl_helper.draw_image(x, y, width, height, img, 0.5)
     width = 50
     height = int(0.5 * percent)
-    bgl_helper.draw_rect(x, y, 50, int(0.5 * percent), (0.2, 1, 0.2, 0.3))
-    bgl_helper.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))
+    bgl_helper.draw_rect(x, y, width, height, (0.2, 1, 0.2, 0.3))
+    bgl_helper.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))  # noqa: WPS221
 
 
 def draw_progress(x, y, text='', percent=None, color=colors.GREEN):  # noqa: WPS111
@@ -475,10 +476,11 @@ def draw_progress(x, y, text='', percent=None, color=colors.GREEN):  # noqa: WPS
         y: y-coordinate where the progress bar should be drawn
         text: Text to be displayed with the progress bar
         percent: Progress percentage
-        colors: color in which the progress bar should be drawn
+        color: color in which the progress bar should be drawn
     """
+    font_size = 16
     bgl_helper.draw_rect(x, y, percent, 5, color)
-    bgl_helper.draw_text(text, x, y + 8, 16, color)
+    bgl_helper.draw_text(text, x, y + 8, font_size, color)
 
 
 def draw_callback_3d_progress(self, context):
@@ -498,8 +500,8 @@ def draw_callback_3d_progress(self, context):
 def draw_callback_2d_progress(self, context):
     ui = getattr(bpy.context.window_manager, HANA3D_UI)
 
-    x = ui.reports_x
-    y = ui.reports_y
+    x = ui.reports_x  # noqa: WPS111
+    y = ui.reports_y  # noqa: WPS111
     line_size = 30
     index = 0
     for thread in download.download_threads.values():
@@ -528,26 +530,24 @@ def draw_callback_2d_progress(self, context):
         else:
             draw_progress(
                 x,
-                y - index * line_size,
+                y - index * line_size,  # noqa: WPS204
                 text=f'downloading {asset_data.name}',
                 percent=tcom.progress
             )
             index += 1
     for process in bg_blender.bg_processes:
         tcom = process[1]
-        draw_progress(x, y - index * line_size, '%s' % tcom.lasttext, tcom.progress)
+        draw_progress(x, y - index * line_size, f'{tcom.lasttext}', tcom.progress)  # noqa: WPS221
         index += 1
     for thread in render.render_threads:
+        percentage_progress = 0
         if thread.uploading:
-            text = thread.render_state
             percentage_progress = int(thread.upload_progress * 100)
-            draw_progress(x, y - index * line_size, text, percentage_progress)
-            index += 1
         elif thread.job_running:
-            text = thread.render_state
             percentage_progress = int(thread.job_progress * 100)
-            draw_progress(x, y - index * line_size, text, percentage_progress)
-            index += 1
+        text = thread.render_state
+        draw_progress(x, y - index * line_size, text, percentage_progress)
+        index += 1
     for thread in render.upload_threads:
         if thread.uploading_render:
             text = thread.upload_state
@@ -636,25 +636,27 @@ def draw_callback_2d_search(self, context):
 
             if count < len(search_results):
                 page_start = ui_props.scrolloffset + 1
-                page_end = (
-                    ui_props.scrolloffset + ui_props.wcount
-                    * context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
-                )
+                preferences = Preferences()
+                page_end = ui_props.scrolloffset + ui_props.wcount * preferences.max_assetbar_rows
                 pagination_text = \
                     f'{page_start} - {page_end} of {search_object.results_orig["count"]}'  # noqa E501
-                bgl_helper.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width  # noqa : WPS317
-                                 - 125, ui_props.bar_y - ui_props.bar_height - 25, 14)
+                bgl_helper.draw_text(
+                    pagination_text,
+                    ui_props.bar_x + ui_props.bar_width - 125,  # noqa: WPS432
+                    ui_props.bar_y - ui_props.bar_height - 25,  # noqa: WPS432
+                    14,  # noqa: WPS432
+                )
                 # arrows
                 arrow_y = (
                     ui_props.bar_y
                     - int((ui_props.bar_height + ui_props.thumb_size) / 2)
                     + ui_props.margin
                 )
+                width = 25
                 if ui_props.scrolloffset > 0:
 
                     if ui_props.active_index == -2:
-                        width = 25
-                        bgl_helper.draw_rect(
+                        bgl_helper.draw_rect(  # noqa: WPS220
                             ui_props.bar_x,
                             ui_props.bar_y - ui_props.bar_height,
                             width,
@@ -662,22 +664,29 @@ def draw_callback_2d_search(self, context):
                             highlight,
                         )
                     img = utils.get_thumbnail('arrow_left.png')
-                    bgl_helper.draw_image(ui_props.bar_x, arrow_y, 25, ui_props.thumb_size, img, 1)
+                    bgl_helper.draw_image(
+                        ui_props.bar_x,
+                        arrow_y,
+                        width,
+                        ui_props.thumb_size,
+                        img,
+                        1,
+                    )
 
                 if search_results_orig['count'] - ui_props.scrolloffset > count + 1:
                     if ui_props.active_index == -1:
-                        bgl_helper.draw_rect(
-                            ui_props.bar_x + ui_props.bar_width - 25,
+                        bgl_helper.draw_rect(  # noqa: WPS220
+                            ui_props.bar_x + ui_props.bar_width - width,
                             ui_props.bar_y - ui_props.bar_height,
-                            25,
+                            width,
                             ui_props.bar_height,
                             highlight,
                         )
                     img1 = utils.get_thumbnail('arrow_right.png')
                     bgl_helper.draw_image(
-                        ui_props.bar_x + ui_props.bar_width - 25,
+                        ui_props.bar_x + ui_props.bar_width - width,
                         arrow_y,
-                        25,
+                        width,
                         ui_props.thumb_size,
                         img1,
                         1,
@@ -704,15 +713,15 @@ def draw_callback_2d_search(self, context):
 
                     max_size = max(img.size[0], img.size[1])
                     width = int(ui_props.thumb_size * img.size[0] / max_size)
-                    height = int(ui_props.thumb_size * img.size[1] / max_size))
+                    height = int(ui_props.thumb_size * img.size[1] / max_size)
                     crop = (0, 0, 1, 1)
                     if img.size[0] > img.size[1]:
-                        offset = (1 - img.size[1] / img.size[0]) / 2
-                        crop=(offset, 0, 1 - offset, 1)  # noqa: WPS220
+                        offset = (1 - img.size[1] / img.size[0]) / 2  # noqa: WPS220, WPS221
+                        crop = (offset, 0, 1 - offset, 1)  # noqa: WPS220
                     if img is not None:
-                        bgl_helper.draw_image(x, y, width, width, img, 1, crop = crop)
+                        bgl_helper.draw_image(x, y, width, width, img, 1, crop=crop)  # noqa: WPS220
                         if index == ui_props.active_index:
-                            bgl_helper.draw_rect(
+                            bgl_helper.draw_rect(  # noqa: WPS220
                                 x - ui_props.highlight_margin,
                                 y - ui_props.highlight_margin,
                                 width + 2 * ui_props.highlight_margin,
@@ -728,14 +737,22 @@ def draw_callback_2d_search(self, context):
 
                     result = search_results[index]
                     if result['downloaded'] > 0:
-                        bgl_helper.draw_rect(x, y - 2, int(w * result['downloaded'] / 100.0), 2, green)
+                        width = int(w * result['downloaded'] / 100.0)  # noqa: WPS220
+                        bgl_helper.draw_rect(x, y - 2, width, 2, green)  # noqa: WPS220
                     # object type icons - just a test..., adds clutter/ not so userfull:
                     # icons = ('type_finished.png', 'type_template.png', 'type_particle_system.png')
 
                     v_icon = verification_icons[result.get('verification_status', 'validated')]
                     if v_icon is not None:
                         img = utils.get_thumbnail(v_icon)
-                        bgl_helper.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
+                        bgl_helper.draw_image(  # noqa: WPS220
+                            x + ui_props.thumb_size - 26,  # noqa: WPS432
+                            y + 2,
+                            24,
+                            24,
+                            img,
+                            1,
+                        )
 
             # if user_preferences.api_key == '':
             #     report = 'Register on Hana3D website to upload your own assets.'
