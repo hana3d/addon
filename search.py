@@ -16,6 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import json
+import logging
 import os
 import threading
 import time
@@ -25,7 +26,7 @@ import requests
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from . import hana3d_oauth, paths, rerequests, tasks_queue, ui, utils
+from . import hana3d_oauth, logger, paths, rerequests, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -44,7 +45,7 @@ prev_time = 0
 
 def check_errors(rdata):
     if rdata.get('status_code') == 401:
-        utils.p(rdata)
+        logging.debug(rdata)
         if rdata.get('code') == 'token_expired':
             user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
             if user_preferences.api_key != '':
@@ -52,7 +53,7 @@ def check_errors(rdata):
                 return False, rdata.get('description')
             return False, 'Missing or wrong api_key in addon preferences'
     elif rdata.get('status_code') == 403:
-        utils.p(rdata)
+        logging.debug(rdata)
         if rdata.get('code') == 'invalid_permissions':
             return False, rdata.get('description')
     return True, ''
@@ -105,10 +106,6 @@ def timer_update():
             asset_search.results = []  # noqa : WPS110
             json_filepath = os.path.join(icons_dir, f'{asset_type}_searchresult.json')
 
-            global reports
-            if reports != '':
-                props.report = str(reports)
-                return 0.2
             with open(json_filepath, 'r') as data_file:
                 rdata = json.load(data_file)
 
@@ -211,13 +208,12 @@ def timer_update():
                     ui_props.scrolloffset = 0
                 props.is_searching = False
                 props.search_error = False
-                props.report = 'Found %i results. ' % (search_object.results_orig['count'])  # noqa #501
-                if not search_object.results:
-                    tasks_queue.add_task(ui.add_report, ('No matching results found.',))
+                text = f'Found {search_object.results_orig["count"]} results. '  # noqa #501
+                logger.show_report(props, text=text)
 
             else:
-                print('error', error)
-                props.report = error
+                logging.error(error)
+                logger.show_report(props, text=error)
                 props.search_error = True
 
             mt('preview loading finished')
@@ -305,7 +301,6 @@ class Searcher(threading.Thread):
         maxthreads = 50
         query = self.query
         params = self.params
-        global reports
 
         mt('search thread started')
         tempdir = paths.get_temp_dir('%s_search' % query['asset_type'])
@@ -331,26 +326,25 @@ class Searcher(threading.Thread):
         if not params['get_next']:
             urlquery = paths.get_api_url('search', query=self.query)
         try:
-            utils.p(urlquery)
+            logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
-            reports = ''
+            logger.show_report(utils.get_search_props(), text='')
         except requests.exceptions.RequestException as e:
-            print(e)
-            reports = e
-            # props.report = e
+            logging.error(e)
+            logger.show_report(utils.get_search_props(), text=str(e))
             return
         mt('response is back ')
         try:
             rdata = r.json()
             rdata['status_code'] = r.status_code
         except Exception as inst:
-            reports = r.text
-            print(inst)
+            logging.error(inst)
+            logger.show_report(utils.get_search_props(), text=r.text)
 
         mt('data parsed ')
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         mt('search finished')
@@ -408,7 +402,7 @@ class Searcher(threading.Thread):
         # TODO do the killing/ stopping here! remember threads might have finished inbetween!
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         # this loop handles downloading of small thumbnails
@@ -428,12 +422,10 @@ class Searcher(threading.Thread):
                         for tk, thread in threads_copy.items():
                             if not thread.is_alive():
                                 thread.join()
-                                # utils.p(x)
                                 del thumb_sml_download_threads[tk]
-                                # utils.p('fetched thumbnail ', i)
                                 i += 1
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         while len(thumb_sml_download_threads) > 0:
@@ -446,7 +438,7 @@ class Searcher(threading.Thread):
                     i += 1
 
         if self.stopped():
-            utils.p('stopping search : ' + str(query))
+            logging.debug(f'stopping search : {str(query)}')
             return
 
         # start downloading full thumbs in the end
@@ -516,7 +508,7 @@ def mt(text):
     alltime = time.time() - search_start_time
     since_last = time.time() - prev_time
     prev_time = time.time()
-    utils.p(text, alltime, since_last)
+    logging.debug(f'{text} {alltime} {since_last}')
 
 
 def add_search_process(query, params):
@@ -590,9 +582,7 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    tasks_queue.add_task(ui.add_report, (f'{HANA3D_DESCRIPTION} searching...', 2))
-
-    props.report = f'{HANA3D_DESCRIPTION} searching...'
+    logger.show_report(props, text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
 
 class SearchOperator(Operator):

@@ -15,8 +15,8 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
+import logging
 import os
 import subprocess
 import tempfile
@@ -28,9 +28,11 @@ import requests
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from . import bg_blender, hana3d_types, paths, render, rerequests, ui, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
+
+from . import bg_blender, hana3d_types, logger, paths, render, rerequests, ui, utils  # isort:skip
+
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 
@@ -255,12 +257,11 @@ class UploadOperator(Operator):
             layout.label(text="Do this only when you create a new asset from an old one.")
             layout.label(text="For updates of thumbnail or model use reupload.")
 
-    # TODO: remove the ignored lint errors
-    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]): # noqa D102, WPS212, WPS210, WPS213, WPS231
+    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]): # noqa D102,WPS212,WPS210,WPS213,WPS231,E501
         utils.name_update()
 
         location = get_upload_location(props, context)
-        props.upload_state = 'preparing upload'
+        logger.show_report(props, text='preparing upload')
 
         if 'jobs' not in props.render_data:
             props.render_data['jobs'] = []
@@ -286,14 +287,13 @@ class UploadOperator(Operator):
         datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
         if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
-            props.upload_state = 'Thumbnail not found'
+            logger.show_report(props, text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
 
         correlation_id = str(uuid.uuid4())
         headers = rerequests.get_headers(correlation_id)
 
-        global reports
         if props.id == '':
             url = paths.get_api_url('assets')
             try:
@@ -303,14 +303,14 @@ class UploadOperator(Operator):
                     headers=headers,
                     immediate=True
                 )
-                ui.add_report('uploaded metadata')
+                logger.show_report(props, text='uploaded metadata')
 
                 dict_response = response.json()
-                utils.pprint(dict_response)
+                logging.debug(dict_response)
                 props.id = dict_response['id']
             except requests.exceptions.RequestException as e:
-                print(e)
-                props.upload_state = str(e)
+                logging.error(e)
+                logger.show_report(props, text=str(e))
                 props.uploading = False
                 return {'CANCELLED'}
         else:
@@ -322,16 +322,16 @@ class UploadOperator(Operator):
                     headers=headers,
                     immediate=True
                 )
-                ui.add_report('uploaded metadata')
+                logger.show_report(props, text='uploaded metadata')
             except requests.exceptions.RequestException as e:
-                print(e)
-                props.upload_state = str(e)
+                logging.error(e)
+                logger.show_report(props, text=str(e))
                 props.uploading = False
                 return {'CANCELLED'}
 
         if upload_set == ['METADATA']:
             props.uploading = False
-            props.upload_state = 'upload finished successfully'
+            logger.show_report(props, text='upload finished successfully')
             props.view_workspace = workspace
             return {'FINISHED'}
 
@@ -399,9 +399,9 @@ class UploadOperator(Operator):
                 bpy.ops.file.autopack_toggle()
 
         except Exception as e:
-            props.upload_state = str(e)
+            logger.show_report(props, text=str(e))
             props.uploading = False
-            print(e)
+            logging.error(e)
             return {'CANCELLED'}
 
         if props.remote_thumbnail:

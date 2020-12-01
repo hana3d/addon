@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import queue
 
 import bpy
@@ -33,7 +33,7 @@ def threads_state_update():
             exec(cmd)
             state_update_queue.task_done()
         except Exception as e:
-            print(f'Failed to execute command {cmd!r} ({e})')
+            logging.error(f'Failed to execute command {cmd!r} ({e})')
     return 0.02
 
 

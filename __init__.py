@@ -33,6 +33,7 @@ from . import (  # noqa: WPS235
     hana3d_types,
     icons,
     libraries,
+    logger,
     paths,
     render,
     search,
@@ -306,6 +307,7 @@ modules = (
     hana3d_oauth,
     icons,
     libraries,
+    logger,
     render,
     search,
     tags,
@@ -339,3 +341,6 @@ def unregister():
 
     bpy.utils.unregister_class(Hana3DAddonPreferences)
     addon_updater_ops.unregister()
+
+
+logger.setup_logger()

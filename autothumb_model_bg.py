@@ -15,8 +15,8 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
+import logging
 import math
 import sys
 from importlib import import_module
@@ -81,7 +81,7 @@ def center_obs_for_thumbnail(obs):
 
 if __name__ == "__main__":
     try:
-        print('autothumb_model_bg')
+        logging.info('autothumb_model_bg')
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
 

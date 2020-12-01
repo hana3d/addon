@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import copy
 import functools
+import logging
 import os
 import shutil
 import threading
@@ -34,7 +35,6 @@ from bpy.props import (
     StringProperty
 )
 
-from . import append_link, colors, hana3d_types, paths, render_tools, ui, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -43,6 +43,9 @@ from .config import (
 )
 from .report_tools import execute_wrapper
 from .src.search.search import Search
+
+from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # noqa E501 isort:skip 
+
 
 download_threads = {}
 append_tasks_queue = Queue()
@@ -105,26 +108,25 @@ class Downloader(threading.Thread):
             # where another check should occur,
             # since the file might be corrupted.
             tcom.downloaded = 100
-            utils.p('not downloading, trying to append again')
+            logging.debug('not downloading, trying to append again')
             return
 
         file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
-        # for k in asset_data:
-        #    print(asset_data[k])
+
         if self.stopped():
-            utils.p('stopping download: ' + asset_data['name'])
+            logging.debug(f'stopping download: {asset_data["name"]}') # noqa WPS204
             return
 
         tmp_file = file_name + '_tmp'
         with open(tmp_file, "wb") as f:
-            print("Downloading %s" % file_name)
+            logging.info(f'Downloading {file_name}')
 
             response = requests.get(asset_data['download_url'], stream=True)
             total_length = response.headers.get('Content-Length')
 
             if total_length is None:  # no content length header
                 f.write(response.content)
-            else:
+            else: # noqa WPS220
                 tcom.file_size = int(total_length)
                 dl = 0
                 for data in response.iter_content(chunk_size=4096):
@@ -133,7 +135,7 @@ class Downloader(threading.Thread):
                     tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
                     f.write(data)
                     if self.stopped():
-                        utils.p('stopping download: ' + asset_data['name'])
+                        logging.debug(f'stopping download: {asset_data["name"]}') # noqa WPS220
                         f.close()
                         os.remove(tmp_file)
                         return
@@ -184,7 +186,7 @@ def check_unused():
 
     for library in bpy.data.libraries:
         if library not in used_libs:
-            print('attempt to remove this library: ', library.filepath)
+            logging.info(f'attempt to remove this library: {library.filepath}')
             # have to unlink all groups, since the file is a 'user'
             # even if the groups aren't used at all...
             for user_id in library.users_id:
@@ -224,7 +226,7 @@ def set_thumbnail(asset_data, asset):
 def update_downloaded_progress(downloader: Downloader):
     search = Search(bpy.context)
     if search.results is None:
-        print('Empty search results')  # noqa : WPS421:230
+        logging.debug('Empty search results')  # noqa : WPS421:230
         return
     for search_result in search.results:
         if search_result.get('view_id') == downloader.asset_data['view_id']:
@@ -236,7 +238,7 @@ def remove_file(filepath):
     try:
         os.remove(filepath)
     except Exception as e:
-        utils.p(f'Error when removing {filepath}: {e}')
+        logging.error(f'Error when removing {filepath}: {e}')
 
 
 def process_finished_thread(downloader: Downloader):
@@ -305,10 +307,9 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             continue
 
         if downloader.tcom.error:
-            sprops = utils.get_search_props()
-            sprops.report = downloader.tcom.report
             downloader.mark_remove()
-            ui.add_report(f'Error when downloading {asset_data["name"]}', color=colors.RED)
+            text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
+            logger.show_report(utils.get_search_props(), text=text, color=colors.RED)
             continue
 
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
@@ -534,7 +535,7 @@ def set_asset_props(asset, asset_data):
 
 def append_asset(asset_data: dict, **kwargs):
     asset_name = asset_data['name']
-    utils.p(f'appending asset {asset_name}')
+    logging.debug(f'appending asset {asset_name}')
 
     file_names = paths.get_download_filenames(asset_data)
     if len(file_names) == 0 or not os.path.isfile(file_names[-1]):

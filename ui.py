@@ -15,6 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import logging
 import math
 import os
 import time
@@ -95,7 +96,7 @@ def add_report(text='', timeout=5, color=colors.GREEN):
     # check for same reports and just make them longer by the timeout.
     for old_report in reports:
         if old_report.text == text:
-            old_report.timeout = old_report.age + timeout
+            old_report.timeout = timeout
             return
     report = Report(text=text, timeout=timeout, color=color)
     reports.append(report)
@@ -1107,7 +1108,7 @@ class AssetBarOperator(bpy.types.Operator):
             or self.area.type != 'VIEW_3D'
             or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
         ):
-            # print('search areas')   bpy.context.area.spaces[0].region_quadviews
+            # logging.info('search areas')   bpy.context.area.spaces[0].region_quadviews
             # stopping here model by now - because of:
             #   switching layouts or maximizing area now fails to assign new area throwing the bug
             #   internal error: modal gizmo-map handler has invalid area
@@ -1153,8 +1154,6 @@ class AssetBarOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         if context.region != self.region:
-            # print(time.time(), 'pass through because of region')
-            # print(context.region.type, self.region.type)
             return {'PASS_THROUGH'}
 
         if ui_props.down_up == 'UPLOAD':
@@ -1252,10 +1251,6 @@ class AssetBarOperator(bpy.types.Operator):
             if not mouse_in_asset_bar(mx, my):
                 return {'PASS_THROUGH'}
 
-            # note - TRACKPADPAN is unsupported in blender by now.
-            # if event.type == 'TRACKPADPAN' :
-            #     print(dir(event))
-            #     print(event.value, event.oskey, event.)
             if (
                 (event.type == 'WHEELDOWNMOUSE')
                 and len(search_results) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount)  # noqa : E501
@@ -1518,7 +1513,7 @@ class AssetBarOperator(bpy.types.Operator):
                                 target_slot = temp_mesh.polygons[face_index].material_index
                                 object_eval.to_mesh_clear()
                             else:
-                                self.report({'WARNING'}, "Invalid or library object as input:")
+                                logging.warning('Invalid or library object as input:') # noqa WPS220
                                 target_object = ''
                                 target_slot = ''
 
@@ -1626,7 +1621,7 @@ class AssetBarOperator(bpy.types.Operator):
             search_object.results = []  # noqa : WPS110
 
         if context.area.type != 'VIEW_3D':
-            self.report({'WARNING'}, "View3D not found, cannot run operator")
+            logging.warning('View3D not found, cannot run operator')
             return {'CANCELLED'}
 
         # the arguments we pass the the callback
