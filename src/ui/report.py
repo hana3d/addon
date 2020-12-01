@@ -3,8 +3,8 @@ import time
 
 import bpy
 
-from . import Color
 from .bgl_helper import draw_text
+from .ui_types import Color
 
 
 class Report(object):
@@ -35,7 +35,9 @@ class Report(object):
 
     def fade(self) -> bool:
         """Fade a report object when it is close to its timeout.
-        Return True if the report has timed out.
+
+        Returns:
+            bool: Returns True if the report has timed out, False otherwise.
         """
         fade_time = 1
         self._age = time.time() - self._start_time
@@ -49,6 +51,13 @@ class Report(object):
             )
         return self._age > self._timeout
 
-    def draw(self, x: float, y: float) -> None:
+    def draw(self, x: float, y: float) -> None:  # noqa: WPS111
+        """Draw report on the screen.
+
+        Parameters:
+            x: x-coordinate of where the text will be drawn
+            y: y-coordinate of where the text will be drawn
+        """
         if bpy.context.area == self._active_area:
-            draw_text(self._text, x, y + 8, 16, self._draw_color)
+            font_size = 16
+            draw_text(self._text, x, y + 8, font_size, self._draw_color)

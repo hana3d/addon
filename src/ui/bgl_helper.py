@@ -25,7 +25,7 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 
-from . import Color
+from .ui_types import Color
 
 
 def draw_rect(

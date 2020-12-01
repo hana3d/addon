@@ -31,9 +31,9 @@ from mathutils import Vector
 from . import bg_blender, colors, download, paths, render, search, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.search.search import Search
 from .src.ui import bgl_helper
 from .src.ui.report import Report
-from .src.search.search import Search
 
 handler_2d = None
 handler_3d = None
@@ -337,7 +337,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
             fsize = font_height
         i += 1
         column_lines += 1
-        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
+        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)  # noqa: WPS441
 
 
 def draw_tooltip_old(x, y, text='', author='', img=None):
@@ -425,7 +425,8 @@ def draw_tooltip_old(x, y, text='', author='', img=None):
         i += 1
         column_lines += 1
         bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
-    bgl_helper.draw_image(x, y - texth - isizey - ttipmargin, isizex, isizey, img, 1)
+    y_image = y - texth - isizey - ttipmargin
+    bgl_helper.draw_image(x, y_image, isizex, isizey, img, 1)
 
 
 def draw_callback_2d(self, context):
@@ -457,7 +458,9 @@ def draw_callback_2d(self, context):
 
 def draw_downloader(x, y, percent=0, img=None):
     if img is not None:
-        bgl_helper.draw_image(x, y, 50, 50, img, 0.5)
+        width = 50
+        height = 50
+        bgl_helper.draw_image(x, y, width, height, img, 0.5)
     bgl_helper.draw_rect(x, y, 50, int(0.5 * percent), (0.2, 1, 0.2, 0.3))
     bgl_helper.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))
 
@@ -486,6 +489,7 @@ def draw_callback_2d_progress(self, context):
 
     x = ui.reports_x
     y = ui.reports_y
+    line_size = 30
     index = 0
     for thread in download.download_threads.values():
         asset_data = thread.asset_data
@@ -513,32 +517,32 @@ def draw_callback_2d_progress(self, context):
         else:
             draw_progress(
                 x,
-                y - index * 30,
+                y - index * line_size,
                 text='downloading %s' % asset_data['name'],
                 percent=tcom.progress
             )
             index += 1
     for process in bg_blender.bg_processes:
         tcom = process[1]
-        draw_progress(x, y - index * 30, '%s' % tcom.lasttext, tcom.progress)
+        draw_progress(x, y - index * line_size, '%s' % tcom.lasttext, tcom.progress)
         index += 1
     for thread in render.render_threads:
         if thread.uploading:
             text = thread.render_state
-            draw_progress(x, y - index * 30, text, int(thread.upload_progress * 100))
+            draw_progress(x, y - index * line_size, text, int(thread.upload_progress * 100))
             index += 1
         elif thread.job_running:
             text = thread.render_state
-            draw_progress(x, y - index * 30, text, int(thread.job_progress * 100))
+            draw_progress(x, y - index * line_size, text, int(thread.job_progress * 100))
             index += 1
     for thread in render.upload_threads:
         if thread.uploading_render:
             text = thread.upload_state
-            draw_progress(x, y - index * 30, text, int(thread.upload_progress * 100))
+            draw_progress(x, y - index * line_size, text, int(thread.upload_progress * 100))
             index += 1
-    global reports
+    global reports  # noqa: WPS420
     for report in reports:
-        report.draw(x, y - index * 30)
+        report.draw(x, y - index * line_size)
         index += 1
         if report.fade():
             reports.remove(report)
@@ -620,8 +624,8 @@ def draw_callback_2d_search(self, context):
 
             if ui_props.wcount * ui_props.hcount < len(search_results):
                 page_start = ui_props.scrolloffset + 1
-                page_end = ui_props.scrolloffset + ui_props.wcount * \
-                    context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows
+                page_end = (ui_props.scrolloffset + ui_props.wcount
+                    * context.preferences.addons[HANA3D_NAME].preferences.max_assetbar_rows)
                 pagination_text = \
                     f'{page_start} - {page_end} of {search_object.results_orig["count"]}'  # noqa E501
                 bgl_helper.draw_text(pagination_text, ui_props.bar_x + ui_props.bar_width  # noqa : WPS317
@@ -692,7 +696,7 @@ def draw_callback_2d_search(self, context):
                     crop = (0, 0, 1, 1)
                     if img.size[0] > img.size[1]:
                         offset = (1 - img.size[1] / img.size[0]) / 2
-                        crop = (offset, 0, 1 - offset, 1)
+                        crop = (offset, 0, 1 - offset, 1)  # noqa: WPS220
                     if img is not None:
                         bgl_helper.draw_image(x, y, w, w, img, 1, crop=crop)
                         if index == ui_props.active_index:
@@ -708,7 +712,7 @@ def draw_callback_2d_search(self, context):
                         #               w + 2*highlight_margin, h + 2*highlight_margin , highlight)
 
                     else:
-                        bgl_helper.draw_rect(x, y, w, h, white)
+                        bgl_helper.draw_rect(x, y, w, h, white)  # noqa: WPS220
 
                     result = search_results[index]
                     if result['downloaded'] > 0:

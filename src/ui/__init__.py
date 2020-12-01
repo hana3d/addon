@@ -1,3 +1,1 @@
-from typing import Tuple
-
-Color = Tuple[float, float, float, float]
+"""UI classes and helpers."""
