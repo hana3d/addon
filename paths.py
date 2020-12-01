@@ -28,12 +28,12 @@ from .config import (
     HANA3D_AUTH_URL,
     HANA3D_NAME,
     HANA3D_PLATFORM_URL,
-    HANA3D_URL
+    HANA3D_URL,
 )
 from .src.search.query import Query
 
-_presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), "presets")
-HANA3D_SETTINGS_FILENAME = os.path.join(_presets, f"{HANA3D_NAME}.json")
+_presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), 'presets')
+HANA3D_SETTINGS_FILENAME = os.path.join(_presets, f'{HANA3D_NAME}.json')
 
 
 def find_in_local(text=''):
@@ -46,6 +46,15 @@ def find_in_local(text=''):
 
 
 def get_api_url(*paths: str, query: Query = None) -> str:
+    """Get API URL.
+
+    Args:
+        paths (str): path of the API url
+        query (Query): Search Query passed as query string parameters. Defaults to None.
+
+    Returns:
+        str: the formatted API URL
+    """
     base_url = HANA3D_URL + '/v1/'
     url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
     if query is None:
@@ -78,7 +87,7 @@ def get_auth_audience():
 def default_global_dict():
     from os.path import expanduser
 
-    home = expanduser("~")
+    home = expanduser('~')
     return home + os.sep + HANA3D_NAME + '_data'
 
 
@@ -200,7 +209,7 @@ def get_download_filenames(asset_data):
 
 def get_clean_filepath():
     script_path = os.path.dirname(os.path.realpath(__file__))
-    subpath = "blendfiles" + os.sep + "cleaned.blend"
+    subpath = 'blendfiles' + os.sep + 'cleaned.blend'
     cp = os.path.join(script_path, subpath)
     return cp
 
@@ -208,14 +217,14 @@ def get_clean_filepath():
 def get_thumbnailer_filepath():
     script_path = os.path.dirname(os.path.realpath(__file__))
     # fpath = os.path.join(p, subpath)
-    subpath = "blendfiles" + os.sep + "thumbnailer.blend"
+    subpath = 'blendfiles' + os.sep + 'thumbnailer.blend'
     return os.path.join(script_path, subpath)
 
 
 def get_material_thumbnailer_filepath():
     script_path = os.path.dirname(os.path.realpath(__file__))
     # fpath = os.path.join(p, subpath)
-    subpath = "blendfiles" + os.sep + "material_thumbnailer_cycles.blend"
+    subpath = 'blendfiles' + os.sep + 'material_thumbnailer_cycles.blend'
     return os.path.join(script_path, subpath)
     """
     for p in bpy.utils.script_paths():
@@ -240,5 +249,5 @@ def get_addon_thumbnail_path(name):
     next = ''
     if not (ext == 'jpg' or ext == 'png'):  # already has ext?
         next = '.jpg'
-    subpath = "thumbnails" + os.sep + name + next
+    subpath = 'thumbnails' + os.sep + name + next
     return os.path.join(script_path, subpath)
