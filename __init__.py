@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import bpy
 import bpy.utils.previews
 from bpy.app.handlers import persistent

@@ -29,7 +29,7 @@ from bpy.props import (
     FloatVectorProperty,
     IntProperty,
     PointerProperty,
-    StringProperty
+    StringProperty,
 )
 from bpy.types import PropertyGroup
 
@@ -42,7 +42,7 @@ from .config import (
     HANA3D_PROFILE,
     HANA3D_RENDER,
     HANA3D_SCENES,
-    HANA3D_UI
+    HANA3D_UI,
 )
 from .src.search.asset_search import AssetSearch
 from .src.search.search import Search
