@@ -803,8 +803,6 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):
         if query.updated_at:
             updated_at = query.updated_at.isoformat()
             query_has_updated = self.search_query_updated_at != updated_at
-            print(updated_at)
-            print(self.search_query_updated_at)
             if query_has_updated:
                 self.object_count = 0
                 self.search_query_updated_at = updated_at
