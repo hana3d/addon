@@ -3,11 +3,12 @@
 import asyncio
 import functools
 import logging
-import requests
 import uuid
 
-from ..preferences.preferences import Preferences
+import requests
+
 from ... import hana3d_oauth, logger
+from ..preferences.preferences import Preferences
 
 
 class Request(object):
