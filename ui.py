@@ -737,7 +737,7 @@ def draw_callback_2d_search(self, context):
 
                     result = search_results[index]
                     if result['downloaded'] > 0:
-                        width = int(w * result['downloaded'] / 100.0)  # noqa: WPS220
+                        width = int(width * result['downloaded'] / 100.0)  # noqa: WPS220
                         bgl_helper.draw_rect(x, y - 2, width, 2, green)  # noqa: WPS220
                     # object type icons - just a test..., adds clutter/ not so userfull:
                     # icons = ('type_finished.png', 'type_template.png', 'type_particle_system.png')
