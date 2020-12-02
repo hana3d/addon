@@ -12,6 +12,9 @@ import bpy
 
 from ...config import HANA3D_NAME
 
+MODAL_TIMER = 0.00001
+MIXIN_TIMER = 1 / 15
+
 log = logging.getLogger(__name__)
 
 # Keeps track of whether a loop-kicking operator is already running.
@@ -95,7 +98,7 @@ def ensure_async_loop():
 
 def erase_async_loop():
     """Force stop event loop."""
-    global _loop_kicking_operator_running
+    global _loop_kicking_operator_running   # noqa: WPS420
 
     log.debug('Erasing async loop')
 
@@ -127,45 +130,50 @@ def run_async_function(
 
 
 class AsyncLoopModalOperator(bpy.types.Operator):
+    """Modal that runs the asyncio main loop."""
     bl_idname = f'asyncio.{HANA3D_NAME}_loop'
     bl_label = 'Runs the asyncio main loop'
 
     timer = None
     log = logging.getLogger(f'{__name__}.AsyncLoopModalOperator')
 
-    def __del__(self):
-        global _loop_kicking_operator_running
+    def __del__(self):  # noqa: WPS603
+        """Stop loop-kicking operator."""
+        global _loop_kicking_operator_running   # noqa: WPS420
 
         # This can be required when the operator is running while Blender
         # (re)loads a file. The operator then doesn't get the chance to
         # finish the async tasks, hence stop_after_this_kick is never True.
-        _loop_kicking_operator_running = False
+        _loop_kicking_operator_running = False  # noqa: WPS122,WPS442
 
     def execute(self, context):
+        """Modal execute just calls invoke."""
         return self.invoke(context, None)
 
     def invoke(self, context, event):
-        global _loop_kicking_operator_running
+        """Set up loop-kicking operator."""
+        global _loop_kicking_operator_running   # noqa: WPS420
 
-        if _loop_kicking_operator_running:
+        if _loop_kicking_operator_running:  # noqa: WPS122,WPS442
             self.log.debug('Another loop-kicking operator is already running.')
             return {'PASS_THROUGH'}
 
         context.window_manager.modal_handler_add(self)
-        _loop_kicking_operator_running = True
+        _loop_kicking_operator_running = True   # noqa: WPS122,WPS442
 
         wm = context.window_manager
-        self.timer = wm.event_timer_add(0.00001, window=context.window)
+        self.timer = wm.event_timer_add(MODAL_TIMER, window=context.window)
 
         return {'RUNNING_MODAL'}
 
     def modal(self, context, event):
-        global _loop_kicking_operator_running
+        """Loop-kicking operator modal."""
+        global _loop_kicking_operator_running   # noqa: WPS420
 
         # If _loop_kicking_operator_running is set to False, someone called
         # erase_async_loop(). This is a signal that we really should stop
         # running.
-        if not _loop_kicking_operator_running:
+        if not _loop_kicking_operator_running:  # noqa: WPS122,WPS442
             return {'FINISHED'}
 
         if event.type != 'TIMER':
@@ -174,7 +182,7 @@ class AsyncLoopModalOperator(bpy.types.Operator):
         stop_after_this_kick = kick_async_loop()
         if stop_after_this_kick:
             context.window_manager.event_timer_remove(self.timer)
-            _loop_kicking_operator_running = False
+            _loop_kicking_operator_running = False  # noqa: WPS122,WPS442
 
             self.log.debug('Stopped asyncio loop kicking')
             return {'FINISHED'}
@@ -192,8 +200,9 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
     stop_upon_exception = False
 
     def invoke(self, context, event):
+        """Mixin invoke."""
         context.window_manager.modal_handler_add(self)
-        self.timer = context.window_manager.event_timer_add(1 / 15, window=context.window)
+        self.timer = context.window_manager.event_timer_add(MIXIN_TIMER, window=context.window)
 
         self.log.info('Starting')
         self._new_async_task(self.async_execute(context))
@@ -212,9 +221,11 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         self._state = 'QUIT'
 
     def execute(self, context):
+        """Mixin execute."""
         return self.invoke(context, None)
 
     def modal(self, context, event):
+        """Mixin modal."""
         task = self.async_task
 
         if self._state != 'EXCEPTION' and task and task.done() and not task.cancelled():
@@ -285,9 +296,11 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
 
 
 def register():
+    """Async loop register."""
     setup_asyncio_executor()
     bpy.utils.register_class(AsyncLoopModalOperator)
 
 
 def unregister():
+    """Async loop unregister."""
     bpy.utils.unregister_class(AsyncLoopModalOperator)
