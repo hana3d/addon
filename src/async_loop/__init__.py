@@ -5,8 +5,8 @@ import gc
 import logging
 import sys
 import traceback
+import typing
 from concurrent import futures
-from typing import Any, Callable, Coroutine, Optional
 
 import bpy
 
@@ -106,26 +106,26 @@ def erase_async_loop():
     loop.stop()
 
 
-def run_async_function(  # noqa: WPS234
-    async_function: Callable,
-    done_callback: Optional[Callable[[asyncio.Future[Any]], Any]] = None,
+def run_async_function(
+    async_function: typing.Callable,
+    callback: typing.Optional[typing.Callable[[asyncio.Future[typing.Any]], typing.Any]] = None,
     **kwargs,
 ):
     """Start an asynchronous task from an async function.
 
     Args:
         async_function: async function to run in event loop.
-        done_callback: callback function to be called when `async_function` is done.
+        callback: callback function to be called when `async_function` is done.
         kwargs: arguments to pass to `async_function`
 
-    def done_callback(task):
+    def callback(task):
         print('Task result: ', task.result())
     """
     log.debug(f'Running async function {async_function}')
 
     async_task = asyncio.ensure_future(async_function(**kwargs))
-    if done_callback is not None:
-        async_task.add_done_callback(done_callback)
+    if callback is not None:
+        async_task.add_done_callback(callback)
     ensure_async_loop()
 
 
@@ -300,7 +300,7 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         self._stop_async_task()
         context.window_manager.event_timer_remove(self.timer)
 
-    def _new_async_task(self, async_task: Coroutine, future: asyncio.Future = None):
+    def _new_async_task(self, async_task: typing.Coroutine, future: asyncio.Future = None):
         """Stop the currently running async task, and starts another one.
 
         Parameters:
