@@ -178,7 +178,7 @@ class AsyncLoopModalOperator(bpy.types.Operator):
         _loop_kicking_operator_running = True   # noqa: WPS122,WPS442
 
         wm = context.window_manager
-        self.timer = wm.event_timer_add(MODAL_TIMER, window=context.window)
+        self.timer = wm.event_timer_add(MODAL_TIMER, window=context.window)  # noqa: WPS601
 
         return {'RUNNING_MODAL'}
 
@@ -249,11 +249,11 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         Parameters:
             context: Blender context
         """
-        return
+        return  # noqa: WPS324
 
-    def quit(self):
+    def quit(self):  # noqa: WPS125
         """Signals the state machine to stop this operator from running."""
-        self._state = 'QUIT'
+        self._state = 'QUIT'    # noqa: WPS601
 
     def execute(self, context):
         """Mixin execute.
@@ -281,7 +281,7 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         if self._state != 'EXCEPTION' and task and task.done() and not task.cancelled():
             ex = task.exception()
             if ex is not None:
-                self._state = 'EXCEPTION'
+                self._state = 'EXCEPTION'   # noqa: WPS601
                 self.log.error(f'Exception while running task: {ex}')
                 if self.stop_upon_exception:
                     self.quit()
@@ -301,20 +301,24 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         context.window_manager.event_timer_remove(self.timer)
 
     def _new_async_task(self, async_task: typing.Coroutine, future: asyncio.Future = None):
-        """Stops the currently running async task, and starts another one."""
+        """Stop the currently running async task, and starts another one.
 
+        Parameters:
+            async_task: new async task
+            future: asyncio future for signalling that we want to cancel everything
+        """
         self.log.debug(f'Setting up a new task {async_task}, so any existing task must be stopped')
         self._stop_async_task()
 
         # Download the previews asynchronously.
-        self.signalling_future = future or asyncio.Future()
-        self.async_task = asyncio.ensure_future(async_task)
+        self.signalling_future = future or asyncio.Future()  # noqa: WPS601
+        self.async_task = asyncio.ensure_future(async_task)  # noqa: WPS601
         self.log.debug(f'Created new task {self.async_task}')
 
         # Start the async manager so everything happens.
         ensure_async_loop()
 
-    def _stop_async_task(self):
+    def _stop_async_task(self):  # noqa: WPS213
         self.log.debug('Stopping async task')
         if self.async_task is None:
             self.log.debug('No async task, trivially stopped')
