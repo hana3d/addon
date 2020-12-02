@@ -16,16 +16,16 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 """Module containing helper methods for drawing using bgl."""
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import bgl
 import blf
 import bpy
 import gpu
 from gpu_extras.batch import batch_for_shader
-from mathutils import Vector
+from mathutils import Euler, Vector
 
-from .ui_types import Color
+from .ui_types import BlenderSequence, Color
 
 
 def draw_rect(
@@ -200,3 +200,78 @@ def draw_text(
     dpi = 72
     blf.size(font_id, size, dpi)
     blf.draw(font_id, text)
+
+
+def draw_bbox(  # noqa: WPS210, WPS211
+    location: BlenderSequence,
+    rotation: BlenderSequence,
+    bbox_min: BlenderSequence,
+    bbox_max: BlenderSequence,
+    progress: Optional[float] = None,
+    color: Color = (0, 1, 0, 1),
+) -> None:
+    """Draw a bounding box on the screen.
+
+    Parameters:
+        location: Location to which the bounding box should be translated
+        rotation: Rotation that should be applied to the bounding box
+        bbox_min: Minimun coordinates of the bounding box
+        bbox_max: Maximum coordinates of the bounding box
+        progress: Progress to be drawn on the bounding box
+        color: Color in which the bounding box should be drawn
+    """
+    rotation = Euler(rotation)
+
+    smin = Vector(bbox_min)
+    smax = Vector(bbox_max)
+    v0 = Vector(smin)
+    v1 = Vector((smax.x, smin.y, smin.z))
+    v2 = Vector((smax.x, smax.y, smin.z))
+    v3 = Vector((smin.x, smax.y, smin.z))
+    v4 = Vector((smin.x, smin.y, smax.z))
+    v5 = Vector((smax.x, smin.y, smax.z))
+    v6 = Vector((smax.x, smax.y, smax.z))
+    v7 = Vector((smin.x, smax.y, smax.z))
+
+    arrowx = smin.x + (smax.x - smin.x) / 2
+    arrowy = smin.y - (smax.x - smin.x) / 2
+    v8 = Vector((arrowx, arrowy, smin.z))
+
+    vertices = [v0, v1, v2, v3, v4, v5, v6, v7, v8]
+    for vertice in vertices:
+        vertice.rotate(rotation)
+        vertice += Vector(location)
+
+    lines = [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 0],
+        [4, 5],
+        [5, 6],
+        [6, 7],
+        [7, 4],
+        [0, 4],
+        [1, 5],
+        [2, 6],
+        [3, 7],
+        [0, 8],
+        [1, 8],
+    ]
+
+    draw_lines(vertices, lines, color)
+    if progress is not None:
+        color = (color[0], color[1], color[2], 0.2)
+        progress = progress * 0.01  # noqa: WPS432
+        vz0 = (v4 - v0) * progress + v0
+        vz1 = (v5 - v1) * progress + v1
+        vz2 = (v6 - v2) * progress + v2
+        vz3 = (v7 - v3) * progress + v3
+        rects = (
+            (v0, v1, vz1, vz0),
+            (v1, v2, vz2, vz1),
+            (v2, v3, vz3, vz2),
+            (v3, v0, vz0, vz3),
+        )
+        for rect in rects:
+            draw_rect3d(rect, color)
