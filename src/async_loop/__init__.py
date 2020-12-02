@@ -57,7 +57,7 @@ def kick_async_loop() -> bool:  # noqa : WPS210,WPS213,WPS231
 
     elif all(task.done() for task in all_tasks):
         log.debug(
-            f'all {len(all_tasks)} tasks are done, fetching results and stopping after this kick.'
+            f'all {len(all_tasks)} tasks are done, fetching results and stopping after this kick.',
         )
         stop_after_this_kick = True
 
@@ -113,7 +113,7 @@ def run_async_function(
     Args:
         async_function: async function to run in event loop.
         done_callback: callback function to be called when `async_function` is done.
-        **kwargs: arguments to pass to `async_function`
+        kwargs: arguments to pass to `async_function`
 
     def done_callback(task):
         print('Task result: ', task.result())
@@ -131,7 +131,7 @@ class AsyncLoopModalOperator(bpy.types.Operator):
     bl_label = 'Runs the asyncio main loop'
 
     timer = None
-    log = logging.getLogger(__name__ + '.AsyncLoopModalOperator')
+    log = logging.getLogger(f'{__name__}.AsyncLoopModalOperator')
 
     def __del__(self):
         global _loop_kicking_operator_running
@@ -262,12 +262,12 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         # Signal that we want to stop.
         self.async_task.cancel()
         if not self.signalling_future.done():
-            self.log.info("Signalling that we want to cancel anything that's running.")
+            self.log.info('Signalling that we want to cancel anything that is running.')
             self.signalling_future.cancel()
 
         # Wait until the asynchronous task is done.
         if not self.async_task.done():
-            self.log.info("blocking until async task is done.")
+            self.log.info('blocking until async task is done.')
             loop = asyncio.get_event_loop()
             try:
                 loop.run_until_complete(self.async_task)
@@ -281,7 +281,7 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         except asyncio.CancelledError:
             self.log.info('Asynchronous task was cancelled')
         except Exception:
-            self.log.exception("Exception from asynchronous task")
+            self.log.exception('Exception from asynchronous task')
 
 
 def register():

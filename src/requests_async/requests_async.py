@@ -55,7 +55,7 @@ class Request(object):  # noqa : WPS214
 
         Parameters:
             url (str): URL to send request
-            **kwargs: Arguments for the request
+            kwargs: Arguments for the request
 
         Returns:
             requests.Response: response
@@ -67,7 +67,7 @@ class Request(object):  # noqa : WPS214
 
         Parameters:
             url (str): URL to send request
-            **kwargs: Arguments for the request
+            kwargs: Arguments for the request
 
         Returns:
             requests.Response: response
@@ -79,7 +79,7 @@ class Request(object):  # noqa : WPS214
 
         Parameters:
             url (str): URL to send request
-            **kwargs: Arguments for the request
+            kwargs: Arguments for the request
 
         Returns:
             requests.Response: response
@@ -91,7 +91,7 @@ class Request(object):  # noqa : WPS214
 
         Parameters:
             url (str): URL to send request
-            **kwargs: Arguments for the request
+            kwargs: Arguments for the request
 
         Returns:
             requests.Response: response
@@ -103,7 +103,7 @@ class Request(object):  # noqa : WPS214
 
         Parameters:
             url (str): URL to send request
-            **kwargs: Arguments for the request
+            kwargs: Arguments for the request
 
         Returns:
             requests.Response: response
