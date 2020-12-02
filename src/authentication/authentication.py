@@ -10,7 +10,7 @@ from ..preferences.profile import Profile
 class Authentication(object):
     """Hana3D authentication."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create an Authentication object."""
         self.preferences = Preferences()
         self.profile = Profile()

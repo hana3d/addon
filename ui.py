@@ -636,7 +636,7 @@ def draw_callback_2d_search(self, context):
 
             if count < len(search_results):
                 page_start = ui_props.scrolloffset + 1
-                preferences = Preferences()
+                preferences = Preferences().get()
                 page_end = ui_props.scrolloffset + ui_props.wcount * preferences.max_assetbar_rows
                 pagination_text = \
                     f'{page_start} - {page_end} of {search_object.results_orig["count"]}'  # noqa E501

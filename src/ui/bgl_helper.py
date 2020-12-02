@@ -121,7 +121,7 @@ def draw_image(  # noqa: WPS210, WPS211
     height: float,
     image: bpy.types.Image,
     transparency: float,
-    crop=(0, 0, 1, 1),
+    crop: Color = (0, 0, 1, 1),
 ) -> None:
     """Draw a image on the screen.
 
