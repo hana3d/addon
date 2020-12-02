@@ -5,8 +5,8 @@ import gc
 import logging
 import sys
 import traceback
-import typing
 from concurrent import futures
+from typing import Any, Callable, Coroutine, Optional
 
 import bpy
 
@@ -107,8 +107,8 @@ def erase_async_loop():
 
 
 def run_async_function(
-    async_function: typing.Callable,
-    done_callback: typing.Optional[typing.Callable[[typing.Callable], typing.Any]] = None,
+    async_function: Callable,
+    done_callback: Optional[Callable[[asyncio.Future[Any]], Any]] = None,
     **kwargs,
 ):
     """Start an asynchronous task from an async function.
@@ -300,7 +300,7 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         self._stop_async_task()
         context.window_manager.event_timer_remove(self.timer)
 
-    def _new_async_task(self, async_task: typing.Coroutine, future: asyncio.Future = None):
+    def _new_async_task(self, async_task: Coroutine, future: asyncio.Future = None):
         """Stop the currently running async task, and starts another one.
 
         Parameters:
