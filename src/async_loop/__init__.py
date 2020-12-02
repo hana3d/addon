@@ -106,7 +106,7 @@ def erase_async_loop():
     loop.stop()
 
 
-def run_async_function(
+def run_async_function(  # noqa: WPS234
     async_function: Callable,
     done_callback: Optional[Callable[[asyncio.Future[Any]], Any]] = None,
     **kwargs,
