@@ -108,24 +108,24 @@ def erase_async_loop():
 
 def run_async_function(
     async_function: typing.Callable,
-    callback: typing.Optional[typing.Callable[[asyncio.Future[typing.Any]], typing.Any]] = None,
+    done_callback: typing.Optional[typing.Callable] = None,
     **kwargs,
 ):
     """Start an asynchronous task from an async function.
 
     Args:
         async_function: async function to run in event loop.
-        callback: callback function to be called when `async_function` is done.
+        done_callback: callback function to be called when `async_function` is done.
         kwargs: arguments to pass to `async_function`
 
-    def callback(task):
+    def done_callback(task):
         print('Task result: ', task.result())
     """
     log.debug(f'Running async function {async_function}')
 
     async_task = asyncio.ensure_future(async_function(**kwargs))
-    if callback is not None:
-        async_task.add_done_callback(callback)
+    if done_callback is not None:
+        async_task.add_done_callback(done_callback)
     ensure_async_loop()
 
 
