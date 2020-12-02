@@ -11,14 +11,14 @@ from ... import hana3d_oauth, logger
 from ..preferences.preferences import Preferences
 
 
-class Request(object):
+class Request(object):  # noqa : WPS214
     """Hana3D requests async."""
 
     def __init__(self):
         """Create an Requests object."""
         self.preferences = Preferences()
 
-    async def _request(self, method, url, **kwargs):
+    async def _request(self, method, url, **kwargs):    # noqa : WPS210
         loop = asyncio.get_event_loop()
 
         # first normal attempt
@@ -29,38 +29,45 @@ class Request(object):
         logging.debug(response.status_code)
 
         if not response.ok:
-            logger.show_report(f'{method} request failed ({response.status_code}): {response.text}')
+            status_code = response.status_code
+            logger.show_report(f'{method} request failed ({status_code}): {response.text}')
             try:
                 code = response.json()['code']
             except Exception:
                 code = None
 
-            if response.status_code == 401 and code == 'token_expired':
+            if status_code == 401 and code == 'token_expired':  # noqa : WPS432
                 logging.debug('refreshing token')
                 logger.show_report(
-                    f"Refreshing token. If this fails, login in {HANA3D_DESCRIPTION} Login panel.",
-                    10)
+                    f'Refreshing token. If this fails, login in {HANA3D_DESCRIPTION} Login panel.',
+                    10
+                )
 
-                oauth_response = hana3d_oauth.refresh_token(immediate=immediate)
-                updated_headers = self._get_headers(api_key=oauth_response['access_token'])
+                oauth_response = hana3d_oauth.refresh_token()
+                updated_headers = self.get_headers(api_key=oauth_response['access_token'])
                 kwargs['headers'].update(updated_headers)
                 partial = functools.partial(requests.request, method, url, **kwargs)
                 response = await loop.run_in_executor(None, partial)
         return response
 
     async def delete(self, url, **kwargs):
+        """DELETE request"""
         return await self._request('delete', url, **kwargs)
 
     async def get(self, url, **kwargs):
+        """GET request"""
         return await self._request('get', url, **kwargs)
 
     async def post(self, url, **kwargs):
+        """POST request"""
         return await self._request('post', url, **kwargs)
 
     async def put(self, url, **kwargs):
+        """PUT request"""
         return await self._request('put', url, **kwargs)
 
     async def patch(self, url, **kwargs):
+        """PATCH request"""
         return await self._request('patch', url, **kwargs)
 
     def get_headers(

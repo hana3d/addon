@@ -1,11 +1,11 @@
 """Manages the asyncio loop."""
 
 import asyncio
-import concurrent.futures
 import gc
 import logging
 import traceback
 import typing
+from concurrent import futures
 
 import bpy
 
@@ -19,8 +19,7 @@ _loop_kicking_operator_running = False
 
 def setup_asyncio_executor():
     """Sets up AsyncIO to run properly on each platform."""
-
-    import sys
+    import sys  # noqa : WPS433
 
     if sys.platform == 'win32':
         asyncio.get_event_loop().close()
@@ -32,17 +31,16 @@ def setup_asyncio_executor():
     else:
         loop = asyncio.get_event_loop()
 
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
+    executor = futures.ThreadPoolExecutor(max_workers=10)
     loop.set_default_executor(executor)
-    # loop.set_debug(True)
 
 
-def kick_async_loop(*args) -> bool:
+def kick_async_loop() -> bool:  # noqa : WPS210,WPS213,WPS231
     """Performs a single iteration of the asyncio event loop.
 
-    :return: whether the asyncio loop should stop after this kick.
+    Returns:
+        bool: whether the asyncio loop should stop after this kick.
     """
-
     loop = asyncio.get_event_loop()
 
     # Even when we want to stop, we always need to do one more
@@ -59,8 +57,8 @@ def kick_async_loop(*args) -> bool:
         stop_after_this_kick = True
 
     elif all(task.done() for task in all_tasks):
-        log.debug('all %i tasks are done, fetching results and stopping after this kick.',
-                  len(all_tasks))
+        log.debug(
+            f'all {len(all_tasks)} tasks are done, fetching results and stopping after this kick.')
         stop_after_this_kick = True
 
         # Clean up circular references between tasks.
@@ -73,16 +71,13 @@ def kick_async_loop(*args) -> bool:
             # noinspection PyBroadException
             try:
                 res = task.result()
-                log.debug('   task #%i: result=%r', task_idx, res)
+                log.debug(f'   task #{task_idx}: result={res}')
             except asyncio.CancelledError:
                 # No problem, we want to stop anyway.
-                log.debug('   task #%i: cancelled', task_idx)
+                log.debug(f'   task #{task_idx}: cancelled')
             except Exception:
                 print('{}: resulted in exception'.format(task))
                 traceback.print_exc()
-
-            # for ref in gc.get_referrers(task):
-            #     log.debug('      - referred by %s', ref)
 
     loop.stop()
     loop.run_forever()
@@ -91,13 +86,15 @@ def kick_async_loop(*args) -> bool:
 
 
 def ensure_async_loop():
+    """Execute async tasks in event loop through `AsyncLoopModalOperator`."""
     log.debug('Starting asyncio loop')
     operator = getattr(bpy.ops.asyncio, f'{HANA3D_NAME}_loop')
     result = operator()
-    log.debug('Result of starting modal operator is %r', result)
+    log.debug(f'Result of starting modal operator is {result}')
 
 
 def erase_async_loop():
+    """Force stop event loop."""
     global _loop_kicking_operator_running
 
     log.debug('Erasing async loop')
@@ -111,13 +108,16 @@ def run_async_function(
         done_callback: typing.Optional[typing.Callable[[typing.Callable], typing.Any]] = None,
         **kwargs
 ):
-    """Start an asynchronous task defined by async_function and
-    run done_callback when it is done, done_callback can only accept task as argument:
+    """Start an asynchronous task from an async function.
+
+    Args:
+        async_function: async function to run in event loop.
+        done_callback: callback function to be called when `async_function` is done.
+        **kwargs: arguments to pass to `async_function`
 
     def done_callback(task):
         print('Task result: ', task.result())
     """
-
     log.debug(f'Running async function {async_function}')
 
     async_task = asyncio.ensure_future(async_function(**kwargs))
@@ -171,7 +171,6 @@ class AsyncLoopModalOperator(bpy.types.Operator):
         if event.type != 'TIMER':
             return {'PASS_THROUGH'}
 
-        # self.log.debug('KICKING LOOP')
         stop_after_this_kick = kick_async_loop()
         if stop_after_this_kick:
             context.window_manager.event_timer_remove(self.timer)
@@ -222,7 +221,7 @@ class AsyncModalOperatorMixin:
             ex = task.exception()
             if ex is not None:
                 self._state = 'EXCEPTION'
-                self.log.error('Exception while running task: %s', ex)
+                self.log.error(f'Exception while running task: {ex}')
                 if self.stop_upon_exception:
                     self.quit()
                     self._finish(context)
@@ -243,13 +242,13 @@ class AsyncModalOperatorMixin:
     def _new_async_task(self, async_task: typing.Coroutine, future: asyncio.Future = None):
         """Stops the currently running async task, and starts another one."""
 
-        self.log.debug('Setting up a new task %r, so any existing task must be stopped', async_task)
+        self.log.debug(f'Setting up a new task {async_task}, so any existing task must be stopped')
         self._stop_async_task()
 
         # Download the previews asynchronously.
         self.signalling_future = future or asyncio.Future()
         self.async_task = asyncio.ensure_future(async_task)
-        self.log.debug('Created new task %r', self.async_task)
+        self.log.debug(f'Created new task {self.async_task}')
 
         # Start the async manager so everything happens.
         ensure_async_loop()
