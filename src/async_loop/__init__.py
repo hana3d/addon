@@ -3,6 +3,7 @@
 import asyncio
 import gc
 import logging
+import sys
 import traceback
 import typing
 from concurrent import futures
@@ -18,9 +19,7 @@ _loop_kicking_operator_running = False
 
 
 def setup_asyncio_executor():
-    """Sets up AsyncIO to run properly on each platform."""
-    import sys  # noqa : WPS433
-
+    """Set up AsyncIO to run properly on each platform."""
     if sys.platform == 'win32':
         asyncio.get_event_loop().close()
         # On Windows, the default event loop is SelectorEventLoop, which does
@@ -58,7 +57,8 @@ def kick_async_loop() -> bool:  # noqa : WPS210,WPS213,WPS231
 
     elif all(task.done() for task in all_tasks):
         log.debug(
-            f'all {len(all_tasks)} tasks are done, fetching results and stopping after this kick.')
+            f'all {len(all_tasks)} tasks are done, fetching results and stopping after this kick.'
+        )
         stop_after_this_kick = True
 
         # Clean up circular references between tasks.
@@ -71,13 +71,13 @@ def kick_async_loop() -> bool:  # noqa : WPS210,WPS213,WPS231
             # noinspection PyBroadException
             try:
                 res = task.result()
-                log.debug(f'   task #{task_idx}: result={res}')
             except asyncio.CancelledError:
                 # No problem, we want to stop anyway.
                 log.debug(f'   task #{task_idx}: cancelled')
             except Exception:
-                print('{}: resulted in exception'.format(task))
+                log.debug(f'{task}: resulted in exception')
                 traceback.print_exc()
+            log.debug(f'   task #{task_idx}: result={res}')
 
     loop.stop()
     loop.run_forever()
@@ -89,8 +89,8 @@ def ensure_async_loop():
     """Execute async tasks in event loop through `AsyncLoopModalOperator`."""
     log.debug('Starting asyncio loop')
     operator = getattr(bpy.ops.asyncio, f'{HANA3D_NAME}_loop')
-    result = operator()
-    log.debug(f'Result of starting modal operator is {result}')
+    async_result = operator()
+    log.debug(f'Result of starting modal operator is {async_result}')
 
 
 def erase_async_loop():
@@ -104,9 +104,9 @@ def erase_async_loop():
 
 
 def run_async_function(
-        async_function: typing.Callable,
-        done_callback: typing.Optional[typing.Callable[[typing.Callable], typing.Any]] = None,
-        **kwargs
+    async_function: typing.Callable,
+    done_callback: typing.Optional[typing.Callable[[typing.Callable], typing.Any]] = None,
+    **kwargs,
 ):
     """Start an asynchronous task from an async function.
 
@@ -183,10 +183,10 @@ class AsyncLoopModalOperator(bpy.types.Operator):
 
 
 # noinspection PyAttributeOutsideInit
-class AsyncModalOperatorMixin:
+class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
     async_task = None  # asyncio task for fetching thumbnails
     signalling_future = None  # asyncio future for signalling that we want to cancel everything.
-    log = logging.getLogger('%s.AsyncModalOperatorMixin' % __name__)
+    log = logging.getLogger(f'{__name__}.AsyncModalOperatorMixin')
 
     _state = 'INITIALIZING'
     stop_upon_exception = False

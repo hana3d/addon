@@ -15,10 +15,10 @@ class Request(object):  # noqa : WPS214
     """Hana3D requests async."""
 
     def __init__(self):
-        """Create an Requests object."""
+        """Create a Requests object."""
         self.preferences = Preferences()
 
-    async def _request(self, method, url, **kwargs):    # noqa : WPS210
+    async def _request(self, method: str, url: str, **kwargs) -> requests.Response:    # noqa : WPS210
         loop = asyncio.get_event_loop()
 
         # first normal attempt
@@ -40,7 +40,7 @@ class Request(object):  # noqa : WPS214
                 logging.debug('refreshing token')
                 logger.show_report(
                     f'Refreshing token. If this fails, login in {HANA3D_DESCRIPTION} Login panel.',
-                    10
+                    10,
                 )
 
                 oauth_response = hana3d_oauth.refresh_token()
@@ -50,24 +50,64 @@ class Request(object):  # noqa : WPS214
                 response = await loop.run_in_executor(None, partial)
         return response
 
-    async def delete(self, url, **kwargs):
-        """DELETE request"""
+    async def delete(self, url: str, **kwargs) -> requests.Response:
+        """DELETE request.
+
+        Parameters:
+            url (str): URL to send request
+            **kwargs: Arguments for the request
+
+        Returns:
+            requests.Response: response
+        """
         return await self._request('delete', url, **kwargs)
 
-    async def get(self, url, **kwargs):
-        """GET request"""
+    async def get(self, url: str, **kwargs) -> requests.Response:
+        """GET request.
+
+        Parameters:
+            url (str): URL to send request
+            **kwargs: Arguments for the request
+
+        Returns:
+            requests.Response: response
+        """
         return await self._request('get', url, **kwargs)
 
-    async def post(self, url, **kwargs):
-        """POST request"""
+    async def post(self, url: str, **kwargs) -> requests.Response:
+        """POST request.
+
+        Parameters:
+            url (str): URL to send request
+            **kwargs: Arguments for the request
+
+        Returns:
+            requests.Response: response
+        """
         return await self._request('post', url, **kwargs)
 
-    async def put(self, url, **kwargs):
-        """PUT request"""
+    async def put(self, url: str, **kwargs) -> requests.Response:
+        """PUT request.
+
+        Parameters:
+            url (str): URL to send request
+            **kwargs: Arguments for the request
+
+        Returns:
+            requests.Response: response
+        """
         return await self._request('put', url, **kwargs)
 
-    async def patch(self, url, **kwargs):
-        """PATCH request"""
+    async def patch(self, url: str, **kwargs) -> requests.Response:
+        """PATCH request.
+
+        Parameters:
+            url (str): URL to send request
+            **kwargs: Arguments for the request
+
+        Returns:
+            requests.Response: response
+        """
         return await self._request('patch', url, **kwargs)
 
     def get_headers(
@@ -78,7 +118,7 @@ class Request(object):  # noqa : WPS214
     ) -> dict:
         """Get Headers for API request.
 
-        Args:
+        Parameters:
             correlation_id (str): The correlation id between multiple requests
             api_key (str): The backend API key
             include_id_token (bool): Determines if the request should include the API id token
