@@ -41,7 +41,7 @@ class Report(object):
             timeout: The new timeout of the report if it matches the string
 
         Returns:
-            bool: Returns true if  the report matches the text
+            bool: Returns True if  the report matches the text
         """
         if self._text == text:
             self._timeout = timeout
