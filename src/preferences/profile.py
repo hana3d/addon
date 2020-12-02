@@ -9,7 +9,7 @@ from ... import config, paths, rerequests, tasks_queue
 class Profile(object):
     """Hana3D user profile."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a Profile object."""
 
     def get(self) -> dict:

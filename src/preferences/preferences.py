@@ -10,10 +10,10 @@ from ...config import HANA3D_NAME
 class Preferences(object):
     """Hana3D addon preferences."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a Preferences object."""
 
-    def get(self):
+    def get(self) -> UserPreferences:
         """Get User Preferences object.
 
         Returns:
