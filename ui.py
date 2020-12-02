@@ -61,30 +61,6 @@ verification_icons = {
 }
 
 
-def get_approximate_text_width(st):
-    size = 10
-    for s in st:
-        if s in 'i|':
-            size += 2
-        elif s in ' ':
-            size += 4
-        elif s in 'sfrt':
-            size += 5
-        elif s in 'ceghkou':
-            size += 6
-        elif s in 'PadnBCST3E':
-            size += 7
-        elif s in 'GMODVXYZ':
-            size += 8
-        elif s in 'w':
-            size += 9
-        elif s in 'm':
-            size += 10
-        else:
-            size += 7
-    return size  # Convert to picas
-
-
 def add_report(text='', timeout=5, color=colors.GREEN):
     global reports
     global active_area  # noqa: WPS420
@@ -339,95 +315,6 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
         i += 1
         column_lines += 1
         bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
-
-
-def draw_tooltip_old(x, y, text='', author='', img=None):
-    region = bpy.context.region
-    scale = bpy.context.preferences.view.ui_scale
-
-    ttipmargin = 10
-
-    font_height = int(12 * scale)
-    line_height = int(15 * scale)
-    nameline_height = int(23 * scale)
-
-    lines = text.split('\n')
-    ncolumns = 2
-    nlines = math.ceil((len(lines) - 1) / ncolumns)
-    texth = line_height * nlines + nameline_height
-
-    isizex = int(512 * scale * img.size[0] / max(img.size[0], img.size[1]))
-    isizey = int(512 * scale * img.size[1] / max(img.size[0], img.size[1]))
-
-    estimated_height = texth + 3 * ttipmargin + isizey
-
-    if estimated_height > y:
-        scaledown = y / (estimated_height)
-        scale *= scaledown
-        # we need to scale these down to have correct size if the tooltip wouldn't fit.
-        font_height = int(12 * scale)
-        line_height = int(15 * scale)
-        nameline_height = int(23 * scale)
-
-        lines = text.split('\n')
-        ncolumns = 2
-        nlines = math.ceil((len(lines) - 1) / ncolumns)
-        texth = line_height * nlines + nameline_height
-
-        isizex = int(512 * scale * img.size[0] / max(img.size[0], img.size[1]))
-        isizey = int(512 * scale * img.size[1] / max(img.size[0], img.size[1]))
-
-    name_height = int(18 * scale)
-
-    x += 2 * ttipmargin
-    y -= 2 * ttipmargin
-
-    width = isizex + 2 * ttipmargin
-
-    properties_width = 0
-    for r in bpy.context.area.regions:
-        if r.type == 'UI':
-            properties_width = r.width
-
-    x = min(x + width, region.width - properties_width) - width
-
-    bgcol = bpy.context.preferences.themes[0].user_interface.wcol_tooltip.inner
-    textcol = bpy.context.preferences.themes[0].user_interface.wcol_tooltip.text
-    textcol = (textcol[0], textcol[1], textcol[2], 1)
-    textcol1 = (textcol[0] * 0.8, textcol[1] * 0.8, textcol[2] * 0.8, 1)
-
-    bgl_helper.draw_rect(
-        x - ttipmargin,
-        y - texth - 2 * ttipmargin - isizey,
-        isizex + ttipmargin * 2,
-        texth + 3 * ttipmargin + isizey,
-        bgcol,
-    )
-
-    i = 0
-    column_lines = -1  # start minus one for the name
-    xtext = x
-    fsize = name_height
-    tcol = textcol
-    for line in lines:
-        if column_lines >= nlines:
-            xtext += int(isizex / ncolumns)
-            column_lines = 0
-        ytext = y - column_lines * line_height - nameline_height - ttipmargin
-        if i == 0:
-            ytext = y - name_height + 5
-        elif i == len(lines) - 1:
-            ytext = y - (nlines - 1) * line_height - nameline_height - ttipmargin
-            tcol = textcol
-        else:
-            if line[:5] == 'tags:':
-                tcol = textcol1
-            fsize = font_height
-        i += 1
-        column_lines += 1
-        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
-    y_image = y - texth - isizey - ttipmargin
-    bgl_helper.draw_image(x, y_image, isizex, isizey, img, 1)
 
 
 def draw_callback_2d(self, context):
