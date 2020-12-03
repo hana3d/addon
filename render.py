@@ -41,12 +41,12 @@ from . import (
     render_tools,
     rerequests,
     thread_tools,
-    ui,
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
 from .src.preferences.profile import Profile
+from .src.ui.main import UI
 
 render_threads = []
 upload_threads = []
@@ -114,6 +114,7 @@ class UploadFileMixin:
         self.update_state('render_state', text)
         color = colors.RED if error else colors.GREEN
         if self.add_report:
+            ui = UI()
             ui.add_report(text, color=color)
         logging.info(text)
 
@@ -584,6 +585,7 @@ class RemoveRender(Operator):
         self.remove_from_props(id_job, props)
         self.switch_active_render_job(props)
 
+        ui = UI()
         ui.add_report(f'Deleted render {name}')
         return {'FINISHED'}
 

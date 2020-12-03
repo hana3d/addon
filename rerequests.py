@@ -20,9 +20,10 @@ import uuid
 
 import requests
 
-from . import hana3d_oauth, ui, utils
+from . import hana3d_oauth, utils
 from .config import HANA3D_DESCRIPTION
 from .src.preferences.preferences import Preferences
+from .src.ui.main import UI
 
 
 def rerequest(method, url, **kwargs):
@@ -38,6 +39,7 @@ def rerequest(method, url, **kwargs):
     logging.debug(response.status_code)
 
     if not response.ok:
+        ui = UI()
         ui.add_report(f'{method} request failed ({response.status_code}): {response.text}')
         try:
             code = response.json()['code']

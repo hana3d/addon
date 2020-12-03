@@ -22,10 +22,11 @@ import time
 import bpy
 import requests
 
-from . import colors, logger, oauth, paths, ui, utils
+from . import colors, logger, oauth, paths, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.preferences.profile import Profile
+from .src.ui.main import UI
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -45,6 +46,7 @@ def login(authenticator: oauth.OAuthAuthenticator):
 
 def refresh_token(immediate: bool = False) -> dict:
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+    ui = UI()
     if preferences.refresh_in_progress:
         ui.add_report('Already Refreshing token, will be ready soon.')
         return
