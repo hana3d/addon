@@ -34,18 +34,11 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from . import (
-    autothumb,
-    colors,
-    paths,
-    render_tools,
-    rerequests,
-    thread_tools,
-    utils,
-)
+from . import autothumb, paths, render_tools, rerequests, thread_tools, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
 from .src.preferences.profile import Profile
+from .src.ui import colors
 from .src.ui.main import UI
 
 render_threads = []
@@ -53,7 +46,11 @@ upload_threads = []
 
 
 def threads_cleanup():
-    """Cleanup finished threads"""
+    """Cleanup finished threads.
+
+    Returns:
+        int: 10 if no render threads, 2 otherwise
+    """
     if len(render_threads) == 0:
         return 10
 

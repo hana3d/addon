@@ -9,9 +9,9 @@ from typing import Tuple
 
 import bpy
 
-from . import colors
 from .config import HANA3D_LOG_LEVEL, HANA3D_NAME
 from .report_tools import execute_wrapper
+from .src.ui import colors
 from .src.ui.main import UI
 
 

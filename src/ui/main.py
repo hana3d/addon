@@ -5,7 +5,7 @@ from typing import Dict, List, Type
 
 import bpy
 
-from ... import colors
+from . import colors
 from .report import Report
 from .ui_types import Color
 
