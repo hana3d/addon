@@ -8,6 +8,8 @@ import bpy
 
 from ... import bg_blender, paths, utils
 from ...config import HANA3D_NAME
+from ..async_loop import run_async_function
+from ..subprocess_async.subprocess_async import Subprocess
 
 HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
 
@@ -79,38 +81,56 @@ def generate_model_thumbnail(
             },
             s,
         )
-    proc = subprocess.Popen(
-        [
-            binary_path,
-            "--background",
-            "-noaudio",
-            tfpath,
-            "--python",
-            os.path.join(script_path, "autothumb_model_bg.py"),
-            "--",
-            datafile,
-            filepath,
-            thumb_path,
-            tempdir,
-            HANA3D_NAME,
-        ],
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        creationflags=utils.get_process_flags(),
-    )
+    # proc = subprocess.Popen(
+    #     [
+    #         binary_path,
+    #         "--background",
+    #         "-noaudio",
+    #         tfpath,
+    #         "--python",
+    #         os.path.join(script_path, "autothumb_model_bg.py"),
+    #         "--",
+    #         datafile,
+    #         filepath,
+    #         thumb_path,
+    #         tempdir,
+    #         HANA3D_NAME,
+    #     ],
+    #     bufsize=1,
+    #     stdout=subprocess.PIPE,
+    #     stdin=subprocess.PIPE,
+    #     creationflags=utils.get_process_flags(),
+    # )
 
-    eval_path_computing = "getattr(bpy.data.objects['%s'], '%s').is_generating_thumbnail" % (mainmodel.name, HANA3D_NAME)  # noqa E501
-    eval_path_state = "getattr(bpy.data.objects['%s'], '%s').thumbnail_generating_state" % (mainmodel.name, HANA3D_NAME)  # noqa E501
-    eval_path = "bpy.data.objects['%s']" % mainmodel.name
+    # eval_path_computing = "getattr(bpy.data.objects['%s'], '%s').is_generating_thumbnail" % (mainmodel.name, HANA3D_NAME)  # noqa E501
+    # eval_path_state = "getattr(bpy.data.objects['%s'], '%s').thumbnail_generating_state" % (mainmodel.name, HANA3D_NAME)  # noqa E501
+    # eval_path = "bpy.data.objects['%s']" % mainmodel.name
 
-    bg_blender.add_bg_process(
-        eval_path_computing=eval_path_computing,
-        eval_path_state=eval_path_state,
-        eval_path=eval_path,
-        process_type='THUMBNAILER',
-        process=proc,
-    )
+    # bg_blender.add_bg_process(
+    #     eval_path_computing=eval_path_computing,
+    #     eval_path_state=eval_path_state,
+    #     eval_path=eval_path,
+    #     process_type='THUMBNAILER',
+    #     process=proc,
+    # )
+
+    cmd = [
+        binary_path,
+        "--background",
+        "-noaudio",
+        tfpath,
+        "--python",
+        os.path.join(script_path, "model_bg.py"),
+        "--",
+        datafile,
+        filepath,
+        thumb_path,
+        tempdir,
+        HANA3D_NAME,
+    ]
+
+    subprocess = Subprocess()
+    run_async_function(subprocess.subprocess, cmd=cmd)
 
     if not save_only and update_state:
         model_props.thumbnail = rel_thumb_path + '.jpg'

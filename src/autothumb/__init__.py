@@ -1,11 +1,15 @@
 """Automatic thumbnailer."""
+import asyncio
+import functools
 import logging
+import subprocess
 
 import bpy
 
 from ... import colors, ui, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
+from .. import async_loop
 from .autothumb import (
     generate_material_thumbnail,
     generate_model_thumbnail,
@@ -13,6 +17,26 @@ from .autothumb import (
 )
 
 HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
+
+
+class TestAsyncProcess(async_loop.AsyncModalOperatorMixin, bpy.types.Operator):
+    bl_idname = f"object.{HANA3D_NAME}_thumbnail"
+    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    async def async_subprocess(self):
+        cmd = ['blender']
+        cmd.extend(['-noaudio', '-b'])
+
+        loop = asyncio.get_event_loop()
+        # run = subprocess.run(cmd, capture_output=True)
+        partial = functools.partial(subprocess.run, cmd, capture_output=True)
+        run = await loop.run_in_executor(None, partial)
+        print(run)
+        return run
+
+    async def async_execute(self, context):
+        return await self.async_subprocess()
 
 
 class GenerateModelThumbnailOperator(bpy.types.Operator):
@@ -168,6 +192,7 @@ classes = (
     GenerateModelThumbnailOperator,
     GenerateMaterialThumbnailOperator,
     GenerateSceneThumbnailOperator,
+    # TestAsyncProcess
 )
 
 
