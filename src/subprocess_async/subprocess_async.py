@@ -22,7 +22,8 @@ class Subprocess(object):  # noqa : WPS214
         Returns:
             subprocess.CompletedProcess: the return value representing a process that has finished.
 
-        raises Exception: Subprocess exited in error
+        Raises:
+            Exception: Subprocess exited in error
         """
         loop = asyncio.get_event_loop()
         partial = functools.partial(subprocess.run, cmd, capture_output=True)

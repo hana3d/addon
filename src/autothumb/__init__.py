@@ -251,7 +251,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
-            title = 'Can't render thumbnail'
+            title = 'Cannot render thumbnail'
             message = 'please save your file first'
             utils.show_pop_menu(message, title)
 
@@ -367,7 +367,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
-            title = 'Can't render thumbnail'
+            title = 'Cannot render thumbnail'
             message = 'please save your file first'
             utils.show_pop_menu(message, title)
 
