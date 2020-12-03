@@ -220,6 +220,7 @@ def get_thumbnailer_filepath(asset_type: str) -> Union[str, pathlib.Path]:
 
     Parameters:
         asset_type: 'model' or 'material'
+
     Returns:
         Union[str, pathlib.Path]: filepath to blend file
     """

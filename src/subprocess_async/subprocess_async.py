@@ -3,7 +3,7 @@
 import asyncio
 import functools
 import logging
-import subprocess
+import subprocess  # noqa: S404
 from typing import List
 
 
@@ -21,6 +21,8 @@ class Subprocess(object):  # noqa : WPS214
 
         Returns:
             subprocess.CompletedProcess: the return value representing a process that has finished.
+
+        raises Exception: Subprocess exited in error
         """
         loop = asyncio.get_event_loop()
         partial = functools.partial(subprocess.run, cmd, capture_output=True)
@@ -28,7 +30,7 @@ class Subprocess(object):  # noqa : WPS214
 
         if output.returncode != 0:
             error_msg = output.stderr.decode()
-            raise Exception('Subprocess raised error:\n' + error_msg)
+            raise Exception(f'Subprocess raised error:\n{error_msg}')
 
         logging.debug(f'Subprocess {cmd}: {output.stdout.decode()}')
         return output
