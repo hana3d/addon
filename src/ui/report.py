@@ -25,14 +25,29 @@ class Report(object):
             timeout: How much time should the report be displayed on screen
             color: Color in which the report should be displayed
         """
-        self.text = text
-
         self._active_area = active_area
+        self._text = text
         self._timeout = timeout
-        self._start_time = time.time()
         self._color = color
+        self._start_time = time.time()
         self._draw_color = color
         self._age = 0.0
+
+    def check_refresh(self, text: str, timeout: float) -> bool:
+        """Check whether this report matches the text and refreshes the timeout if it does.
+
+        Parameters:
+            text: Text to check the report against
+            timeout: The new timeout of the report if it matches the string
+
+        Returns:
+            bool: Returns True if  the report matches the text
+        """
+        if self._text == text:
+            self._timeout = timeout
+            self._age = 0
+            return True
+        return False
 
     def fade(self) -> bool:
         """Fade a report object when it is close to its timeout.
@@ -61,4 +76,4 @@ class Report(object):
         """
         if bpy.context.area == self._active_area:
             font_size = 16
-            draw_text(self.text, x, y + 8, font_size, self._draw_color)
+            draw_text(self._text, x, y + 8, font_size, self._draw_color)

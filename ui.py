@@ -61,37 +61,12 @@ verification_icons = {
 }
 
 
-def get_approximate_text_width(st):
-    size = 10
-    for s in st:
-        if s in 'i|':
-            size += 2
-        elif s in ' ':
-            size += 4
-        elif s in 'sfrt':
-            size += 5
-        elif s in 'ceghkou':
-            size += 6
-        elif s in 'PadnBCST3E':
-            size += 7
-        elif s in 'GMODVXYZ':
-            size += 8
-        elif s in 'w':
-            size += 9
-        elif s in 'm':
-            size += 10
-        else:
-            size += 7
-    return size  # Convert to picas
-
-
 def add_report(text='', timeout=5, color=colors.GREEN):
     global reports
     global active_area  # noqa: WPS420
     # check for same reports and just make them longer by the timeout.
     for old_report in reports:
-        if old_report.text == text:
-            old_report.timeout = timeout
+        if old_report.check_refresh(text, timeout):
             return
     logging.info(f'Message showed to the user: {text}')
     report = Report(active_area, text, timeout=timeout, color=color)
@@ -134,56 +109,6 @@ def get_asset_under_mouse(mousex, mousey):
     return -3
 
 
-def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1, 0, 1)):
-    rotation = mathutils.Euler(rotation)
-
-    smin = Vector(bbox_min)
-    smax = Vector(bbox_max)
-    v0 = Vector(smin)
-    v1 = Vector((smax.x, smin.y, smin.z))
-    v2 = Vector((smax.x, smax.y, smin.z))
-    v3 = Vector((smin.x, smax.y, smin.z))
-    v4 = Vector((smin.x, smin.y, smax.z))
-    v5 = Vector((smax.x, smin.y, smax.z))
-    v6 = Vector((smax.x, smax.y, smax.z))
-    v7 = Vector((smin.x, smax.y, smax.z))
-
-    arrowx = smin.x + (smax.x - smin.x) / 2
-    arrowy = smin.y - (smax.x - smin.x) / 2
-    v8 = Vector((arrowx, arrowy, smin.z))
-
-    vertices = [v0, v1, v2, v3, v4, v5, v6, v7, v8]
-    for v in vertices:
-        v.rotate(rotation)
-        v += Vector(location)
-
-    lines = [
-        [0, 1],
-        [1, 2],
-        [2, 3],
-        [3, 0],
-        [4, 5],
-        [5, 6],
-        [6, 7],
-        [7, 4],
-        [0, 4],
-        [1, 5],
-        [2, 6],
-        [3, 7],
-        [0, 8],
-        [1, 8],
-    ]
-    bgl_helper.draw_lines(vertices, lines, color)
-    if progress is not None:
-        color = (color[0], color[1], color[2], 0.2)
-        progress = progress * 0.01
-        vz0 = (v4 - v0) * progress + v0
-        vz1 = (v5 - v1) * progress + v1
-        vz2 = (v6 - v2) * progress + v2
-        vz3 = (v7 - v3) * progress + v3
-        rects = ((v0, v1, vz1, vz0), (v1, v2, vz2, vz1), (v2, v3, vz3, vz2), (v3, v0, vz0, vz3))
-        for r in rects:
-            bgl_helper.draw_rect3d(r, color)
 
 
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
@@ -342,95 +267,6 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
         bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
 
 
-def draw_tooltip_old(x, y, text='', author='', img=None):
-    region = bpy.context.region
-    scale = bpy.context.preferences.view.ui_scale
-
-    ttipmargin = 10
-
-    font_height = int(12 * scale)
-    line_height = int(15 * scale)
-    nameline_height = int(23 * scale)
-
-    lines = text.split('\n')
-    ncolumns = 2
-    nlines = math.ceil((len(lines) - 1) / ncolumns)
-    texth = line_height * nlines + nameline_height
-
-    isizex = int(512 * scale * img.size[0] / max(img.size[0], img.size[1]))
-    isizey = int(512 * scale * img.size[1] / max(img.size[0], img.size[1]))
-
-    estimated_height = texth + 3 * ttipmargin + isizey
-
-    if estimated_height > y:
-        scaledown = y / (estimated_height)
-        scale *= scaledown
-        # we need to scale these down to have correct size if the tooltip wouldn't fit.
-        font_height = int(12 * scale)
-        line_height = int(15 * scale)
-        nameline_height = int(23 * scale)
-
-        lines = text.split('\n')
-        ncolumns = 2
-        nlines = math.ceil((len(lines) - 1) / ncolumns)
-        texth = line_height * nlines + nameline_height
-
-        isizex = int(512 * scale * img.size[0] / max(img.size[0], img.size[1]))
-        isizey = int(512 * scale * img.size[1] / max(img.size[0], img.size[1]))
-
-    name_height = int(18 * scale)
-
-    x += 2 * ttipmargin
-    y -= 2 * ttipmargin
-
-    width = isizex + 2 * ttipmargin
-
-    properties_width = 0
-    for r in bpy.context.area.regions:
-        if r.type == 'UI':
-            properties_width = r.width
-
-    x = min(x + width, region.width - properties_width) - width
-
-    bgcol = bpy.context.preferences.themes[0].user_interface.wcol_tooltip.inner
-    textcol = bpy.context.preferences.themes[0].user_interface.wcol_tooltip.text
-    textcol = (textcol[0], textcol[1], textcol[2], 1)
-    textcol1 = (textcol[0] * 0.8, textcol[1] * 0.8, textcol[2] * 0.8, 1)
-
-    bgl_helper.draw_rect(
-        x - ttipmargin,
-        y - texth - 2 * ttipmargin - isizey,
-        isizex + ttipmargin * 2,
-        texth + 3 * ttipmargin + isizey,
-        bgcol,
-    )
-
-    i = 0
-    column_lines = -1  # start minus one for the name
-    xtext = x
-    fsize = name_height
-    tcol = textcol
-    for line in lines:
-        if column_lines >= nlines:
-            xtext += int(isizex / ncolumns)
-            column_lines = 0
-        ytext = y - column_lines * line_height - nameline_height - ttipmargin
-        if i == 0:
-            ytext = y - name_height + 5
-        elif i == len(lines) - 1:
-            ytext = y - (nlines - 1) * line_height - nameline_height - ttipmargin
-            tcol = textcol
-        else:
-            if line[:5] == 'tags:':
-                tcol = textcol1
-            fsize = font_height
-        i += 1
-        column_lines += 1
-        bgl_helper.draw_text(line, xtext, ytext, fsize, tcol)
-    y_image = y - texth - isizey - ttipmargin
-    bgl_helper.draw_image(x, y_image, isizex, isizey, img, 1)
-
-
 def draw_callback_2d(self, context):
     if not utils.guard_from_crash():
         return
@@ -488,7 +324,7 @@ def draw_callback_3d_progress(self, context):
     for thread in download.download_threads.values():
         if thread.asset_data['asset_type'] == 'model':
             for param in thread.tcom.passargs.get('import_params', []):
-                draw_bbox(
+                bgl_helper.draw_bbox(
                     param['location'],
                     param['rotation'],
                     thread.asset_data['bbox_min'],
@@ -636,7 +472,7 @@ def draw_callback_2d_search(self, context):
 
             if count < len(search_results):
                 page_start = ui_props.scrolloffset + 1
-                preferences = Preferences()
+                preferences = Preferences().get()
                 page_end = ui_props.scrolloffset + ui_props.wcount * preferences.max_assetbar_rows
                 pagination_text = \
                     f'{page_start} - {page_end} of {search_object.results_orig["count"]}'  # noqa E501
@@ -852,7 +688,7 @@ def draw_callback_3d(self, context):
 
     if ui.dragging and ui.asset_type == 'MODEL':
         if ui.draw_snapped_bounds:
-            draw_bbox(
+            bgl_helper.draw_bbox(
                 ui.snapped_location,
                 ui.snapped_rotation,
                 ui.snapped_bbox_min,

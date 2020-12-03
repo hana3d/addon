@@ -10,7 +10,7 @@ from ..requests_async.requests_async import Request
 class Profile(object):
     """Hana3D user profile."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a Profile object."""
 
     def get(self) -> dict:

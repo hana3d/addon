@@ -6,7 +6,7 @@ import bpy
 class Application(object):
     """Blender application."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create an Application object."""
 
     def background(self) -> bool:
