@@ -47,7 +47,7 @@ def login(authenticator: oauth.OAuthAuthenticator):
 
 
 def refresh_token(immediate: bool = False) -> dict:
-    """Refresh OAuth token
+    """Refresh OAuth token.
 
     Parameters:
         immediate: True if the subsequent operations should be done in the same thread sequentially
