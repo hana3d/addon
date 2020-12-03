@@ -14,7 +14,6 @@ HANA3D_EXPORT_DATA = sys.argv[-5]
 
 module = import_module(HANA3D_NAME)
 append_link = module.append_link
-bg_blender = module.bg_blender
 utils = module.utils
 
 
@@ -27,7 +26,6 @@ def unhide_collection(cname):
 
 if __name__ == "__main__":
     try:
-        bg_blender.progress('preparing thumbnail scene')
         with open(HANA3D_EXPORT_DATA, 'r') as s:
             data = json.load(s)
             # append_material(file_name, matname = None, link = False, fake_user = True)
@@ -107,9 +105,7 @@ if __name__ == "__main__":
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
         else:
             bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
-            bg_blender.progress('rendering thumbnail')
             bpy.ops.render.render(write_still=True, animation=False)
-        bg_blender.progress('background autothumbnailer finished successfully')
 
     except Exception as e:
         logging.error(e)

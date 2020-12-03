@@ -76,9 +76,19 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """Model thumbnailer poll.
+
+        Parameters:
+            context: Blender context
+        """
         return bpy.context.view_layer.objects.active is not None
 
     def draw(self, context):
+        """Model thumbnailer draw.
+
+        Parameters:
+            context: Blender context
+        """
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
@@ -96,6 +106,11 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
+        """Model thumbnailer execute.
+
+        Parameters:
+            context: Blender context
+        """
         try:
             main_model = utils.get_active_model(context)
             self.props = getattr(main_model, HANA3D_NAME)
@@ -108,6 +123,12 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        """Model thumbnailer invoke.
+
+        Parameters:
+            context: Blender context
+            event: invoke event
+        """
         wm = context.window_manager
         if bpy.data.filepath == '':
             title = "Can't render thumbnail"
@@ -176,12 +197,19 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """Material thumbnailer poll.
+
+        Parameters:
+            context: Blender context
+        """
         return bpy.context.view_layer.objects.active is not None
 
-    def check(self, context):
-        return True
-
     def draw(self, context):
+        """Material thumbnailer draw.
+
+        Parameters:
+            context: Blender context
+        """
         layout = self.layout
         props = getattr(utils.get_active_material(context), HANA3D_NAME)
         layout.prop(props, 'thumbnail_generator_type')
@@ -198,6 +226,11 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
+        """Material thumbnailer execute.
+
+        Parameters:
+            context: Blender context
+        """
         try:
             material = utils.get_active_material(context)
             self.props = getattr(material, HANA3D_NAME)
@@ -210,6 +243,12 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        """Material thumbnailer invoke.
+
+        Parameters:
+            context: Blender context
+            event: invoker event
+        """
         wm = context.window_manager
         if bpy.data.filepath == '':
             title = "Can't render thumbnail"
@@ -274,7 +313,21 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
     bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
     bl_options = {'REGISTER', 'INTERNAL'}
 
+    @classmethod
+    def poll(cls, context):
+        """Scene thumbnailer poll.
+
+        Parameters:
+            context: Blender context
+        """
+        return bpy.context.view_layer.objects.active is not None
+
     def draw(self, context):
+        """Scene thumbnailer draw.
+
+        Parameters:
+            context: Blender context
+        """
         ob = bpy.context.active_object
         while ob.parent is not None:
             ob = ob.parent
@@ -287,7 +340,42 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
-    def get_active_scene(self, context=None, view_id: str = None):
+    @execute_wrapper
+    def execute(self, context):
+        """Scene thumbnailer execute.
+
+        Parameters:
+            context: Blender context
+        """
+        try:
+            props = getattr(self._get_active_scene(context), HANA3D_NAME)
+            self._generate_scene_thumbnail(props)
+        except Exception as e:
+            logging.warning(f'Error while exporting file: {str(e)}')
+            return {'CANCELLED'}
+        finally:
+            props.thumbnail_generating_state = 'Finished'
+            props.is_generating_thumbnail = False
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        """Scene thumbnailer invoke.
+
+        Parameters:
+            context: Blender context
+            event: invoke event
+        """
+        wm = context.window_manager
+        if bpy.data.filepath == '':
+            title = "Can't render thumbnail"
+            message = "please save your file first"
+            utils.show_pop_menu(message, title)
+
+            return {'CANCELLED'}
+
+        return wm.invoke_props_dialog(self)
+
+    def _get_active_scene(self, context=None, view_id: str = None):
         context = context or bpy.context
         if view_id is None:
             return context.scene
@@ -295,7 +383,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
         return scenes[0]
 
-    def generate_scene_thumbnail(
+    def _generate_scene_thumbnail(
             self,
             props=None,
             asset_name: str = None,
@@ -351,30 +439,6 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
         context.scene.render.resolution_x = x
         context.scene.render.resolution_y = y
-
-    @execute_wrapper
-    def execute(self, context):
-        try:
-            props = getattr(self.get_active_scene(context), HANA3D_NAME)
-            self.generate_scene_thumbnail(props)
-        except Exception as e:
-            logging.warning(f'Error while exporting file: {str(e)}')
-            return {'CANCELLED'}
-        finally:
-            props.thumbnail_generating_state = 'Finished'
-            props.is_generating_thumbnail = False
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        if bpy.data.filepath == '':
-            title = "Can't render thumbnail"
-            message = "please save your file first"
-            utils.show_pop_menu(message, title)
-
-            return {'CANCELLED'}
-
-        return wm.invoke_props_dialog(self)
 
 
 classes = (

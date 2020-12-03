@@ -16,7 +16,6 @@ HANA3D_EXPORT_DATA = sys.argv[-5]
 
 module = import_module(HANA3D_NAME)
 append_link = module.append_link
-bg_blender = module.bg_blender
 utils = module.utils
 
 
@@ -70,7 +69,6 @@ if __name__ == "__main__":
 
         user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
-        bg_blender.progress('preparing thumbnail scene')
         obnames = get_obnames()
         link = not data['save_only']
         main_object, allobs = append_link.append_objects(
@@ -140,9 +138,7 @@ if __name__ == "__main__":
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
         else:
             bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
-            bg_blender.progress('rendering thumbnail')
             bpy.ops.render.render(write_still=True, animation=False)
-        bg_blender.progress('background autothumbnailer finished successfully')
 
     except Exception:
         import traceback
