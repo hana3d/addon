@@ -18,6 +18,7 @@
 import logging
 import os
 import urllib.parse
+from typing import Union
 
 import bpy
 
@@ -214,17 +215,21 @@ def get_clean_filepath():
     return cp
 
 
-def get_thumbnailer_filepath(asset_type: str):
+def get_thumbnailer_filepath(asset_type: str) -> Union[str, pathlib.Path]:
+    """Get filepath for blend files used in thumbnailer.
+
+    Parameters:
+        asset_type: 'model' or 'material'
+    Returns:
+        Union[str, pathlib.Path]: filepath to blend file
+    """
     script_path = os.path.dirname(os.path.realpath(__file__))
-    # fpath = os.path.join(p, subpath)
     if asset_type == 'model':
         subpath = f'blendfiles{os.sep}thumbnailer.blend'
         return os.path.join(script_path, subpath)
     elif asset_type == 'material':
         subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
         return os.path.join(script_path, subpath)
-    else:
-        raise Exception('Invalid asset type')
 
 
 def get_addon_file(subpath=''):

@@ -14,7 +14,7 @@ from ...report_tools import execute_wrapper
 from ..async_loop import run_async_function
 from ..subprocess_async.subprocess_async import Subprocess
 
-HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
+HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
 
 def _common_setup(
@@ -31,12 +31,12 @@ def _common_setup(
     script_path = os.path.dirname(os.path.realpath(__file__))
     basename, ext = os.path.splitext(bpy.data.filepath)
     if not basename:
-        basename = os.path.join(basename, "temp")
+        basename = os.path.join(basename, 'temp')
     if not ext:
-        ext = ".blend"
+        ext = '.blend'
     tempdir = tempfile.mkdtemp()
 
-    filepath = os.path.join(tempdir, "thumbnailer_" + HANA3D_NAME + ext)
+    filepath = os.path.join(tempdir, 'thumbnailer_' + HANA3D_NAME + ext)
     tfpath = paths.get_thumbnailer_filepath(asset_type)
     datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
@@ -70,8 +70,8 @@ def _common_setup(
 class GenerateModelThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for model assets."""
 
-    bl_idname = f"object.{HANA3D_NAME}_thumbnail"
-    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
+    bl_idname = f'object.{HANA3D_NAME}_thumbnail'
+    bl_label = f'{HANA3D_DESCRIPTION} Thumbnail Generator'
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -102,7 +102,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
         preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
-        layout.prop(preferences, "thumbnail_use_gpu")
+        layout.prop(preferences, 'thumbnail_use_gpu')
 
     @execute_wrapper
     def execute(self, context):
@@ -131,8 +131,8 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
-            title = "Can't render thumbnail"
-            message = "please save your file first"
+            title = 'Can't render thumbnail'
+            message = 'please save your file first'
             utils.show_pop_menu(message, title)
 
             return {'CANCELLED'}
@@ -163,16 +163,16 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
             obnames.append(ob.name)
 
         json_data = {
-            "type": "model",
-            "models": str(obnames),
-            "thumbnail_angle": self.props.thumbnail_angle,
-            "thumbnail_snap_to": self.props.thumbnail_snap_to,
-            "thumbnail_background_lightness": self.props.thumbnail_background_lightness,
-            "thumbnail_resolution": self.props.thumbnail_resolution,
-            "thumbnail_samples": self.props.thumbnail_samples,
-            "thumbnail_denoising": self.props.thumbnail_denoising,
-            "save_only": save_only,
-            "blend_filepath": blend_filepath,
+            'type': 'model',
+            'models': str(obnames),
+            'thumbnail_angle': self.props.thumbnail_angle,
+            'thumbnail_snap_to': self.props.thumbnail_snap_to,
+            'thumbnail_background_lightness': self.props.thumbnail_background_lightness,
+            'thumbnail_resolution': self.props.thumbnail_resolution,
+            'thumbnail_samples': self.props.thumbnail_samples,
+            'thumbnail_denoising': self.props.thumbnail_denoising,
+            'save_only': save_only,
+            'blend_filepath': blend_filepath,
         }
 
         file_dir = os.path.dirname(bpy.data.filepath)
@@ -191,8 +191,8 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
 class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for materials."""
 
-    bl_idname = f"material.{HANA3D_NAME}_thumbnail"
-    bl_label = f"{HANA3D_DESCRIPTION} Material Thumbnail Generator"
+    bl_idname = f'material.{HANA3D_NAME}_thumbnail'
+    bl_label = f'{HANA3D_DESCRIPTION} Material Thumbnail Generator'
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -222,7 +222,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_denoising')
         layout.prop(props, 'adaptive_subdivision')
         preferences = context.preferences.addons[HANA3D_NAME].preferences
-        layout.prop(preferences, "thumbnail_use_gpu")
+        layout.prop(preferences, 'thumbnail_use_gpu')
 
     @execute_wrapper
     def execute(self, context):
@@ -251,8 +251,8 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
-            title = "Can't render thumbnail"
-            message = "please save your file first"
+            title = 'Can't render thumbnail'
+            message = 'please save your file first'
             utils.show_pop_menu(message, title)
 
             return {'CANCELLED'}
@@ -277,19 +277,19 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
             asset_name = mat.name
 
         json_data = {
-            "type": "material",
-            "material": material.name,
-            "thumbnail_type": self.props.thumbnail_generator_type,
-            "thumbnail_scale": self.props.thumbnail_scale,
-            "thumbnail_background": self.props.thumbnail_background,
-            "thumbnail_background_lightness": self.props.thumbnail_background_lightness,
-            "thumbnail_resolution": self.props.thumbnail_resolution,
-            "thumbnail_samples": self.props.thumbnail_samples,
-            "thumbnail_denoising": self.props.thumbnail_denoising,
-            "adaptive_subdivision": self.props.adaptive_subdivision,
-            "texture_size_meters": self.props.texture_size_meters,
-            "save_only": save_only,
-            "blend_filepath": blend_filepath,
+            'type': 'material',
+            'material': material.name,
+            'thumbnail_type': self.props.thumbnail_generator_type,
+            'thumbnail_scale': self.props.thumbnail_scale,
+            'thumbnail_background': self.props.thumbnail_background,
+            'thumbnail_background_lightness': self.props.thumbnail_background_lightness,
+            'thumbnail_resolution': self.props.thumbnail_resolution,
+            'thumbnail_samples': self.props.thumbnail_samples,
+            'thumbnail_denoising': self.props.thumbnail_denoising,
+            'adaptive_subdivision': self.props.adaptive_subdivision,
+            'texture_size_meters': self.props.texture_size_meters,
+            'save_only': save_only,
+            'blend_filepath': blend_filepath,
         }
 
         file_dir = os.path.dirname(bpy.data.filepath)
@@ -309,8 +309,8 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 class GenerateSceneThumbnailOperator(bpy.types.Operator):
     """Generate Cycles thumbnail for scene."""
 
-    bl_idname = f"scene.{HANA3D_NAME}_thumbnail"
-    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
+    bl_idname = f'scene.{HANA3D_NAME}_thumbnail'
+    bl_label = f'{HANA3D_DESCRIPTION} Thumbnail Generator'
     bl_options = {'REGISTER', 'INTERNAL'}
 
     @classmethod
@@ -338,7 +338,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
         preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
-        layout.prop(preferences, "thumbnail_use_gpu")
+        layout.prop(preferences, 'thumbnail_use_gpu')
 
     @execute_wrapper
     def execute(self, context):
@@ -367,8 +367,8 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
-            title = "Can't render thumbnail"
-            message = "please save your file first"
+            title = 'Can't render thumbnail'
+            message = 'please save your file first'
             utils.show_pop_menu(message, title)
 
             return {'CANCELLED'}
@@ -401,9 +401,9 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
         basename, ext = os.path.splitext(bpy.data.filepath)
         if not basename:
-            basename = os.path.join(basename, "temp")
+            basename = os.path.join(basename, 'temp')
         if not ext:
-            ext = ".blend"
+            ext = '.blend'
 
         asset_name = os.path.basename(basename)
         file_dir = os.path.dirname(bpy.data.filepath)
