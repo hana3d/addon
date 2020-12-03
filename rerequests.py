@@ -20,7 +20,7 @@ import uuid
 
 import requests
 
-from . import hana3d_oauth, utils
+from . import hana3d_oauth
 from .config import HANA3D_DESCRIPTION
 from .src.preferences.preferences import Preferences
 from .src.ui.main import UI

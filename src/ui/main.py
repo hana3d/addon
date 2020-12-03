@@ -43,7 +43,5 @@ class UI(object, metaclass=_Singleton):
             if old_report.check_refresh(text, timeout):
                 return
         logging.info(f'Message showed to the user: {text}')
-        print(self._active_area)
-        print(bpy.context.area)
         report = Report(self._active_area, text, timeout=timeout, color=color)
         self._reports.append(report)
