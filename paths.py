@@ -214,26 +214,17 @@ def get_clean_filepath():
     return cp
 
 
-def get_thumbnailer_filepath():
+def get_thumbnailer_filepath(asset_type: str):
     script_path = os.path.dirname(os.path.realpath(__file__))
     # fpath = os.path.join(p, subpath)
-    subpath = f'blendfiles{os.sep}thumbnailer.blend'
-    return os.path.join(script_path, subpath)
-
-
-def get_material_thumbnailer_filepath():
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    # fpath = os.path.join(p, subpath)
-    subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
-    return os.path.join(script_path, subpath)
-    """
-    for p in bpy.utils.script_paths():
-        testfname= os.path.join(p, subpath)#p + '%saddons%sobject_fracture%sdata.blend' % (s,s,s)
-        if os.path.isfile( testfname):
-            fname=testfname
-            return(fname)
-    return None
-    """
+    if asset_type == 'model':
+        subpath = f'blendfiles{os.sep}thumbnailer.blend'
+        return os.path.join(script_path, subpath)
+    elif asset_type == 'material':
+        subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
+        return os.path.join(script_path, subpath)
+    else:
+        raise Exception('Invalid asset type')
 
 
 def get_addon_file(subpath=''):
