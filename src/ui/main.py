@@ -1,28 +1,16 @@
 """Hana3D Blender UI class."""
-
 import logging
-from typing import Dict, List, Type
+from typing import List
 
 import bpy
 
+from ..metaclasses.singleton import Singleton
 from . import colors
 from .report import Report
 from .ui_types import Color
 
 
-# See https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
-# for more context in how to implement a singleton in Python
-class _Singleton(type):
-    # See https://www.python.org/dev/peps/pep-0484/#the-problem-of-forward-declarations
-    _instances: Dict[Type['_Singleton'], Type['UI']] = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
-class UI(object, metaclass=_Singleton):
+class UI(object, metaclass=Singleton):
     """Hana3D Blender UI singleton class."""
 
     def __init__(self) -> None:
