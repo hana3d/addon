@@ -27,8 +27,8 @@ class UI(object, metaclass=_Singleton):
 
     def __init__(self) -> None:
         """Create a new UI instance."""
-        self._active_area: bpy.type.Area = bpy.context.area
-        self._reports: List[Report] = []
+        self.active_area: bpy.type.Area = bpy.context.area
+        self.reports: List[Report] = []
 
     def add_report(self, text: str = '', timeout: int = 5, color: Color = colors.GREEN) -> None:
         """Create a new UI user report.
@@ -39,9 +39,9 @@ class UI(object, metaclass=_Singleton):
             color: Color in which the text should be displayed
         """
         # check for same reports and just make them longer by the timeout.
-        for old_report in self._reports:
+        for old_report in self.reports:
             if old_report.check_refresh(text, timeout):
                 return
         logging.info(f'Message showed to the user: {text}')
-        report = Report(self._active_area, text, timeout=timeout, color=color)
-        self._reports.append(report)
+        report = Report(self.active_area, text, timeout=timeout, color=color)
+        self.reports.append(report)
