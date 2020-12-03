@@ -3,6 +3,7 @@ import logging
 import time
 
 from ...hana3d_oauth import refresh_token
+from ..async_loop import run_async_function
 from ..preferences.preferences import Preferences
 from ..preferences.profile import Profile
 
@@ -32,4 +33,4 @@ class Authentication(object):
         if (api_key_exists and api_key_has_timed_out):
             refresh_token(immediate=False)
         if api_key_exists and self.profile.get() is None:
-            self.profile.update_async()
+            run_async_function(self.profile.update_async)
