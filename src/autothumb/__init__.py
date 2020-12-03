@@ -1,42 +1,70 @@
 """Automatic thumbnailer."""
-import asyncio
-import functools
+import json
 import logging
-import subprocess
+import os
+import pathlib
+import tempfile
+from typing import Callable, Union
 
 import bpy
 
-from ... import colors, ui, utils
+from ... import colors, paths, ui, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
-from .. import async_loop
-from .autothumb import (
-    generate_material_thumbnail,
-    generate_model_thumbnail,
-    generate_scene_thumbnail,
-)
+from ..async_loop import run_async_function
+from ..subprocess_async.subprocess_async import Subprocess
 
 HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
 
 
-class TestAsyncProcess(async_loop.AsyncModalOperatorMixin, bpy.types.Operator):
-    bl_idname = f"object.{HANA3D_NAME}_thumbnail"
-    bl_label = f"{HANA3D_DESCRIPTION} Thumbnail Generator"
-    bl_options = {'REGISTER', 'INTERNAL'}
+def _common_setup(
+        props,
+        asset_name: str,
+        asset_type: str,
+        json_data: dict,
+        thumb_path: Union[str, pathlib.Path],
+        done_callback: Callable):
+    props.is_generating_thumbnail = True
+    props.thumbnail_generating_state = 'starting blender instance'
 
-    async def async_subprocess(self):
-        cmd = ['blender']
-        cmd.extend(['-noaudio', '-b'])
+    binary_path = bpy.app.binary_path
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    basename, ext = os.path.splitext(bpy.data.filepath)
+    if not basename:
+        basename = os.path.join(basename, "temp")
+    if not ext:
+        ext = ".blend"
+    tempdir = tempfile.mkdtemp()
 
-        loop = asyncio.get_event_loop()
-        # run = subprocess.run(cmd, capture_output=True)
-        partial = functools.partial(subprocess.run, cmd, capture_output=True)
-        run = await loop.run_in_executor(None, partial)
-        print(run)
-        return run
+    filepath = os.path.join(tempdir, "thumbnailer_" + HANA3D_NAME + ext)
+    tfpath = paths.get_thumbnailer_filepath(asset_type)
+    datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
-    async def async_execute(self, context):
-        return await self.async_subprocess()
+    if bpy.data.use_autopack is True:
+        bpy.ops.file.autopack_toggle()
+    utils.save_file(filepath, compress=False, copy=True)
+
+    with open(datafile, 'w') as json_file:
+        json.dump(json_data, json_file)
+
+    cmd = [
+        binary_path,
+        '--background',
+        '-noaudio',
+        tfpath,
+        '--python',
+        os.path.join(script_path, f'{asset_type}_bg.py'),
+        '--',
+        datafile,
+        filepath,
+        thumb_path,
+        tempdir,
+        HANA3D_NAME,
+    ]
+
+    subprocess = Subprocess()
+    props.thumbnail_generating_state = 'rendering thumbnail'
+    run_async_function(subprocess.subprocess, done_callback=done_callback, cmd=cmd)
 
 
 class GenerateModelThumbnailOperator(bpy.types.Operator):
@@ -69,8 +97,9 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         try:
-            props = getattr(utils.get_active_model(context), HANA3D_NAME)
-            generate_model_thumbnail(props)
+            main_model = utils.get_active_model(context)
+            self.props = getattr(main_model, HANA3D_NAME)
+            self._generate_model_thumbnail(main_model)
         except Exception as e:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
@@ -88,6 +117,54 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         return wm.invoke_props_dialog(self)
+
+    def _done_callback(self, task):
+        self.props.thumbnail = self.rel_thumb_path + '.jpg'
+        self.props.thumbnail_generating_state = 'rendering done'
+        self.props.is_generating_thumbnail = False
+
+        if bpy.data.use_autopack is True:
+            bpy.ops.file.autopack_toggle()
+
+    def _generate_model_thumbnail(
+            self,
+            main_model: bpy.types.Object,
+            asset_name: str = None,
+            save_only: bool = False,
+            blend_filepath: str = ''):
+        mainmodel = utils.get_active_model()
+        if asset_name is None:
+            asset_name = mainmodel.name
+
+        obs = utils.get_hierarchy(mainmodel)
+        obnames = []
+        for ob in obs:
+            obnames.append(ob.name)
+
+        json_data = {
+            "type": "model",
+            "models": str(obnames),
+            "thumbnail_angle": self.props.thumbnail_angle,
+            "thumbnail_snap_to": self.props.thumbnail_snap_to,
+            "thumbnail_background_lightness": self.props.thumbnail_background_lightness,
+            "thumbnail_resolution": self.props.thumbnail_resolution,
+            "thumbnail_samples": self.props.thumbnail_samples,
+            "thumbnail_denoising": self.props.thumbnail_denoising,
+            "save_only": save_only,
+            "blend_filepath": blend_filepath,
+        }
+
+        file_dir = os.path.dirname(bpy.data.filepath)
+        thumb_path = os.path.join(file_dir, asset_name)
+        self.rel_thumb_path = os.path.join('//', asset_name)
+
+        i = 0
+        while os.path.isfile(thumb_path + '.jpg'):
+            thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
+            self.rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
+            i += 1
+
+        _common_setup(self.props, asset_name, 'model', json_data, thumb_path, self._done_callback)
 
 
 class GenerateMaterialThumbnailOperator(bpy.types.Operator):
@@ -122,8 +199,9 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         try:
-            props = getattr(utils.get_active_material(context), HANA3D_NAME)
-            generate_material_thumbnail(props)
+            material = utils.get_active_material(context)
+            self.props = getattr(material, HANA3D_NAME)
+            self._generate_material_thumbnail(material)
         except Exception as e:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
@@ -141,6 +219,52 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         return wm.invoke_props_dialog(self)
+
+    def _done_callback(self, task):
+        self.props.thumbnail = self.rel_thumb_path + '.jpg'
+        self.props.thumbnail_generating_state = 'rendering done'
+        self.props.is_generating_thumbnail = False
+
+        if bpy.data.use_autopack is True:
+            bpy.ops.file.autopack_toggle()
+
+    def _generate_material_thumbnail(
+            self,
+            material: bpy.types.Material,
+            asset_name: str = None,
+            save_only: bool = False,
+            blend_filepath: str = ''):
+        if asset_name is None:
+            asset_name = mat.name
+
+        json_data = {
+            "type": "material",
+            "material": material.name,
+            "thumbnail_type": self.props.thumbnail_generator_type,
+            "thumbnail_scale": self.props.thumbnail_scale,
+            "thumbnail_background": self.props.thumbnail_background,
+            "thumbnail_background_lightness": self.props.thumbnail_background_lightness,
+            "thumbnail_resolution": self.props.thumbnail_resolution,
+            "thumbnail_samples": self.props.thumbnail_samples,
+            "thumbnail_denoising": self.props.thumbnail_denoising,
+            "adaptive_subdivision": self.props.adaptive_subdivision,
+            "texture_size_meters": self.props.texture_size_meters,
+            "save_only": save_only,
+            "blend_filepath": blend_filepath,
+        }
+
+        file_dir = os.path.dirname(bpy.data.filepath)
+        thumb_path = os.path.join(file_dir, asset_name)
+        self.rel_thumb_path = os.path.join('//', asset_name)
+
+        i = 0
+        while os.path.isfile(thumb_path + '.jpg'):
+            thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
+            self.rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
+            i += 1
+
+        _common_setup(self.props, asset_name, 'material',
+                      json_data, thumb_path, self._done_callback)
 
 
 class GenerateSceneThumbnailOperator(bpy.types.Operator):
@@ -163,11 +287,76 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, "thumbnail_use_gpu")
 
+    def get_active_scene(self, context=None, view_id: str = None):
+        context = context or bpy.context
+        if view_id is None:
+            return context.scene
+        scenes = [s for s in context.blend_data.scenes if s.view_id == view_id]
+
+        return scenes[0]
+
+    def generate_scene_thumbnail(
+            self,
+            props=None,
+            asset_name: str = None,
+            save_only: bool = False,
+            blend_filepath: str = ''):
+        if props is None:
+            props = getattr(bpy.data.scenes[asset_name], HANA3D_NAME)
+            update_state = False
+        else:
+            update_state = True
+        context = bpy.context
+        if update_state:
+            props.is_generating_thumbnail = True
+            props.thumbnail_generating_state = 'starting blender instance'
+
+        basename, ext = os.path.splitext(bpy.data.filepath)
+        if not basename:
+            basename = os.path.join(basename, "temp")
+        if not ext:
+            ext = ".blend"
+
+        asset_name = os.path.basename(basename)
+        file_dir = os.path.dirname(bpy.data.filepath)
+        thumb_path = os.path.join(file_dir, asset_name)
+        rel_thumb_path = os.path.join('//', asset_name)
+
+        i = 0
+        while os.path.isfile(thumb_path + '.png'):
+            thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
+            rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
+            i += 1
+
+        user_preferences = context.preferences.addons[HANA3D_NAME].preferences
+
+        if user_preferences.thumbnail_use_gpu:
+            context.scene.cycles.device = 'GPU'
+
+        context.scene.cycles.samples = props.thumbnail_samples
+        context.view_layer.cycles.use_denoising = props.thumbnail_denoising
+
+        x = context.scene.render.resolution_x
+        y = context.scene.render.resolution_y
+
+        context.scene.render.resolution_x = int(props.thumbnail_resolution)
+        context.scene.render.resolution_y = int(props.thumbnail_resolution)
+
+        if save_only:
+            bpy.ops.wm.save_as_mainfile(filepath=blend_filepath, compress=True, copy=True)
+        else:
+            context.scene.render.filepath = thumb_path + '.png'
+            bpy.ops.render.render(write_still=True, animation=False)
+            props.thumbnail = rel_thumb_path + '.png'
+
+        context.scene.render.resolution_x = x
+        context.scene.render.resolution_y = y
+
     @execute_wrapper
     def execute(self, context):
         try:
-            props = getattr(get_active_scene(context), HANA3D_NAME)
-            generate_scene_thumbnail(props)
+            props = getattr(self.get_active_scene(context), HANA3D_NAME)
+            self.generate_scene_thumbnail(props)
         except Exception as e:
             logging.warning(f'Error while exporting file: {str(e)}')
             return {'CANCELLED'}
@@ -192,7 +381,6 @@ classes = (
     GenerateModelThumbnailOperator,
     GenerateMaterialThumbnailOperator,
     GenerateSceneThumbnailOperator,
-    # TestAsyncProcess
 )
 
 
