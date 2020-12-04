@@ -18,7 +18,6 @@ MODAL_TIMER = 0.00001
 log = logging.getLogger(__name__)
 
 # Keeps track of whether a loop-kicking operator is already running.
-_loop_kicking_operator_running = False
 
 
 def setup_asyncio_executor():
