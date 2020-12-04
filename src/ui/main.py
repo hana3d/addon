@@ -1,6 +1,6 @@
 """Hana3D Blender UI class."""
 import logging
-from typing import List
+from typing import List, Tuple
 
 import bpy
 
@@ -15,7 +15,9 @@ class UI(object, metaclass=Singleton):
 
     def __init__(self) -> None:
         """Create a new UI instance."""
+        self.active_window: bpy.types.Window = bpy.context.window
         self.active_area: bpy.type.Area = bpy.context.area
+        self.active_region: bpy.types.Region = bpy.context.region
         self.reports: List[Report] = []
 
     def add_report(self, text: str = '', timeout: int = 5, color: Color = colors.GREEN) -> None:
@@ -33,3 +35,38 @@ class UI(object, metaclass=Singleton):
         logging.info(f'Message showed to the user: {text}')
         report = Report(self.active_area, text, timeout=timeout, color=color)
         self.reports.append(report)
+
+    def get_largest_view3d(self) -> Tuple[bpy.types.Window, bpy.types.Area, bpy.types.Region]:  # noqa: WPS210, E501
+        """Get largest 3D View.
+
+        Returns:
+            bpy.types.Window: Window with the largest 3d view
+            bpy.types.Area: Area with the largest 3d view
+            bpy.types.Region: Region with the largest 3d view
+        """
+        maxsurf = 0
+        maxa = None
+        maxw = None
+        maxr = None
+        for window in bpy.context.window_manager.windows:
+            for area in window.screen.areas:
+                if area.type != 'VIEW_3D':
+                    continue
+
+                asurf = area.width * area.height
+                if asurf <= maxsurf:
+                    continue
+
+                maxa = area
+                maxw = window
+                maxsurf = asurf
+
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        maxr = region  # noqa: WPS220
+
+        self.active_window = maxw
+        self.active_area = maxa
+        self.active_region = maxr
+
+        return maxw, maxa, maxr
