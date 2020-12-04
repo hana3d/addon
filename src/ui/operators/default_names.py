@@ -1,5 +1,5 @@
 """Assign default object name as props name and object render job name."""
-from typing import List, Set
+from typing import Set
 
 import bpy
 
@@ -47,17 +47,14 @@ class DefaultNamesOperator(bpy.types.Operator):
             else:
                 previous_names = [job['job_name'] for job in props.render_data['jobs']]
             base_name = props.name or asset.name or 'Render'
-            props.render_job_name = self._new_render_job_name(base_name, previous_names)
+            for n in range(1000):  # noqa: WPS111
+                new_name = f'{base_name}_{n:03d}'
+                if new_name not in previous_names:
+                    break
+            props.render_job_name = new_name
 
         return {'PASS_THROUGH'}
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> Set[str]:  # noqa: D102
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
-
-    def _new_render_job_name(self, base_name: str, previous_names: List[str]) -> str:
-        for n in range(1000):  # noqa: WPS111
-            new_name = f'{base_name}_{n:03d}'
-            if new_name not in previous_names:
-                break
-        return new_name
