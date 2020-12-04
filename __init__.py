@@ -45,6 +45,7 @@ from . import (  # noqa: WPS235
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .src import async_loop
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 
@@ -298,6 +299,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 
 modules = (
+    async_loop,
     append_link,
     asset,
     autothumb,
