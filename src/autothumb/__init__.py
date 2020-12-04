@@ -331,7 +331,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
             'material',
             json_data,
             thumb_path,
-            self._done_callback
+            self._done_callback,
         )
 
 
@@ -382,7 +382,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
-        try:    # noqa: WPS210
+        try:    # noqa: WPS229
             props = getattr(self._get_active_scene(context), HANA3D_NAME)
             self._generate_scene_thumbnail(props)
         except Exception as error:
