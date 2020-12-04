@@ -67,7 +67,7 @@ if __name__ == '__main__':
                 ob.data.texspace_size.x = 1 / tscale    # noqa: WPS111
                 ob.data.texspace_size.y = 1 / tscale    # noqa: WPS111
                 ob.data.texspace_size.z = 1 / tscale    # noqa: WPS111
-                ob.cycles.use_adaptive_subdivision = True if data['adaptive_subdivision'] else False
+                ob.cycles.use_adaptive_subdivision = bool(data['adaptive_subdivision'])
                 tex_size = data['texture_size_meters']
                 if data['thumbnail_type'] in ['BALL', 'CUBE', 'CLOTH']:  # noqa: WPS510
                     utils.automap(
