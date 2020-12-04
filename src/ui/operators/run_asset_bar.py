@@ -16,7 +16,7 @@ class RunAssetBarWithContext(bpy.types.Operator):
     bl_description = 'Run assetbar with fixed context'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    @execute_wrapper
+    @execute_wrapper  # noqa: WPS210
     def execute(self, context: bpy.types.Context) -> Set[str]:  # noqa: WPS210,D102
         c_dict = bpy.context.copy()
         c_dict.update(region='WINDOW')
