@@ -1,4 +1,4 @@
-"""Hana3D requests async."""
+"""Hana3D subprocess async."""
 
 import asyncio
 import functools
