@@ -23,8 +23,8 @@ def _common_setup(  # noqa: WPS211,WPS210
     asset_type: str,
     json_data: dict,
     thumb_path: Union[str, pathlib.Path],
-    done_callback: Callable
-    ):
+    done_callback: Callable,
+):
     props.is_generating_thumbnail = True
     props.thumbnail_generating_state = 'starting blender instance'
 
@@ -93,7 +93,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         Parameters:
             context: Blender context
         """
-        ob = bpy.context.active_object
+        ob = context.active_object
         while ob.parent is not None:
             ob = ob.parent
         props = getattr(ob, HANA3D_NAME)
@@ -105,7 +105,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+        preferences = context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, 'thumbnail_use_gpu')
 
     @execute_wrapper
@@ -118,14 +118,14 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
-        try:
+        try:    # noqa: WPS229
             main_model = utils.get_active_model(context)
             self.props = getattr(main_model, HANA3D_NAME)
             self._generate_model_thumbnail(main_model)
-        except Exception as e:
+        except Exception as error:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
-            ui.add_report(f'Error in thumbnailer: {e}', color=colors.RED)
+            ui.add_report(f'Error in thumbnailer: {error}', color=colors.RED)
             return {'CANCELLED'}
         return {'FINISHED'}
 
@@ -150,19 +150,20 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def _done_callback(self, task):
-        self.props.thumbnail = self.rel_thumb_path + '.jpg'
+        self.props.thumbnail = f'{self.rel_thumb_path}.jpg'
         self.props.thumbnail_generating_state = 'rendering done'
         self.props.is_generating_thumbnail = False
 
         if bpy.data.use_autopack is True:
             bpy.ops.file.autopack_toggle()
 
-    def _generate_model_thumbnail(
-            self,
-            main_model: bpy.types.Object,
-            asset_name: str = None,
-            save_only: bool = False,
-            blend_filepath: str = ''):
+    def _generate_model_thumbnail(  # noqa: WPS210
+        self,
+        main_model: bpy.types.Object,
+        asset_name: str = None,
+        save_only: bool = False,
+        blend_filepath: str = ''
+    ):
         mainmodel = utils.get_active_model()
         if asset_name is None:
             asset_name = mainmodel.name
@@ -189,11 +190,11 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         thumb_path = os.path.join(file_dir, asset_name)
         self.rel_thumb_path = os.path.join('//', asset_name)
 
-        i = 0
-        while os.path.isfile(thumb_path + '.jpg'):
-            thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
-            self.rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
-            i += 1
+        counter = 0
+        while os.path.isfile(f'{thumb_path}.jpg'):
+            thumb_path = os.path.join(file_dir, f'{asset_name}_{str(counter).zfill(4)}')
+            self.rel_thumb_path = os.path.join('//', f'{asset_name}_{str(counter).zfill(4)}')
+            counter += 1
 
         _common_setup(self.props, asset_name, 'model', json_data, thumb_path, self._done_callback)
 
@@ -247,14 +248,14 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
-        try:
+        try:    # noqa: WPS229
             material = utils.get_active_material(context)
             self.props = getattr(material, HANA3D_NAME)
             self._generate_material_thumbnail(material)
-        except Exception as e:
+        except Exception as error:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
-            logging.warning(f'Error while packing file: {str(e)}')
+            logging.warning(f'Error while packing file: {str(error)}')
             return {'CANCELLED'}
         return {'FINISHED'}
 
@@ -286,12 +287,13 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         if bpy.data.use_autopack is True:
             bpy.ops.file.autopack_toggle()
 
-    def _generate_material_thumbnail(
-            self,
-            material: bpy.types.Material,
-            asset_name: str = None,
-            save_only: bool = False,
-            blend_filepath: str = ''):
+    def _generate_material_thumbnail(   # noqa: WPS210
+        self,
+        material: bpy.types.Material,
+        asset_name: str = None,
+        save_only: bool = False,
+        blend_filepath: str = ''
+    ):
         if asset_name is None:
             asset_name = mat.name
 
@@ -315,11 +317,11 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         thumb_path = os.path.join(file_dir, asset_name)
         self.rel_thumb_path = os.path.join('//', asset_name)
 
-        i = 0
-        while os.path.isfile(thumb_path + '.jpg'):
-            thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
-            self.rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
-            i += 1
+        counter = 0
+        while os.path.isfile(f'{thumb_path}.jpg'):
+            thumb_path = os.path.join(file_dir, f'{asset_name}_{str(counter).zfill(4)}')
+            self.rel_thumb_path = os.path.join('//', f'{asset_name}_{str(counter).zfill(4)}')
+            counter += 1
 
         _common_setup(self.props, asset_name, 'material',
                       json_data, thumb_path, self._done_callback)
@@ -350,7 +352,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         Parameters:
             context: Blender context
         """
-        ob = bpy.context.active_object
+        ob = context.active_object
         while ob.parent is not None:
             ob = ob.parent
         props = getattr(ob, HANA3D_NAME)
@@ -359,7 +361,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         layout.prop(props, 'thumbnail_samples')
         layout.prop(props, 'thumbnail_resolution')
         layout.prop(props, 'thumbnail_denoising')
-        preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+        preferences = context.preferences.addons[HANA3D_NAME].preferences
         layout.prop(preferences, 'thumbnail_use_gpu')
 
     @execute_wrapper
@@ -372,11 +374,11 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
-        try:
+        try:    # noqa: WPS210
             props = getattr(self._get_active_scene(context), HANA3D_NAME)
             self._generate_scene_thumbnail(props)
-        except Exception as e:
-            logging.warning(f'Error while exporting file: {str(e)}')
+        except Exception as error:
+            logging.warning(f'Error while exporting file: {str(error)}')
             return {'CANCELLED'}
         finally:
             props.thumbnail_generating_state = 'Finished'
@@ -411,12 +413,13 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
         return scenes[0]
 
-    def _generate_scene_thumbnail(
-            self,
-            props=None,
-            asset_name: str = None,
-            save_only: bool = False,
-            blend_filepath: str = ''):
+    def _generate_scene_thumbnail(  # noqa: WPS210
+        self,
+        props=None,
+        asset_name: str = None,
+        save_only: bool = False,
+        blend_filepath: str = ''
+    ):
         if props is None:
             props = getattr(bpy.data.scenes[asset_name], HANA3D_NAME)
             update_state = False
@@ -438,11 +441,11 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         thumb_path = os.path.join(file_dir, asset_name)
         rel_thumb_path = os.path.join('//', asset_name)
 
-        i = 0
-        while os.path.isfile(thumb_path + '.png'):
-            thumb_path = os.path.join(file_dir, asset_name + '_' + str(i).zfill(4))
-            rel_thumb_path = os.path.join('//', asset_name + '_' + str(i).zfill(4))
-            i += 1
+        counter = 0
+        while os.path.isfile(f'{thumb_path}.png'):
+            thumb_path = os.path.join(file_dir, f'{asset_name}_{str(counter).zfill(4)}')
+            rel_thumb_path = os.path.join('//', f'{asset_name}_{str(counter).zfill(4)}')
+            counter += 1
 
         user_preferences = context.preferences.addons[HANA3D_NAME].preferences
 
@@ -452,8 +455,8 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         context.scene.cycles.samples = props.thumbnail_samples
         context.view_layer.cycles.use_denoising = props.thumbnail_denoising
 
-        x = context.scene.render.resolution_x
-        y = context.scene.render.resolution_y
+        resolution_x = context.scene.render.resolution_x
+        resolution_y = context.scene.render.resolution_y
 
         context.scene.render.resolution_x = int(props.thumbnail_resolution)
         context.scene.render.resolution_y = int(props.thumbnail_resolution)
@@ -461,12 +464,12 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         if save_only:
             bpy.ops.wm.save_as_mainfile(filepath=blend_filepath, compress=True, copy=True)
         else:
-            context.scene.render.filepath = thumb_path + '.png'
+            context.scene.render.filepath = f'{thumb_path}.png'
             bpy.ops.render.render(write_still=True, animation=False)
-            props.thumbnail = rel_thumb_path + '.png'
+            props.thumbnail = f'{rel_thumb_path}.png'
 
-        context.scene.render.resolution_x = x
-        context.scene.render.resolution_y = y
+        context.scene.render.resolution_x = resolution_x
+        context.scene.render.resolution_y = resolution_y
 
 
 classes = (
