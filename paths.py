@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import logging
 import os
+import pathlib
 import urllib.parse
 from typing import Union
 

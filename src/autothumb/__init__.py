@@ -12,18 +12,19 @@ from ... import colors, paths, ui, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
 from ..async_loop import run_async_function
-from ..subprocess_async.subprocess_async import Subprocess
+from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
 
-def _common_setup(
-        props,
-        asset_name: str,
-        asset_type: str,
-        json_data: dict,
-        thumb_path: Union[str, pathlib.Path],
-        done_callback: Callable):
+def _common_setup(  # noqa: WPS211,WPS210
+    props,
+    asset_name: str,
+    asset_type: str,
+    json_data: dict,
+    thumb_path: Union[str, pathlib.Path],
+    done_callback: Callable
+    ):
     props.is_generating_thumbnail = True
     props.thumbnail_generating_state = 'starting blender instance'
 
@@ -36,7 +37,7 @@ def _common_setup(
         ext = '.blend'
     tempdir = tempfile.mkdtemp()
 
-    filepath = os.path.join(tempdir, 'thumbnailer_' + HANA3D_NAME + ext)
+    filepath = os.path.join(tempdir, f'thumbnailer_{HANA3D_NAME}{ext}')
     tfpath = paths.get_thumbnailer_filepath(asset_type)
     datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
@@ -80,6 +81,9 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
 
         Parameters:
             context: Blender context
+
+        Returns:
+            bool: if there is an active object
         """
         return bpy.context.view_layer.objects.active is not None
 
@@ -110,6 +114,9 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
 
         Parameters:
             context: Blender context
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         try:
             main_model = utils.get_active_model(context)
@@ -128,6 +135,9 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         Parameters:
             context: Blender context
             event: invoke event
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
@@ -201,6 +211,9 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
         Parameters:
             context: Blender context
+
+        Returns:
+            bool: if there is an active object
         """
         return bpy.context.view_layer.objects.active is not None
 
@@ -230,6 +243,9 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
         Parameters:
             context: Blender context
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         try:
             material = utils.get_active_material(context)
@@ -248,6 +264,9 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         Parameters:
             context: Blender context
             event: invoker event
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
@@ -319,6 +338,9 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
         Parameters:
             context: Blender context
+
+        Returns:
+            bool: if there is an active object
         """
         return bpy.context.view_layer.objects.active is not None
 
@@ -346,6 +368,9 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
         Parameters:
             context: Blender context
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         try:
             props = getattr(self._get_active_scene(context), HANA3D_NAME)
@@ -364,6 +389,9 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         Parameters:
             context: Blender context
             event: invoke event
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         wm = context.window_manager
         if bpy.data.filepath == '':
