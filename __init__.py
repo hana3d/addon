@@ -21,7 +21,7 @@ from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
-from . import (  # noqa: WPS235
+from . import (
     addon_updater_ops,
     append_link,
     asset,
