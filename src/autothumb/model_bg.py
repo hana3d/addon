@@ -61,11 +61,11 @@ def _center_obs_for_thumbnail(obs):
     bpy.context.view_layer.update()
 
 
-if __name__ == "__main__":
-    try:
+if __name__ == '__main__':
+    try:    # noqa: WPS229
         logging.info('autothumb_model_bg')
-        with open(HANA3D_EXPORT_DATA, 'r') as file_:
-            data = json.load(file_)
+        with open(HANA3D_EXPORT_DATA, 'r') as data_file:
+            data = json.load(data_file)  # noqa: WPS110
 
         user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 

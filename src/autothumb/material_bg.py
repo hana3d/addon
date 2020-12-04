@@ -25,23 +25,23 @@ def _unhide_collection(cname, context):
     collection.hide_select = False
 
 
-if __name__ == "__main__":
-    try:
-        with open(HANA3D_EXPORT_DATA, 'r') as file_:
-            data = json.load(file_)
+if __name__ == '__main__':
+    try:    # noqa: WPS229
+        with open(HANA3D_EXPORT_DATA, 'r') as data_file:
+            data = json.load(data_file)  # noqa: WPS110
         link = not data['save_only']
 
         mat = append_link.append_material(
             file_name=HANA3D_EXPORT_FILE_INPUT,
-            matname=data["material"],
+            matname=data['material'],
             link=link,
-            fake_user=False
+            fake_user=False,
         )
-
-        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
         context = bpy.context
         scene = context.scene
+
+        user_preferences = context.preferences.addons[HANA3D_NAME].preferences
 
         colmapdict = {
             'BALL': 'Ball',
@@ -51,32 +51,32 @@ if __name__ == "__main__":
             'HAIR': 'Hair',
         }
 
-        _unhide_collection(colmapdict[data["thumbnail_type"]], context)
+        _unhide_collection(colmapdict[data['thumbnail_type']], context)
         if data['thumbnail_background']:
             _unhide_collection('Background', context)
-            bpy.data.materials["bg checker colorable"].node_tree.nodes['input_level'].outputs[
-                'Value'
-            ].default_value = data['thumbnail_background_lightness']
-        tscale = data["thumbnail_scale"]
-        bpy.context.view_layer.objects['scaler'].scale = (tscale, tscale, tscale)
-        bpy.context.view_layer.update()
-        for ob in bpy.context.visible_objects:
+            node_tree = bpy.data.materials['bg checker colorable'].node_tree
+            value_output = node_tree.nodes['input_level'].outputs['Value']
+            value_output.default_value = data['thumbnail_background_lightness']
+        tscale = data['thumbnail_scale']
+        context.view_layer.objects['scaler'].scale = (tscale, tscale, tscale)
+        context.view_layer.update()
+        for ob in context.visible_objects:
             if ob.name[:15] == 'MaterialPreview':
                 ob.material_slots[0].material = mat
-                ob.data.texspace_size.x = 1 / tscale
-                ob.data.texspace_size.y = 1 / tscale
-                ob.data.texspace_size.z = 1 / tscale
-                if data["adaptive_subdivision"]:
+                ob.data.texspace_size.x = 1 / tscale    # noqa: WPS111
+                ob.data.texspace_size.y = 1 / tscale    # noqa: WPS111
+                ob.data.texspace_size.z = 1 / tscale    # noqa: WPS111
+                if data['adaptive_subdivision']:
                     ob.cycles.use_adaptive_subdivision = True
                 else:
                     ob.cycles.use_adaptive_subdivision = False
                 tex_size = data['texture_size_meters']
-                if data["thumbnail_type"] in ['BALL', 'CUBE', 'CLOTH']:
+                if data['thumbnail_type'] in ['BALL', 'CUBE', 'CLOTH']:
                     utils.automap(
                         ob.name,
                         tex_size=tex_size / tscale,
                         just_scale=True,
-                        bg_exception=True
+                        bg_exception=True,
                     )
         context.view_layer.update()
 
