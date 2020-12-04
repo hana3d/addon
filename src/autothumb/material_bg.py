@@ -1,3 +1,4 @@
+"""Blender script to render material thumbnail."""
 import json
 import logging
 import sys
@@ -17,8 +18,8 @@ append_link = module.append_link
 utils = module.utils
 
 
-def unhide_collection(cname):
-    collection = bpy.context.scene.collection.children[cname]
+def _unhide_collection(cname, context):
+    collection = context.scene.collection.children[cname]
     collection.hide_viewport = False
     collection.hide_render = False
     collection.hide_select = False
@@ -26,9 +27,8 @@ def unhide_collection(cname):
 
 if __name__ == "__main__":
     try:
-        with open(HANA3D_EXPORT_DATA, 'r') as s:
-            data = json.load(s)
-            # append_material(file_name, matname = None, link = False, fake_user = True)
+        with open(HANA3D_EXPORT_DATA, 'r') as file_:
+            data = json.load(file_)
         link = not data['save_only']
 
         mat = append_link.append_material(
@@ -40,7 +40,8 @@ if __name__ == "__main__":
 
         user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
-        s = bpy.context.scene
+        context = bpy.context
+        scene = context.scene
 
         colmapdict = {
             'BALL': 'Ball',
@@ -50,9 +51,9 @@ if __name__ == "__main__":
             'HAIR': 'Hair',
         }
 
-        unhide_collection(colmapdict[data["thumbnail_type"]])
+        _unhide_collection(colmapdict[data["thumbnail_type"]], context)
         if data['thumbnail_background']:
-            unhide_collection('Background')
+            _unhide_collection('Background', context)
             bpy.data.materials["bg checker colorable"].node_tree.nodes['input_level'].outputs[
                 'Value'
             ].default_value = data['thumbnail_background_lightness']
@@ -69,18 +70,23 @@ if __name__ == "__main__":
                     ob.cycles.use_adaptive_subdivision = True
                 else:
                     ob.cycles.use_adaptive_subdivision = False
-                ts = data['texture_size_meters']
+                tex_size = data['texture_size_meters']
                 if data["thumbnail_type"] in ['BALL', 'CUBE', 'CLOTH']:
-                    utils.automap(ob.name, tex_size=ts / tscale, just_scale=True, bg_exception=True)
-        bpy.context.view_layer.update()
+                    utils.automap(
+                        ob.name,
+                        tex_size=tex_size / tscale,
+                        just_scale=True,
+                        bg_exception=True
+                    )
+        context.view_layer.update()
 
-        s.cycles.volume_step_size = tscale * 0.1
+        scene.cycles.volume_step_size = tscale * 0.1
 
         if user_preferences.thumbnail_use_gpu:
-            bpy.context.scene.cycles.device = 'GPU'
+            context.scene.cycles.device = 'GPU'
 
-        s.cycles.samples = data['thumbnail_samples']
-        bpy.context.view_layer.cycles.use_denoising = data['thumbnail_denoising']
+        scene.cycles.samples = data['thumbnail_samples']
+        context.view_layer.cycles.use_denoising = data['thumbnail_denoising']
 
         # import blender's HDR here
         hdr_path = Path('datafiles/studiolights/world/interior.exr')
@@ -97,14 +103,14 @@ if __name__ == "__main__":
         hdr_img.filepath = ipath
         hdr_img.reload()
 
-        bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
-        bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
+        context.scene.render.resolution_x = int(data['thumbnail_resolution'])
+        context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
         if data['save_only']:
             hdr_img.pack()
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
         else:
-            bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
+            context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
             bpy.ops.render.render(write_still=True, animation=False)
 
     except Exception as e:

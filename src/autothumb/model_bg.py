@@ -1,3 +1,4 @@
+"""Blender script to render model thumbnail."""
 import json
 import logging
 import math
@@ -19,16 +20,15 @@ append_link = module.append_link
 utils = module.utils
 
 
-def get_obnames():
-    with open(HANA3D_EXPORT_DATA, 'r') as s:
-        data = json.load(s)
+def _get_obnames():
+    with open(HANA3D_EXPORT_DATA, 'r') as file_:
+        data = json.load(file_)
     obnames = eval(data['models'])
     return obnames
 
 
-def center_obs_for_thumbnail(obs):
-    s = bpy.context.scene
-    # obs = bpy.context.selected_objects
+def _center_obs_for_thumbnail(obs):
+    scene = bpy.context.scene
     parent = obs[0]
 
     while parent.parent is not None:
@@ -40,13 +40,13 @@ def center_obs_for_thumbnail(obs):
 
     cx = (maxx - minx) / 2 + minx
     cy = (maxy - miny) / 2 + miny
-    for ob in s.collection.objects:
+    for ob in scene.collection.objects:
         ob.select_set(False)
 
     bpy.context.view_layer.objects.active = parent
     parent.location += mathutils.Vector((-cx, -cy, -minz))
 
-    camZ = s.camera.parent.parent
+    camZ = scene.camera.parent.parent
     camZ.location.z = (maxz - minz) / 2
     dx = maxx - minx
     dy = maxy - miny
@@ -64,12 +64,12 @@ def center_obs_for_thumbnail(obs):
 if __name__ == "__main__":
     try:
         logging.info('autothumb_model_bg')
-        with open(HANA3D_EXPORT_DATA, 'r') as s:
-            data = json.load(s)
+        with open(HANA3D_EXPORT_DATA, 'r') as file_:
+            data = json.load(file_)
 
         user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
 
-        obnames = get_obnames()
+        obnames = _get_obnames()
         link = not data['save_only']
         main_object, allobs = append_link.append_objects(
             file_name=HANA3D_EXPORT_FILE_INPUT,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         }
 
         bpy.context.scene.camera = bpy.data.objects[camdict[data['thumbnail_snap_to']]]
-        center_obs_for_thumbnail(allobs)
+        _center_obs_for_thumbnail(allobs)
         if user_preferences.thumbnail_use_gpu:
             bpy.context.scene.cycles.device = 'GPU'
 
@@ -96,12 +96,13 @@ if __name__ == "__main__":
             'SIDE': 3,
             'TOP': 4,
         }
-        s = bpy.context.scene
-        s.frame_set(fdict[data['thumbnail_angle']])
+        context = bpy.context
+        scene = context.scene
+        scene.frame_set(fdict[data['thumbnail_angle']])
 
         snapdict = {'GROUND': 'Ground', 'WALL': 'Wall', 'CEILING': 'Ceiling', 'FLOAT': 'Float'}
 
-        collection = bpy.context.scene.collection.children[snapdict[data['thumbnail_snap_to']]]
+        collection = context.scene.collection.children[snapdict[data['thumbnail_snap_to']]]
         collection.hide_viewport = False
         collection.hide_render = False
         collection.hide_select = False
@@ -111,9 +112,9 @@ if __name__ == "__main__":
         bpy.data.materials['hana3d background'].node_tree.nodes['Value'].outputs[
             'Value'
         ].default_value = data['thumbnail_background_lightness']
-        s.cycles.samples = data['thumbnail_samples']
-        bpy.context.view_layer.cycles.use_denoising = data['thumbnail_denoising']
-        bpy.context.view_layer.update()
+        scene.cycles.samples = data['thumbnail_samples']
+        context.view_layer.cycles.use_denoising = data['thumbnail_denoising']
+        context.view_layer.update()
 
         # import blender's HDR here
         hdr_path = Path('datafiles/studiolights/world/interior.exr')
@@ -130,14 +131,14 @@ if __name__ == "__main__":
         hdr_img.filepath = ipath
         hdr_img.reload()
 
-        bpy.context.scene.render.resolution_x = int(data['thumbnail_resolution'])
-        bpy.context.scene.render.resolution_y = int(data['thumbnail_resolution'])
+        context.scene.render.resolution_x = int(data['thumbnail_resolution'])
+        context.scene.render.resolution_y = int(data['thumbnail_resolution'])
 
         if data['save_only']:
             hdr_img.pack()
             bpy.ops.wm.save_as_mainfile(filepath=data['blend_filepath'], compress=True, copy=True)
         else:
-            bpy.context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
+            context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
             bpy.ops.render.render(write_still=True, animation=False)
 
     except Exception:
