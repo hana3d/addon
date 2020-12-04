@@ -136,6 +136,7 @@ class AsyncLoopModalOperator(bpy.types.Operator):
     log = logging.getLogger(f'{__name__}.AsyncLoopModalOperator')
 
     def __init__(self):
+        """Create a new AsyncLoopModalOperator instance."""
         self.loop_status = LoopStatus()
 
     def __del__(self):  # noqa: WPS603
