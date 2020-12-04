@@ -162,7 +162,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         main_model: bpy.types.Object,
         asset_name: str = None,
         save_only: bool = False,
-        blend_filepath: str = ''
+        blend_filepath: str = '',
     ):
         mainmodel = utils.get_active_model()
         if asset_name is None:
@@ -192,8 +192,9 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
 
         counter = 0
         while os.path.isfile(f'{thumb_path}.jpg'):
-            thumb_path = os.path.join(file_dir, f'{asset_name}_{str(counter).zfill(4)}')
-            self.rel_thumb_path = os.path.join('//', f'{asset_name}_{str(counter).zfill(4)}')
+            new_name = f'{asset_name}_{str(counter).zfill(4)}'
+            thumb_path = os.path.join(file_dir, new_name)
+            self.rel_thumb_path = os.path.join('//', new_name)
             counter += 1
 
         _common_setup(self.props, asset_name, 'model', json_data, thumb_path, self._done_callback)
@@ -218,7 +219,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         """
         return bpy.context.view_layer.objects.active is not None
 
-    def draw(self, context):
+    def draw(self, context):    # noqa: WPS213
         """Material thumbnailer draw.
 
         Parameters:
@@ -280,7 +281,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def _done_callback(self, task):
-        self.props.thumbnail = self.rel_thumb_path + '.jpg'
+        self.props.thumbnail = f'{self.rel_thumb_path}.jpg'
         self.props.thumbnail_generating_state = 'rendering done'
         self.props.is_generating_thumbnail = False
 
@@ -292,7 +293,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         material: bpy.types.Material,
         asset_name: str = None,
         save_only: bool = False,
-        blend_filepath: str = ''
+        blend_filepath: str = '',
     ):
         if asset_name is None:
             asset_name = mat.name
@@ -319,12 +320,19 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
 
         counter = 0
         while os.path.isfile(f'{thumb_path}.jpg'):
-            thumb_path = os.path.join(file_dir, f'{asset_name}_{str(counter).zfill(4)}')
-            self.rel_thumb_path = os.path.join('//', f'{asset_name}_{str(counter).zfill(4)}')
+            new_name = f'{asset_name}_{str(counter).zfill(4)}'
+            thumb_path = os.path.join(file_dir, new_name)
+            self.rel_thumb_path = os.path.join('//', new_name)
             counter += 1
 
-        _common_setup(self.props, asset_name, 'material',
-                      json_data, thumb_path, self._done_callback)
+        _common_setup(
+            self.props,
+            asset_name,
+            'material',
+            json_data,
+            thumb_path,
+            self._done_callback
+        )
 
 
 class GenerateSceneThumbnailOperator(bpy.types.Operator):
@@ -409,7 +417,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         context = context or bpy.context
         if view_id is None:
             return context.scene
-        scenes = [s for s in context.blend_data.scenes if s.view_id == view_id]
+        scenes = [scene for scene in context.blend_data.scenes if scene.view_id == view_id]
 
         return scenes[0]
 
@@ -418,7 +426,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
         props=None,
         asset_name: str = None,
         save_only: bool = False,
-        blend_filepath: str = ''
+        blend_filepath: str = '',
     ):
         if props is None:
             props = getattr(bpy.data.scenes[asset_name], HANA3D_NAME)
@@ -443,8 +451,9 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
         counter = 0
         while os.path.isfile(f'{thumb_path}.png'):
-            thumb_path = os.path.join(file_dir, f'{asset_name}_{str(counter).zfill(4)}')
-            rel_thumb_path = os.path.join('//', f'{asset_name}_{str(counter).zfill(4)}')
+            new_name = f'{asset_name}_{str(counter).zfill(4)}'
+            thumb_path = os.path.join(file_dir, new_name)
+            self.rel_thumb_path = os.path.join('//', new_name)
             counter += 1
 
         user_preferences = context.preferences.addons[HANA3D_NAME].preferences
@@ -481,11 +490,11 @@ classes = (
 
 def register():
     """Autothumb register."""
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    for class_ in classes:
+        bpy.utils.register_class(class_)
 
 
 def unregister():
     """Autothumb unregister."""
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+    for class_ in reversed(classes):
+        bpy.utils.unregister_class(class_)
