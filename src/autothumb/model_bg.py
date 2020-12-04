@@ -1,8 +1,10 @@
 """Blender script to render model thumbnail."""
+import ast
 import json
 import logging
 import math
 import sys
+import traceback
 from importlib import import_module
 from pathlib import Path
 
@@ -21,13 +23,12 @@ utils = module.utils
 
 
 def _get_obnames():
-    with open(HANA3D_EXPORT_DATA, 'r') as file_:
-        data = json.load(file_)
-    obnames = eval(data['models'])
-    return obnames
+    with open(HANA3D_EXPORT_DATA, 'r') as data_file:
+        model_data = json.load(data_file)
+    return ast.literal_eval(model_data['models'])
 
 
-def _center_obs_for_thumbnail(obs):
+def _center_obs_for_thumbnail(obs):  # noqa: WPS210
     scene = bpy.context.scene
     parent = obs[0]
 
@@ -46,18 +47,18 @@ def _center_obs_for_thumbnail(obs):
     bpy.context.view_layer.objects.active = parent
     parent.location += mathutils.Vector((-cx, -cy, -minz))
 
-    camZ = scene.camera.parent.parent
-    camZ.location.z = (maxz - minz) / 2
+    cam_z = scene.camera.parent.parent
+    cam_z.location.z = (maxz - minz) / 2    # noqa: WPS111
     dx = maxx - minx
     dy = maxy - miny
     dz = maxz - minz
-    r = math.sqrt(dx * dx + dy * dy + dz * dz)
+    scale_factor = math.sqrt(dx * dx + dy * dy + dz * dz)   # noqa: WPS221
 
     scaler = bpy.context.view_layer.objects['scaler']
-    scaler.scale = (r, r, r)
+    scaler.scale = (scale_factor, scale_factor, scale_factor)
     coef = 0.7
-    r *= coef
-    camZ.scale = (r, r, r)
+    scale_factor *= coef
+    cam_z.scale = (scale_factor, scale_factor, scale_factor)
     bpy.context.view_layer.update()
 
 
@@ -67,7 +68,10 @@ if __name__ == '__main__':
         with open(HANA3D_EXPORT_DATA, 'r') as data_file:
             data = json.load(data_file)  # noqa: WPS110
 
-        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+        context = bpy.context
+        scene = context.scene
+
+        user_preferences = context.preferences.addons[HANA3D_NAME].preferences
 
         obnames = _get_obnames()
         link = not data['save_only']
@@ -76,7 +80,7 @@ if __name__ == '__main__':
             obnames=obnames,
             link=link,
         )
-        bpy.context.view_layer.update()
+        context.view_layer.update()
 
         camdict = {
             'GROUND': 'camera ground',
@@ -85,10 +89,10 @@ if __name__ == '__main__':
             'FLOAT': 'camera float',
         }
 
-        bpy.context.scene.camera = bpy.data.objects[camdict[data['thumbnail_snap_to']]]
+        context.scene.camera = bpy.data.objects[camdict[data['thumbnail_snap_to']]]
         _center_obs_for_thumbnail(allobs)
         if user_preferences.thumbnail_use_gpu:
-            bpy.context.scene.cycles.device = 'GPU'
+            context.scene.cycles.device = 'GPU'
 
         fdict = {
             'DEFAULT': 1,
@@ -96,8 +100,6 @@ if __name__ == '__main__':
             'SIDE': 3,
             'TOP': 4,
         }
-        context = bpy.context
-        scene = context.scene
         scene.frame_set(fdict[data['thumbnail_angle']])
 
         snapdict = {'GROUND': 'Ground', 'WALL': 'Wall', 'CEILING': 'Ceiling', 'FLOAT': 'Float'}
@@ -109,9 +111,9 @@ if __name__ == '__main__':
 
         main_object.rotation_euler = (0, 0, 0)
         # material declared on thumbnailer.blend
-        bpy.data.materials['hana3d background'].node_tree.nodes['Value'].outputs[
-            'Value'
-        ].default_value = data['thumbnail_background_lightness']
+        node_tree = bpy.data.materials['hana3d background'].node_tree
+        value_output = node_tree.nodes['Value'].outputs['Value']
+        value_output.default_value = data['thumbnail_background_lightness']
         scene.cycles.samples = data['thumbnail_samples']
         context.view_layer.cycles.use_denoising = data['thumbnail_denoising']
         context.view_layer.update()
@@ -141,8 +143,8 @@ if __name__ == '__main__':
             context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
             bpy.ops.render.render(write_still=True, animation=False)
 
-    except Exception:
-        import traceback
+    except Exception as error:
+        logging.error(error)
 
         traceback.print_exc()
         sys.exit(1)

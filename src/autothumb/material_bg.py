@@ -2,6 +2,7 @@
 import json
 import logging
 import sys
+import traceback
 from importlib import import_module
 from pathlib import Path
 
@@ -61,17 +62,14 @@ if __name__ == '__main__':
         context.view_layer.objects['scaler'].scale = (tscale, tscale, tscale)
         context.view_layer.update()
         for ob in context.visible_objects:
-            if ob.name[:15] == 'MaterialPreview':
+            if ob.name[:15] == 'MaterialPreview':   # noqa: WPS432
                 ob.material_slots[0].material = mat
                 ob.data.texspace_size.x = 1 / tscale    # noqa: WPS111
                 ob.data.texspace_size.y = 1 / tscale    # noqa: WPS111
                 ob.data.texspace_size.z = 1 / tscale    # noqa: WPS111
-                if data['adaptive_subdivision']:
-                    ob.cycles.use_adaptive_subdivision = True
-                else:
-                    ob.cycles.use_adaptive_subdivision = False
+                ob.cycles.use_adaptive_subdivision = True if data['adaptive_subdivision'] else False
                 tex_size = data['texture_size_meters']
-                if data['thumbnail_type'] in ['BALL', 'CUBE', 'CLOTH']:
+                if data['thumbnail_type'] in ['BALL', 'CUBE', 'CLOTH']:  # noqa: WPS510
                     utils.automap(
                         ob.name,
                         tex_size=tex_size / tscale,
@@ -113,9 +111,8 @@ if __name__ == '__main__':
             context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
             bpy.ops.render.render(write_still=True, animation=False)
 
-    except Exception as e:
-        logging.error(e)
-        import traceback
+    except Exception as error:
+        logging.error(error)
 
         traceback.print_exc()
 
