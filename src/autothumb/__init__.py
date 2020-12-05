@@ -423,10 +423,11 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
     def _generate_scene_thumbnail(  # noqa: WPS210
         self,
-        props,
+        props=None,
         save_only: bool = False,
         blend_filepath: str = '',
     ):
+        context = bpy.context
         props.is_generating_thumbnail = True
         props.thumbnail_generating_state = 'starting blender instance'
 
