@@ -89,8 +89,7 @@ if __name__ == '__main__':
         # import blender's HDR here
         hdr_path = Path('datafiles/studiolights/world/interior.exr')
         bpath = Path(bpy.utils.resource_path('LOCAL'))
-        ipath = bpath / hdr_path
-        ipath = str(ipath)
+        ipath = str(bpath / hdr_path)
 
         # this  stuff is for mac and possibly linux. For blender // means relative path.
         # for Mac, // means start of absolute path

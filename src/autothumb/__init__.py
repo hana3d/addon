@@ -296,7 +296,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         blend_filepath: str = '',
     ):
         if asset_name is None:
-            asset_name = mat.name
+            asset_name = material.name
 
         json_data = {
             'type': 'material',
@@ -424,7 +424,6 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
     def _generate_scene_thumbnail(  # noqa: WPS210
         self,
         props=None,
-        asset_name: str = None,
         save_only: bool = False,
         blend_filepath: str = '',
     ):

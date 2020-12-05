@@ -30,8 +30,8 @@ class Subprocess(object):  # noqa : WPS214
         output = await loop.run_in_executor(None, partial)
 
         if output.returncode != 0:
-            error_msg = output.stderr.decode()
+            error_msg = output.stderr
             raise Exception(f'Subprocess raised error:\n{error_msg}')
 
-        logging.debug(f'Subprocess {cmd}: {output.stdout.decode()}')
+        logging.debug(f'Subprocess {cmd}: {output.stdout}')
         return output
