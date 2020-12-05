@@ -423,19 +423,12 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
 
     def _generate_scene_thumbnail(  # noqa: WPS210
         self,
-        props=None,
+        props,
         save_only: bool = False,
         blend_filepath: str = '',
     ):
-        if props is None:
-            props = getattr(bpy.data.scenes[asset_name], HANA3D_NAME)
-            update_state = False
-        else:
-            update_state = True
-        context = bpy.context
-        if update_state:
-            props.is_generating_thumbnail = True
-            props.thumbnail_generating_state = 'starting blender instance'
+        props.is_generating_thumbnail = True
+        props.thumbnail_generating_state = 'starting blender instance'
 
         basename, ext = os.path.splitext(bpy.data.filepath)
         if not basename:
