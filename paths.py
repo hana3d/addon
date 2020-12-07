@@ -231,8 +231,7 @@ def get_thumbnailer_filepath(asset_type: AssetType) -> str:
     elif asset_type == 'material':
         subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
         return os.path.join(script_path, subpath)
-    else:
-        raise Exception('Invalid asset type for thumbnailer filepath.')
+    raise Exception('Invalid asset type for thumbnailer filepath.')
 
 
 def get_addon_file(subpath=''):
