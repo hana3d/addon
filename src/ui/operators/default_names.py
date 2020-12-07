@@ -27,6 +27,8 @@ class DefaultNamesOperator(bpy.types.Operator):
         if ui_props.down_up == 'SEARCH':
             search_props = utils.get_search_props()
             if search_props.workspace != '' and search_props.tags_list:
+                # This is done to force the UI to update
+                # TODO: refactor this so this happens more explicitly?
                 search_props.workspace = search_props.workspace
 
         asset = utils.get_active_asset()
@@ -37,6 +39,8 @@ class DefaultNamesOperator(bpy.types.Operator):
 
         if ui_props.down_up == 'UPLOAD':
             if props.workspace != '' and props.tags_list:
+                # This is done to force the UI to update
+                # TODO: refactor this so this happens more explicitly?
                 props.workspace = props.workspace
             if props.name == '' and props.name != asset.name:
                 props.name = asset.name

@@ -13,7 +13,7 @@ class TransferHana3DData(bpy.types.Operator):
     bl_idname = f'object.{HANA3D_NAME}_data_transfer'
     bl_label = f'Transfer {HANA3D_DESCRIPTION} data'
     bl_description = (
-        'Transfer hana3d metadata from one object to another when fixing uploads'
+        f'Transfer {HANA3D_DESCRIPTION} metadata from one object to another when fixing uploads'
         + ' with wrong parenting.'
     )
     bl_options = {'REGISTER', 'UNDO'}
