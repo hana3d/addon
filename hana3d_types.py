@@ -337,6 +337,7 @@ class Hana3DRenderItem(PropertyGroup):
     name: StringProperty(name='Render Name', default='', description='sad')
     job_id: StringProperty(name='Render Job Id', default='')
     icon_id: IntProperty(name='Render Icon Id')
+    file_path: StringProperty(name='Render File Path', default='')
     index: IntProperty(name='Render Index')
     not_working: StringProperty(name='Not Working', default='Not working')
 

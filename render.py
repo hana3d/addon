@@ -542,6 +542,7 @@ def update_render_list():
         new_render['index'] = n
         new_render['job_id'] = job_id
         new_render['icon_id'] = preview_img.icon_id
+        new_render['file_path'] = file_path
         enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
         available_previews.append(enum_item)
     preview_collection.previews = available_previews
