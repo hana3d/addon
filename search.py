@@ -134,7 +134,7 @@ def timer_update():
                                     tdict['thumbnail_%i'] = t
                                 if f['fileType'] == 'blend':
                                     durl = f['downloadUrl']
-                            if durl and tname:
+                            if durl:
                                 # Check for assetBaseId for backwards compatibility
                                 view_id = r.get('viewId') or r.get('assetBaseId') or ''
                                 tooltip = utils.generate_tooltip(
@@ -234,13 +234,30 @@ def load_previews():
     search_object = Search(bpy.context)
     search_results = search_object.results
 
+    placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
+
     if search_results is not None:
         index = 0
         for search_result in search_results:
+            iname = utils.previmg_name(index)
+
+            if search_result['thumbnail_small'] == '':
+                img = bpy.data.images.load(placeholder_path)
+                img.name = iname
+
+                hidden_name = f'.{search_result["id"]}'
+                hidden_img = bpy.data.images.load(placeholder_path)
+                hidden_img.name = hidden_name
+
+                if search_result['thumbnail'] == '':
+                    fullsize_name = utils.previmg_name(index, fullsize=True)
+                    fullsize_img = bpy.data.images.load(placeholder_path)
+                    fullsize_img.name = fullsize_name
+
+                index += 1
+                continue
 
             tpath = os.path.join(directory, search_result['thumbnail_small'])
-
-            iname = utils.previmg_name(index)
 
             if os.path.exists(tpath):  # sometimes we are unlucky...
                 img = bpy.data.images.get(iname)
