@@ -223,6 +223,9 @@ def get_thumbnailer_filepath(asset_type: AssetType) -> str:
 
     Returns:
         str: filepath to blend file
+
+    Raises:
+        Exception: Invalid asset type for thumbnailer filepath
     """
     script_path = os.path.dirname(os.path.realpath(__file__))
     if asset_type == 'model':
