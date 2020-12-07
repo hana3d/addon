@@ -134,7 +134,7 @@ def timer_update():
                                     tdict['thumbnail_%i'] = t
                                 if f['fileType'] == 'blend':
                                     durl = f['downloadUrl']
-                            if durl:
+                            if durl:    # noqa: WPS220
                                 # Check for assetBaseId for backwards compatibility
                                 view_id = r.get('viewId') or r.get('assetBaseId') or ''
                                 tooltip = utils.generate_tooltip(

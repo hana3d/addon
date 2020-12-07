@@ -218,8 +218,8 @@ def set_thumbnail(asset_data, asset):
         asset_props = getattr(asset, HANA3D_NAME)
         asset_props.thumbnail = ''
     else:
-        thumbnail_name = asset_data['thumbnail'].split(os.sep)[-1]
-        tempdir = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')
+        thumbnail_name = asset_data['thumbnail'].split(os.sep)[-1]  # noqa: WPS204
+        tempdir = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')  # noqa: WPS204
         thumbpath = os.path.join(tempdir, thumbnail_name)
         asset_thumbs_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
         asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
