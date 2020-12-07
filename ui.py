@@ -35,12 +35,15 @@ from .src.preferences.preferences import Preferences
 from .src.search.search import Search
 from .src.ui import bgl_helper, colors
 from .src.ui.main import UI
+from .src.ui.operators import (
+    DefaultNamesOperator,
+    RunAssetBarWithContext,
+    TransferHana3DData,
+    UndoWithContext,
+)
 
 handler_2d = None
 handler_3d = None
-active_area = None
-active_window = None
-active_region = None
 
 mappingdict = {
     'MODEL': 'model',
@@ -835,29 +838,6 @@ def update_ui_size(area, region):
         ui.reports_x = ui.bar_x
 
 
-def get_largest_3dview():
-    maxsurf = 0
-    maxa = None
-    maxw = None
-    region = None
-    for w in bpy.context.window_manager.windows:
-        screen = w.screen
-        for a in screen.areas:
-            if a.type == 'VIEW_3D':
-                asurf = a.width * a.height
-                if asurf > maxsurf:
-                    maxa = a
-                    maxw = w
-                    maxsurf = asurf
-
-                    for r in a.regions:
-                        if r.type == 'WINDOW':
-                            region = r
-    global active_area, active_window, active_region
-    active_window = maxw
-    active_area = maxa
-    active_region = region
-    return maxw, maxa, region
 
 
 class AssetBarOperator(bpy.types.Operator):
@@ -1452,10 +1432,10 @@ class AssetBarOperator(bpy.types.Operator):
             if r.type == 'WINDOW':
                 self.region = r
 
-        global active_window, active_area, active_region
-        active_window = self.window
-        active_area = self.area
-        active_region = self.region
+        ui = UI()
+        ui.active_window = self.window
+        ui.active_area = self.area
+        ui.active_region = self.region
 
         update_ui_size(self.area, self.region)
 
@@ -1480,140 +1460,6 @@ class AssetBarOperator(bpy.types.Operator):
     def execute(self, context):
         return {'RUNNING_MODAL'}
 
-
-class DefaultNamesOperator(bpy.types.Operator):
-    '''Assign default object name as props name and object render job name'''
-
-    bl_idname = f"view3d.{HANA3D_NAME}_default_name"
-    bl_label = f"{HANA3D_DESCRIPTION} Default Name"
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    def modal(self, context, event):
-        # This is for case of closing the area or changing type:
-        ui_props = getattr(context.window_manager, HANA3D_UI)
-
-        if ui_props.turn_off:
-            return {'CANCELLED'}
-
-        draw_event = (
-            event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE' or event.type == 'ENTER'
-        )
-        if not draw_event:
-            return {'PASS_THROUGH'}
-
-        if ui_props.down_up == 'SEARCH':
-            search_props = utils.get_search_props()
-            if (
-                search_props.workspace != ''
-                and len(search_props.tags_list) == 0
-            ):
-                search_props.workspace = search_props.workspace
-
-        asset = utils.get_active_asset()
-        if asset is None:
-            return {'PASS_THROUGH'}
-
-        props = getattr(asset, HANA3D_NAME)
-
-        if ui_props.down_up == 'UPLOAD':
-            if props.workspace != '' and len(props.tags_list) == 0:
-                props.workspace = props.workspace
-            if props.name == '' and props.name != asset.name:
-                props.name = asset.name
-
-        if props.render_job_name == '':
-            if 'jobs' not in props.render_data:
-                previous_names = []
-            else:
-                previous_names = [job['job_name'] for job in props.render_data['jobs']]
-            name = props.name or asset.name or 'Render'
-            for n in range(1000):
-                new_name = f'{name}_{n:03d}'
-                if new_name not in previous_names:
-                    break
-            props.render_job_name = new_name
-
-        return {'PASS_THROUGH'}
-
-    def invoke(self, context, event):
-        context.window_manager.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
-
-
-class TransferHana3DData(bpy.types.Operator):
-    """Regenerate cobweb"""
-
-    bl_idname = f"object.{HANA3D_NAME}_data_transfer"
-    bl_label = f"Transfer {HANA3D_DESCRIPTION} data"
-    bl_description = "Transfer hana3d metadata from one object to another when fixing uploads with wrong parenting."  # noqa E501
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @execute_wrapper
-    def execute(self, context):
-        source_ob = bpy.context.active_object
-        for target_ob in bpy.context.selected_objects:
-            if target_ob != source_ob:
-                target_ob.property_unset(HANA3D_NAME)
-                for k in source_ob.keys():
-                    target_ob[k] = source_ob[k]
-        source_ob.property_unset(HANA3D_NAME)
-        return {'FINISHED'}
-
-
-class UndoWithContext(bpy.types.Operator):
-    """Regenerate cobweb"""
-
-    bl_idname = f"wm.{HANA3D_NAME}_undo_push_context"
-    bl_label = f"{HANA3D_DESCRIPTION} undo push"
-    bl_description = f"{HANA3D_DESCRIPTION} undo push with fixed context"
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    # def modal(self, context, event):
-    #     return {'RUNNING_MODAL'}
-
-    message: StringProperty('Undo Message', default=f'{HANA3D_DESCRIPTION} operation')
-
-    @execute_wrapper
-    def execute(self, context):
-        C_dict = bpy.context.copy()
-        C_dict.update(region='WINDOW')
-        if context.area is None or context.area.type != 'VIEW_3D':
-            w, a, r = get_largest_3dview()
-            override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
-            C_dict.update(override)
-        bpy.ops.ed.undo_push(C_dict, 'INVOKE_REGION_WIN', message=self.message)
-        return {'FINISHED'}
-
-
-class RunAssetBarWithContext(bpy.types.Operator):
-    """Regenerate cobweb"""
-
-    bl_idname = f"object.{HANA3D_NAME}_run_assetbar_fix_context"
-    bl_label = f"{HANA3D_DESCRIPTION} assetbar with fixed context"
-    bl_description = "Run assetbar with fixed context"
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-
-    # def modal(self, context, event):
-    #     return {'RUNNING_MODAL'}
-
-    @execute_wrapper
-    def execute(self, context):
-        C_dict = bpy.context.copy()
-        C_dict.update(region='WINDOW')
-        if context.area is None or context.area.type != 'VIEW_3D':
-            w, a, r = get_largest_3dview()
-            override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
-            C_dict.update(override)
-        asset_bar_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_asset_bar')
-        asset_bar_op(
-            C_dict,
-            'INVOKE_REGION_WIN',
-            keep_running=True,
-            do_search=False
-        )
-        return {'FINISHED'}
-
-
 classes = (
     AssetBarOperator,
     DefaultNamesOperator,
@@ -1631,8 +1477,8 @@ def default_name_handler(dummy):
     C_dict = bpy.context.copy()
     C_dict.update(region='WINDOW')
     if bpy.context.area is None or bpy.context.area.type != 'VIEW_3D':
-        w, a, r = get_largest_3dview()
-        override = {'window': w, 'screen': w.screen, 'area': a, 'region': r}
+        window, area, region = UI().get_largest_view3d()
+        override = {'window': window, 'screen': window.screen, 'area': area, 'region': region}
         C_dict.update(override)
     default_name_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_default_name')
     default_name_op(C_dict, 'INVOKE_REGION_WIN')
