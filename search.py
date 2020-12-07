@@ -221,27 +221,23 @@ def timer_update():
     return 0.3
 
 
-def load_placeholder_thumbnail(index: int, id_: str):
+def load_placeholder_thumbnail(index: int, asset_id: str):
     """Load placeholder thumbnail for assets without one.
 
     Arguments:
         index: index number of the asset in search results
-        id_: asset id
+        asset_id: asset id
     """
     placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
 
-    image_name = utils.previmg_name(index)
-
     img = bpy.data.images.load(placeholder_path)
-    img.name = image_name
+    img.name = utils.previmg_name(index)
 
-    hidden_name = f'.{id_}'
     hidden_img = bpy.data.images.load(placeholder_path)
-    hidden_img.name = hidden_name
+    hidden_img.name = f'.{asset_id}'
 
-    fullsize_name = utils.previmg_name(index, fullsize=True)
     fullsize_img = bpy.data.images.load(placeholder_path)
-    fullsize_img.name = fullsize_name
+    fullsize_img.name = utils.previmg_name(index, fullsize=True)
 
 
 def load_previews():
