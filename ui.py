@@ -367,7 +367,7 @@ def draw_callback_2d_progress(self, context):
             draw_progress(
                 x,
                 y - index * line_size,  # noqa: WPS204
-                text=f'downloading {asset_data.name}',
+                text=f'downloading {asset_data["name"]}',
                 percent=tcom.progress,
             )
             index += 1
