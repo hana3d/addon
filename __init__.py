@@ -47,6 +47,7 @@ from . import (  # noqa: WPS235
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
+from .src.ui import render as render_ui
 
 bl_info = {
     'name': 'Hana3D',
@@ -308,6 +309,7 @@ modules = (
     libraries,
     logger,
     render,
+    render_ui,
     search,
     tags,
     tasks_queue,

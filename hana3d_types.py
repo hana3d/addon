@@ -333,6 +333,14 @@ class Hana3DTagItem(PropertyGroup):
     selected: BoolProperty(name="Tag Selected", default=False)
 
 
+class Hana3DRenderItem(PropertyGroup):
+    name: StringProperty(name='Render Name', default='', description='sad')
+    job_id: StringProperty(name='Render Job Id', default='')
+    icon_id: IntProperty(name='Render Icon Id')
+    index: IntProperty(name='Render Index')
+    not_working: StringProperty(name='Not Working', default='Not working')
+
+
 class Hana3DLibraryItem(PropertyGroup):
     id_: StringProperty(name="Library ID", default="Unknown")
     name: StringProperty(name="Library Name", default="Unknown")
@@ -430,32 +438,6 @@ class Hana3DCommonSearchProps:
 
 
 class Hana3DCommonUploadProps:
-    def get_render_job_outputs(self, context):
-        preview_collection = render.render_previews[self.view_id]
-        if not hasattr(preview_collection, 'previews'):
-            preview_collection.previews = []
-
-        n_render_jobs = len(self.render_data['jobs']) if 'jobs' in self.render_data else 0
-        if len(preview_collection.previews) != n_render_jobs:
-            # Sort jobs to avoid error when appending newer render jobs
-            sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
-            available_previews = []
-            for n, job in enumerate(sorted_jobs):
-                job_id = job['id']
-                if job_id not in preview_collection:
-                    file_path = job['file_path']
-                    if not os.path.exists(file_path):
-                        continue
-                    preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
-                else:
-                    preview_img = preview_collection[job_id]
-
-                enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
-                available_previews.append(enum_item)
-            preview_collection.previews = available_previews
-
-        return preview_collection.previews
-
     def get_active_image(self, context):
         preview_collection = render.render_previews['active_images']
         if not hasattr(preview_collection, 'previews'):
@@ -666,16 +648,20 @@ class Hana3DCommonUploadProps:
         description='Container for holding data of completed render jobs',
     )
 
-    render_job_output: EnumProperty(
-        name="Previous renders",
-        description='Render name',
-        items=get_render_job_outputs,
-    )
-
     active_image: EnumProperty(
         name="Local Images",
         description='Images in .blend file',
         items=get_active_image,
+    )
+
+    render_list: CollectionProperty(
+        type=Hana3DRenderItem
+    )
+
+    render_list_index: IntProperty(
+        name='Render of the asset',
+        description='Index of the active render',
+        default=0,
     )
 
     render_job_name: StringProperty(
@@ -998,6 +984,7 @@ Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUplo
 classes = (
     Hana3DTagItem,
     Hana3DLibraryItem,
+    Hana3DRenderItem,
     Hana3DUIProps,
     Hana3DRenderProps,
     Hana3DModelSearchProps,

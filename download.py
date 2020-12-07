@@ -45,7 +45,7 @@ from .report_tools import execute_wrapper
 from .src.search.query import Query
 from .src.search.search import Search
 
-from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # noqa E501 isort:skip
+from . import append_link, colors, hana3d_types, logger, paths, render, render_tools, ui, utils  # noqa E501 isort:skip
 
 
 download_threads = {}
@@ -533,6 +533,8 @@ def set_asset_props(asset, asset_data):
                         asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]  # noqa E501
                     else:
                         asset_props.custom_props[name] = ''
+
+    render.update_render_list()
 
 
 def append_asset(asset_data: dict, **kwargs):

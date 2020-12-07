@@ -30,7 +30,7 @@ from typing import List, Tuple
 import bpy
 import bpy.utils.previews
 import requests
-from bpy.props import BoolProperty, CollectionProperty, StringProperty
+from bpy.props import BoolProperty, CollectionProperty, StringProperty, IntProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
@@ -517,41 +517,34 @@ class CancelJob(Operator):
         return {'FINISHED'}
 
 
-class ImportRender(Operator):
-    """Import finished render job"""
-
-    bl_idname = f"{HANA3D_NAME}.import_render"
-    bl_label = "Import render to scene"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        props = utils.get_upload_props()
-        return len(props.render_data['jobs']) > 0
-
-    @execute_wrapper
-    def execute(self, context):
-        props = utils.get_upload_props()
-        for job in props.render_data['jobs']:
-            if job['id'] != props.render_job_output:
+def update_render_list():
+    props = utils.get_upload_props()
+    preview_collection = render_previews[props.view_id]
+    if not hasattr(preview_collection, 'previews'):
+        preview_collection.previews = []
+    props = utils.get_upload_props()
+    props.render_list.clear()
+    sorted_jobs = sorted(props.render_data['jobs'], key=lambda x: x['created'])
+    available_previews = []
+    for n, job in enumerate(sorted_jobs):
+        job_id = job['id']
+        file_path = job['file_path']
+        if job_id not in preview_collection:
+            file_path = job['file_path']
+            if not os.path.exists(file_path):
                 continue
+            preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
+        else:
+            preview_img = preview_collection[job_id]
 
-            if job.get('image') is not None:
-                # Image was already imported
-                return {'FINISHED'}
-
-            image = bpy.data.images.load(job['file_path'], check_existing=True)
-            image.name = job['job_name']
-            image['active'] = True
-            job['image'] = image
-
-            def draw(self, context):
-                self.layout.label(text="Your render is now on your scene's Image Data list")
-            context.window_manager.popup_menu(draw, title='Success')
-
-            return {'FINISHED'}
-        logging.info(f'Cound not find render job id={job["id"]}') # noqa WPS441
-        return {'CANCELLED'}
+        new_render = props.render_list.add()
+        new_render['name'] = job['job_name'] or ''
+        new_render['index'] = n
+        new_render['job_id'] = job_id
+        new_render['icon_id'] = preview_img.icon_id
+        enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
+        available_previews.append(enum_item)
+    preview_collection.previews = available_previews
 
 
 class RemoveRender(Operator):
@@ -561,10 +554,9 @@ class RemoveRender(Operator):
     bl_label = "Remove render"
     bl_options = {'REGISTER', 'UNDO'}
 
-    @classmethod
-    def poll(cls, context):
-        props = utils.get_upload_props()
-        return props.render_job_output != ''
+    job_id: StringProperty(
+        name='job_id',
+    )
 
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
@@ -572,7 +564,7 @@ class RemoveRender(Operator):
     @execute_wrapper
     def execute(self, context):
         props = utils.get_upload_props()
-        id_job = props.render_job_output
+        id_job = self.job_id
         job, = [j for j in props.render_data['jobs'] if j['id'] == id_job]
 
         if job.get('image') is not None:  # Case when image was not imported to scene
@@ -582,7 +574,7 @@ class RemoveRender(Operator):
 
         name = job['job_name']  # Get name before job is de-referenced
         self.remove_from_props(id_job, props)
-        self.switch_active_render_job(props)
+        update_render_list()
 
         ui.add_report(f'Deleted render {name}')
         return {'FINISHED'}
@@ -601,13 +593,6 @@ class RemoveRender(Operator):
             if job['id'] != id_job
         ]
         props.render_data['jobs'] = jobs
-
-    @staticmethod
-    def switch_active_render_job(props):
-        if len(props.render_data['jobs']) == 0:
-            return
-        id_first_job = props.render_data['jobs'][0]['id']
-        props.render_job_output = id_first_job
 
 
 class OpenImage(Operator):
@@ -653,6 +638,36 @@ class OpenImage(Operator):
         return {'RUNNING_MODAL'}
 
 
+class ShowImage(Operator):
+    """Show render image"""
+
+    bl_idname = f"{HANA3D_NAME}.show_image"
+    bl_label = ""
+
+    index: IntProperty(
+        name='index',
+    )
+
+    @execute_wrapper
+    def execute(self, context):
+        asset_props = utils.get_upload_props()
+        filepath = asset_props.render_list[self.index]['file_path']
+
+        image = bpy.data.images.load(filepath, check_existing=True)
+        image.name = asset_props.render_list[self.index]['name']
+        asset_props.render_list[self.index]['name'] = image.name
+
+        bpy.ops.render.view_show('INVOKE_DEFAULT')
+        try_again = True
+        while try_again:
+            try:
+                bpy.context.area.spaces.active.image = image
+                try_again = False
+            except AttributeError:
+                try_again = True
+        return {"FINISHED"}
+
+
 class UploadThread(UploadFileMixin, threading.Thread):
     def __init__(self, context, props):
         super().__init__(daemon=True)
@@ -689,7 +704,7 @@ class UploadThread(UploadFileMixin, threading.Thread):
             }
 
             self.upload_render(job)
-            self.append_job_to_props(job)
+            update_render_list()
         except Exception as e:
             self.log(f'Error when uploading render {self.render_job_name}:{e!r}')
             raise e
@@ -750,10 +765,6 @@ class UploadThread(UploadFileMixin, threading.Thread):
         url = paths.get_api_url('uploads_s3', render_scene_id, 'upload-file')
         rerequests.post(url, headers=self.headers)
 
-    def append_job_to_props(self, job: dict):
-        operation = '=' if self.no_previous_jobs else '+='
-        self.update_state("render_data['jobs']", [job], operation)
-
 
 class UploadImage(Operator):
     """Upload existing render image"""
@@ -782,9 +793,9 @@ class UploadImage(Operator):
 classes = (
     RenderScene,
     CancelJob,
-    ImportRender,
     RemoveRender,
     OpenImage,
+    ShowImage,
     UploadImage,
 )
 
