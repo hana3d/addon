@@ -1,4 +1,5 @@
 """Stores asyncio loop statuses."""
+from typing import Dict
 
 
 class SingletonMeta(type):
@@ -9,7 +10,7 @@ class SingletonMeta(type):
     metaclass because it is best suited for this purpose.
     """
 
-    _instances = {}
+    _instances: Dict = {}
 
     def __call__(cls, *args, **kwargs):
         """Singleton setup.
