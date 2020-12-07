@@ -4,6 +4,10 @@ import asyncio
 import logging
 import typing
 
+import bpy
+
+from ...config import HANA3D_NAME
+
 MIXIN_TIMER = 1 / 15    # noqa: WPS432
 
 log = logging.getLogger(__name__)
