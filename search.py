@@ -221,6 +221,29 @@ def timer_update():
     return 0.3
 
 
+def load_placeholder_thumbnail(index: int, id_: str):
+    """Load placeholder thumbnail for assets without one.
+
+    Arguments:
+        index: index number of the asset in search results
+        id_: asset id
+    """
+    placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
+
+    image_name = utils.previmg_name(index)
+
+    img = bpy.data.images.load(placeholder_path)
+    img.name = image_name
+
+    hidden_name = f'.{id_}'
+    hidden_img = bpy.data.images.load(placeholder_path)
+    hidden_img.name = hidden_name
+
+    fullsize_name = utils.previmg_name(index, fullsize=True)
+    fullsize_img = bpy.data.images.load(placeholder_path)
+    fullsize_img.name = fullsize_name
+
+
 def load_previews():
     mappingdict = {
         'MODEL': 'model',
@@ -234,30 +257,17 @@ def load_previews():
     search_object = Search(bpy.context)
     search_results = search_object.results
 
-    placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
-
     if search_results is not None:
         index = 0
         for search_result in search_results:
-            iname = utils.previmg_name(index)
-
             if search_result['thumbnail_small'] == '':
-                img = bpy.data.images.load(placeholder_path)
-                img.name = iname
-
-                hidden_name = f'.{search_result["id"]}'
-                hidden_img = bpy.data.images.load(placeholder_path)
-                hidden_img.name = hidden_name
-
-                if search_result['thumbnail'] == '':
-                    fullsize_name = utils.previmg_name(index, fullsize=True)
-                    fullsize_img = bpy.data.images.load(placeholder_path)
-                    fullsize_img.name = fullsize_name
-
+                load_placeholder_thumbnail(index, search_result['id'])
                 index += 1
                 continue
 
             tpath = os.path.join(directory, search_result['thumbnail_small'])
+
+            iname = utils.previmg_name(index)
 
             if os.path.exists(tpath):  # sometimes we are unlucky...
                 img = bpy.data.images.get(iname)
