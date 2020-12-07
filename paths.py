@@ -17,9 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import logging
 import os
-import pathlib
 import urllib.parse
-from typing import Union
 
 import bpy
 
@@ -32,6 +30,7 @@ from .config import (
     HANA3D_PLATFORM_URL,
     HANA3D_URL,
 )
+from .src.asset.asset_type import AssetType
 from .src.search.query import Query
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), 'presets')
@@ -216,14 +215,14 @@ def get_clean_filepath():
     return cp
 
 
-def get_thumbnailer_filepath(asset_type: str) -> Union[str, pathlib.Path]:
+def get_thumbnailer_filepath(asset_type: AssetType) -> str:
     """Get filepath for blend files used in thumbnailer.
 
     Parameters:
         asset_type: 'model' or 'material'
 
     Returns:
-        Union[str, pathlib.Path]: filepath to blend file
+        str: filepath to blend file
     """
     script_path = os.path.dirname(os.path.realpath(__file__))
     if asset_type == 'model':
@@ -232,6 +231,8 @@ def get_thumbnailer_filepath(asset_type: str) -> Union[str, pathlib.Path]:
     elif asset_type == 'material':
         subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
         return os.path.join(script_path, subpath)
+    else:
+        raise Exception('Invalid asset type for thumbnailer filepath.')
 
 
 def get_addon_file(subpath=''):

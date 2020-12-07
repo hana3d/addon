@@ -11,6 +11,7 @@ import bpy
 from ... import colors, paths, ui, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
+from ..asset.asset_type import AssetType
 from ..async_loop import run_async_function
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 
@@ -20,7 +21,7 @@ HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 def _common_setup(  # noqa: WPS211,WPS210
     props,
     asset_name: str,
-    asset_type: str,
+    asset_type: AssetType,
     json_data: dict,
     thumb_path: Union[str, pathlib.Path],
     done_callback: Callable,
