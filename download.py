@@ -21,6 +21,7 @@ import logging
 import os
 import shutil
 import threading
+import json
 from queue import Queue
 
 import bpy
@@ -290,10 +291,11 @@ def execute_append_tasks():
         append_tasks_queue.task_done()
     except Exception as e:
         asset_data, = task.args
-        file_names = file_names = paths.get_download_filenames(asset_data)
-        for f in file_names:
-            remove_file(f)
+        file_names = paths.get_download_filenames(asset_data)
+        for file_name in file_names:
+            remove_file(file_name)
         ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
+        # TODO: remove invalid asset
     return 0.01
 
 
@@ -333,6 +335,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
 
 def download(asset_data, **kwargs):
     '''start the download thread'''
+
+    logging.debug(f'Downloading asset_data {json.dumps(asset_data)}')
 
     tcom = ThreadCom()
     tcom.passargs = kwargs
@@ -801,7 +805,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     def execute(self, context):
         search = Search(context)
         if not search.results:
-            print('Empty search results')  # noqa : WPS421
+            logger.show_report(search.props, 'Empty search results')
             return {'CANCELLED'}
 
         query = Query(context)
@@ -811,7 +815,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
             self.object_count = 0
             self.last_query = last_query
 
-        text = f'Downloading {self.batch_size} assets from search results {self.object_count}:{len(search.results)}' # noqa : WPS221
+        n_assets_to_download = min(self.batch_size, len(search.results) - self.object_count)
+        fetch_more_text = '(fetch more results to continue downloading)' if n_assets_to_download == 0 else ''
+        text = f'Downloading {n_assets_to_download} assets from search results{fetch_more_text}'
         logger.show_report(search.props, text)
 
         for _, search_result in zip(  # noqa : WPS352

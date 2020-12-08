@@ -29,6 +29,7 @@ class Query(object):  # noqa : WPS230,WPS214
         self.workspace: str = ''
         self.tags: str = ''
         self.libraries: str = ''
+        self.results_per_page = 100
 
         if search_props is not None:
             self._add_view_id_search_term(search_props)
