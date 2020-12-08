@@ -18,8 +18,8 @@ HANA3D_EXPORT_FILE_INPUT = sys.argv[-4]
 HANA3D_EXPORT_DATA = sys.argv[-5]
 
 module = import_module(HANA3D_NAME)
-append_link = module.append_link  # mypy: ignore
-utils = module.utils  # mypy: ignore
+append_link = module.append_link  # type: ignore
+utils = module.utils  # type: ignore
 
 
 def _get_obnames():
