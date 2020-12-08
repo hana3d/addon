@@ -72,9 +72,15 @@ class Query(object):  # noqa : WPS230,WPS214
         self.libraries = ','.join(libraries)
 
     def save_last_query(self):
+        """Save last search query to the Blender context."""
         self.context.window_manager[f'{HANA3D_NAME}_last_query'] = str(vars(self)) # noqa : WPS421
 
     def get_last_query(self) -> str:
+        """Get last search query from the Blender context.
+
+        Returns:
+            str: the last search query, stringified
+        """
         if f'{HANA3D_NAME}_last_query' in self.context.window_manager:
             return self.context.window_manager[f'{HANA3D_NAME}_last_query']
         return ''

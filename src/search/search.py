@@ -79,4 +79,3 @@ class Search(object):
     def _get_asset_type_from_ui(self) -> AssetType:
         uiprops = getattr(self.context.window_manager, HANA3D_UI)
         return uiprops.asset_type.lower()
-

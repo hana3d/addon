@@ -590,18 +590,6 @@ def draw_callback_2d_search(self, context):
                             1,
                         )
 
-            # if user_preferences.api_key == '':
-            #     report = 'Register on Hana3D website to upload your own assets.'
-            #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
-            #                      ui_props.bar_y - 25 - ui_props.margin - ui_props.bar_height, 15)
-            # elif len(search_results) == 0:
-            #     report = 'Hana3D - No matching results found.'
-            #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
-            #                      ui_props.bar_y - 25 - ui_props.margin, 15)
-        # props = search.props
-        # if props.report != '' and props.is_searching or props.search_error:
-        #     ui_bgl.draw_text(props.report, ui_props.bar_x,
-        #                      ui_props.bar_y - 15 - ui_props.margin - ui_props.bar_height, 15)
 
         props = getattr(wm, HANA3D_UI)
         if props.draw_tooltip:

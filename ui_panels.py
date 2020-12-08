@@ -198,16 +198,16 @@ def draw_panel_common_search(layout, context):
     search_props = search.props
 
     row = layout.row()
-    row.prop(search_props, "search_keywords", text="", icon='VIEWZOOM')
+    row.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
     draw_assetbar_show_hide(row, search_props)
     layout.prop(search_props, 'workspace', expand=False, text='Workspace')
     row = layout.row()
-    row.prop_search(search_props, "libraries_input", search_props, "libraries_list", icon='VIEWZOOM')
+    row.prop_search(search_props, 'libraries_input', search_props, 'libraries_list', icon='VIEWZOOM') # noqa : E501
     row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
-    draw_selected_libraries(layout, search_props, f"object.{HANA3D_NAME}_remove_library_search")
-    layout.prop_search(search_props, "tags_input", search_props, "tags_list", icon='VIEWZOOM')
-    draw_selected_tags(layout, search_props, f"object.{HANA3D_NAME}_remove_tag_search")
-    layout.prop(search_props, "public_only")
+    draw_selected_libraries(layout, search_props, f'object.{HANA3D_NAME}_remove_library_search')
+    layout.prop_search(search_props, 'tags_input', search_props, 'tags_list', icon='VIEWZOOM')
+    draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
+    layout.prop(search_props, 'public_only')
     label_multiline(layout, text=search_props.report)
 
     if asset_type == 'MODEL':
@@ -405,8 +405,8 @@ def header_search_draw(self, context):
             'OBJE',
         ):
             layout.separator_spacer()
-        layout.prop(ui_props, "asset_type", text='', icon='URL')
-        layout.prop(search_props, "search_keywords", text="", icon='VIEWZOOM')
+        layout.prop(ui_props, 'asset_type', text='', icon='URL')
+        layout.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
         draw_assetbar_show_hide(layout, search_props)
 
 
