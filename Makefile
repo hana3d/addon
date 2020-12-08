@@ -42,7 +42,7 @@ lint: ## lint code
 	git diff -U0 origin/$(STAGE).. | flake8 --diff
 	isort . --check
 	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py,ui.py,search.py
-	mypy ../hana3d | grep 'src/'; test $$? -ne 0
+	mypy ../hana3d | grep '../hana3d/src/' && exit 1
 
 
 test: ## test code
