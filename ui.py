@@ -109,8 +109,6 @@ def get_asset_under_mouse(mousex, mousey):
     return -3
 
 
-
-
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
@@ -662,7 +660,6 @@ def draw_callback_2d_search(self, context):
                 ui_props.mouse_y,
                 ui_props.mouse_x + linelength,
                 ui_props.mouse_y - linelength,
-                2,
                 white,
             )
 
@@ -1330,7 +1327,7 @@ class AssetBarOperator(bpy.types.Operator):
                                 target_slot = temp_mesh.polygons[face_index].material_index
                                 object_eval.to_mesh_clear()
                             else:
-                                logging.warning('Invalid or library object as input:') # noqa WPS220
+                                logging.warning('Invalid or library object as input:')  # noqa WPS220
                                 target_object = ''
                                 target_slot = ''
 
