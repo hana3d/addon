@@ -22,7 +22,7 @@ from typing import List
 
 import requests
 
-from . import paths, rerequests, utils
+from . import paths, rerequests
 from .src.search.query import Query
 
 

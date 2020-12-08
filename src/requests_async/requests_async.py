@@ -26,8 +26,7 @@ class Request(object):  # noqa : WPS214
         partial = functools.partial(requests.request, method, url, **kwargs)
         response = await loop.run_in_executor(None, partial)
 
-        logging.debug(f'{method.upper()}: {url}')
-        logging.debug(response.status_code)
+        logging.debug(f'{method.upper()} {url} ({response.status_code})')
 
         if not response.ok:
             status_code = response.status_code

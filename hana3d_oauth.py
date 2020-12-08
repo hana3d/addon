@@ -16,6 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import logging
+from .src.search.search import Search
 import time
 
 import bpy
@@ -77,7 +78,8 @@ def write_tokens(oauth_response: dict):
     preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    logger.show_report(utils.get_search_props(), text=f'{HANA3D_DESCRIPTION} Re-Login success')
+    search = Search(bpy.context)
+    logger.show_report(search.props, text=f'{HANA3D_DESCRIPTION} Re-Login success')
     profile = Profile()
     run_async_function(profile.update_async)
 

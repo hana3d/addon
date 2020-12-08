@@ -16,6 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+from .src.search.search import Search
 import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
@@ -47,7 +48,8 @@ class Hana3DAddTag(Operator):
         new_tag['name'] = self.tag
         new_tag.selected = True
 
-        search_props = utils.get_search_props()
+        search = Search(context)
+        search_props = search.props
         new_tag = search_props.tags_list.add()
         new_tag['name'] = self.tag
 
@@ -72,8 +74,9 @@ class RemoveTagSearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_search_props()
-        props.tags_list[self.tag].selected = False
+        search = Search(context)
+        search_props = search.props
+        search_props.tags_list[self.tag].selected = False
         return {'INTERFACE'}
 
 

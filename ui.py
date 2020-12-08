@@ -598,7 +598,7 @@ def draw_callback_2d_search(self, context):
             #     report = 'Hana3D - No matching results found.'
             #     ui_bgl.draw_text(report, ui_props.bar_x + ui_props.margin,
             #                      ui_props.bar_y - 25 - ui_props.margin, 15)
-        props = utils.get_search_props()
+        # props = search.props
         # if props.report != '' and props.is_searching or props.search_error:
         #     ui_bgl.draw_text(props.report, ui_props.bar_x,
         #                      ui_props.bar_y - 15 - ui_props.margin - ui_props.bar_height, 15)
@@ -1516,7 +1516,8 @@ class DefaultNamesOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         if ui_props.down_up == 'SEARCH':
-            search_props = utils.get_search_props()
+            search_object = Search(context)
+            search_props = search_object.props
             if (
                 search_props.workspace != ''
                 and len(search_props.tags_list) == 0
