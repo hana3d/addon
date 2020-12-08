@@ -134,7 +134,7 @@ def timer_update():
                                     tdict['thumbnail_%i'] = t
                                 if f['fileType'] == 'blend':
                                     durl = f['downloadUrl']
-                            if durl and tname:
+                            if durl:    # noqa: WPS220
                                 # Check for assetBaseId for backwards compatibility
                                 view_id = r.get('viewId') or r.get('assetBaseId') or ''
                                 tooltip = utils.generate_tooltip(
@@ -221,6 +221,25 @@ def timer_update():
     return 0.3
 
 
+def load_placeholder_thumbnail(index: int, asset_id: str):
+    """Load placeholder thumbnail for assets without one.
+
+    Arguments:
+        index: index number of the asset in search results
+        asset_id: asset id
+    """
+    placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
+
+    img = bpy.data.images.load(placeholder_path)
+    img.name = utils.previmg_name(index)
+
+    hidden_img = bpy.data.images.load(placeholder_path)
+    hidden_img.name = f'.{asset_id}'
+
+    fullsize_img = bpy.data.images.load(placeholder_path)
+    fullsize_img.name = utils.previmg_name(index, fullsize=True)
+
+
 def load_previews():
     mappingdict = {
         'MODEL': 'model',
@@ -237,6 +256,10 @@ def load_previews():
     if search_results is not None:
         index = 0
         for search_result in search_results:
+            if search_result['thumbnail_small'] == '':
+                load_placeholder_thumbnail(index, search_result['id'])
+                index += 1
+                continue
 
             tpath = os.path.join(directory, search_result['thumbnail_small'])
 
