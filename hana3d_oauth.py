@@ -26,6 +26,7 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.async_loop import run_async_function
 from .src.preferences.profile import Profile
+from .src.search.search import Search
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -77,7 +78,8 @@ def write_tokens(oauth_response: dict):
     preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    logger.show_report(utils.get_search_props(), text=f'{HANA3D_DESCRIPTION} Re-Login success')
+    search = Search(bpy.context)
+    logger.show_report(search.props, text=f'{HANA3D_DESCRIPTION} Re-Login success')
     profile = Profile()
     run_async_function(profile.update_async)
 

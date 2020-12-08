@@ -314,7 +314,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         if downloader.tcom.error:
             downloader.mark_remove()
             text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
-            logger.show_report(utils.get_search_props(), text=text, color=colors.RED)
+            search = Search(bpy.context)
+            logger.show_report(search.props, text=text, color=colors.RED)
             continue
 
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
@@ -760,9 +761,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         options={'HIDDEN'},
     )
 
-    search_query_updated_at: StringProperty(
-        name='Search Query Updated At',
-        description='time when search query updated',
+    last_query: StringProperty(
+        name='Last Searched Query',
+        description='string representing the last performed query',
         default='',
         options={'HIDDEN'},
     )
@@ -804,13 +805,14 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
             return {'CANCELLED'}
 
         query = Query(context)
+        last_query = query.get_last_query()
 
-        if query.updated_at:
-            updated_at = query.updated_at.isoformat()
-            query_has_updated = self.search_query_updated_at != updated_at
-            if query_has_updated:
-                self.object_count = 0
-                self.search_query_updated_at = updated_at
+        if last_query != self.last_query:
+            self.object_count = 0
+            self.last_query = last_query
+
+        text = f'Downloading {self.batch_size} assets from search results {self.object_count}:{len(search.results)}' # noqa : WPS221
+        logger.show_report(search.props, text)
 
         for _, search_result in zip(  # noqa : WPS352
             range(self.batch_size),
