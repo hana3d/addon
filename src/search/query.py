@@ -81,6 +81,4 @@ class Query(object):  # noqa : WPS230,WPS214
         Returns:
             str: the last search query, stringified
         """
-        if f'{HANA3D_NAME}_last_query' in self.context.window_manager:
-            return self.context.window_manager[f'{HANA3D_NAME}_last_query']
-        return ''
+        return self.context.window_manager.get(f'{HANA3D_NAME}_last_query', '')

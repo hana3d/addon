@@ -808,7 +808,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
             self.last_query = last_query
 
         text = f'Downloading {self.batch_size} assets from search results {self.object_count}:{len(search.results)}' # noqa : WPS221
-        logger.show_report(search.props, text) 
+        logger.show_report(search.props, text)
 
         for _, search_result in zip(  # noqa : WPS352
             range(self.batch_size),
