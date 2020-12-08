@@ -75,8 +75,7 @@ class RemoveTagSearch(Operator):
     @execute_wrapper
     def execute(self, context):
         search = Search(context)
-        search_props = search.props
-        search_props.tags_list[self.tag].selected = False
+        search.props.tags_list[self.tag].selected = False
         return {'INTERFACE'}
 
 
