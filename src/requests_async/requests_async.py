@@ -7,9 +7,9 @@ import uuid
 
 import requests
 
+from ..preferences.preferences import Preferences
 from ... import hana3d_oauth, logger
 from ...config import HANA3D_DESCRIPTION
-from ..preferences.preferences import Preferences
 
 
 class Request(object):  # noqa : WPS214

@@ -16,7 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import logging
-from .src.search.search import Search
 import time
 
 import bpy
@@ -27,6 +26,7 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.async_loop import run_async_function
 from .src.preferences.profile import Profile
+from .src.search.search import Search
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()

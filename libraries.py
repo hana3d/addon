@@ -16,7 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import logging
-from .src.search.search import Search
 
 import bpy
 from bpy.props import StringProperty
@@ -25,6 +24,7 @@ from bpy.types import Operator
 from . import hana3d_types, paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
+from .src.search.search import Search
 
 
 def update_libraries(workspace):

@@ -2,10 +2,10 @@
 import logging
 import time
 
-from ...hana3d_oauth import refresh_token
 from ..async_loop import run_async_function
 from ..preferences.preferences import Preferences
 from ..preferences.profile import Profile
+from ...hana3d_oauth import refresh_token
 
 
 class Authentication(object):

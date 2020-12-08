@@ -40,7 +40,7 @@ help: ## show this message
 
 lint: ## lint code
 	git diff -U0 origin/$(STAGE).. | flake8 --diff
-	isort . --check
+	isort --recursive --check .
 	# new code should always get better
 	xenon --max-absolute B --max-modules A --max-average A src/
 	# do not let old code get worse

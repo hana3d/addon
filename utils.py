@@ -18,14 +18,14 @@
 import json
 import logging
 import os
-from .src.search.search import Search
 import sys
 import time
 from typing import List, Tuple
 
 import bpy
-from idprop.types import IDPropertyGroup
 from mathutils import Vector
+
+from idprop.types import IDPropertyGroup
 
 from . import logger, paths
 from .config import (
@@ -36,6 +36,7 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from .src.search.search import Search
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000

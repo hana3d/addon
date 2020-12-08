@@ -15,7 +15,6 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-from .src.search.search import Search
 import bpy
 from bpy.types import Panel
 
@@ -29,6 +28,7 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from .src.search.search import Search
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
