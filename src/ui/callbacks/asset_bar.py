@@ -21,12 +21,6 @@ verification_icons = {
     'rejected': 'vs_rejected.png',
 }
 
-mappingdict = {
-    'MODEL': 'model',
-    'SCENE': 'scene',
-    'MATERIAL': 'material',
-}
-
 
 def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     region = bpy.context.region
@@ -394,7 +388,7 @@ def draw_callback_2d_search(self, context):
             # TODO move this lazy loading into a function and don't duplicate through the code
             iname = utils.previmg_name(ui_props.active_index, fullsize=True)
 
-            directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
+            directory = paths.get_temp_dir(f'{props.asset_type.lower()}_search')
             search_results = search_object.results
             if search_results is not None and -1 < ui_props.active_index < len(search_results):
                 search_result = search_results[ui_props.active_index]
