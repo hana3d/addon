@@ -75,7 +75,7 @@ def get_search_url(*paths: str, query: Query = None) -> str:
         str: the formatted API URL
     """
     query.public = 'true' if query.public else 'false'
-    return get_api_url(*paths, query=vars(query))
+    return get_api_url(*paths, query=vars(query))   # noqa: WPS421
 
 
 def get_auth_url():
