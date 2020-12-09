@@ -816,9 +816,10 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
             self.last_query = last_query
 
         n_assets_to_download = min(self.batch_size, len(search.results) - self.object_count)
-        fetch_more_text = '(fetch more results to continue downloading)' if n_assets_to_download == 0 else ''
-        text = f'Downloading {n_assets_to_download} assets from search results{fetch_more_text}'
-        logger.show_report(search.props, text)
+        if n_assets_to_download == 0:
+            logger.show_report(search.props, 'Fetch more results to continue downloading')
+        else:
+            logger.show_report(search.props, f'Downloading {n_assets_to_download} assets')
 
         for _, search_result in zip(  # noqa : WPS352
             range(self.batch_size),
