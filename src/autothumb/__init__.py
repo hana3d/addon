@@ -11,7 +11,8 @@ import bpy
 from ..asset.asset_type import AssetType
 from ..async_loop import run_async_function
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
-from ... import colors, paths, ui, utils
+from ..ui.main import UI
+from ... import colors, paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
 
@@ -126,7 +127,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         except Exception as error:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
-            ui.add_report(f'Error in thumbnailer: {error}', color=colors.RED)
+            UI().add_report(f'Error in thumbnailer: {error}', color=colors.RED)
             return {'CANCELLED'}
         return {'FINISHED'}
 

@@ -5,6 +5,7 @@ import bpy
 
 from .... import utils
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ...search.search import Search
 
 
 class DefaultNamesOperator(bpy.types.Operator):
@@ -25,7 +26,8 @@ class DefaultNamesOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         if ui_props.down_up == 'SEARCH':
-            search_props = utils.get_search_props()
+            search_object = Search(bpy.context)
+            search_props = search_object.props
             if search_props.workspace != '' and search_props.tags_list:
                 # This is done to force the UI to update
                 # TODO: refactor this so this happens more explicitly?
