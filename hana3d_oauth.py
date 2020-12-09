@@ -16,7 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import logging
-import threading
 import time
 
 import bpy
@@ -25,8 +24,10 @@ import requests
 from . import logger, oauth, paths, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
+from .src.async_loop import run_async_function
 from .src.preferences.preferences import Preferences
 from .src.preferences.profile import Profile
+from .src.search.search import Search
 from .src.ui import colors
 from .src.ui.main import UI
 
@@ -67,18 +68,10 @@ def refresh_token(immediate: bool = False) -> dict:
     )
     oauth_response = authenticator.get_refreshed_token(preferences.api_key_refresh)
     if oauth_response['access_token'] is not None and oauth_response['refresh_token'] is not None:
-        if immediate:
-            write_tokens(oauth_response)
-        else:
-            thread = threading.Thread(target=write_tokens, args=(oauth_response,), daemon=True)
-            thread.start()
+        write_tokens(oauth_response)
     else:
         ui.add_report('Auto-Login failed, please login manually', color=colors.RED)
-        if immediate:
-            reset_tokens()
-        else:
-            thread = threading.Thread(target=reset_tokens, daemon=True)
-            thread.start()
+        reset_tokens()
     return oauth_response
 
 
@@ -94,9 +87,10 @@ def write_tokens(oauth_response: dict):
     preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
-    logger.show_report(utils.get_search_props(), text=f'{HANA3D_DESCRIPTION} Re-Login success')
+    search = Search(bpy.context)
+    logger.show_report(search.props, text=f'{HANA3D_DESCRIPTION} Re-Login success')
     profile = Profile()
-    profile.update_async()
+    run_async_function(profile.update_async)
 
 
 def reset_tokens():
@@ -142,8 +136,7 @@ class RegisterLoginOnline(bpy.types.Operator):
         )
         # we store authenticator globally to be able to ping the server if connection fails.
         active_authenticator = authenticator
-        thread = threading.Thread(target=login, args=(authenticator,), daemon=True)
-        thread.start()
+        login(authenticator)
 
 
 class Logout(bpy.types.Operator):

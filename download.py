@@ -216,14 +216,18 @@ def scene_load(context):
 
 
 def set_thumbnail(asset_data, asset):
-    thumbnail_name = asset_data['thumbnail'].split(os.sep)[-1]
-    tempdir = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')
-    thumbpath = os.path.join(tempdir, thumbnail_name)
-    asset_thumbs_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
-    asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
-    shutil.copy(thumbpath, asset_thumb_path)
-    asset_props = getattr(asset, HANA3D_NAME)
-    asset_props.thumbnail = asset_thumb_path
+    if asset_data['thumbnail'] == '':
+        asset_props = getattr(asset, HANA3D_NAME)
+        asset_props.thumbnail = ''
+    else:
+        thumbnail_name = asset_data['thumbnail'].split(os.sep)[-1]  # noqa: WPS204
+        tempdir = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')  # noqa: WPS204
+        thumbpath = os.path.join(tempdir, thumbnail_name)
+        asset_thumbs_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
+        asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
+        shutil.copy(thumbpath, asset_thumb_path)
+        asset_props = getattr(asset, HANA3D_NAME)
+        asset_props.thumbnail = asset_thumb_path
 
 
 def update_downloaded_progress(downloader: Downloader):
@@ -313,7 +317,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         if downloader.tcom.error:
             downloader.mark_remove()
             text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
-            logger.show_report(utils.get_search_props(), text=text, color=colors.RED)
+            search = Search(bpy.context)
+            logger.show_report(search.props, text=text, color=colors.RED)
             continue
 
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
@@ -759,9 +764,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         options={'HIDDEN'},
     )
 
-    search_query_updated_at: StringProperty(
-        name='Search Query Updated At',
-        description='time when search query updated',
+    last_query: StringProperty(
+        name='Last Searched Query',
+        description='string representing the last performed query',
         default='',
         options={'HIDDEN'},
     )
@@ -803,13 +808,14 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
             return {'CANCELLED'}
 
         query = Query(context)
+        last_query = query.get_last_query()
 
-        if query.updated_at:
-            updated_at = query.updated_at.isoformat()
-            query_has_updated = self.search_query_updated_at != updated_at
-            if query_has_updated:
-                self.object_count = 0
-                self.search_query_updated_at = updated_at
+        if last_query != self.last_query:
+            self.object_count = 0
+            self.last_query = last_query
+
+        text = f'Downloading {self.batch_size} assets from search results {self.object_count}:{len(search.results)}' # noqa : WPS221
+        logger.show_report(search.props, text)
 
         for _, search_result in zip(  # noqa : WPS352
             range(self.batch_size),

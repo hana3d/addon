@@ -3,9 +3,9 @@ from typing import List
 
 from bpy.types import Context
 
-from ...config import HANA3D_NAME
-from ..asset.asset_type import AssetType
 from .search import SearchResult
+from ..asset.asset_type import AssetType
+from ...config import HANA3D_NAME
 
 
 class AssetSearch(object):

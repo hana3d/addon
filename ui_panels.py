@@ -28,6 +28,7 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from .src.search.search import Search
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
@@ -192,25 +193,27 @@ def draw_panel_common_upload(layout, context):
 def draw_panel_common_search(layout, context):
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
     asset_type = uiprops.asset_type
-    props = utils.get_search_props()
+
+    search = Search(context)
+    search_props = search.props
 
     row = layout.row()
-    row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
-    draw_assetbar_show_hide(row, props)
-    layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
+    draw_assetbar_show_hide(row, search_props)
+    layout.prop(search_props, 'workspace', expand=False, text='Workspace')
     row = layout.row()
-    row.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    row.prop_search(search_props, 'libraries_input', search_props, 'libraries_list', icon='VIEWZOOM') # noqa : E501
     row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
-    draw_selected_libraries(layout, props, f"object.{HANA3D_NAME}_remove_library_search")
-    layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
-    draw_selected_tags(layout, props, f"object.{HANA3D_NAME}_remove_tag_search")
-    layout.prop(props, "public_only")
-    label_multiline(layout, text=props.report)
+    draw_selected_libraries(layout, search_props, f'object.{HANA3D_NAME}_remove_library_search')
+    layout.prop_search(search_props, 'tags_input', search_props, 'tags_list', icon='VIEWZOOM')
+    draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
+    layout.prop(search_props, 'public_only')
+    label_multiline(layout, text=search_props.report)
 
     if asset_type == 'MODEL':
         layout.separator()
         layout.label(text='Import method:')
-        layout.prop(props, 'append_method', expand=True, icon_only=False)
+        layout.prop(search_props, 'append_method', expand=True, icon_only=False)
         row = layout.row(align=True)
         row.operator(f'scene.{HANA3D_NAME}_batch_download')
     # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge
@@ -294,8 +297,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
     def draw(self, context):
         s = context.scene
-        wm = context.window_manager
-        ui_props = getattr(wm, HANA3D_UI)
+        ui_props = getattr(context.window_manager, HANA3D_UI)
         user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout = self.layout
 
@@ -314,7 +316,8 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
         if ui_props.down_up == 'SEARCH':
             if utils.profile_is_validator():
-                search_props = utils.get_search_props()
+                search = Search(context)
+                search_props = search.props
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type == 'MODEL':
                 draw_panel_common_search(self.layout, context)
@@ -393,25 +396,18 @@ def header_search_draw(self, context):
     preferences = context.preferences.addons[HANA3D_NAME].preferences
     if preferences.search_in_header:
         layout = self.layout
-        wm = context.window_manager
-        ui_props = getattr(wm, HANA3D_UI)
-        if ui_props.asset_type == 'MODEL':
-            props = getattr(wm, HANA3D_MODELS)
-        if ui_props.asset_type == 'MATERIAL':
-            props = getattr(wm, HANA3D_MATERIALS)
-        if ui_props.asset_type == 'SCENE':
-            props = getattr(wm, HANA3D_SCENES)
-        # if ui_props.asset_type == 'HDR':
-        #     props = getattr(wm, HANA3D_HDR)
+        ui_props = getattr(context.window_manager, HANA3D_UI)
+        search = Search(context)
+        search_props = search.props
 
         if context.space_data.show_region_tool_header is True or context.mode[:4] not in (
             'EDIT',
             'OBJE',
         ):
             layout.separator_spacer()
-        layout.prop(ui_props, "asset_type", text='', icon='URL')
-        layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
-        draw_assetbar_show_hide(layout, props)
+        layout.prop(ui_props, 'asset_type', text='', icon='URL')
+        layout.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
+        draw_assetbar_show_hide(layout, search_props)
 
 
 class VIEW3D_PT_UpdaterPanel(Panel):
