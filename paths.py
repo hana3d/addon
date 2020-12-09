@@ -74,13 +74,8 @@ def get_search_url(*paths: str, query: Query = None) -> str:
     Returns:
         str: the formatted API URL
     """
-    base_url = f'{HANA3D_URL}/v1/'
-    url = urllib.parse.urljoin(base_url, '/'.join(path.strip('/') for path in paths))
-    if query is None:
-        return url
     query.public = 'true' if query.public else 'false'
-    query_string = urllib.parse.urlencode(vars(query))  # noqa : WPS421
-    return f'{url}?{query_string}'
+    return get_api_url(*paths, query=vars(query))
 
 
 def get_auth_url():
