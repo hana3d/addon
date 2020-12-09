@@ -17,11 +17,11 @@
 # ##### END GPL LICENSE BLOCK #####
 import copy
 import functools
+import json
 import logging
 import os
 import shutil
 import threading
-import json
 from queue import Queue
 
 import bpy
