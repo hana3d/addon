@@ -291,11 +291,14 @@ def execute_append_tasks():
         append_tasks_queue.task_done()
     except Exception as e:
         asset_data, = task.args
+        ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
+
+        # cleanup failed downloads
         file_names = paths.get_download_filenames(asset_data)
         for file_name in file_names:
             remove_file(file_name)
-        ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
-        # TODO: remove invalid asset
+        if asset_data['view_id'] in download_threads:
+            download_threads.pop(asset_data['view_id'])
     return 0.01
 
 
