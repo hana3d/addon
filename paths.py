@@ -56,8 +56,8 @@ def get_api_url(*paths: str, query: dict = None) -> str:
     Returns:
         str: the formatted API URL
     """
-    base_url = HANA3D_URL + '/v1/'
-    url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
+    base_url = f'{HANA3D_URL}/v1/'
+    url = urllib.parse.urljoin(base_url, '/'.join(path.strip('/') for path in paths))
     if query is None:
         return url
     query_string = urllib.parse.urlencode(query)
@@ -74,8 +74,8 @@ def get_search_url(*paths: str, query: Query = None) -> str:
     Returns:
         str: the formatted API URL
     """
-    base_url = HANA3D_URL + '/v1/'
-    url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
+    base_url = f'{HANA3D_URL}/v1/'
+    url = urllib.parse.urljoin(base_url, '/'.join(path.strip('/') for path in paths))
     if query is None:
         return url
     query.public = 'true' if query.public else 'false'
