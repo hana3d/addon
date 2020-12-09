@@ -28,7 +28,7 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from . import bg_blender, download, paths, render, search, utils
+from . import bg_blender, download, paths, render, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
 from .src.preferences.preferences import Preferences

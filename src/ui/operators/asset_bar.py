@@ -6,12 +6,12 @@ import math
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
+from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
+from ..main import UI
+from ...search.search import Search
 from .... import search, utils
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from ....report_tools import execute_wrapper
-from ...search.search import Search
-from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
-from ..main import UI
 
 
 def get_asset_under_mouse(mousex, mousey):
