@@ -18,7 +18,6 @@
 import json
 import logging
 import os
-from .src.preferences.preferences import Preferences
 import threading
 import time
 
@@ -28,12 +27,9 @@ from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
 from . import colors, hana3d_oauth, logger, paths, rerequests, utils
-from .config import (
-    HANA3D_DESCRIPTION,
-    HANA3D_NAME,
-    HANA3D_UI,
-)
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.preferences.preferences import Preferences
 from .src.search.asset_search import AssetSearch
 from .src.search.query import Query
 from .src.search.search import Search
@@ -211,7 +207,7 @@ def timer_update():
                 props.search_error = True
 
             mt('preview loading finished')
-    return 0.3
+    return 0.3 # noqa : WPS432
 
 
 def load_placeholder_thumbnail(index: int, asset_id: str):
