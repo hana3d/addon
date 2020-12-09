@@ -130,11 +130,6 @@ def show_report(
         color: color that will be displayed on UI
     """
     ui.add_report(text=text, timeout=timeout, color=color)
-    hana_type = str(type(props))
-    if 'SearchProps' in hana_type:
-        props.report = text
-    elif 'UploadProps' in hana_type:
-        props.upload_state = text
 
 
 classes = (

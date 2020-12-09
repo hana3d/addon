@@ -18,6 +18,7 @@
 import json
 import logging
 import os
+from .src.preferences.preferences import Preferences
 import threading
 import time
 
@@ -26,13 +27,10 @@ import requests
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from . import hana3d_oauth, logger, paths, rerequests, utils
+from . import colors, hana3d_oauth, logger, paths, rerequests, utils
 from .config import (
     HANA3D_DESCRIPTION,
-    HANA3D_MATERIALS,
-    HANA3D_MODELS,
     HANA3D_NAME,
-    HANA3D_SCENES,
     HANA3D_UI,
 )
 from .report_tools import execute_wrapper
@@ -73,7 +71,7 @@ last_clipboard = ''
 # @bpy.app.handlers.persistent
 def timer_update():
     global first_time
-    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+    preferences = Preferences().get()
     if first_time:
         first_time = False
         if preferences.show_on_start:
@@ -209,7 +207,7 @@ def timer_update():
 
             else:
                 logging.error(error)
-                logger.show_report(props, text=error)
+                logger.show_report(props, text=error, color=colors.RED)
                 props.search_error = True
 
             mt('preview loading finished')
@@ -586,11 +584,7 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.app.timers.register(timer_update)
-
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    if bpy.app.timers.is_registered(timer_update):
-        bpy.app.timers.unregister(timer_update)
