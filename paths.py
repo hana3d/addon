@@ -46,7 +46,25 @@ def find_in_local(text=''):
     return fs
 
 
-def get_api_url(*paths: str, query: Query = None) -> str:
+def get_api_url(*paths: str, query: dict = None) -> str:
+    """Get API URL.
+
+    Args:
+        paths (str): path of the API url
+        query (dict): Query passed as query string parameters. Defaults to None.
+
+    Returns:
+        str: the formatted API URL
+    """
+    base_url = HANA3D_URL + '/v1/'
+    url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
+    if query is None:
+        return url
+    query_string = urllib.parse.urlencode(query)
+    return f'{url}?{query_string}'
+
+
+def get_search_url(*paths: str, query: Query = None) -> str:
     """Get API URL.
 
     Args:
