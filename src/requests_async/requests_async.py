@@ -7,7 +7,7 @@ import uuid
 import requests
 
 from ..preferences.preferences import Preferences
-from ... import hana3d_oauth, colors, ui
+from ... import colors, hana3d_oauth, ui
 from ...config import HANA3D_DESCRIPTION
 
 
@@ -30,7 +30,7 @@ class Request(object):  # noqa : WPS214
         if not response.ok:
             status_code = response.status_code
             ui.add_report(
-                f'{method} request failed ({status_code}): {response.text}', 
+                f'{method} request failed ({status_code}): {response.text}',
                 color=colors.RED,
             )
             try:

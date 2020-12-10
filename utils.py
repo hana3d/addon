@@ -27,13 +27,8 @@ from mathutils import Vector
 
 from idprop.types import IDPropertyGroup
 
-from . import paths, ui, colors
-from .config import (
-    HANA3D_MATERIALS,
-    HANA3D_NAME,
-    HANA3D_PROFILE,
-    HANA3D_UI,
-)
+from . import colors, paths, ui
+from .config import HANA3D_MATERIALS, HANA3D_NAME, HANA3D_PROFILE, HANA3D_UI
 from .src.search.search import Search
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000

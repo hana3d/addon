@@ -20,7 +20,7 @@ import uuid
 
 import requests
 
-from . import hana3d_oauth, colors
+from . import colors, hana3d_oauth
 from .config import HANA3D_DESCRIPTION
 from .src.preferences.preferences import Preferences
 from .src.ui.main import UI
@@ -40,7 +40,10 @@ def rerequest(method, url, **kwargs):
 
     if not response.ok:
         ui = UI()
-        ui.add_report(f'{method} request failed ({response.status_code}): {response.text}', color=colors.RED)
+        ui.add_report(
+            f'{method} request failed ({response.status_code}): {response.text}', 
+            color=colors.RED,
+        )
         try:
             code = response.json()['code']
         except Exception:
