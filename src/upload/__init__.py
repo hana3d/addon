@@ -15,7 +15,6 @@ from bpy.types import Operator
 
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
-from ..asset.asset_type import AssetType
 
 from ... import bg_blender, hana3d_types, logger, paths, render, rerequests, ui, utils  # isort:skip
 
@@ -180,7 +179,7 @@ asset_types = (
 class UploadAssetOperator(Operator):
     """Tooltip"""
 
-    bl_idname = f"object.{HANA3D_NAME}_upload_asset"
+    bl_idname = f"object.{HANA3D_NAME}_upload"
     bl_description = f"Upload or re-upload asset + thumbnail + metadata to {HANA3D_DESCRIPTION}"
 
     bl_label = "hana3d asset upload"
@@ -228,20 +227,6 @@ class UploadAssetOperator(Operator):
             props.remote_thumbnail = True
 
         return self.start_upload(context, props, upload_set)
-
-    def draw(self, context):
-        props = utils.get_upload_props()
-        layout = self.layout
-
-        if self.reupload:
-            # layout.prop(self, 'metadata')
-            layout.prop(self, 'main_file')
-            layout.prop(self, 'thumbnail')
-
-        if props.view_id != '' and not self.reupload:
-            layout.label(text="Really upload as new? ")
-            layout.label(text="Do this only when you create a new asset from an old one.")
-            layout.label(text="For updates of thumbnail or model use reupload.")
 
     def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]):  # noqa D102,WPS212,WPS210,WPS213,WPS231,E501
         utils.name_update()
@@ -407,8 +392,8 @@ class UploadAssetOperator(Operator):
 
 classes = (
     UploadAssetOperator,
-    UploadVersionOperator,
-    UploadVariantOperator,
+    # UploadVersionOperator,
+    # UploadVariantOperator,
 )
 
 
