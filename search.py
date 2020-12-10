@@ -581,8 +581,11 @@ classes = [SearchOperator]
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+    bpy.app.timers.register(timer_update)
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+    if bpy.app.timers.is_registered(timer_update):
+        bpy.app.timers.unregister(timer_update)
