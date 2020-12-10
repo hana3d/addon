@@ -262,6 +262,7 @@ class UploadOperator(Operator):
         utils.name_update()
 
         location = get_upload_location(props, context)
+        ui = UI()
         ui.add_report(text='preparing upload')
 
         if 'jobs' not in props.render_data:
@@ -287,7 +288,7 @@ class UploadOperator(Operator):
         tempdir = tempfile.mkdtemp()
         datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
-        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
+        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
             ui.add_report(text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
@@ -400,10 +401,10 @@ class UploadOperator(Operator):
             if autopack:
                 bpy.ops.file.autopack_toggle()
 
-        except Exception as e:
-            ui.add_report(text=str(e))
+        except Exception as error:
+            ui.add_report(text=str(error))
             props.uploading = False
-            logging.error(e)
+            logging.error(error)
             return {'CANCELLED'}
 
         if props.remote_thumbnail:

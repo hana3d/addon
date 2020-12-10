@@ -325,6 +325,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         if downloader.tcom.error:
             downloader.mark_remove()
             text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
+            ui = UI()
             ui.add_report(text=text, color=colors.RED)
             continue
 
@@ -812,6 +813,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     @execute_wrapper
     def execute(self, context):
         search = Search(context)
+        ui = UI()
         if not search.results:
             ui.add_report('Empty search results')
             return {'CANCELLED'}
