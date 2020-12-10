@@ -303,8 +303,8 @@ def execute_append_tasks():
         file_names = paths.get_download_filenames(asset_data)
         for file_name in file_names:
             remove_file(file_name)
-        if asset_data['view_id'] in download_threads:
-            download_threads.pop(asset_data['view_id'])
+        download_kill_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download_kill')
+        download_kill_op(view_id=asset_data['view_id'])
     return 0.01
 
 
