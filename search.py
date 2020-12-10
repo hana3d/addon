@@ -26,13 +26,14 @@ import requests
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from . import colors, hana3d_oauth, logger, paths, rerequests, utils, ui
+from . import hana3d_oauth, logger, paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
 from .src.preferences.preferences import Preferences
 from .src.search.asset_search import AssetSearch
 from .src.search.query import Query
 from .src.search.search import Search
+from .src.ui.main import UI
 
 search_start_time = 0
 prev_time = 0
@@ -199,10 +200,12 @@ def timer_update():
                 props.is_searching = False
                 props.search_error = False
                 text = f'Found {search_object.results_orig["count"]} results. '  # noqa #501
+                ui = UI()
                 ui.add_report(text=text)
 
             else:
                 logging.error(error)
+                ui = UI()
                 ui.add_report(text=error, color=colors.RED)
                 props.search_error = True
 
@@ -338,10 +341,9 @@ class Searcher(threading.Thread):
                     params['get_next'] = False
         if not params['get_next']:
             query.save_last_query()
-            urlquery = paths.get_api_url('search', query=self.query)
+            urlquery = paths.get_search_url('search', query=self.query)
 
-        search_object = Search(bpy.context)
-        search_props = search_object.props
+        ui = UI()
         try:
             logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
@@ -517,6 +519,7 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
+    ui = UI()
     ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
 

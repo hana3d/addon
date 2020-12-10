@@ -1,5 +1,4 @@
 """Search Query."""
-
 from typing import Dict
 
 from bpy.types import Context

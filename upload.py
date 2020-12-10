@@ -30,8 +30,9 @@ from bpy.types import Operator
 
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
+from .src.ui.main import UI
 
-from . import bg_blender, hana3d_types, logger, paths, render, rerequests, ui, utils  # isort:skip
+from . import bg_blender, hana3d_types, logger, paths, render, rerequests, utils  # isort:skip
 
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
@@ -365,6 +366,7 @@ class UploadOperator(Operator):
 
             skip_post_process = 'false'
             if any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes):
+                ui = UI()
                 ui.add_report(
                     'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map',
                 )
