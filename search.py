@@ -341,7 +341,7 @@ class Searcher(threading.Thread):
                     params['get_next'] = False
         if not params['get_next']:
             query.save_last_query()
-            urlquery = paths.get_search_url('search', query=self.query)
+            urlquery = paths.get_api_url('search', query=self.query.to_dict())
 
         ui = UI()
         try:
