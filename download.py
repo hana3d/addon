@@ -319,8 +319,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         if downloader.tcom.error:
             downloader.mark_remove()
             text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
-            search = Search(bpy.context)
-            logger.show_report(search.props, text=text, color=colors.RED)
+            ui.add_report(text=text, color=colors.RED)
             continue
 
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
@@ -808,7 +807,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     def execute(self, context):
         search = Search(context)
         if not search.results:
-            logger.show_report(search.props, 'Empty search results')
+            ui.add_report('Empty search results')
             return {'CANCELLED'}
 
         query = Query(context)
@@ -820,9 +819,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
 
         n_assets_to_download = min(self.batch_size, len(search.results) - self.object_count)
         if n_assets_to_download == 0:
-            logger.show_report(search.props, 'Fetch more results to continue downloading')
+            ui.add_report('Fetch more results to continue downloading')
         else:
-            logger.show_report(search.props, f'Downloading {n_assets_to_download} assets')
+            ui.add_report(f'Downloading {n_assets_to_download} assets')
 
         for _, search_result in zip(  # noqa : WPS352
             range(self.batch_size),

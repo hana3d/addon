@@ -114,23 +114,6 @@ class AppendInfo(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def show_report(
-    props=None,
-    text: str = '',
-    timeout: int = 5,
-    color: Tuple = colors.GREEN,
-):
-    """
-    Show report on UI and Addon.
-
-    Parameters:
-        props: props related to the right part of the addon
-        text: text of the report
-        timeout: seconds it will be displayed on UI
-        color: color that will be displayed on UI
-    """
-    ui.add_report(text=text, timeout=timeout, color=color)
-
 
 classes = (
     AppendInfo,

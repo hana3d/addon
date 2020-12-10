@@ -26,7 +26,7 @@ import requests
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
-from . import colors, hana3d_oauth, logger, paths, rerequests, utils
+from . import colors, hana3d_oauth, logger, paths, rerequests, utils, ui
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
 from .src.preferences.preferences import Preferences
@@ -199,11 +199,11 @@ def timer_update():
                 props.is_searching = False
                 props.search_error = False
                 text = f'Found {search_object.results_orig["count"]} results. '  # noqa #501
-                logger.show_report(props, text=text)
+                ui.add_report(text=text)
 
             else:
                 logging.error(error)
-                logger.show_report(props, text=error, color=colors.RED)
+                ui.add_report(text=error, color=colors.RED)
                 props.search_error = True
 
             mt('preview loading finished')
@@ -345,10 +345,9 @@ class Searcher(threading.Thread):
         try:
             logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
-            logger.show_report(search_props, text='')
         except requests.exceptions.RequestException as e:
             logging.error(e)
-            logger.show_report(search_props, text=str(e))
+            ui.add_report(text=str(e))
             return
         mt('response is back ')
         try:
@@ -356,7 +355,7 @@ class Searcher(threading.Thread):
             rdata['status_code'] = r.status_code
         except Exception as inst:
             logging.error(inst)
-            logger.show_report(search_props, text=r.text)
+            ui.add_report(text=r.text)
 
         mt('data parsed ')
 
@@ -518,7 +517,7 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    logger.show_report(search_props, text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
+    ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
 
 class SearchOperator(Operator):
