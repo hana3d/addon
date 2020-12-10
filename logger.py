@@ -9,9 +9,10 @@ from typing import Tuple
 
 import bpy
 
-from . import colors, ui
 from .config import HANA3D_LOG_LEVEL, HANA3D_NAME
 from .report_tools import execute_wrapper
+from .src.ui import colors
+from .src.ui.main import UI
 
 
 def setup_logger(): # noqa WPS210,WPS213
@@ -110,7 +111,7 @@ class AppendInfo(bpy.types.Operator):
             state: blender state
         """
         # noqa E800 self.report({self.level}, self.text)
-        pass # noqa S110 
+        pass # noqa S110
         return {'FINISHED'}
 
 
@@ -129,6 +130,7 @@ def show_report(
         timeout: seconds it will be displayed on UI
         color: color that will be displayed on UI
     """
+    ui = UI()
     ui.add_report(text=text, timeout=timeout, color=color)
     hana_type = str(type(props))
     if 'SearchProps' in hana_type:

@@ -44,8 +44,10 @@ from .config import (
 from .report_tools import execute_wrapper
 from .src.search.query import Query
 from .src.search.search import Search
+from .src.ui import colors
+from .src.ui.main import UI
 
-from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # noqa E501 isort:skip
+from . import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
 
 
 download_threads = {}
@@ -293,6 +295,7 @@ def execute_append_tasks():
         file_names = file_names = paths.get_download_filenames(asset_data)
         for f in file_names:
             remove_file(f)
+        ui = UI()
         ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
     return 0.01
 

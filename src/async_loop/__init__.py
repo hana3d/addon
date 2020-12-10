@@ -1,5 +1,4 @@
 """Manages the asyncio loop."""
-
 import asyncio
 import gc
 import logging
