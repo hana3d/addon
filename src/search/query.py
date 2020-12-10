@@ -84,7 +84,7 @@ class Query(object):  # noqa : WPS230,WPS214
         return self.context.window_manager.get(f'{HANA3D_NAME}_last_query', '')
 
     def to_dict(self) -> Dict:
-        """Get the search query as a Dict
+        """Get the search query as a Dict.
 
         Returns:
             Dict: the query string as a dictionary
