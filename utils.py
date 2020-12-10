@@ -28,14 +28,7 @@ from mathutils import Vector
 from idprop.types import IDPropertyGroup
 
 from . import logger, paths
-from .config import (
-    HANA3D_MATERIALS,
-    HANA3D_MODELS,
-    HANA3D_NAME,
-    HANA3D_PROFILE,
-    HANA3D_SCENES,
-    HANA3D_UI,
-)
+from .config import HANA3D_MATERIALS, HANA3D_NAME, HANA3D_PROFILE, HANA3D_UI
 from .src.search.search import Search
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
@@ -118,8 +111,6 @@ def get_selected_models():
     if len(parents) == 0:
         parents = obs
     return parents
-
-
 
 
 def get_active_asset():
