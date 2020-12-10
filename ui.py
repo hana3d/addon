@@ -109,13 +109,9 @@ def draw_callback_2d_progress(self, context):
                     param['location']
                 )
                 if loc is not None:
-                    if asset_data['asset_type'] == 'model':
-                        # models now draw with star trek mode,
-                        # no need to draw percent for the image.
-                        draw_downloader(loc[0], loc[1], percent=tcom.progress, img=img)
-                    else:
-                        draw_downloader(loc[0], loc[1], percent=tcom.progress, img=img)
-
+                    # models now draw with star trek mode,
+                    # no need to draw percent for the image.
+                    draw_downloader(loc[0], loc[1], percent=tcom.progress, img=img)
         else:
             draw_progress(
                 x,

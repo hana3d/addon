@@ -7,7 +7,9 @@ import uuid
 import requests
 
 from ..preferences.preferences import Preferences
-from ... import hana3d_oauth, logger
+from ..ui import colors
+from ..ui.main import UI
+from ... import hana3d_oauth
 from ...config import HANA3D_DESCRIPTION
 
 
@@ -29,7 +31,11 @@ class Request(object):  # noqa : WPS214
 
         if not response.ok:
             status_code = response.status_code
-            logger.show_report(f'{method} request failed ({status_code}): {response.text}')
+            ui = UI()
+            ui.add_report(
+                f'{method} request failed ({status_code}): {response.text}',
+                color=colors.RED,
+            )
             try:
                 code = response.json()['code']
             except Exception:
@@ -37,9 +43,9 @@ class Request(object):  # noqa : WPS214
 
             if status_code == 401 and code == 'token_expired':  # noqa : WPS432
                 logging.debug('refreshing token')
-                logger.show_report(
+                ui.add_report(
                     f'Refreshing token. If this fails, login in {HANA3D_DESCRIPTION} Login panel.',
-                    str(10),
+                    10,
                 )
 
                 oauth_response = hana3d_oauth.refresh_token()

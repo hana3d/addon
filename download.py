@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import copy
 import functools
+import json
 import logging
 import os
 import shutil
@@ -297,6 +298,13 @@ def execute_append_tasks():
             remove_file(f)
         ui = UI()
         ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
+
+        # cleanup failed downloads
+        file_names = paths.get_download_filenames(asset_data)
+        for file_name in file_names:
+            remove_file(file_name)
+        download_kill_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download_kill')
+        download_kill_op(view_id=asset_data['view_id'])
     return 0.01
 
 
@@ -317,8 +325,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         if downloader.tcom.error:
             downloader.mark_remove()
             text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
-            search = Search(bpy.context)
-            logger.show_report(search.props, text=text, color=colors.RED)
+            ui = UI()
+            ui.add_report(text=text, color=colors.RED)
             continue
 
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
@@ -336,6 +344,8 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
 
 def download(asset_data, **kwargs):
     '''start the download thread'''
+
+    logging.debug(f'Downloading asset_data {json.dumps(asset_data)}')
 
     tcom = ThreadCom()
     tcom.passargs = kwargs
@@ -803,8 +813,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     @execute_wrapper
     def execute(self, context):
         search = Search(context)
+        ui = UI()
         if not search.results:
-            print('Empty search results')  # noqa : WPS421
+            ui.add_report('Empty search results')
             return {'CANCELLED'}
 
         query = Query(context)
@@ -814,8 +825,11 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
             self.object_count = 0
             self.last_query = last_query
 
-        text = f'Downloading {self.batch_size} assets from search results {self.object_count}:{len(search.results)}' # noqa : WPS221
-        logger.show_report(search.props, text)
+        n_assets_to_download = min(self.batch_size, len(search.results) - self.object_count)
+        if n_assets_to_download == 0:
+            ui.add_report('Fetch more results to continue downloading')
+        else:
+            ui.add_report(f'Downloading {n_assets_to_download} assets')
 
         for _, search_result in zip(  # noqa : WPS352
             range(self.batch_size),

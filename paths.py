@@ -64,19 +64,6 @@ def get_api_url(*paths: str, query: dict = None) -> str:
     return f'{url}?{query_string}'
 
 
-def get_search_url(*paths: str, query: Query = None) -> str:
-    """Get API URL.
-
-    Args:
-        paths (str): path of the API url
-        query (Query): Search Query passed as query string parameters. Defaults to None.
-
-    Returns:
-        str: the formatted API URL
-    """
-    query.public = 'true' if query.public else 'false'
-    return get_api_url(*paths, query=vars(query))   # noqa: WPS421
-
 
 def get_auth_url():
     return HANA3D_AUTH_URL
