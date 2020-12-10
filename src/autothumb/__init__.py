@@ -11,8 +11,9 @@ import bpy
 from ..asset.asset_type import AssetType
 from ..async_loop import run_async_function
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
+from ..ui import colors
 from ..ui.main import UI
-from ... import colors, paths, utils
+from ... import paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
 

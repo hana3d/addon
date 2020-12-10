@@ -26,12 +26,7 @@ class DefaultNamesOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         if ui_props.down_up == 'SEARCH':
-            search_object = Search(bpy.context)
-            search_props = search_object.props
-            if search_props.workspace != '' and search_props.tags_list:
-                # This is done to force the UI to update
-                # TODO: refactor this so this happens more explicitly?
-                search_props.workspace = search_props.workspace
+            self._search()
 
         asset = utils.get_active_asset()
         if asset is None:
@@ -40,13 +35,33 @@ class DefaultNamesOperator(bpy.types.Operator):
         props = getattr(asset, HANA3D_NAME)
 
         if ui_props.down_up == 'UPLOAD':
-            if props.workspace != '' and props.tags_list:
-                # This is done to force the UI to update
-                # TODO: refactor this so this happens more explicitly?
-                props.workspace = props.workspace
-            if props.name == '' and props.name != asset.name:
-                props.name = asset.name
+            self._upload()
 
+        self._default_render_name(props, asset)
+
+        return {'PASS_THROUGH'}
+
+    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> Set[str]:  # noqa: D102
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+    def _search(self):
+        search_object = Search(bpy.context)
+        search_props = search_object.props
+        if search_props.workspace != '' and search_props.tags_list:
+            # This is done to force the UI to update
+            # TODO: refactor this so this happens more explicitly?
+            search_props.workspace = search_props.workspace
+
+    def _upload(self):
+        if props.workspace != '' and props.tags_list:
+            # This is done to force the UI to update
+            # TODO: refactor this so this happens more explicitly?
+            props.workspace = props.workspace
+        if props.name == '' and props.name != asset.name:
+            props.name = asset.name
+
+    def _default_render_name(self, props, asset):
         if props.render_job_name == '':
             if 'jobs' not in props.render_data:
                 previous_names = []
@@ -58,9 +73,3 @@ class DefaultNamesOperator(bpy.types.Operator):
                 if new_name not in previous_names:
                     break
             props.render_job_name = new_name
-
-        return {'PASS_THROUGH'}
-
-    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> Set[str]:  # noqa: D102
-        context.window_manager.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
