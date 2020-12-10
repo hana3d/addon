@@ -27,14 +27,7 @@ from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
 from . import hana3d_oauth, logger, paths, rerequests, utils
-from .config import (
-    HANA3D_DESCRIPTION,
-    HANA3D_MATERIALS,
-    HANA3D_MODELS,
-    HANA3D_NAME,
-    HANA3D_SCENES,
-    HANA3D_UI,
-)
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
 from .src.search.asset_search import AssetSearch
 from .src.search.query import Query
@@ -344,7 +337,7 @@ class Searcher(threading.Thread):
                     params['get_next'] = False
         if not params['get_next']:
             query.save_last_query()
-            urlquery = paths.get_api_url('search', query=self.query)
+            urlquery = paths.get_search_url('search', query=self.query)
 
         search_object = Search(bpy.context)
         search_props = search_object.props
