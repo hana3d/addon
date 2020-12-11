@@ -5,6 +5,7 @@ import math
 
 import bpy
 from bpy.props import BoolProperty, StringProperty
+from bpy_extras import view3d_utils
 
 from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
 from ..main import UI

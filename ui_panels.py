@@ -18,7 +18,7 @@
 import bpy
 from bpy.types import Panel
 
-from . import addon_updater_ops, download, utils
+from . import addon_updater_ops, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -29,6 +29,7 @@ from .config import (
     HANA3D_UI,
 )
 from .src.search.search import Search
+from .src.panels.download import VIEW3D_PT_hana3d_downloads
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
@@ -69,17 +70,6 @@ def prop_needed(layout, props, name, value, is_not_filled=''):
     else:
         row.prop(props, name)
     return row
-
-
-def draw_not_logged_in(source):
-    title = "User not logged in"
-
-    def draw_message(source, context):
-        layout = source.layout
-        label_multiline(layout, text='Please login or sign up ' 'to upload files.')
-        draw_login_buttons(layout)
-
-    bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
 
 
 def draw_selected_tags(layout, props, operator):
@@ -366,25 +356,6 @@ class VIEW3D_PT_hana3d_unified(Panel):
                     )
 
 
-class VIEW3D_PT_hana3d_downloads(Panel):
-    bl_category = HANA3D_DESCRIPTION
-    bl_idname = f"VIEW3D_PT_{HANA3D_NAME}_downloads"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_label = f"Downloads {HANA3D_DESCRIPTION}"
-
-    @classmethod
-    def poll(cls, context):
-        return len(download.download_threads) > 0
-
-    def draw(self, context):
-        layout = self.layout
-        for view_id, thread in download.download_threads.items():
-            row = layout.row()
-            row.label(text=thread.asset_data['name'])
-            row.label(text=str(int(thread.tcom.progress)) + ' %')
-            op = row.operator(f'scene.{HANA3D_NAME}_download_kill', text='', icon='CANCEL')
-            op.view_id = view_id
 
 
 def header_search_draw(self, context):
