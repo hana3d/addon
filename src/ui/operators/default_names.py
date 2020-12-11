@@ -35,7 +35,7 @@ class DefaultNamesOperator(bpy.types.Operator):
         props = getattr(asset, HANA3D_NAME)
 
         if ui_props.down_up == 'UPLOAD':
-            self._upload()
+            self._upload(props, asset)
 
         self._default_render_name(props, asset)
 
@@ -53,7 +53,7 @@ class DefaultNamesOperator(bpy.types.Operator):
             # TODO: refactor this so this happens more explicitly?
             search_props.workspace = search_props.workspace
 
-    def _upload(self):
+    def _upload(self, props, asset):
         if props.workspace != '' and props.tags_list:
             # This is done to force the UI to update
             # TODO: refactor this so this happens more explicitly?
