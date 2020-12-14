@@ -33,6 +33,7 @@ from .src.preferences.preferences import Preferences
 from .src.search.asset_search import AssetSearch
 from .src.search.query import Query
 from .src.search.search import Search
+from .src.ui import colors
 from .src.ui.main import UI
 
 search_start_time = 0
