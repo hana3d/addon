@@ -28,8 +28,8 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from .src.panels.download import Hana3dDownloadPanel
 from .src.search.search import Search
-from .src.panels.download import VIEW3D_PT_hana3d_downloads
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
@@ -568,7 +568,7 @@ classes = (
     VIEW3D_PT_UpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
-    VIEW3D_PT_hana3d_downloads,
+    Hana3dDownloadPanel,
     VIEW3D_PT_hana3d_RenderPanel
 )
 

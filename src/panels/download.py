@@ -5,7 +5,7 @@ from ... import download
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 
-class VIEW3D_PT_hana3d_downloads(Panel):
+class Hana3dDownloadPanel(Panel):
     """Download panel."""
 
     bl_category = HANA3D_DESCRIPTION
