@@ -389,7 +389,7 @@ classes = (
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
     Hana3DDownloadPanel,
-    Hana3DRenderPanel
+    Hana3DRenderPanel,
 )
 
 
