@@ -29,6 +29,7 @@ from .config import (
     HANA3D_UI,
 )
 from .src.panels.download import Hana3DDownloadPanel
+from .src.panels.login import Hana3DLogin
 from .src.panels.render import Hana3DRenderPanel
 from .src.panels.updater import Hana3DUpdaterPanel
 from .src.search.search import Search
@@ -235,45 +236,6 @@ def draw_assetbar_show_hide(layout, props):
     op.tooltip = ttip
 
 
-class VIEW3D_PT_hana3d_login(Panel):
-    bl_category = HANA3D_DESCRIPTION
-    bl_idname = f"VIEW3D_PT_{HANA3D_NAME}_login"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_label = f"{HANA3D_DESCRIPTION} Login"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def draw(self, context):
-        layout = self.layout
-        user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
-
-        if user_preferences.login_attempt:
-            draw_login_progress(layout)
-            return
-
-        draw_login_buttons(layout)
-
-
-def draw_login_progress(layout):
-    layout.label(text='Login through browser')
-    layout.label(text='in progress.')
-    layout.operator(f"wm.{HANA3D_NAME}_login_cancel", text="Cancel", icon='CANCEL')
-
-
-def draw_login_buttons(layout):
-    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
-
-    if user_preferences.login_attempt:
-        draw_login_progress(layout)
-    else:
-        if user_preferences.api_key == '':
-            layout.operator(f"wm.{HANA3D_NAME}_login", text="Login / Sign up", icon='URL')
-        else:
-            layout.operator(f"wm.{HANA3D_NAME}_logout", text="Logout", icon='URL')
 
 
 class VIEW3D_PT_hana3d_unified(Panel):
@@ -296,15 +258,6 @@ class VIEW3D_PT_hana3d_unified(Panel):
         row = layout.row()
         row.prop(ui_props, 'down_up', expand=True, icon_only=False)
         layout.prop(ui_props, 'asset_type', expand=False, text='')
-
-        w = context.region.width
-        if user_preferences.login_attempt:
-            draw_login_progress(layout)
-            return
-
-        if len(user_preferences.api_key) < 20 and user_preferences.asset_counter > 20:
-            draw_login_buttons(layout)
-            layout.separator()
 
         if ui_props.down_up == 'SEARCH':
             if utils.profile_is_validator():
@@ -386,7 +339,7 @@ def header_search_draw(self, context):
 
 classes = (
     Hana3DUpdaterPanel,
-    VIEW3D_PT_hana3d_login,
+    Hana3DLogin,
     VIEW3D_PT_hana3d_unified,
     Hana3DDownloadPanel,
     Hana3DRenderPanel,
