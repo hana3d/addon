@@ -15,14 +15,14 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import os
 import threading
 from typing import List
 
 import requests
 
-from . import paths, rerequests, utils
+from . import paths, render, rerequests, utils
 from .src.search.query import Query
 
 
@@ -64,3 +64,57 @@ def get_render_jobs(asset_type: str, view_id: str, job_id: str = None) -> List[d
             thread.start()
 
     return jobs
+
+
+def get_jobs_list(jobs: dict):
+    if jobs is False:
+        jobs = get_render_jobs(props.asset_type, props.view_id)
+        props.render_data['jobs'] = jobs
+
+    if jobs is None:
+        return
+
+    jobs_list = []
+    for job in jobs:
+        if 'IDPropertyGroup' in str(type(job)):
+            jobs_list.append(job.to_dict())
+        else:
+            jobs_list.append(job)
+    return jobs_list
+
+
+def update_render_list(
+    props,
+    jobs: dict = False,
+    view_id: str = None
+):
+    if not hasattr(props, 'view_id'):
+        return
+    preview_collection = render.render_previews[props.view_id]
+    if not hasattr(preview_collection, 'previews'):
+        preview_collection.previews = []
+
+    jobs_list = get_jobs_list(preview_collection, jobs)
+
+    props.render_list.clear()
+    sorted_jobs = sorted(jobs_list, key=lambda x: x['created'])
+    available_previews = []
+    for n, job in enumerate(sorted_jobs):
+        job_id = job['id']
+        file_path = job['file_path']
+        if job_id not in preview_collection:
+            preview_img = preview_collection.load(job_id, job['file_path'], 'IMAGE')
+        else:
+            preview_img = preview_collection[job_id]
+
+        new_render = props.render_list.add()
+        new_render['name'] = job['job_name'] or ''
+        new_render['index'] = n
+        new_render['job_id'] = job_id
+        new_render['icon_id'] = preview_img.icon_id
+        new_render['file_path'] = file_path
+        enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
+        available_previews.append(enum_item)
+    preview_collection.previews = available_previews
+
+    logging.debug(f'Updated renders for {props.name}')

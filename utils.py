@@ -165,6 +165,27 @@ def get_upload_props():
     return getattr(active_asset, HANA3D_NAME)
 
 
+def get_upload_props_by_view_id(asset_type: str, view_id: str):
+    asset = None
+    if asset_type == 'model':
+        asset = get_active_model(bpy.context, view_id)
+    elif asset_type == 'scene':
+        scenes = [
+            ob
+            for ob in bpy.data.scenes
+            if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
+        ]
+        asset = scenes[0]
+    elif asset_type == 'material':
+        materials = [
+            ob
+            for ob in bpy.data.materials
+            if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
+        ]
+        asset = materials[0]
+    return getattr(asset, HANA3D_NAME)
+
+
 def previmg_name(index, fullsize=False):
     if not fullsize:
         return f'.{HANA3D_NAME}_preview_' + str(index).zfill(2)

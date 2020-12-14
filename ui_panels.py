@@ -18,7 +18,7 @@
 import bpy
 from bpy.types import Panel
 
-from . import addon_updater_ops, download, utils
+from . import addon_updater_ops, download, render, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,

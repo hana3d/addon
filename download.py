@@ -45,7 +45,7 @@ from .report_tools import execute_wrapper
 from .src.search.query import Query
 from .src.search.search import Search
 
-from . import append_link, colors, hana3d_types, logger, paths, render, render_tools, ui, utils  # noqa E501 isort:skip
+from . import append_link, colors, hana3d_types, logger, paths, render_tools, ui, utils  # noqa E501 isort:skip
 
 
 download_threads = {}
@@ -281,9 +281,10 @@ def execute_append_tasks():
         return 0.1
 
     task = append_tasks_queue.get()
+    task()
+    append_tasks_queue.task_done()
     try:
-        task()
-        append_tasks_queue.task_done()
+        pass
     except Exception as e:
         asset_data, = task.args
         file_names = file_names = paths.get_download_filenames(asset_data)
@@ -501,9 +502,11 @@ def set_asset_props(asset, asset_data):
     asset_props.name = asset_data['name']
     asset_props.tags = ','.join(asset_data['tags'])
     asset_props.description = asset_data['description']
+    asset_props.asset_type = asset_data['asset_type']
 
     jobs = render_tools.get_render_jobs(asset_data['asset_type'], asset_data['view_id'])
     asset_props.render_data['jobs'] = jobs
+    render_tools.update_render_list(asset_props, jobs)
 
     if 'tags' in asset_data:
         hana3d_types.update_tags_list(asset_props, bpy.context)
@@ -533,8 +536,6 @@ def set_asset_props(asset, asset_data):
                         asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]  # noqa E501
                     else:
                         asset_props.custom_props[name] = ''
-
-    render.update_render_list()
 
 
 def append_asset(asset_data: dict, **kwargs):

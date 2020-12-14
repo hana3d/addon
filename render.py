@@ -239,6 +239,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         else:
             self.finished = True
             if not self.cancelled:
+                thread_tools.update_renders_in_foreground(self.asset_type, self.view_id)
                 self.log('Job finished successfully')
         finally:
             self._set_running_flag(False)
@@ -517,37 +518,6 @@ class CancelJob(Operator):
         return {'FINISHED'}
 
 
-def update_render_list():
-    props = utils.get_upload_props()
-    preview_collection = render_previews[props.view_id]
-    if not hasattr(preview_collection, 'previews'):
-        preview_collection.previews = []
-    props = utils.get_upload_props()
-    props.render_list.clear()
-    sorted_jobs = sorted(props.render_data['jobs'], key=lambda x: x['created'])
-    available_previews = []
-    for n, job in enumerate(sorted_jobs):
-        job_id = job['id']
-        file_path = job['file_path']
-        if job_id not in preview_collection:
-            file_path = job['file_path']
-            if not os.path.exists(file_path):
-                continue
-            preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
-        else:
-            preview_img = preview_collection[job_id]
-
-        new_render = props.render_list.add()
-        new_render['name'] = job['job_name'] or ''
-        new_render['index'] = n
-        new_render['job_id'] = job_id
-        new_render['icon_id'] = preview_img.icon_id
-        new_render['file_path'] = file_path
-        enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
-        available_previews.append(enum_item)
-    preview_collection.previews = available_previews
-
-
 class RemoveRender(Operator):
     """Remove finished render job"""
 
@@ -575,7 +545,7 @@ class RemoveRender(Operator):
 
         name = job['job_name']  # Get name before job is de-referenced
         self.remove_from_props(id_job, props)
-        update_render_list()
+        render_tools.update_render_list(props, props.render_data['jobs'])
 
         ui.add_report(f'Deleted render {name}')
         return {'FINISHED'}
@@ -689,6 +659,7 @@ class UploadThread(UploadFileMixin, threading.Thread):
             'jobs' not in props.render_data
             or len(props.render_data['jobs']) == 0
         )
+        self.props = props
 
     def run(self):
         self.update_state('uploading_render', True)
@@ -705,13 +676,13 @@ class UploadThread(UploadFileMixin, threading.Thread):
             }
 
             self.upload_render(job)
-            update_render_list()
         except Exception as e:
             self.log(f'Error when uploading render {self.render_job_name}:{e!r}')
             raise e
         else:
             self.finished = True
             self.log('Uploaded render image')
+            thread_tools.update_renders_in_foreground(self.asset_type, self.view_id)
         finally:
             self.update_state('uploading_render', False)
             time.sleep(5)

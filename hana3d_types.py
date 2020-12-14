@@ -33,7 +33,7 @@ from bpy.props import (
 )
 from bpy.types import PropertyGroup
 
-from . import paths, render, search, utils
+from . import paths, render, render_tools, search, utils
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -334,7 +334,7 @@ class Hana3DTagItem(PropertyGroup):
 
 
 class Hana3DRenderItem(PropertyGroup):
-    name: StringProperty(name='Render Name', default='', description='sad')
+    name: StringProperty(name='Render Name', default='')
     job_id: StringProperty(name='Render Job Id', default='')
     icon_id: IntProperty(name='Render Icon Id')
     file_path: StringProperty(name='Render File Path', default='')
@@ -469,6 +469,7 @@ class Hana3DCommonUploadProps:
     def on_workspace_update(self, context):
         update_libraries_list(self, context)
         update_tags_list(self, context)
+        render_tools.update_render_list(self, self.render_data['jobs'])
 
     def update_tags_input(self, context):
         if self.tags_input != '':
@@ -655,9 +656,7 @@ class Hana3DCommonUploadProps:
         items=get_active_image,
     )
 
-    render_list: CollectionProperty(
-        type=Hana3DRenderItem
-    )
+    render_list: CollectionProperty(type=Hana3DRenderItem)
 
     render_list_index: IntProperty(
         name='Render of the asset',
