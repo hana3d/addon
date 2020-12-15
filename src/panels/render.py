@@ -68,12 +68,12 @@ class Hana3DRenderPanel(Panel):  # noqa: WPS214
         box = self.layout.box()
         row = box.row()
         row.template_list(
-            listtype_name="RENDER_UL_List",
-            list_id="render_list",
+            listtype_name='RENDER_UL_List',
+            list_id='render_list',
             dataptr=asset_props,
-            propname="render_list",
+            propname='render_list',
             active_dataptr=asset_props,
-            active_propname="render_list_index",
+            active_propname='render_list_index',
             item_dyntip_propname='not_working',
         )
         row = box.row()

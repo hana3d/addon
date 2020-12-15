@@ -18,6 +18,10 @@ class ShowRenderImage(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
+        """Execute the operator.
+
+        Parameters:
+            context: context"""
         asset_props = upload.get_upload_props()
         filepath = asset_props.render_list[self.index]['file_path']
 
@@ -28,12 +32,22 @@ class ShowRenderImage(bpy.types.Operator):
         bpy.ops.render.view_show('INVOKE_DEFAULT')
         try_again = True
         while try_again:
-            try:
-                bpy.context.area.spaces.active.image = image
-                try_again = False
-            except AttributeError:
-                try_again = True
+            try_again = self.set_image(bpy.context)
+
         return {'FINISHED'}
+
+    def set_image(self, context):
+        """Set image to the new window.
+
+        Parameters:
+            context: context"""
+        try:
+            context.area.spaces.active.image = image
+        except AttributeError:
+            try_again = True
+        else:
+            try_again = False
+        return try_again
 
 
 classes = (
@@ -42,10 +56,12 @@ classes = (
 
 
 def register():
+    """Register."""
     for cl in classes:
         bpy.utils.register_class(cl)
 
 
 def unregister():
+    """Unregister."""
     for cl in reversed(classes):
         bpy.utils.unregister_class(cl)

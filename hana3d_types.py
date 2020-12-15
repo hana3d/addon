@@ -335,6 +335,7 @@ class Hana3DTagItem(PropertyGroup):
 
 class Hana3DRenderItem(PropertyGroup):
     """Property group of Render Item."""
+
     name: StringProperty(name='Render Name', default='')
     job_id: StringProperty(name='Render Job Id', default='')
     icon_id: IntProperty(name='Render Icon Id')

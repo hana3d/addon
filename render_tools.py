@@ -72,7 +72,7 @@ def update_render_list(
 ):
     """Update render list on UI.
 
-    Parameters
+    Parameters:
         props: upload props
         jobs: dict
         set_jobs: True if jobs exists, False otherwise
@@ -98,14 +98,14 @@ def update_render_list(
 def update_props_render_list(props, jobs, preview_collection):
     """Update render list on props.
 
-    Parameters
+    Parameters:
         props: Upload props
         jobs: not None
         preview_collection: List[Tuple] not None
     """
     props.render_list.clear()
     available_previews = []
-    sorted_jobs = sorted(jobs, key=lambda x: x['created'])
+    sorted_jobs = sorted(jobs, key=lambda job: job['created'])
     for index, job in enumerate(sorted_jobs):
         job_id = job['id']
         if job_id not in preview_collection:

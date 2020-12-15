@@ -62,7 +62,7 @@ def update_in_foreground(
 def update_renders_in_foreground(asset_type: str, view_id: str):
     """Update blender renders of object in foreground.
 
-    Parameters
+    Parameters:
         asset_type: str (model|scene|material)
         view_id: str
     """
