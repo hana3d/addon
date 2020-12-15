@@ -9,9 +9,6 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
-from ..main import UI
-from ...search.search import Search
 from .... import search, utils
 from ....config import (
     HANA3D_DESCRIPTION,
@@ -20,6 +17,10 @@ from ....config import (
     HANA3D_UI,
 )
 from ....report_tools import execute_wrapper
+from ...search.search import Search
+from ...upload import upload
+from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
+from ..main import UI
 
 
 def get_asset_under_mouse(mousex, mousey):
@@ -349,7 +350,7 @@ class AssetBarOperator(bpy.types.Operator):
                     and ao is not None
                     and ao.active_material is not None
                 ):
-                    props = utils.get_upload_props()
+                    props = upload.get_upload_props()
                     asset_data = {
                         'name': props.name,
                         'description': props.description,

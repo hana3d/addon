@@ -27,6 +27,7 @@ from bpy.props import EnumProperty
 from . import tasks_queue, utils
 from .config import HANA3D_NAME
 from .report_tools import execute_wrapper
+from .src.upload import upload
 
 bg_processes = []
 
@@ -204,7 +205,7 @@ class KillBgProcess(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         # first do the easy stuff...TODO all cases.
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         if self.process_type == 'UPLOAD':
             props.uploading = False
         if self.process_type == 'THUMBNAILER':

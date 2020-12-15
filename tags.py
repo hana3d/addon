@@ -24,6 +24,7 @@ from . import utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.search.search import Search
+from .src.upload import upload
 
 
 class Hana3DAddTag(Operator):
@@ -41,7 +42,7 @@ class Hana3DAddTag(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         current_workspace = props.workspace
 
         new_tag = props.tags_list.add()
@@ -90,7 +91,7 @@ class RemoveTagUpload(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         props.tags_list[self.tag].selected = False
         return {'INTERFACE'}
 

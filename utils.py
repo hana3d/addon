@@ -114,8 +114,6 @@ def get_selected_models():
     return parents
 
 
-
-
 def get_active_asset():
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.asset_type == 'MODEL':
@@ -134,39 +132,6 @@ def get_active_asset():
             return bpy.context.active_object.active_material
     return None
 
-
-def get_upload_props():
-    active_asset = get_active_asset()
-    if active_asset is None:
-        return None
-    return getattr(active_asset, HANA3D_NAME)
-
-
-def get_upload_props_by_view_id(asset_type: str, view_id: str):
-    """Get upload props by view_id.
-
-    Parameters:
-        asset_type: str (model|scene|material)
-        view_id: str
-    """
-    asset = None
-    if asset_type == 'model':
-        asset = get_active_model(bpy.context, view_id)
-    elif asset_type == 'scene':
-        scenes = [
-            ob
-            for ob in bpy.data.scenes
-            if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
-        ]
-        asset = scenes[0]
-    elif asset_type == 'material':
-        materials = [
-            ob
-            for ob in bpy.data.materials
-            if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
-        ]
-        asset = materials[0]
-    return getattr(asset, HANA3D_NAME)
 
 
 def previmg_name(index, fullsize=False):

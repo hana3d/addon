@@ -30,17 +30,18 @@ from typing import List, Tuple
 import bpy
 import bpy.utils.previews
 import requests
-from bpy.props import BoolProperty, CollectionProperty, StringProperty, IntProperty
+from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from . import autothumb, paths, render_tools, rerequests, thread_tools, utils
+from . import autothumb, paths, render_tools, rerequests, thread_tools
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
 from .src.async_loop import run_async_function
 from .src.preferences.profile import Profile
 from .src.ui import colors
 from .src.ui.main import UI
+from .src.upload import upload
 
 render_threads = []
 upload_threads = []
@@ -446,7 +447,7 @@ class RenderScene(Operator):
 
     @classmethod
     def poll(cls, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         return props is not None and not props.rendering
 
     @execute_wrapper
@@ -454,7 +455,7 @@ class RenderScene(Operator):
         if context.scene.camera is None:
             logging.warning('No active camera found in scene')
             return {'CANCELLED'}
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
 
         if props.view_id == '':
             def draw_message(self, context):
@@ -498,7 +499,7 @@ class CancelJob(Operator):
 
     @classmethod
     def poll(cls, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         return props is not None and props.rendering
 
     @execute_wrapper
@@ -511,7 +512,7 @@ class CancelJob(Operator):
         if len(view_thread_jobs) == 1:
             thread_job = view_thread_jobs[0]
             thread_job.cancelled = True
-        props = utils.get_upload_props()  # TODO: get props using thread's view_id
+        props = upload.get_upload_props()  # TODO: get props using thread's view_id
         props.rendering = False
 
         return {'FINISHED'}
@@ -533,7 +534,7 @@ class RemoveRender(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         id_job = self.job_id
         job, = [j for j in props.render_data['jobs'] if j['id'] == id_job]
 
@@ -607,36 +608,6 @@ class OpenImage(Operator):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
-
-class ShowRenderImage(Operator):
-    """Show render image."""
-
-    bl_idname = f'{HANA3D_NAME}.show_image'
-    bl_label = ''
-
-    index: IntProperty(
-        name='index',
-    )
-
-    @execute_wrapper
-    def execute(self, context):
-        asset_props = utils.get_upload_props()
-        filepath = asset_props.render_list[self.index]['file_path']
-
-        image = bpy.data.images.load(filepath, check_existing=True)
-        image.name = asset_props.render_list[self.index]['name']
-        asset_props.render_list[self.index]['name'] = image.name
-
-        bpy.ops.render.view_show('INVOKE_DEFAULT')
-        try_again = True
-        while try_again:
-            try:
-                bpy.context.area.spaces.active.image = image
-                try_again = False
-            except AttributeError:
-                try_again = True
-        return {'FINISHED'}
 
 
 class UploadThread(UploadFileMixin, threading.Thread):
@@ -747,12 +718,12 @@ class UploadImage(Operator):
 
     @classmethod
     def poll(cls, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         return props is not None and props.active_image != '' and not props.uploading_render
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
 
         thread = UploadThread(context, props)
         thread.start()
@@ -766,7 +737,6 @@ classes = (
     CancelJob,
     RemoveRender,
     OpenImage,
-    ShowRenderImage,
     UploadImage,
 )
 

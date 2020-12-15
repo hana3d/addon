@@ -19,15 +19,12 @@ import bpy
 from bpy.types import Panel
 
 from . import addon_updater_ops, utils
-from .config import (
-    HANA3D_DESCRIPTION,
-    HANA3D_NAME,
-    HANA3D_UI,
-)
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src.panels.download import Hana3DDownloadPanel
 from .src.panels.render import Hana3DRenderPanel
 from .src.panels.updater import Hana3DUpdaterPanel
 from .src.search.search import Search
+from .src.upload import upload
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
@@ -103,7 +100,7 @@ def draw_selected_libraries(layout, props, operator):
 def draw_panel_common_upload(layout, context):
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
     asset_type = uiprops.asset_type
-    props = utils.get_upload_props()
+    props = upload.get_upload_props()
 
     box = layout.box()
     box.label(text='Workspace and Lib', icon='ASSET_MANAGER')

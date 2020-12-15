@@ -1,8 +1,8 @@
 """Render Farm operations panel."""
 from bpy.types import Panel
 
-from ... import utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER, HANA3D_UI
+from ..upload import upload
 
 
 class Hana3DRenderPanel(Panel):  # noqa: WPS214
@@ -20,7 +20,7 @@ class Hana3DRenderPanel(Panel):  # noqa: WPS214
 
     def draw(self, context):  # noqa: D102,WPS213
         render_props = getattr(context.window_manager, HANA3D_RENDER)
-        asset_props = utils.get_upload_props()
+        asset_props = upload.get_upload_props()
         ui_props = getattr(context.window_manager, HANA3D_UI)
 
         self.layout.prop(ui_props, 'asset_type_render', expand=False, text='')

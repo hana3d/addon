@@ -32,7 +32,7 @@ from bpy.props import (
 )
 from bpy.types import PropertyGroup
 
-from . import paths, render, render_tools, search, utils
+from . import paths, render, render_tools, search
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -45,6 +45,7 @@ from .config import (
 )
 from .src.search.asset_search import AssetSearch
 from .src.search.search import Search
+from .src.upload import upload
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -221,7 +222,7 @@ class Hana3DUIProps(PropertyGroup):
 
 class Hana3DRenderProps(PropertyGroup):
     def get_render_asset_name(self) -> str:
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         if props is not None:
             return props.name
         return ''
