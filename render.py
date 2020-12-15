@@ -145,7 +145,7 @@ class _read_in_chunks:
         self,
         render_thread: UploadFileMixin,
         blocksize: int = 2 ** 20,  # noqa WPS432,WPS404
-    ):
+    ):  # noqa DAR101
         """Helper class that allows for streaming upload and update progress"""  # noqa DAR101
         self.render_thread = render_thread
         self.blocksize = blocksize
