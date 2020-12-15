@@ -5,12 +5,12 @@ import os
 
 import bpy
 
-from .... import paths, utils
-from ....config import HANA3D_NAME, HANA3D_UI
+from .. import bgl_helper
 from ...preferences.preferences import Preferences
 from ...search.search import Search
 from ...upload import upload
-from .. import bgl_helper
+from .... import paths, utils
+from ....config import HANA3D_NAME, HANA3D_UI
 
 verification_icons = {
     'ready': 'vs_ready.png',
@@ -499,5 +499,5 @@ def draw_callback_3d(self, context):
                 ui.snapped_location,
                 ui.snapped_rotation,
                 ui.snapped_bbox_min,
-                ui.snapped_bbox_max
+                ui.snapped_bbox_max,
             )

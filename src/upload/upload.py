@@ -1,6 +1,7 @@
 """Upload functions."""
 import bpy
 
+from ..asset.asset_type import AssetType
 from ... import utils
 from ...config import HANA3D_NAME
 
@@ -17,11 +18,11 @@ def get_upload_props():
     return getattr(active_asset, HANA3D_NAME)
 
 
-def get_upload_props_by_view_id(asset_type: str, view_id: str):
+def get_upload_props_by_view_id(asset_type: AssetType, view_id: str):
     """Get upload props by view_id.
 
     Parameters:
-        asset_type: str (model|scene|material)
+        asset_type: AssetType
         view_id: str
 
     Returns:

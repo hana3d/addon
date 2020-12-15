@@ -9,6 +9,10 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
+from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
+from ..main import UI
+from ...search.search import Search
+from ...upload import upload
 from .... import search, utils
 from ....config import (
     HANA3D_DESCRIPTION,
@@ -17,10 +21,6 @@ from ....config import (
     HANA3D_UI,
 )
 from ....report_tools import execute_wrapper
-from ...search.search import Search
-from ...upload import upload
-from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
-from ..main import UI
 
 
 def get_asset_under_mouse(mousex, mousey):
@@ -34,7 +34,7 @@ def get_asset_under_mouse(mousex, mousey):
         for b in range(0, h_draw):
             w_draw = min(
                 ui_props.wcount,
-                len(search_results) - b * ui_props.wcount - ui_props.scrolloffset
+                len(search_results) - b * ui_props.wcount - ui_props.scrolloffset,
             )
             for a in range(0, w_draw):
                 x = (
@@ -128,7 +128,7 @@ def floor_raycast(context, mx, my):
         ray_target,
         (0, 0, 0),
         plane_normal,
-        False
+        False,
     )
     if snapped_location is not None:
         has_hit = True
@@ -191,7 +191,7 @@ def update_ui_size(area, region):
     if search_results is not None and ui.wcount > 0:
         ui.hcount = min(
             user_preferences.max_assetbar_rows,
-            math.ceil(len(search_results) / ui.wcount)
+            math.ceil(len(search_results) / ui.wcount),
         )
     else:
         ui.hcount = 1
@@ -203,9 +203,6 @@ def update_ui_size(area, region):
     else:
         ui.reports_y = ui.bar_y - ui.bar_height - 100
         ui.reports_x = ui.bar_x
-
-
-
 
 
 class AssetBarOperator(bpy.types.Operator):
@@ -595,7 +592,7 @@ class AssetBarOperator(bpy.types.Operator):
                 if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
                     ui_props.scrolloffset = max(
                         0,
-                        ui_props.scrolloffset - ui_props.wcount * ui_props.hcount
+                        ui_props.scrolloffset - ui_props.wcount * ui_props.hcount,
                     )
                     return {'RUNNING_MODAL'}
 
@@ -654,7 +651,7 @@ class AssetBarOperator(bpy.types.Operator):
                             ui_props.dragging = False
                             sel = utils.selection_get()
                             bpy.ops.view3d.select(
-                                location=(event.mouse_region_x, event.mouse_region_y)
+                                location=(event.mouse_region_x, event.mouse_region_y),
                             )
                             sel1 = utils.selection_get()
                             if sel[0] != sel1[0] and sel1[0].type != 'MESH':
@@ -682,7 +679,7 @@ class AssetBarOperator(bpy.types.Operator):
                                 target_slot = temp_mesh.polygons[face_index].material_index
                                 object_eval.to_mesh_clear()
                             else:
-                                logging.warning('Invalid or library object as input:') # noqa: WPS220
+                                logging.warning('Invalid or library object as input:')  # noqa: WPS220
                                 target_object = ''
                                 target_slot = ''
 
@@ -690,7 +687,7 @@ class AssetBarOperator(bpy.types.Operator):
                 else:
                     asset_search_index = get_asset_under_mouse(mx, my)
 
-                    if ui_props.asset_type in ('MATERIAL', 'MODEL',):  # noqa: WPS220
+                    if ui_props.asset_type in ('MATERIAL', 'MODEL'):  # noqa: WPS220
                         ao = bpy.context.active_object
                         if ao is not None and not ao.is_library_indirect:
                             target_object = bpy.context.active_object.name
@@ -743,7 +740,7 @@ class AssetBarOperator(bpy.types.Operator):
                         download_op = getattr(bpy.ops.scene, HANA3D_NAME + '_download')
                         download_op(
                             asset_type=ui_props.asset_type,
-                            asset_index=asset_search_index
+                            asset_index=asset_search_index,
                         )
 
                     ui_props.dragging = False
@@ -817,13 +814,13 @@ class AssetBarOperator(bpy.types.Operator):
             draw_callback_2d,
             args,
             'WINDOW',
-            'POST_PIXEL'
+            'POST_PIXEL',
         )
         self._handle_3d = bpy.types.SpaceView3D.draw_handler_add(
             draw_callback_3d,
             args,
             'WINDOW',
-            'POST_VIEW'
+            'POST_VIEW',
         )
 
         context.window_manager.modal_handler_add(self)
