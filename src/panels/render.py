@@ -67,20 +67,20 @@ class Hana3DRenderPanel(Panel):  # noqa: WPS214
 
         box = self.layout.box()
         row = box.row()
-        row.prop(asset_props, 'render_job_output', text='Render jobs')
-        row = box.row()
-        row.template_icon_view(
-            asset_props,
-            'render_job_output',
-            show_labels=True,
-            scale=10,
-            scale_popup=6,
+        row.template_list(
+            listtype_name="RENDER_UL_List",
+            list_id="render_list",
+            dataptr=asset_props,
+            propname="render_list",
+            active_dataptr=asset_props,
+            active_propname="render_list_index",
+            item_dyntip_propname='not_working',
         )
-
         row = box.row()
-        row.operator(f'{HANA3D_NAME}.import_render', icon='IMPORT')
-        row = box.row()
-        row.operator(f'{HANA3D_NAME}.remove_render', icon='CANCEL')
+        row.template_icon(
+            icon_value=asset_props.render_list[asset_props.render_list_index]['icon_id'],
+            scale=10,
+        )
 
     def _draw_generate_panel(self, context, render_props, asset_props):  # noqa: WPS213
         box = self.layout.box()
