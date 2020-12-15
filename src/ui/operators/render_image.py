@@ -22,6 +22,9 @@ class ShowRenderImage(bpy.types.Operator):
 
         Parameters:
             context: Blender context
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         asset_props = upload.get_upload_props()
         filepath = asset_props.render_list[self.index]['file_path']
