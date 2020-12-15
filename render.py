@@ -544,7 +544,7 @@ class RemoveRender(Operator):
 
         name = job['job_name']  # Get name before job is de-referenced
         self.remove_from_props(id_job, props)
-        render_tools.update_render_list(props, props.render_data['jobs'])
+        render_tools.update_render_list(props)
 
         ui = UI()
         ui.add_report(f'Deleted render {name}')
@@ -609,7 +609,7 @@ class OpenImage(Operator):
         return {'RUNNING_MODAL'}
 
 
-class ShowImage(Operator):
+class ShowRenderImage(Operator):
     """Show render image."""
 
     bl_idname = f'{HANA3D_NAME}.show_image'
@@ -659,7 +659,6 @@ class UploadThread(UploadFileMixin, threading.Thread):
             'jobs' not in props.render_data
             or len(props.render_data['jobs']) == 0
         )
-        self.props = props
 
     def run(self):
         self.update_state('uploading_render', True)
@@ -767,7 +766,7 @@ classes = (
     CancelJob,
     RemoveRender,
     OpenImage,
-    ShowImage,
+    ShowRenderImage,
     UploadImage,
 )
 

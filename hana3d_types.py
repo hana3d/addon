@@ -470,7 +470,7 @@ class Hana3DCommonUploadProps:
     def on_workspace_update(self, context):
         update_libraries_list(self, context)
         update_tags_list(self, context)
-        render_tools.update_render_list(self, self.render_data['jobs'])
+        render_tools.update_render_list(self)
 
     def update_tags_input(self, context):
         if self.tags_input != '':

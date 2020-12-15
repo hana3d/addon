@@ -67,13 +67,15 @@ def get_render_jobs(asset_type: str, view_id: str, job_id: str = None) -> List[d
 
 def update_render_list(
     props,
-    jobs=False,
+    jobs: dict = None,
+    set_jobs: bool = True,
 ):
     """Update render list on UI.
 
     Parameters
         props: upload props
-        jobs: dict, generally props.render_data['jobs']
+        jobs: dict
+        set_jobs: True if jobs exists, False otherwise
     """
     if not hasattr(props, 'view_id'):  # noqa WPS421
         return
@@ -81,7 +83,9 @@ def update_render_list(
     if not hasattr(preview_collection, 'previews'):  # noqa WPS421
         preview_collection.previews = []
 
-    if jobs is False:
+    if set_jobs:
+        jobs = props.render_data['jobs']
+    else:
         jobs = get_render_jobs(props.asset_type, props.view_id)
         props.render_data['jobs'] = jobs
 
@@ -102,7 +106,7 @@ def update_props_render_list(props, jobs, preview_collection):
     props.render_list.clear()
     available_previews = []
     sorted_jobs = sorted(jobs, key=lambda x: x['created'])
-    for n, job in enumerate(sorted_jobs):
+    for index, job in enumerate(sorted_jobs):
         job_id = job['id']
         if job_id not in preview_collection:
             preview_img = preview_collection.load(job_id, job['file_path'], 'IMAGE')
@@ -111,10 +115,10 @@ def update_props_render_list(props, jobs, preview_collection):
 
         new_render = props.render_list.add()
         new_render['name'] = job['job_name'] or ''
-        new_render['index'] = n
+        new_render['index'] = index
         new_render['job_id'] = job_id
         new_render['icon_id'] = preview_img.icon_id
         new_render['file_path'] = job['file_path']
-        enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
+        enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, index)
         available_previews.append(enum_item)
     preview_collection.previews = available_previews
