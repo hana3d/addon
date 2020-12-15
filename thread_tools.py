@@ -60,8 +60,12 @@ def update_in_foreground(
 
 
 def update_renders_in_foreground(asset_type: str, view_id: str):
-    """Update blender renders of object in foreground"""
+    """Update blender renders of object in foreground.
 
+    Parameters
+        asset_type: str (model|scene|material)
+        view_id: str
+    """
     imports = 'from . import utils, render_tools'
     props = f'props = utils.get_upload_props_by_view_id("{asset_type}", "{view_id}")'
     update = 'render_tools.update_render_list(props)'

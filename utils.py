@@ -166,6 +166,12 @@ def get_upload_props():
 
 
 def get_upload_props_by_view_id(asset_type: str, view_id: str):
+    """Get upload props by view_id.
+
+    Parameters:
+        asset_type: str (model|scene|material)
+        view_id: str
+    """
     asset = None
     if asset_type == 'model':
         asset = get_active_model(bpy.context, view_id)

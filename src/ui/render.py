@@ -1,15 +1,17 @@
+"""Render UI"""
 import bpy
 from bpy.types import UIList
 
 from ...config import HANA3D_NAME
 
 
-class RENDER_UL_List(UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+class RENDER_UL_List(UIList): # noqa N801
+    """List type to show all renders fo an asset."""
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname): # noqa WPS211,WPS110
+        """Method called when drawing each item of a Blender UI List."""
         show_image = layout.operator(f'{HANA3D_NAME}.show_image', icon='FULLSCREEN_ENTER')
         show_image.index = item.index
 
-        # layout.prop(item, 'name', text='', icon = item.icon_id, emboss=False, translate=False)
         layout.label(text=item.name, icon_value=item.icon_id)
 
         remove_render = layout.operator(f'{HANA3D_NAME}.remove_render', icon='CANCEL', text='')
@@ -24,10 +26,12 @@ keymaps = []
 
 
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    """Register"""
+    for cl in classes:
+        bpy.utils.register_class(cl)
 
 
 def unregister():
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+    """Unregister"""
+    for cl in reversed(classes):
+        bpy.utils.unregister_class(cl)

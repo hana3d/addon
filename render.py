@@ -610,10 +610,10 @@ class OpenImage(Operator):
 
 
 class ShowImage(Operator):
-    """Show render image"""
+    """Show render image."""
 
-    bl_idname = f"{HANA3D_NAME}.show_image"
-    bl_label = ""
+    bl_idname = f'{HANA3D_NAME}.show_image'
+    bl_label = ''
 
     index: IntProperty(
         name='index',
@@ -636,7 +636,7 @@ class ShowImage(Operator):
                 try_again = False
             except AttributeError:
                 try_again = True
-        return {"FINISHED"}
+        return {'FINISHED'}
 
 
 class UploadThread(UploadFileMixin, threading.Thread):

@@ -22,7 +22,7 @@ from typing import List
 
 import requests
 
-from . import paths, render, rerequests, utils
+from . import paths, render, rerequests
 from .src.search.query import Query
 
 
@@ -66,42 +66,45 @@ def get_render_jobs(asset_type: str, view_id: str, job_id: str = None) -> List[d
     return jobs
 
 
-def get_jobs_list(jobs: dict):
+def update_render_list(
+    props,
+    jobs=False,
+):
+    """Update render list on UI.
+
+    Parameters
+        props: upload props
+        jobs: dict, generally props.render_data['jobs']
+    """
+    if not hasattr(props, 'view_id'):  # noqa WPS421
+        return
+    preview_collection = render.render_previews[props.view_id]
+    if not hasattr(preview_collection, 'previews'):  # noqa WPS421
+        preview_collection.previews = []
+
     if jobs is False:
         jobs = get_render_jobs(props.asset_type, props.view_id)
         props.render_data['jobs'] = jobs
 
-    if jobs is None:
-        return
+    if jobs is not None:
+        update_props_render_list(props, jobs, preview_collection)
 
-    jobs_list = []
-    for job in jobs:
-        if 'IDPropertyGroup' in str(type(job)):
-            jobs_list.append(job.to_dict())
-        else:
-            jobs_list.append(job)
-    return jobs_list
+        logging.debug(f'Updated renders for {props.name}')
 
 
-def update_render_list(
-    props,
-    jobs: dict = False,
-    view_id: str = None
-):
-    if not hasattr(props, 'view_id'):
-        return
-    preview_collection = render.render_previews[props.view_id]
-    if not hasattr(preview_collection, 'previews'):
-        preview_collection.previews = []
+def update_props_render_list(props, jobs, preview_collection):
+    """Update render list on props.
 
-    jobs_list = get_jobs_list(preview_collection, jobs)
-
+    Parameters
+        props: Upload props
+        jobs: not None
+        preview_collection: List[Tuple] not None
+    """
     props.render_list.clear()
-    sorted_jobs = sorted(jobs_list, key=lambda x: x['created'])
     available_previews = []
+    sorted_jobs = sorted(jobs, key=lambda x: x['created'])
     for n, job in enumerate(sorted_jobs):
         job_id = job['id']
-        file_path = job['file_path']
         if job_id not in preview_collection:
             preview_img = preview_collection.load(job_id, job['file_path'], 'IMAGE')
         else:
@@ -112,9 +115,7 @@ def update_render_list(
         new_render['index'] = n
         new_render['job_id'] = job_id
         new_render['icon_id'] = preview_img.icon_id
-        new_render['file_path'] = file_path
+        new_render['file_path'] = job['file_path']
         enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
         available_previews.append(enum_item)
     preview_collection.previews = available_previews
-
-    logging.debug(f'Updated renders for {props.name}')
