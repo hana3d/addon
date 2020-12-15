@@ -17,7 +17,6 @@
 # ##### END GPL LICENSE BLOCK #####
 import logging
 import math
-import os
 from typing import Union
 
 import bpy
@@ -340,6 +339,7 @@ class Hana3DRenderItem(PropertyGroup):
     icon_id: IntProperty(name='Render Icon Id')
     file_path: StringProperty(name='Render File Path', default='')
     index: IntProperty(name='Render Index')
+    # the next property is only to show a custom text on hover label
     not_working: StringProperty(name='Not Working', default='Not working')
 
 
