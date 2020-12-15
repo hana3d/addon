@@ -1,9 +1,9 @@
 """Render image operator."""
 import bpy
 
+from ...upload import upload
 from ....config import HANA3D_NAME
 from ....report_tools import execute_wrapper
-from ...upload import upload
 
 
 class ShowRenderImage(bpy.types.Operator):
