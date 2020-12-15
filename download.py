@@ -288,10 +288,9 @@ def execute_append_tasks():
         return 0.1
 
     task = append_tasks_queue.get()
-    task()
-    append_tasks_queue.task_done()
     try:
-        pass
+        task()
+        append_tasks_queue.task_done()
     except Exception as e:
         asset_data, = task.args
         file_names = file_names = paths.get_download_filenames(asset_data)
