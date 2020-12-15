@@ -18,16 +18,16 @@
 import bpy
 from bpy.types import Panel
 
-from . import addon_updater_ops, download, render, utils
+from . import addon_updater_ops, utils
 from .config import (
     HANA3D_DESCRIPTION,
-    HANA3D_MATERIALS,
-    HANA3D_MODELS,
     HANA3D_NAME,
-    HANA3D_RENDER,
-    HANA3D_SCENES,
     HANA3D_UI,
 )
+from .src.panels.download import Hana3DDownloadPanel
+from .src.panels.render import Hana3DRenderPanel
+from .src.panels.updater import Hana3DUpdaterPanel
+from .src.search.search import Search
 
 
 def label_multiline(layout, text='', icon='NONE', width=-1):
@@ -68,17 +68,6 @@ def prop_needed(layout, props, name, value, is_not_filled=''):
     else:
         row.prop(props, name)
     return row
-
-
-def draw_not_logged_in(source):
-    title = "User not logged in"
-
-    def draw_message(source, context):
-        layout = source.layout
-        label_multiline(layout, text='Please login or sign up ' 'to upload files.')
-        draw_login_buttons(layout)
-
-    bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
 
 
 def draw_selected_tags(layout, props, operator):
@@ -192,25 +181,27 @@ def draw_panel_common_upload(layout, context):
 def draw_panel_common_search(layout, context):
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
     asset_type = uiprops.asset_type
-    props = utils.get_search_props()
+
+    search = Search(context)
+    search_props = search.props
 
     row = layout.row()
-    row.prop(props, "search_keywords", text="", icon='VIEWZOOM')
-    draw_assetbar_show_hide(row, props)
-    layout.prop(props, 'workspace', expand=False, text='Workspace')
+    row.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
+    draw_assetbar_show_hide(row, search_props)
+    layout.prop(search_props, 'workspace', expand=False, text='Workspace')
     row = layout.row()
-    row.prop_search(props, "libraries_input", props, "libraries_list", icon='VIEWZOOM')
+    row.prop_search(search_props, 'libraries_input', search_props, 'libraries_list', icon='VIEWZOOM') # noqa : E501
     row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
-    draw_selected_libraries(layout, props, f"object.{HANA3D_NAME}_remove_library_search")
-    layout.prop_search(props, "tags_input", props, "tags_list", icon='VIEWZOOM')
-    draw_selected_tags(layout, props, f"object.{HANA3D_NAME}_remove_tag_search")
-    layout.prop(props, "public_only")
-    label_multiline(layout, text=props.report)
+    draw_selected_libraries(layout, search_props, f'object.{HANA3D_NAME}_remove_library_search')
+    layout.prop_search(search_props, 'tags_input', search_props, 'tags_list', icon='VIEWZOOM')
+    draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
+    layout.prop(search_props, 'public_only')
+    label_multiline(layout, text=search_props.report)
 
     if asset_type == 'MODEL':
         layout.separator()
         layout.label(text='Import method:')
-        layout.prop(props, 'append_method', expand=True, icon_only=False)
+        layout.prop(search_props, 'append_method', expand=True, icon_only=False)
         row = layout.row(align=True)
         row.operator(f'scene.{HANA3D_NAME}_batch_download')
     # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge
@@ -294,8 +285,7 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
     def draw(self, context):
         s = context.scene
-        wm = context.window_manager
-        ui_props = getattr(wm, HANA3D_UI)
+        ui_props = getattr(context.window_manager, HANA3D_UI)
         user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
         layout = self.layout
 
@@ -314,7 +304,8 @@ class VIEW3D_PT_hana3d_unified(Panel):
 
         if ui_props.down_up == 'SEARCH':
             if utils.profile_is_validator():
-                search_props = utils.get_search_props()
+                search = Search(context)
+                search_props = search.props
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type == 'MODEL':
                 draw_panel_common_search(self.layout, context)
@@ -363,25 +354,6 @@ class VIEW3D_PT_hana3d_unified(Panel):
                     )
 
 
-class VIEW3D_PT_hana3d_downloads(Panel):
-    bl_category = HANA3D_DESCRIPTION
-    bl_idname = f"VIEW3D_PT_{HANA3D_NAME}_downloads"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_label = f"Downloads {HANA3D_DESCRIPTION}"
-
-    @classmethod
-    def poll(cls, context):
-        return len(download.download_threads) > 0
-
-    def draw(self, context):
-        layout = self.layout
-        for view_id, thread in download.download_threads.items():
-            row = layout.row()
-            row.label(text=thread.asset_data['name'])
-            row.label(text=str(int(thread.tcom.progress)) + ' %')
-            op = row.operator(f'scene.{HANA3D_NAME}_download_kill', text='', icon='CANCEL')
-            op.view_id = view_id
 
 
 def header_search_draw(self, context):
@@ -393,221 +365,32 @@ def header_search_draw(self, context):
     preferences = context.preferences.addons[HANA3D_NAME].preferences
     if preferences.search_in_header:
         layout = self.layout
-        wm = context.window_manager
-        ui_props = getattr(wm, HANA3D_UI)
-        if ui_props.asset_type == 'MODEL':
-            props = getattr(wm, HANA3D_MODELS)
-        if ui_props.asset_type == 'MATERIAL':
-            props = getattr(wm, HANA3D_MATERIALS)
-        if ui_props.asset_type == 'SCENE':
-            props = getattr(wm, HANA3D_SCENES)
-        # if ui_props.asset_type == 'HDR':
-        #     props = getattr(wm, HANA3D_HDR)
+        ui_props = getattr(context.window_manager, HANA3D_UI)
+        search = Search(context)
+        search_props = search.props
 
         if context.space_data.show_region_tool_header is True or context.mode[:4] not in (
             'EDIT',
             'OBJE',
         ):
             layout.separator_spacer()
-        layout.prop(ui_props, "asset_type", text='', icon='URL')
-        layout.prop(props, "search_keywords", text="", icon='VIEWZOOM')
-        draw_assetbar_show_hide(layout, props)
+        layout.prop(ui_props, 'asset_type', text='', icon='URL')
+        layout.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
+        draw_assetbar_show_hide(layout, search_props)
 
-
-class VIEW3D_PT_UpdaterPanel(Panel):
-    """Panel to demo popup notice and ignoring functionality"""
-
-    bl_label = "Preferences"
-    bl_idname = f"VIEW3D_PT_{HANA3D_NAME}_UpdaterPanel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = "objectmode"
-    bl_category = HANA3D_DESCRIPTION
-
-    def draw(self, context):
-        layout = self.layout
-
-        mainrow = layout.row()
-        col = mainrow.column()
-        addon_updater_ops.update_settings_ui_condensed(self, context, col)
-
-        addon_updater_ops.check_for_update_background()
-
-        addon_updater_ops.update_notice_box_ui(self, context)
-
-        layout.prop(context.preferences.addons[HANA3D_NAME].preferences, 'search_in_header')
-
-
-class VIEW3D_PT_hana3d_RenderPanel(Panel):
-    """Render Farm operations panel"""
-
-    bl_label = f"Manage renders on {HANA3D_DESCRIPTION}"
-    bl_idname = f"VIEW3D_PT_{HANA3D_NAME}_RenderPanel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = HANA3D_DESCRIPTION
-
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def draw(self, context):
-        render_props = getattr(context.window_manager, HANA3D_RENDER)
-        asset_props = utils.get_upload_props()
-        ui_props = getattr(context.window_manager, HANA3D_UI)
-
-        self.layout.prop(ui_props, 'asset_type_render', expand=False, text='')
-
-        if asset_props is None:
-            row = self.layout.row()
-            row.label(text='Select an asset')
-            return
-
-        self.draw_asset_name(ui_props, render_props)
-        self.layout.separator()
-
-        if asset_props.view_id == '':
-            row = self.layout.row()
-            row.label(text='Upload asset first')
-            return
-
-        self.draw_main_panel(render_props, asset_props)
-        self.layout.separator()
-
-        self.layout.prop(render_props, 'render_ui_mode', expand=True, icon_only=False)
-        self.layout.separator()
-
-        if render_props.render_ui_mode == 'GENERATE':
-            self.draw_generate_panel(context, render_props, asset_props)
-        elif render_props.render_ui_mode == 'UPLOAD':
-            self.draw_upload_panel(asset_props)
-
-    def draw_asset_name(self, ui_props, render_props):
-        if ui_props.asset_type == 'MODEL':
-            icon = 'OBJECT_DATAMODE'
-        elif ui_props.asset_type == 'SCENE':
-            icon = 'SCENE_DATA'
-        elif ui_props.asset_type == 'MATERIAL':
-            icon = 'MATERIAL'
-        row = self.layout.row()
-        row.prop(render_props, 'asset', text='Asset', icon=icon)
-
-    def draw_main_panel(self, render_props, asset_props):
-        if 'jobs' not in asset_props.render_data or len(asset_props.render_data['jobs']) == 0:
-            row = self.layout.row()
-            row.label(text=f"This asset has no saved renders in {HANA3D_DESCRIPTION}")
-            return
-
-        box = self.layout.box()
-        row = box.row()
-        row.template_list(
-            listtype_name='RENDER_UL_List',
-            list_id='render_list',
-            dataptr=asset_props,
-            propname='render_list',
-            active_dataptr=asset_props,
-            active_propname='render_list_index',
-            item_dyntip_propname='not_working',
-        )
-        row = box.row()
-        row.template_icon(
-            icon_value=asset_props.render_list[asset_props.render_list_index]['icon_id'],
-            scale=10,
-        )
-
-    def draw_generate_panel(self, context, render_props, asset_props):
-        box = self.layout.box()
-
-        row = box.row()
-        row.label(text='Balance')
-        row.label(text=render_props.balance)
-
-        box.label(text='Render Parameters', icon='PREFERENCES')
-        box.prop(asset_props, 'render_job_name', text='Name')
-        box.prop(render_props, 'cameras', expand=False, icon_only=False)
-        if render_props.cameras == 'ACTIVE_CAMERA' and context.scene.camera is not None:
-            row = box.row()
-            row.label(text=context.scene.camera.name_full)
-        box.prop(render_props, 'engine')
-        row = box.row()
-        row.label(text="Resolution X")
-        row.prop(context.scene.render, "resolution_x", text='')
-        row = box.row()
-        row.label(text="Resolution Y")
-        row.prop(context.scene.render, "resolution_y", text='')
-
-        row = box.row()
-        row.prop(render_props, 'frame_animation', text='')
-        if render_props.cameras in ('VISIBLE_CAMERAS', 'ALL_CAMERAS'):
-            row.enabled = False
-            row = box.row()
-            row.label(text="Frame")
-            row.prop(context.scene, "frame_current", text='')
-            row = box.row()
-            row.label(text="Atenção! Só será renderizado um frame por câmera!", icon='ERROR')
-        elif render_props.frame_animation == 'FRAME':
-            row = box.row()
-            row.label(text="Frame")
-            row.prop(context.scene, "frame_current", text='')
-        elif render_props.frame_animation == 'ANIMATION':
-            row = box.row()
-            row.label(text="Frame Start")
-            row.prop(context.scene, "frame_start", text='')
-            row = box.row()
-            row.label(text="Frame End")
-            row.prop(context.scene, "frame_end", text='')
-
-        if asset_props is not None and asset_props.rendering:
-            self.draw_kill_job(asset_props)
-
-        visible_cameras = [ob.name_full for ob in context.scene.objects
-                           if ob.type == 'CAMERA' and ob.visible_get()]
-        all_cameras = [ob.name_full for ob in context.scene.objects
-                       if ob.type == 'CAMERA']
-        if render_props.cameras == 'ACTIVE_CAMERA' and context.scene.camera is not None or \
-                render_props.cameras == 'VISIBLE_CAMERAS' and len(visible_cameras) or \
-                render_props.cameras == 'ALL_CAMERAS' and len(all_cameras):
-            row = self.layout.row()
-            row.scale_y = 2.0
-            row.operator(HANA3D_NAME + '.render_scene', icon='SCENE')
-
-    def draw_kill_job(self, asset_props):
-        row = self.layout.row(align=True)
-        row.label(text=asset_props.render_state)
-        op = row.operator(HANA3D_NAME + '.cancel_render_job', text="", icon='CANCEL')
-        op.view_id = asset_props.view_id
-
-    def draw_upload_panel(self, asset_props):
-        box = self.layout.box()
-
-        row = box.row()
-        row.prop(asset_props, 'active_image', text='')
-        row.operator(HANA3D_NAME + '.open_image', text='', icon='FILEBROWSER')
-
-        row = box.row()
-        row.prop(asset_props, 'render_job_name', text='Name')
-        row = box.row()
-        row.label(text=asset_props.upload_render_state)
-        row = box.row()
-        row.operator(HANA3D_NAME + '.upload_render_image', icon='EXPORT')
-
-        # Only work in EDIT_IMAGE space
-        # box = self.layout.box()
-        # row = box.row()
-        # row.template_ID(bpy.context.space_data, 'image', open='image.open')
 
 
 classes = (
-    VIEW3D_PT_UpdaterPanel,
+    Hana3DUpdaterPanel,
     VIEW3D_PT_hana3d_login,
     VIEW3D_PT_hana3d_unified,
-    VIEW3D_PT_hana3d_downloads,
-    VIEW3D_PT_hana3d_RenderPanel
+    Hana3DDownloadPanel,
+    Hana3DRenderPanel,
 )
 
 
 def register():
-    addon_updater_ops.make_annotations(VIEW3D_PT_UpdaterPanel)
+    addon_updater_ops.make_annotations(Hana3DUpdaterPanel)
     for c in classes:
         bpy.utils.register_class(c)
     bpy.types.VIEW3D_MT_editor_menus.append(header_search_draw)

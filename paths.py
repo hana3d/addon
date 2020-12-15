@@ -30,6 +30,7 @@ from .config import (
     HANA3D_PLATFORM_URL,
     HANA3D_URL,
 )
+from .src.asset.asset_type import AssetType
 from .src.search.query import Query
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), 'presets')
@@ -45,23 +46,23 @@ def find_in_local(text=''):
     return fs
 
 
-def get_api_url(*paths: str, query: Query = None) -> str:
+def get_api_url(*paths: str, query: dict = None) -> str:
     """Get API URL.
 
     Args:
         paths (str): path of the API url
-        query (Query): Search Query passed as query string parameters. Defaults to None.
+        query (dict): Query passed as query string parameters. Defaults to None.
 
     Returns:
         str: the formatted API URL
     """
-    base_url = HANA3D_URL + '/v1/'
-    url = urllib.parse.urljoin(base_url, '/'.join(p.strip('/') for p in paths))
+    base_url = f'{HANA3D_URL}/v1/'
+    url = urllib.parse.urljoin(base_url, '/'.join(path.strip('/') for path in paths))
     if query is None:
         return url
-    query.public = 'true' if query.public else 'false'
-    query_string = urllib.parse.urlencode(vars(query))  # noqa : WPS421
+    query_string = urllib.parse.urlencode(query)
     return f'{url}?{query_string}'
+
 
 
 def get_auth_url():
@@ -214,26 +215,26 @@ def get_clean_filepath():
     return cp
 
 
-def get_thumbnailer_filepath():
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    # fpath = os.path.join(p, subpath)
-    subpath = f'blendfiles{os.sep}thumbnailer.blend'
-    return os.path.join(script_path, subpath)
+def get_thumbnailer_filepath(asset_type: AssetType) -> str:
+    """Get filepath for blend files used in thumbnailer.
 
+    Parameters:
+        asset_type: 'model' or 'material'
 
-def get_material_thumbnailer_filepath():
+    Returns:
+        str: filepath to blend file
+
+    Raises:
+        Exception: Invalid asset type for thumbnailer filepath
+    """
     script_path = os.path.dirname(os.path.realpath(__file__))
-    # fpath = os.path.join(p, subpath)
-    subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
-    return os.path.join(script_path, subpath)
-    """
-    for p in bpy.utils.script_paths():
-        testfname= os.path.join(p, subpath)#p + '%saddons%sobject_fracture%sdata.blend' % (s,s,s)
-        if os.path.isfile( testfname):
-            fname=testfname
-            return(fname)
-    return None
-    """
+    if asset_type == 'model':
+        subpath = f'blendfiles{os.sep}thumbnailer.blend'
+        return os.path.join(script_path, subpath)
+    elif asset_type == 'material':
+        subpath = f'blendfiles{os.sep}material_thumbnailer_cycles.blend'
+        return os.path.join(script_path, subpath)
+    raise Exception('Invalid asset type for thumbnailer filepath.')
 
 
 def get_addon_file(subpath=''):

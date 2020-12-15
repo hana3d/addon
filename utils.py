@@ -23,18 +23,14 @@ import time
 from typing import List, Tuple
 
 import bpy
-from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from . import logger, paths
-from .config import (
-    HANA3D_MATERIALS,
-    HANA3D_MODELS,
-    HANA3D_NAME,
-    HANA3D_PROFILE,
-    HANA3D_SCENES,
-    HANA3D_UI,
-)
+from idprop.types import IDPropertyGroup
+
+from . import paths
+from .config import HANA3D_MATERIALS, HANA3D_NAME, HANA3D_PROFILE, HANA3D_UI
+from .src.ui import colors
+from .src.ui.main import UI
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -118,25 +114,6 @@ def get_selected_models():
     return parents
 
 
-def get_search_props():
-    scene = bpy.context.window_manager
-    if scene is None:
-        return
-    uiprops = getattr(scene, HANA3D_UI)
-    props = None
-    if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, HANA3D_MODELS):
-            return
-        props = getattr(scene, HANA3D_MODELS)
-    if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, HANA3D_SCENES):
-            return
-        props = getattr(scene, HANA3D_SCENES)
-    if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, HANA3D_MATERIALS):
-            return
-        props = getattr(scene, HANA3D_MATERIALS)
-    return props
 
 
 def get_active_asset():
@@ -224,10 +201,8 @@ def save_prefs(self, context):
             # reset the api key in case the user writes some nonsense,
             # e.g. a search string instead of the Key
             user_preferences.api_key = ''
-            logger.show_report(
-                get_search_props(),
-                text='Login failed. Please paste a correct API Key.',
-            )
+            ui = UI()
+            ui.add_report(text='Login failed. Please paste a correct API Key.', color=colors.RED)
 
         prefs = {
             'API_key': user_preferences.api_key,

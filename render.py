@@ -34,26 +34,24 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty, IntPrope
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from . import (
-    autothumb,
-    colors,
-    paths,
-    render_tools,
-    rerequests,
-    thread_tools,
-    ui,
-    utils,
-)
+from . import autothumb, paths, render_tools, rerequests, thread_tools, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
+from .src.async_loop import run_async_function
 from .src.preferences.profile import Profile
+from .src.ui import colors
+from .src.ui.main import UI
 
 render_threads = []
 upload_threads = []
 
 
 def threads_cleanup():
-    """Cleanup finished threads"""
+    """Cleanup finished threads.
+
+    Returns:
+        int: 10 if no render threads, 2 otherwise
+    """
     if len(render_threads) == 0:
         return 10
 
@@ -114,6 +112,7 @@ class UploadFileMixin:
         self.update_state('render_state', text)
         color = colors.RED if error else colors.GREEN
         if self.add_report:
+            ui = UI()
             ui.add_report(text, color=color)
         logging.info(text)
 
@@ -246,7 +245,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             time.sleep(5)
             self.update_state(self.log_state_name, '')
             profile = Profile()
-            profile.update_async()
+            run_async_function(profile.update_async)
 
     def _set_running_flag(self, flag: bool):
         if self.is_thumbnail:
@@ -547,6 +546,7 @@ class RemoveRender(Operator):
         self.remove_from_props(id_job, props)
         render_tools.update_render_list(props, props.render_data['jobs'])
 
+        ui = UI()
         ui.add_report(f'Deleted render {name}')
         return {'FINISHED'}
 

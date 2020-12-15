@@ -23,7 +23,6 @@ from typing import List
 import requests
 
 from . import paths, render, rerequests
-from .src.search.query import Query
 
 
 def download_file(file_path: str, url: str) -> str:
@@ -37,10 +36,10 @@ def download_file(file_path: str, url: str) -> str:
 
 
 def get_render_jobs(asset_type: str, view_id: str, job_id: str = None) -> List[dict]:
-    query = Query()
-    query.view_id = view_id
+    query = {}
+    query['view_id'] = view_id
     if job_id:
-        query.job_id = job_id
+        query['job_id'] = job_id
     url = paths.get_api_url('renders', query=query)
     response = rerequests.get(url, headers=rerequests.get_headers())
     assert response.ok, response.text

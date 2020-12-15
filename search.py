@@ -27,18 +27,14 @@ from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
 
 from . import hana3d_oauth, logger, paths, rerequests, utils
-from .config import (
-    HANA3D_DESCRIPTION,
-    HANA3D_MATERIALS,
-    HANA3D_MODELS,
-    HANA3D_NAME,
-    HANA3D_SCENES,
-    HANA3D_UI,
-)
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.preferences.preferences import Preferences
 from .src.search.asset_search import AssetSearch
 from .src.search.query import Query
 from .src.search.search import Search
+from .src.ui import colors
+from .src.ui.main import UI
 
 search_start_time = 0
 prev_time = 0
@@ -73,7 +69,7 @@ last_clipboard = ''
 # @bpy.app.handlers.persistent
 def timer_update():
     global first_time
-    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+    preferences = Preferences().get()
     if first_time:
         first_time = False
         if preferences.show_on_start:
@@ -95,14 +91,9 @@ def timer_update():
             search_threads.remove(thread)
             icons_dir = thread[1]
             asset_type = thread[2]
-            if asset_type == 'model':
-                props = getattr(bpy.context.window_manager, HANA3D_MODELS)
-            if asset_type == 'scene':
-                props = getattr(bpy.context.window_manager, HANA3D_SCENES)
-            if asset_type == 'material':
-                props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
 
-            search_object = Search(bpy.context)
+            search_object = Search(bpy.context, asset_type)
+            props = search_object.props
             asset_search = AssetSearch(bpy.context, asset_type)
             asset_search.results = []  # noqa : WPS110
             json_filepath = os.path.join(icons_dir, f'{asset_type}_searchresult.json')
@@ -134,7 +125,7 @@ def timer_update():
                                     tdict['thumbnail_%i'] = t
                                 if f['fileType'] == 'blend':
                                     durl = f['downloadUrl']
-                            if durl and tname:
+                            if durl:    # noqa: WPS220
                                 # Check for assetBaseId for backwards compatibility
                                 view_id = r.get('viewId') or r.get('assetBaseId') or ''
                                 tooltip = utils.generate_tooltip(
@@ -210,15 +201,36 @@ def timer_update():
                 props.is_searching = False
                 props.search_error = False
                 text = f'Found {search_object.results_orig["count"]} results. '  # noqa #501
-                logger.show_report(props, text=text)
+                ui = UI()
+                ui.add_report(text=text)
 
             else:
                 logging.error(error)
-                logger.show_report(props, text=error)
+                ui = UI()
+                ui.add_report(text=error, color=colors.RED)
                 props.search_error = True
 
             mt('preview loading finished')
-    return 0.3
+    return 0.3 # noqa : WPS432
+
+
+def load_placeholder_thumbnail(index: int, asset_id: str):
+    """Load placeholder thumbnail for assets without one.
+
+    Arguments:
+        index: index number of the asset in search results
+        asset_id: asset id
+    """
+    placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
+
+    img = bpy.data.images.load(placeholder_path)
+    img.name = utils.previmg_name(index)
+
+    hidden_img = bpy.data.images.load(placeholder_path)
+    hidden_img.name = f'.{asset_id}'
+
+    fullsize_img = bpy.data.images.load(placeholder_path)
+    fullsize_img.name = utils.previmg_name(index, fullsize=True)
 
 
 def load_previews():
@@ -237,6 +249,10 @@ def load_previews():
     if search_results is not None:
         index = 0
         for search_result in search_results:
+            if search_result['thumbnail_small'] == '':
+                load_placeholder_thumbnail(index, search_result['id'])
+                index += 1
+                continue
 
             tpath = os.path.join(directory, search_result['thumbnail_small'])
 
@@ -325,14 +341,16 @@ class Searcher(threading.Thread):
                     # in case no search results found on drive we don't do next page loading.
                     params['get_next'] = False
         if not params['get_next']:
-            urlquery = paths.get_api_url('search', query=self.query)
+            query.save_last_query()
+            urlquery = paths.get_api_url('search', query=self.query.to_dict())
+
+        ui = UI()
         try:
             logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
-            logger.show_report(utils.get_search_props(), text='')
         except requests.exceptions.RequestException as e:
             logging.error(e)
-            logger.show_report(utils.get_search_props(), text=str(e))
+            ui.add_report(text=str(e))
             return
         mt('response is back ')
         try:
@@ -340,7 +358,7 @@ class Searcher(threading.Thread):
             rdata['status_code'] = r.status_code
         except Exception as inst:
             logging.error(inst)
-            logger.show_report(utils.get_search_props(), text=r.text)
+            ui.add_report(text=r.text)
 
         mt('data parsed ')
 
@@ -485,38 +503,25 @@ def search(get_next=False, author_id=''):
 
     search_start_time = time.time()
     # mt('start')
+
+    search_object = Search(bpy.context)
+    search_props = search_object.props
+
+    query = Query(bpy.context, search_props)
+
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
-    asset_type = uiprops.asset_type.lower()
+    query.asset_type = uiprops.asset_type.lower()
 
-    props = None
-
-    if uiprops.asset_type == 'MODEL':
-        if not hasattr(bpy.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
-            return
-        props = getattr(bpy.context.window_manager, HANA3D_MODELS)
-    elif uiprops.asset_type == 'SCENE':
-        if not hasattr(bpy.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
-            return
-        props = getattr(bpy.context.window_manager, HANA3D_SCENES)
-    elif uiprops.asset_type == 'MATERIAL':
-        if not hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
-            return
-        props = getattr(bpy.context.window_manager, HANA3D_MATERIALS)
-    else:
+    if search_props.is_searching and get_next:
         return
 
-    query = Query(bpy.context, props)
-    query.asset_type = asset_type
-
-    if props.is_searching and get_next:
-        return
-
-    props.is_searching = True
+    search_props.is_searching = True
 
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    logger.show_report(props, text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
+    ui = UI()
+    ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
 
 class SearchOperator(Operator):
@@ -556,12 +561,13 @@ class SearchOperator(Operator):
     @execute_wrapper
     def execute(self, context):
         # TODO this should all get transferred to properties of the search operator,
-        #  so sprops don't have to be fetched here at all.
-        sprops = utils.get_search_props()
+        #  so search_props don't have to be fetched here at all.
+        search_object = Search(context)
+        search_props = search_object.props
         if self.author_id != '':
-            sprops.search_keywords = ''
+            search_props.search_keywords = ''
         if self.keywords != '':
-            sprops.search_keywords = self.keywords
+            search_props.search_keywords = self.keywords
 
         search(get_next=self.get_next, author_id=self.author_id)
         # asset_bar_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_asset_bar')
@@ -576,7 +582,6 @@ classes = [SearchOperator]
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-
     bpy.app.timers.register(timer_update)
 
 
