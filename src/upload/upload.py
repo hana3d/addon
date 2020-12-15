@@ -7,7 +7,7 @@ from ...config import HANA3D_NAME
 
 def get_upload_props():
     """Get upload props of the active asset.
-    
+
     Returns:
         upload props
     """
@@ -23,6 +23,7 @@ def get_upload_props_by_view_id(asset_type: str, view_id: str):
     Parameters:
         asset_type: str (model|scene|material)
         view_id: str
+
     Returns:
         upload props
     """

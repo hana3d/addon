@@ -9,7 +9,7 @@ class RENDER_UL_List(UIList): # noqa N801
     """List type to show all renders fo an asset."""
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname): # noqa WPS211,WPS110
         """Method called when drawing each item of a Blender UI List.
-        
+
         Parameters:
             context: automatically passed
             layout: automatically passed

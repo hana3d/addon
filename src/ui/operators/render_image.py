@@ -21,7 +21,8 @@ class ShowRenderImage(bpy.types.Operator):
         """Execute the operator.
 
         Parameters:
-            context: context"""
+            context: Blender context
+        """
         asset_props = upload.get_upload_props()
         filepath = asset_props.render_list[self.index]['file_path']
 
@@ -40,7 +41,11 @@ class ShowRenderImage(bpy.types.Operator):
         """Set image to the new window.
 
         Parameters:
-            context: context"""
+            context: Blender context
+
+        Returns:
+            try_again: bool
+        """
         try:
             context.area.spaces.active.image = image
         except AttributeError:

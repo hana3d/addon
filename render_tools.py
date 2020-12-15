@@ -95,7 +95,7 @@ def update_render_list(
         logging.debug(f'Updated renders for {props.name}')
 
 
-def update_props_render_list(props, jobs, preview_collection):
+def update_props_render_list(props, jobs, preview_collection):  # noqa WPS210
     """Update render list on props.
 
     Parameters:
@@ -105,7 +105,7 @@ def update_props_render_list(props, jobs, preview_collection):
     """
     props.render_list.clear()
     available_previews = []
-    sorted_jobs = sorted(jobs, key=lambda job: job['created'])
+    sorted_jobs = sorted(jobs, key=lambda jb: jb['created'])
     for index, job in enumerate(sorted_jobs):
         job_id = job['id']
         if job_id not in preview_collection:
