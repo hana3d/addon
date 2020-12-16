@@ -8,6 +8,10 @@ import uuid
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
+from ... import paths, render, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -16,10 +20,7 @@ from .async_functions import (
     get_upload_url,
     upload_file,
 )
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from .data_helper import get_export_data
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -30,110 +31,6 @@ asset_types = (
     ('MATERIAL', 'Material', 'any .blend Material'),
     ('ADDON', 'Addon', 'addon'),
 )
-
-
-def _get_export_data(   # noqa: WPS210
-    props: hana3d_types.Props,
-    path_computing: str = 'uploading',
-    path_state: str = 'upload_state',
-):
-    export_data = {
-        'type': props.asset_type,
-        'thumbnail_path': bpy.path.abspath(props.thumbnail),
-    }
-    upload_params = {}
-    if props.asset_type.upper() == 'MODEL':
-        mainmodel = utils.get_active_model(bpy.context)
-
-        obs = utils.get_hierarchy(mainmodel)
-        obnames = []
-        for ob in obs:
-            obnames.append(ob.name)
-        export_data['type'] = 'MODEL'
-        export_data['models'] = obnames
-
-        upload_data = {
-            'assetType': 'model',
-        }
-        upload_params = {
-            'dimensionX': round(props.dimensions[0], 4),
-            'dimensionY': round(props.dimensions[1], 4),
-            'dimensionZ': round(props.dimensions[2], 4),
-            'boundBoxMinX': round(props.bbox_min[0], 4),
-            'boundBoxMinY': round(props.bbox_min[1], 4),
-            'boundBoxMinZ': round(props.bbox_min[2], 4),
-            'boundBoxMaxX': round(props.bbox_max[0], 4),
-            'boundBoxMaxY': round(props.bbox_max[1], 4),
-            'boundBoxMaxZ': round(props.bbox_max[2], 4),
-            'faceCount': props.face_count,
-            'faceCountRender': props.face_count_render,
-            'objectCount': props.object_count,
-        }
-
-    elif props.asset_type.upper() == 'SCENE':
-        name = bpy.context.scene.name
-
-        export_data['type'] = 'SCENE'
-        export_data['scene'] = name
-
-        upload_data = {
-            'assetType': 'scene',
-        }
-
-    elif props.asset_type.upper() == 'MATERIAL':
-        mat = bpy.context.active_object.active_material
-
-        export_data['type'] = 'MATERIAL'
-        export_data['material'] = str(mat.name)
-
-        upload_data = {
-            'assetType': 'material',
-        }
-
-        upload_params = {}
-    else:
-        raise Exception(f'Unexpected asset_type={props.asset_type}')
-
-    upload_data['name'] = props.name
-    upload_data['description'] = props.description
-
-    upload_data['parameters'] = upload_params
-
-    upload_data['is_public'] = props.is_public
-    if props.workspace != '' and not props.is_public:
-        upload_data['workspace'] = props.workspace
-
-    metadata = {}
-    if metadata:
-        upload_data['metadata'] = metadata
-
-    upload_data['tags'] = []
-    for tag in props.tags_list.keys():
-        if props.tags_list[tag].selected is True:
-            upload_data['tags'].append(tag)
-
-    upload_data['libraries'] = []
-    for library_name in props.libraries_list.keys():
-        if props.libraries_list[library_name].selected is True:
-            library_id = props.libraries_list[library_name].id_
-            library = {}
-            library.update({
-                'id': library_id,
-            })
-            if props.custom_props.keys():
-                custom_props = {}
-                for prop_name in props.custom_props.keys():
-                    prop_value = props.custom_props[prop_name]
-                    slug = props.custom_props_info[prop_name]['slug']
-                    prop_library_id = props.custom_props_info[prop_name]['library_id']
-                    if prop_library_id == library_id:
-                        custom_props.update({slug: prop_value})  # noqa: WPS220
-                library.update({'metadata': {'view_props': custom_props}})
-            upload_data['libraries'].append(library)
-
-    export_data['publish_message'] = props.publish_message
-
-    return export_data, upload_data, bg_process_params
 
 
 class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
@@ -188,10 +85,28 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
+        ui = UI()
+        ui.add_report(text='preparing upload')
+
         active_asset = utils.get_active_asset()
         props = getattr(active_asset, HANA3D_NAME)
 
+        workspace = props.workspace
+
         correlation_id = str(uuid.uuid4())
+
+        basename, ext = os.path.splitext(bpy.data.filepath)
+        if not ext:
+            ext = '.blend'
+
+        utils.name_update()
+
+        if not self.reupload:
+            props.view_id = ''
+            props.id = ''   # noqa: WPS125
+
+        if 'jobs' not in props.render_data:
+            props.render_data['jobs'] = []
 
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(active_asset)
@@ -203,24 +118,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         else:
             props.remote_thumbnail = True
 
-        utils.name_update()
-
-        ui = UI()
-        ui.add_report(text='preparing upload')
-
-        if 'jobs' not in props.render_data:
-            props.render_data['jobs'] = []
-
-        if not self.reupload:
-            props.view_id = ''
-            props.id = ''   # noqa: WPS125
-        export_data, upload_data, bg_process_params = _get_export_data(props)
-
-        upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
-
-        basename, ext = os.path.splitext(bpy.data.filepath)
-        if not ext:
-            ext = '.blend'
+        export_data, upload_data = get_export_data(props)
 
         if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
             ui.add_report(text='Thumbnail not found')
@@ -229,8 +127,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
 
         asset_id = await create_asset(props, ui, props.id, upload_data, correlation_id)
         props.id = asset_id  # noqa: WPS125
-
-        workspace = props.workspace
 
         if upload_set == ['METADATA']:
             props.uploading = False
