@@ -122,7 +122,7 @@ def _get_tags(props: hana3d_types.Props):
     return tags
 
 
-def _get_libraries(props: hana3d_types.Props):
+def _get_libraries(props: hana3d_types.Props):  # noqa: WPS210
     libraries = []
     for library_name in props.libraries_list.keys():
         if props.libraries_list[library_name].selected is True:

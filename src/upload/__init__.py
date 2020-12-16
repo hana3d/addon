@@ -35,7 +35,7 @@ asset_types = (
 )
 
 
-class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
+class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS214
     """Hana3D upload asset operator."""
 
     bl_idname = f'object.{HANA3D_NAME}_upload'
@@ -154,8 +154,8 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         ui.add_report(text='upload finished successfully')
 
         return {'FINISHED'}
-        
-    def _get_basic_data(self):
+
+    def _get_basic_data(self):  # noqa: WPS210
         active_asset = utils.get_active_asset()
         props = getattr(active_asset, HANA3D_NAME)
         workspace = props.workspace
@@ -190,7 +190,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         props: hana3d_types.Props,
         ui: UI,
         upload_set: List[str],
-        export_data: dict
+        export_data: dict,
     ):
         if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
             ui.add_report(text='Thumbnail not found')
@@ -208,7 +208,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
 
         return source_filepath
 
-    def _write_json_file(
+    def _write_json_file(   # noqa: WPS211
         self,
         tempdir: str,
         source_filepath: Union[str, pathlib.Path],
@@ -249,7 +249,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         upload_set: List[str],
         export_data: dict,
         tempdir: str,
-        filename: str
+        filename: str,
     ):
         files = []
         if 'THUMBNAIL' in upload_set:
@@ -272,7 +272,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
             )
         return files
 
-    def _start_remote_thumbnail(self, props: hana3d_types.Props,):
+    def _start_remote_thumbnail(self, props: hana3d_types.Props):
         thread = render.RenderThread(
             props,
             engine='CYCLES',
