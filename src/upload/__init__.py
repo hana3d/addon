@@ -8,9 +8,10 @@ import uuid
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
-from ... import hana3d_types, logger, paths, render, ui, utils
+from ... import hana3d_types, paths, render, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -230,7 +231,8 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
 
         utils.name_update()
 
-        logger.show_report(props, text='preparing upload')
+        ui = UI()
+        ui.add_report(text='preparing upload')
 
         if 'jobs' not in props.render_data:
             props.render_data['jobs'] = []
@@ -247,17 +249,17 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
             ext = ".blend"
 
         if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
-            logger.show_report(props, text='Thumbnail not found')
+            ui.add_report(text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
 
-        await create_asset(props, upload_data, correlation_id)
+        await create_asset(props, ui, upload_data, correlation_id)
 
         workspace = props.workspace
 
         if upload_set == ['METADATA']:
             props.uploading = False
-            logger.show_report(props, text='upload finished successfully')
+            ui.add_report(text='upload finished successfully')
             props.view_workspace = workspace
             return {'FINISHED'}
 
@@ -291,7 +293,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
             json.dump(data, s)
 
         filename = f'{upload_data["viewId"]}.blend'
-        await create_blend_file(props, datafile, clean_file_path, filename)
+        await create_blend_file(props, ui, datafile, clean_file_path, filename)
 
         skip_post_process = 'false'
         if any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes):
@@ -321,12 +323,12 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
             )
 
         for file_ in files:
-            upload = await get_upload_url(props, correlation_id, upload_data, file_)
-            uploaded = await upload_file(props, file_, upload['s3UploadUrl'])
+            upload = await get_upload_url(props, ui, correlation_id, upload_data, file_)
+            uploaded = await upload_file(ui, file_, upload['s3UploadUrl'])
             if uploaded:
-                await confirm_upload(props, correlation_id, upload['id'], skip_post_process)
+                await confirm_upload(props, ui, correlation_id, upload['id'], skip_post_process)
             else:
-                logger.show_report(props, text='failed to send file')
+                ui.add_report(text='failed to send file')
                 props.uploading = False
                 return {'CANCELLED'}
 
@@ -347,10 +349,10 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         props.view_workspace = workspace
 
         if 'MAINFILE' in upload_set:
-            await finish_asset_creation(props, correlation_id, upload_data['id'])
+            await finish_asset_creation(props, ui, correlation_id, upload_data['id'])
 
         props.uploading = False
-        logger.show_report(props, text='upload finished successfully')
+        ui.add_report(text='upload finished successfully')
 
         return {'FINISHED'}
 

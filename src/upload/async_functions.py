@@ -6,24 +6,26 @@ import time
 import bpy
 import requests
 
-from ... import hana3d_types, logger, paths
+from ... import hana3d_types, paths
 from ...config import HANA3D_NAME
 from ..requests_async.requests_async import Request, upload_in_chunks
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
+from ..ui.main import UI
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 CHUNK_SIZE = 1024 * 1024 * 2
 
 
-async def create_asset(props: hana3d_types.Props, upload_data: dict, correlation_id: str):
+async def create_asset(props: hana3d_types.Props, ui: UI, upload_data: dict, correlation_id: str):
     """Send request to create asset.
 
     Arguments:
         props: Hana3D upload props
+        ui: UI object
         upload_data: Upload data
         correlation_id: Correlation ID
     """
-    logger.show_report(props, text='uploading metadata')
+    ui.add_report(text='uploading metadata')
     request = Request()
     headers = request.get_headers(correlation_id)
 
@@ -36,14 +38,14 @@ async def create_asset(props: hana3d_types.Props, upload_data: dict, correlation
                 json=upload_data,
                 headers=headers,
             )
-            logger.show_report(props, text='uploaded metadata')
+            ui.add_report(text='uploaded metadata')
 
             dict_response = response.json()
             logging.debug(dict_response)
             props.id = dict_response['id']
         except requests.exceptions.RequestException as e:
             logging.error(e)
-            logger.show_report(props, text=str(e))
+            ui.add_report(text=str(e))
             props.uploading = False
             return {'CANCELLED'}
     else:
@@ -55,29 +57,31 @@ async def create_asset(props: hana3d_types.Props, upload_data: dict, correlation
                 json=upload_data,
                 headers=headers,
             )
-            logger.show_report(props, text='uploaded metadata')
+            ui.add_report(text='uploaded metadata')
         except requests.exceptions.RequestException as error:
             logging.error(error)
-            logger.show_report(props, text=str(error))
+            ui.add_report(text=str(error))
             props.uploading = False
             return {'CANCELLED'}
 
 
 async def create_blend_file(
     props: hana3d_types.Props,
+    ui: UI,
     datafile: str,
     clean_file_path: str,
-    filename: str
+    filename: str,
 ):
     """Create blend file in a subprocess.
 
     Arguments:
         props: Hana3D upload props
+        ui: UI object
         datafile: filepath containing the upload data
         clean_file_path: Clean file path
         flename: Name that the blend file will be saved as
     """
-    logger.show_report(props, text='creating upload file')
+    ui.add_report(text='creating upload file')
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -98,30 +102,32 @@ async def create_blend_file(
 
     try:
         result = await subprocess.subprocess(cmd)
-        logger.show_report(props, text='created upload file')
+        ui.add_report(text='created upload file')
         return result
     except Exception as error:
         logging.error(error)
-        logger.show_report(props, text=str(error))
+        ui.add_report(text=str(error))
         props.uploading = False
         return {'CANCELLED'}
 
 
 async def get_upload_url(
     props: hana3d_types.Props,
+    ui: UI,
     correlation_id: str,
     upload_data: dict,
-    file_: dict
+    file_: dict,
 ) -> dict:
     """Get upload url from backend.
 
     Arguments:
         props: Hana3D upload props
+        ui: UI object
         correlation_id: Correlation ID
         upload_data: Upload data
         file_: File information
     """
-    logger.show_report(props, text='getting upload url')
+    ui.add_report(text='getting upload url')
     request = Request()
     headers = request.get_headers(correlation_id)
     upload_info = {
@@ -146,20 +152,20 @@ async def get_upload_url(
         return response.json()
     except requests.exceptions.RequestException as error:
         logging.error(error)
-        logger.show_report(props, text=str(error))
+        ui.add_report(text=str(error))
         props.uploading = False
         return {'CANCELLED'}
 
 
-async def upload_file(props: hana3d_types.Props, file_: dict, upload_url: str) -> bool:
+async def upload_file(ui: UI, file_: dict, upload_url: str) -> bool:
     """Upload file.
 
     Arguments:
-        props: Hana3D upload props
+        ui: UI object
         file_: File information
         upload_url: URL to send PUT request
     """
-    logger.show_report(props, text='uploading file')
+    ui.add_report(text='uploading file')
     request = Request()
     uploaded = False
     for a in range(0, 5):
@@ -184,14 +190,16 @@ async def upload_file(props: hana3d_types.Props, file_: dict, upload_url: str) -
 
 async def confirm_upload(
     props: hana3d_types.Props,
+    ui: UI,
     correlation_id: str,
     upload_id: str,
-    skip_post_process: str
+    skip_post_process: str,
 ):
     """Confirm upload to backend.
 
     Arguments:
         props: Hana3D upload props
+        ui: UI object
         correlation_id: Correlation ID
         upload_id: ID of the upload process
         skip_post_process: Flag to skip the post process in backend
@@ -209,7 +217,7 @@ async def confirm_upload(
         upload_response = await request.post(upload_done_url, headers=headers)
     except requests.exceptions.RequestException as error:
         logging.error(error)
-        logger.show_report(props, text=str(error))
+        ui.add_report(text=str(error))
         props.uploading = False
         return {'CANCELLED'}
 
@@ -221,11 +229,17 @@ async def confirm_upload(
             json.dump(dict_response, json_file)
 
 
-async def finish_asset_creation(props: hana3d_types.Props, correlation_id: str, asset_id: str):
+async def finish_asset_creation(
+    props: hana3d_types.Props,
+    ui: UI,
+    correlation_id: str,
+    asset_id: str,
+):
     """Confirm asset creation to backend.
 
     Arguments:
         props: Hana3D upload props
+        ui: UI object
         correlation_id: Correlation ID
         asset_id: Asset ID
     """
@@ -240,6 +254,6 @@ async def finish_asset_creation(props: hana3d_types.Props, correlation_id: str, 
         await request.patch(url, json=confirm_data, headers=headers)
     except requests.exceptions.RequestException as error:
         logging.error(error)
-        logger.show_report(props, text=str(error))
+        ui.add_report(text=str(error))
         props.uploading = False
         return {'CANCELLED'}
