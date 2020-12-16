@@ -1,6 +1,8 @@
+"""Auxiliary upload async functions."""
 import json
 import logging
 import os
+import subprocess  # noqa: S404
 import time
 
 import bpy
@@ -12,24 +14,34 @@ from ..requests_async.requests_async import Request, UploadInChunks
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui.main import UI
 
-HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
 CHUNK_SIZE = 1024 * 1024 * 2
 
 
-async def create_asset(props: hana3d_types.Props, ui: UI, upload_data: dict, correlation_id: str):
+async def create_asset(
+    props: hana3d_types.Props,
+    ui: UI,
+    asset_id: str,
+    upload_data: dict,
+    correlation_id: str
+) -> str:
     """Send request to create asset.
 
     Arguments:
         props: Hana3D upload props
         ui: UI object
+        asset_id: Asset ID
         upload_data: Upload data
         correlation_id: Correlation ID
+
+    Returns:
+        str: Asset ID
+        {'CANCELLED'} if it fails
     """
     ui.add_report(text='uploading metadata')
     request = Request()
     headers = request.get_headers(correlation_id)
 
-    if props.id == '':
+    if asset_id == '':
         url = paths.get_api_url('assets')
         try:
             headers = request.get_headers(include_id_token=True)
@@ -42,14 +54,14 @@ async def create_asset(props: hana3d_types.Props, ui: UI, upload_data: dict, cor
 
             dict_response = response.json()
             logging.debug(dict_response)
-            props.id = dict_response['id']
+            return dict_response['id']
         except requests.exceptions.RequestException as e:
             logging.error(e)
             ui.add_report(text=str(e))
             props.uploading = False
             return {'CANCELLED'}
     else:
-        url = paths.get_api_url('assets', props.id)
+        url = paths.get_api_url('assets', asset_id)
         try:
             headers = request.get_headers(include_id_token=True)
             await request.put(
@@ -58,6 +70,7 @@ async def create_asset(props: hana3d_types.Props, ui: UI, upload_data: dict, cor
                 headers=headers,
             )
             ui.add_report(text='uploaded metadata')
+            return asset_id
         except requests.exceptions.RequestException as error:
             logging.error(error)
             ui.add_report(text=str(error))
@@ -71,7 +84,7 @@ async def create_blend_file(
     datafile: str,
     clean_file_path: str,
     filename: str,
-):
+) -> subprocess.CompletedProcess:
     """Create blend file in a subprocess.
 
     Arguments:
@@ -80,6 +93,10 @@ async def create_blend_file(
         datafile: filepath containing the upload data
         clean_file_path: Clean file path
         flename: Name that the blend file will be saved as
+
+    Returns:
+        Subprocess output
+        {'CANCELLED'} if it fails
     """
     ui.add_report(text='creating upload file')
     binary_path = bpy.app.binary_path
@@ -126,6 +143,10 @@ async def get_upload_url(
         correlation_id: Correlation ID
         upload_data: Upload data
         file_: File information
+
+    Returns:
+        dict: Request response
+        {'CANCELLED'} if it fails
     """
     ui.add_report(text='getting upload url')
     request = Request()
@@ -164,6 +185,9 @@ async def upload_file(ui: UI, file_: dict, upload_url: str) -> bool:
         ui: UI object
         file_: File information
         upload_url: URL to send PUT request
+
+    Returns:
+        bool: if upload was successful
     """
     ui.add_report(text='uploading file')
     request = Request()
@@ -203,6 +227,9 @@ async def confirm_upload(
         correlation_id: Correlation ID
         upload_id: ID of the upload process
         skip_post_process: Flag to skip the post process in backend
+
+    Returns:
+        {'CANCELLED'} if it fails
     """
     request = Request()
     headers = request.get_headers(correlation_id)
@@ -242,6 +269,9 @@ async def finish_asset_creation(
         ui: UI object
         correlation_id: Correlation ID
         asset_id: Asset ID
+
+    Returns:
+        {'CANCELLED'} if it fails
     """
     request = Request()
 

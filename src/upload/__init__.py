@@ -43,7 +43,6 @@ def _get_export_data(   # noqa: WPS210
     }
     upload_params = {}
     if props.asset_type.upper() == 'MODEL':
-        # Prepare to save the file
         mainmodel = utils.get_active_model(bpy.context)
 
         obs = utils.get_hierarchy(mainmodel)
@@ -72,7 +71,6 @@ def _get_export_data(   # noqa: WPS210
         }
 
     elif props.asset_type.upper() == 'SCENE':
-        # Prepare to save the file
         name = bpy.context.scene.name
 
         export_data['type'] = 'SCENE'
@@ -80,12 +78,6 @@ def _get_export_data(   # noqa: WPS210
 
         upload_data = {
             'assetType': 'scene',
-        }
-        upload_params = {
-            # TODO add values
-            # "faceCount": 1,  # props.face_count,
-            # "faceCountRender": 1,  # props.face_count_render,
-            # "objectCount": 1,  # props.object_count,
         }
 
     elif props.asset_type.upper() == 'MATERIAL':
@@ -101,10 +93,6 @@ def _get_export_data(   # noqa: WPS210
         upload_params = {}
     else:
         raise Exception(f'Unexpected asset_type={props.asset_type}')
-
-    upload_data['sourceAppName'] = 'blender'
-    upload_data['sourceAppVersion'] = '{}.{}.{}'.format(*utils.get_addon_version())
-    upload_data['addonVersion'] = '{}.{}.{}'.format(*utils.get_addon_blender_version())
 
     upload_data['name'] = props.name
     upload_data['description'] = props.description
@@ -127,21 +115,21 @@ def _get_export_data(   # noqa: WPS210
             upload_data['tags'].append(tag)
 
     upload_data['libraries'] = []
-    for library in props.libraries_list.keys():
-        if props.libraries_list[library].selected is True:
-            library_id = props.libraries_list[library].id_
+    for library_name in props.libraries_list.keys():
+        if props.libraries_list[library_name].selected is True:
+            library_id = props.libraries_list[library_name].id_
             library = {}
             library.update({
                 'id': library_id,
             })
             if props.custom_props.keys() != []:
                 custom_props = {}
-                for name in props.custom_props.keys():
-                    value = props.custom_props[name]
-                    slug = props.custom_props_info[name]['slug']
-                    prop_library_id = props.custom_props_info[name]['library_id']
+                for prop_name in props.custom_props.keys():
+                    prop_value = props.custom_props[prop_name]
+                    slug = props.custom_props_info[prop_name]['slug']
+                    prop_library_id = props.custom_props_info[prop_name]['library_id']
                     if prop_library_id == library_id:
-                        custom_props.update({slug: value})
+                        custom_props.update({slug: prop_value})
                 library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
 
@@ -150,7 +138,7 @@ def _get_export_data(   # noqa: WPS210
     return export_data, upload_data, bg_process_params
 
 
-class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
+class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS217,WPS210
     """Hana3D upload asset operator."""
 
     bl_idname = f'object.{HANA3D_NAME}_upload'
@@ -202,13 +190,13 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
-        obj = utils.get_active_asset()
-        props = getattr(obj, HANA3D_NAME)
+        active_asset = utils.get_active_asset()
+        props = getattr(active_asset, HANA3D_NAME)
 
         correlation_id = str(uuid.uuid4())
 
         if self.asset_type == 'MODEL':
-            utils.fill_object_metadata(obj)
+            utils.fill_object_metadata(active_asset)
 
         upload_set = ['METADATA', 'MAINFILE']
         if props.has_thumbnail:
@@ -241,7 +229,8 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
             props.uploading = False
             return {'CANCELLED'}
 
-        await create_asset(props, ui, upload_data, correlation_id)
+        asset_id = await create_asset(props, ui, props.id, upload_data, correlation_id)
+        props.id = asset_id
 
         workspace = props.workspace
 
@@ -261,7 +250,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
         datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
         source_filepath = os.path.join(tempdir, f'export_hana3d{ext}')
         clean_file_path = paths.get_clean_filepath()
-        data = {
+        json_data = {
             'clean_file_path': clean_file_path,
             'source_filepath': source_filepath,
             'temp_dir': tempdir,
@@ -277,8 +266,8 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
             bpy.ops.file.autopack_toggle()
         bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
 
-        with open(datafile, 'w') as s:
-            json.dump(data, s)
+        with open(datafile, 'w') as opened_file:
+            json.dump(json_data, opened_file)
 
         filename = f'{upload_data["viewId"]}.blend'
         await create_blend_file(props, ui, datafile, clean_file_path, filename)
@@ -352,11 +341,11 @@ classes = (
 
 def register():
     """Upload register."""
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    for class_ in classes:
+        bpy.utils.register_class(class_)
 
 
 def unregister():
     """Upload unregister."""
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+    for class_ in reversed(classes):
+        bpy.utils.unregister_class(class_)

@@ -25,9 +25,6 @@ class UploadInChunks:  # noqa : WPS306
             filename (str): Name of the file
             chunksize (int): Size of the chunks in bytes
             report_name (str): Report name
-
-        Yields:
-            chunk of file
         """
         self.filename = filename
         self.chunksize = chunksize
@@ -36,7 +33,11 @@ class UploadInChunks:  # noqa : WPS306
         self.report_name = report_name
 
     def __iter__(self):
-        """Upload in chunks iterator."""
+        """Upload in chunks iterator.
+
+        Yields:
+            chunk of file
+        """
         with open(self.filename, 'rb') as opened_file:
             while True:
                 file_data = opened_file.read(self.chunksize)
