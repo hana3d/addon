@@ -34,28 +34,11 @@ class ShowRenderImage(bpy.types.Operator):
         asset_props.render_list[self.index]['name'] = image.name
 
         bpy.ops.render.view_show('INVOKE_DEFAULT')
-        try_again = True
-        while try_again:
-            try_again = self.set_image(bpy.context)
+        screen = bpy.data.screens['temp']
+        space = screen.areas[0].spaces[0]
+        space.image = image
 
         return {'FINISHED'}
-
-    def set_image(self, context):
-        """Set image to the new window.
-
-        Parameters:
-            context: Blender context
-
-        Returns:
-            try_again: bool
-        """
-        try:
-            context.area.spaces.active.image = image
-        except AttributeError:
-            try_again = True
-        else:
-            try_again = False
-        return try_again
 
 
 classes = (

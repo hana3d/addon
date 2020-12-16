@@ -1,9 +1,9 @@
 """Upload functions."""
 import bpy
 
+from ..asset.asset_type import AssetType
 from ... import utils
 from ...config import HANA3D_NAME
-from ..asset.asset_type import AssetType
 
 
 def get_upload_props():
