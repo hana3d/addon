@@ -21,7 +21,7 @@ from .async_functions import (
     upload_file,
 )
 
-HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
+HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
 
 asset_types = (
@@ -32,14 +32,14 @@ asset_types = (
 )
 
 
-def _get_export_data(
+def _get_export_data(   # noqa: WPS210
     props: hana3d_types.Props,
     path_computing: str = 'uploading',
     path_state: str = 'upload_state',
 ):
     export_data = {
-        "type": props.asset_type,
-        "thumbnail_path": bpy.path.abspath(props.thumbnail),
+        'type': props.asset_type,
+        'thumbnail_path': bpy.path.abspath(props.thumbnail),
     }
     upload_params = {}
     if props.asset_type.upper() == 'MODEL':
@@ -50,40 +50,36 @@ def _get_export_data(
         obnames = []
         for ob in obs:
             obnames.append(ob.name)
-        export_data["type"] = 'MODEL'
-        export_data["models"] = obnames
-
-        eval_path = f"bpy.data.objects['{mainmodel.name}']"
+        export_data['type'] = 'MODEL'
+        export_data['models'] = obnames
 
         upload_data = {
-            "assetType": 'model',
+            'assetType': 'model',
         }
         upload_params = {
-            "dimensionX": round(props.dimensions[0], 4),
-            "dimensionY": round(props.dimensions[1], 4),
-            "dimensionZ": round(props.dimensions[2], 4),
-            "boundBoxMinX": round(props.bbox_min[0], 4),
-            "boundBoxMinY": round(props.bbox_min[1], 4),
-            "boundBoxMinZ": round(props.bbox_min[2], 4),
-            "boundBoxMaxX": round(props.bbox_max[0], 4),
-            "boundBoxMaxY": round(props.bbox_max[1], 4),
-            "boundBoxMaxZ": round(props.bbox_max[2], 4),
-            "faceCount": props.face_count,
-            "faceCountRender": props.face_count_render,
-            "objectCount": props.object_count,
+            'dimensionX': round(props.dimensions[0], 4),
+            'dimensionY': round(props.dimensions[1], 4),
+            'dimensionZ': round(props.dimensions[2], 4),
+            'boundBoxMinX': round(props.bbox_min[0], 4),
+            'boundBoxMinY': round(props.bbox_min[1], 4),
+            'boundBoxMinZ': round(props.bbox_min[2], 4),
+            'boundBoxMaxX': round(props.bbox_max[0], 4),
+            'boundBoxMaxY': round(props.bbox_max[1], 4),
+            'boundBoxMaxZ': round(props.bbox_max[2], 4),
+            'faceCount': props.face_count,
+            'faceCountRender': props.face_count_render,
+            'objectCount': props.object_count,
         }
 
     elif props.asset_type.upper() == 'SCENE':
         # Prepare to save the file
         name = bpy.context.scene.name
 
-        export_data["type"] = 'SCENE'
-        export_data["scene"] = name
-
-        eval_path = f"bpy.data.scenes['{name}']"
+        export_data['type'] = 'SCENE'
+        export_data['scene'] = name
 
         upload_data = {
-            "assetType": 'scene',
+            'assetType': 'scene',
         }
         upload_params = {
             # TODO add values
@@ -95,35 +91,27 @@ def _get_export_data(
     elif props.asset_type.upper() == 'MATERIAL':
         mat = bpy.context.active_object.active_material
 
-        export_data["type"] = 'MATERIAL'
-        export_data["material"] = str(mat.name)
-
-        eval_path = f"bpy.data.materials['{mat.name}']"
+        export_data['type'] = 'MATERIAL'
+        export_data['material'] = str(mat.name)
 
         upload_data = {
-            "assetType": 'material',
+            'assetType': 'material',
         }
 
         upload_params = {}
     else:
         raise Exception(f'Unexpected asset_type={props.asset_type}')
 
-    bg_process_params = {
-        'eval_path_computing': f'{eval_path}.{HANA3D_NAME}.{path_computing}',
-        'eval_path_state': f'{eval_path}.{HANA3D_NAME}.{path_state}',
-        'eval_path': eval_path,
-    }
+    upload_data['sourceAppName'] = 'blender'
+    upload_data['sourceAppVersion'] = '{}.{}.{}'.format(*utils.get_addon_version())
+    upload_data['addonVersion'] = '{}.{}.{}'.format(*utils.get_addon_blender_version())
 
-    upload_data["sourceAppName"] = "blender"
-    upload_data["sourceAppVersion"] = '{}.{}.{}'.format(*utils.get_addon_version())
-    upload_data["addonVersion"] = '{}.{}.{}'.format(*utils.get_addon_blender_version())
-
-    upload_data["name"] = props.name
-    upload_data["description"] = props.description
+    upload_data['name'] = props.name
+    upload_data['description'] = props.description
 
     upload_data['parameters'] = upload_params
 
-    upload_data["is_public"] = props.is_public
+    upload_data['is_public'] = props.is_public
     if props.workspace != '' and not props.is_public:
         upload_data['workspace'] = props.workspace
 
@@ -136,7 +124,7 @@ def _get_export_data(
     upload_data['tags'] = []
     for tag in props.tags_list.keys():
         if props.tags_list[tag].selected is True:
-            upload_data["tags"].append(tag)
+            upload_data['tags'].append(tag)
 
     upload_data['libraries'] = []
     for library in props.libraries_list.keys():
@@ -165,32 +153,32 @@ def _get_export_data(
 class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
     """Hana3D upload asset operator."""
 
-    bl_idname = f"object.{HANA3D_NAME}_upload"
-    bl_description = f"Upload or re-upload asset + thumbnail + metadata to {HANA3D_DESCRIPTION}"
+    bl_idname = f'object.{HANA3D_NAME}_upload'
+    bl_description = f'Upload or re-upload asset + thumbnail + metadata to {HANA3D_DESCRIPTION}'
 
-    bl_label = "hana3d asset upload"
+    bl_label = 'hana3d asset upload'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     # type of upload - model, material, textures, e.t.c.
     asset_type: EnumProperty(
-        name="Type",
+        name='Type',
         items=asset_types,
-        description="Type of upload",
-        default="MODEL",
+        description='Type of upload',
+        default='MODEL',
     )
 
     reupload: BoolProperty(
-        name="reupload",
-        description="reupload but also draw so that it asks what to reupload",
+        name='reupload',
+        description='reupload but also draw so that it asks what to reupload',
         default=False,
         options={'SKIP_SAVE'},
     )
 
-    metadata: BoolProperty(name="metadata", default=True, options={'SKIP_SAVE'})
+    metadata: BoolProperty(name='metadata', default=True, options={'SKIP_SAVE'})
 
-    thumbnail: BoolProperty(name="thumbnail", default=False, options={'SKIP_SAVE'})
+    thumbnail: BoolProperty(name='thumbnail', default=False, options={'SKIP_SAVE'})
 
-    main_file: BoolProperty(name="main file", default=False, options={'SKIP_SAVE'})
+    main_file: BoolProperty(name='main file', default=False, options={'SKIP_SAVE'})
 
     @classmethod
     def poll(cls, context):
@@ -246,9 +234,9 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
 
         basename, ext = os.path.splitext(bpy.data.filepath)
         if not ext:
-            ext = ".blend"
+            ext = '.blend'
 
-        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
+        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
             ui.add_report(text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
@@ -271,7 +259,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
 
         tempdir = tempfile.mkdtemp()
         datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
-        source_filepath = os.path.join(tempdir, "export_hana3d" + ext)
+        source_filepath = os.path.join(tempdir, f'export_hana3d{ext}')
         clean_file_path = paths.get_clean_filepath()
         data = {
             'clean_file_path': clean_file_path,

@@ -8,7 +8,7 @@ import requests
 
 from ... import hana3d_types, paths
 from ...config import HANA3D_NAME
-from ..requests_async.requests_async import Request, upload_in_chunks
+from ..requests_async.requests_async import Request, UploadInChunks
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui.main import UI
 
@@ -173,7 +173,7 @@ async def upload_file(ui: UI, file_: dict, upload_url: str) -> bool:
             try:
                 upload_response = await request.put(
                     upload_url,
-                    data=upload_in_chunks(file_['file_path'], CHUNK_SIZE, file_['type']),
+                    data=UploadInChunks(file_['file_path'], CHUNK_SIZE, file_['type']),
                     stream=True,
                 )
 

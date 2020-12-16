@@ -15,17 +15,19 @@ from ..ui import colors
 from ..ui.main import UI
 
 
-class upload_in_chunks:
-    """Helper class that creates iterable for uploading file in chunks.
-    Must be used only with an async request."""
+class UploadInChunks:  # noqa : WPS306
+    """Helper class that creates iterable for uploading file in chunks."""
 
-    def __init__(self, filename: str, chunksize: int = 2 ** 20, report_name: str = 'file'):
+    def __init__(self, filename: str, chunksize: int = 2 ** 20, report_name: str = 'file'):  # noqa : WPS404,WPS432
         """Create upload in chunks object.
 
         Parameters:
             filename (str): Name of the file
             chunksize (int): Size of the chunks in bytes
             report_name (str): Report name
+
+        Yields:
+            chunk of file
         """
         self.filename = filename
         self.chunksize = chunksize
@@ -35,20 +37,21 @@ class upload_in_chunks:
 
     def __iter__(self):
         """Upload in chunks iterator."""
-        with open(self.filename, 'rb') as file_:
+        with open(self.filename, 'rb') as opened_file:
             while True:
-                data = file_.read(self.chunksize)
-                if not data:
-                    sys.stderr.write("\n")
+                file_data = opened_file.read(self.chunksize)
+                if not file_data:
+                    sys.stderr.write('\n')
                     break
-                self.readsofar += len(data)
-                # percent = 100 * self.readsofar / self.totalsize
-                # progress('uploading %s' % self.report_name, percent)
-                # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
-                yield data
+                self.readsofar += len(file_data)
+                yield file_data
 
     def __len__(self):
-        """Total size of the file."""
+        """Total size of the file.
+
+        Returns:
+            int: Total size of the file
+        """
         return self.totalsize
 
 
