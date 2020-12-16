@@ -1,5 +1,4 @@
 """Search Query."""
-
 from typing import Dict
 
 from bpy.types import Context
@@ -29,6 +28,7 @@ class Query(object):  # noqa : WPS230,WPS214
         self.workspace: str = ''
         self.tags: str = ''
         self.libraries: str = ''
+        self.results_per_page = 100
 
         if search_props is not None:
             self._add_view_id_search_term(search_props)
@@ -82,3 +82,11 @@ class Query(object):  # noqa : WPS230,WPS214
             str: the last search query, stringified
         """
         return self.context.window_manager.get(f'{HANA3D_NAME}_last_query', '')
+
+    def to_dict(self) -> Dict:
+        """Get the search query as a Dict.
+
+        Returns:
+            Dict: the query string as a dictionary
+        """
+        return vars(self)   # noqa: WPS421

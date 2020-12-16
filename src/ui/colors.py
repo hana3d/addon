@@ -15,8 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
-# this module defines color palette for the UI
+"""Color palette of the UI."""
 
 TEXT = (0.9, 0.9, 0.9, 0.6)
 GREEN = (0.9, 1, 0.9, 0.6)

@@ -8,12 +8,14 @@ from typing import Callable, Union
 
 import bpy
 
-from ... import colors, hana3d_types, paths, ui, utils
+from ... import hana3d_types, paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
 from ..asset.asset_type import AssetType
 from ..async_loop import run_async_function
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
+from ..ui import colors
+from ..ui.main import UI
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -126,7 +128,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         except Exception as error:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
-            ui.add_report(f'Error in thumbnailer: {error}', color=colors.RED)
+            UI().add_report(f'Error in thumbnailer: {error}', color=colors.RED)
             return {'CANCELLED'}
         return {'FINISHED'}
 

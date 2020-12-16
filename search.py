@@ -29,9 +29,12 @@ from bpy.types import Operator
 from . import hana3d_oauth, logger, paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .report_tools import execute_wrapper
+from .src.preferences.preferences import Preferences
 from .src.search.asset_search import AssetSearch
 from .src.search.query import Query
 from .src.search.search import Search
+from .src.ui import colors
+from .src.ui.main import UI
 
 search_start_time = 0
 prev_time = 0
@@ -66,7 +69,7 @@ last_clipboard = ''
 # @bpy.app.handlers.persistent
 def timer_update():
     global first_time
-    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+    preferences = Preferences().get()
     if first_time:
         first_time = False
         if preferences.show_on_start:
@@ -198,15 +201,17 @@ def timer_update():
                 props.is_searching = False
                 props.search_error = False
                 text = f'Found {search_object.results_orig["count"]} results. '  # noqa #501
-                logger.show_report(props, text=text)
+                ui = UI()
+                ui.add_report(text=text)
 
             else:
                 logging.error(error)
-                logger.show_report(props, text=error)
+                ui = UI()
+                ui.add_report(text=error, color=colors.RED)
                 props.search_error = True
 
             mt('preview loading finished')
-    return 0.3
+    return 0.3 # noqa : WPS432
 
 
 def load_placeholder_thumbnail(index: int, asset_id: str):
@@ -337,17 +342,15 @@ class Searcher(threading.Thread):
                     params['get_next'] = False
         if not params['get_next']:
             query.save_last_query()
-            urlquery = paths.get_search_url('search', query=self.query)
+            urlquery = paths.get_api_url('search', query=self.query.to_dict())
 
-        search_object = Search(bpy.context)
-        search_props = search_object.props
+        ui = UI()
         try:
             logging.debug(urlquery)
             r = rerequests.get(urlquery, headers=headers)
-            logger.show_report(search_props, text='')
         except requests.exceptions.RequestException as e:
             logging.error(e)
-            logger.show_report(search_props, text=str(e))
+            ui.add_report(text=str(e))
             return
         mt('response is back ')
         try:
@@ -355,7 +358,7 @@ class Searcher(threading.Thread):
             rdata['status_code'] = r.status_code
         except Exception as inst:
             logging.error(inst)
-            logger.show_report(search_props, text=r.text)
+            ui.add_report(text=r.text)
 
         mt('data parsed ')
 
@@ -517,7 +520,8 @@ def search(get_next=False, author_id=''):
     params = {'get_next': get_next}
 
     add_search_process(query, params)
-    logger.show_report(search_props, text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
+    ui = UI()
+    ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
 
 class SearchOperator(Operator):
@@ -578,7 +582,6 @@ classes = [SearchOperator]
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-
     bpy.app.timers.register(timer_update)
 
 

@@ -39,13 +39,13 @@ from . import (  # noqa: WPS235
     tasks_queue,
     thread_tools,
     ui,
-    ui_panels,
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src import async_loop, autothumb, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
+from .src.panels import panel_builder
 
 bl_info = {
     'name': 'Hana3D',
@@ -314,7 +314,7 @@ modules = (
     thread_tools,
     hana3d_types,
     ui,
-    ui_panels,
+    panel_builder,
     upload,
 )
 
