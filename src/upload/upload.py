@@ -1,9 +1,9 @@
 """Upload functions."""
 import bpy
 
-from ..asset.asset_type import AssetType
 from ... import utils
 from ...config import HANA3D_NAME
+from ..asset.asset_type import AssetType
 
 
 def get_upload_props():
@@ -30,19 +30,16 @@ def get_upload_props_by_view_id(asset_type: AssetType, view_id: str):
     """
     asset = None
     if asset_type == 'model':
-        asset = utils.get_active_model(bpy.context, view_id)
+        assets = context.blend_data.objects
     elif asset_type == 'scene':
-        scenes = [
-            ob
-            for ob in bpy.data.scenes
-            if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
-        ]
-        asset = scenes[0]
+        assets = bpy.data.scenes
     elif asset_type == 'material':
-        materials = [
-            ob
-            for ob in bpy.data.materials
-            if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
-        ]
-        asset = materials[0]
+        assets = bpy.data.materials
+
+    assets = [
+        ob
+        for ob in assets
+        if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
+    ]
+    asset = assets[0]
     return getattr(asset, HANA3D_NAME)
