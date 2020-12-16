@@ -4,6 +4,55 @@ import bpy
 from ... import hana3d_types, utils
 
 
+def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
+    """Get required data from Blender for upload.
+
+    Arguments:
+        props: Hana3D upload props
+
+    Returns:
+        export_data, upload_data
+
+    Raises:
+        Exception: Unexpected asset_type
+    """
+    export_data = {
+        'type': props.asset_type,
+        'thumbnail_path': bpy.path.abspath(props.thumbnail),
+    }
+
+    if props.asset_type.upper() == 'MODEL':
+        upload_data, upload_params = _get_model_data()
+
+    elif props.asset_type.upper() == 'SCENE':
+        upload_data, upload_params = _get_scene_data()
+
+    elif props.asset_type.upper() == 'MATERIAL':
+        upload_data, upload_params = _get_material_data()
+
+    else:
+        raise Exception(f'Unexpected asset_type={props.asset_type}')
+
+    upload_data['name'] = props.name
+    upload_data['description'] = props.description
+    upload_data['parameters'] = upload_params
+    upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
+    upload_data['is_public'] = props.is_public
+    if props.workspace != '' and not props.is_public:
+        upload_data['workspace'] = props.workspace
+
+    metadata = {}
+    if metadata:
+        upload_data['metadata'] = metadata
+
+    upload_data['tags'] = _get_tags(props)
+    upload_data['libraries'] = _get_libraries(props)
+
+    export_data['publish_message'] = props.publish_message
+
+    return export_data, upload_data
+
+
 def _get_model_data(export_data: dict):  # noqa: WPS210
     mainmodel = utils.get_active_model(bpy.context)
 
@@ -65,54 +114,16 @@ def _get_scene_data(export_data: dict):
     return upload_data, upload_params
 
 
-def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
-    """Get required data from Blender for upload.
-
-    Arguments:
-        props: Hana3D upload props
-
-    Returns:
-        export_data, upload_data
-
-    Raises:
-        Exception: Unexpected asset_type
-    """
-    export_data = {
-        'type': props.asset_type,
-        'thumbnail_path': bpy.path.abspath(props.thumbnail),
-    }
-
-    if props.asset_type.upper() == 'MODEL':
-        upload_data, upload_params = _get_model_data()
-
-    elif props.asset_type.upper() == 'SCENE':
-        upload_data, upload_params = _get_scene_data()
-
-    elif props.asset_type.upper() == 'MATERIAL':
-        upload_data, upload_params = _get_material_data()
-
-    else:
-        raise Exception(f'Unexpected asset_type={props.asset_type}')
-
-    upload_data['name'] = props.name
-    upload_data['description'] = props.description
-
-    upload_data['parameters'] = upload_params
-
-    upload_data['is_public'] = props.is_public
-    if props.workspace != '' and not props.is_public:
-        upload_data['workspace'] = props.workspace
-
-    metadata = {}
-    if metadata:
-        upload_data['metadata'] = metadata
-
-    upload_data['tags'] = []
+def _get_tags(props: hana3d_types.Props):
+    tags = []
     for tag in props.tags_list.keys():
         if props.tags_list[tag].selected is True:
-            upload_data['tags'].append(tag)
+            tags['tags'].append(tag)
+    return tags
 
-    upload_data['libraries'] = []
+
+def _get_libraries(props: hana3d_types.Props):
+    libraries = []
     for library_name in props.libraries_list.keys():
         if props.libraries_list[library_name].selected is True:
             library_id = props.libraries_list[library_name].id_
@@ -129,10 +140,5 @@ def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
                     if prop_library_id == library_id:
                         custom_props.update({slug: prop_value})  # noqa: WPS220
                 library.update({'metadata': {'view_props': custom_props}})
-            upload_data['libraries'].append(library)
-
-    export_data['publish_message'] = props.publish_message
-
-    upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
-
-    return export_data, upload_data
+            libraries.append(library)
+    return libraries
