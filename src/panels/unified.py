@@ -255,7 +255,8 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         if props.view_id != '' and props.workspace == props.view_workspace:
             op = row.operator(
                 f'object.{HANA3D_NAME}_upload',
-                text='Upload as New Version', icon='RECOVER_LAST',
+                text='Upload as New Version',
+                icon='RECOVER_LAST',
             )
             op.asset_type = asset_type
             op.reupload = True
