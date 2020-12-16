@@ -120,7 +120,7 @@ def _get_tags(props: hana3d_types.Props):
     tags: List[str] = []
     for tag in props.tags_list.keys():
         if props.tags_list[tag].selected is True:
-            tags['tags'].append(tag)
+            tags.append(tag)
     return tags
 
 
