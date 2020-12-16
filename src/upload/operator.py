@@ -1,26 +1,31 @@
-"""Upload assets module."""
-
 import json
-import logging
 import os
-import subprocess
 import tempfile
 import uuid
-from typing import List
 
 import bpy
-import requests
 from bpy.props import BoolProperty, EnumProperty
-from bpy.types import Operator
 
+from ... import hana3d_types, logger, paths, render, ui, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
-from ...report_tools import execute_wrapper
-from .operator import UploadAssetOperator
-
-from ... import bg_blender, hana3d_types, logger, paths, render, rerequests, ui, utils  # isort:skip
-
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from .temp import (
+    confirm_upload,
+    create_asset,
+    create_blend_file,
+    finish_asset_creation,
+    get_upload_url,
+    upload_file,
+)
 
 HANA3D_EXPORT_DATA_FILE = HANA3D_NAME + "_data.json"
+
+asset_types = (
+    ('MODEL', 'Model', 'set of objects'),
+    ('SCENE', 'Scene', 'scene'),
+    ('MATERIAL', 'Material', 'any .blend Material'),
+    ('ADDON', 'Addon', 'addon'),
+)
 
 
 def get_upload_location(props, context):
@@ -169,16 +174,8 @@ def get_export_data(
     return export_data, upload_data, bg_process_params
 
 
-asset_types = (
-    ('MODEL', 'Model', 'set of objects'),
-    ('SCENE', 'Scene', 'scene'),
-    ('MATERIAL', 'Material', 'any .blend Material'),
-    ('ADDON', 'Addon', 'addon'),
-)
-
-
-class UploadOperator(Operator):
-    """Tooltip"""
+class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
+    """Hana3D upload asset operator."""
 
     bl_idname = f"object.{HANA3D_NAME}_upload"
     bl_description = f"Upload or re-upload asset + thumbnail + metadata to {HANA3D_DESCRIPTION}"
@@ -212,10 +209,11 @@ class UploadOperator(Operator):
         props = utils.get_upload_props()
         return bpy.context.view_layer.objects.active is not None and not props.uploading
 
-    @execute_wrapper
-    def execute(self, context):
+    async def async_execute(self, context):
         obj = utils.get_active_asset()
         props = getattr(obj, HANA3D_NAME)
+
+        correlation_id = str(uuid.uuid4())
 
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(obj)
@@ -227,12 +225,8 @@ class UploadOperator(Operator):
         else:
             props.remote_thumbnail = True
 
-        return self.start_upload(context, props, upload_set)
-
-    def start_upload(self, context, props: hana3d_types.Props, upload_set: List[str]):  # noqa D102,WPS212,WPS210,WPS213,WPS231,E501
         utils.name_update()
 
-        location = get_upload_location(props, context)
         logger.show_report(props, text='preparing upload')
 
         if 'jobs' not in props.render_data:
@@ -243,63 +237,20 @@ class UploadOperator(Operator):
             props.id = ''
         export_data, upload_data, bg_process_params = get_export_data(props)
 
-        workspace = props.workspace
-
-        # weird array conversion only for upload, not for tooltips.
         upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
 
-        binary_path = bpy.app.binary_path
-        script_path = os.path.dirname(os.path.realpath(__file__))
         basename, ext = os.path.splitext(bpy.data.filepath)
-        # if not basename:
-        #     basename = os.path.join(basename, "temp")
         if not ext:
             ext = ".blend"
-        tempdir = tempfile.mkdtemp()
-        datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
         if 'THUMBNAIL' in upload_set and not os.path.exists(export_data["thumbnail_path"]):
             logger.show_report(props, text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
 
-        correlation_id = str(uuid.uuid4())
-        headers = rerequests.get_headers(correlation_id)
+        await create_asset(props, upload_data, correlation_id)
 
-        if props.id == '':
-            url = paths.get_api_url('assets')
-            try:
-                response = rerequests.post(
-                    url,
-                    json=upload_data,
-                    headers=headers,
-                    immediate=True,
-                )
-                logger.show_report(props, text='uploaded metadata')
-
-                dict_response = response.json()
-                logging.debug(dict_response)
-                props.id = dict_response['id']
-            except requests.exceptions.RequestException as e:
-                logging.error(e)
-                logger.show_report(props, text=str(e))
-                props.uploading = False
-                return {'CANCELLED'}
-        else:
-            url = paths.get_api_url('assets', props.id)
-            try:
-                rerequests.put(
-                    url,
-                    json=upload_data,
-                    headers=headers,
-                    immediate=True,
-                )
-                logger.show_report(props, text='uploaded metadata')
-            except requests.exceptions.RequestException as e:
-                logging.error(e)
-                logger.show_report(props, text=str(e))
-                props.uploading = False
-                return {'CANCELLED'}
+        workspace = props.workspace
 
         if upload_set == ['METADATA']:
             props.uploading = False
@@ -313,6 +264,8 @@ class UploadOperator(Operator):
         upload_data['viewId'] = props.view_id
         upload_data['id'] = props.id
 
+        tempdir = tempfile.mkdtemp()
+        datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
         source_filepath = os.path.join(tempdir, "export_hana3d" + ext)
         clean_file_path = paths.get_clean_filepath()
         data = {
@@ -325,56 +278,52 @@ class UploadOperator(Operator):
             'correlation_id': correlation_id,
         }
 
-        try:
-            props.uploading = True
-            autopack = bpy.data.use_autopack is True
-            if autopack:
-                bpy.ops.file.autopack_toggle()
-            bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
+        props.uploading = True
+        autopack = bpy.data.use_autopack is True
+        if autopack:
+            bpy.ops.file.autopack_toggle()
+        bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
 
-            with open(datafile, 'w') as s:
-                json.dump(data, s)
+        with open(datafile, 'w') as s:
+            json.dump(data, s)
 
-            skip_post_process = 'false'
-            if any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes):
-                ui.add_report(
-                    'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map',
-                )
-                skip_post_process = 'true'
+        filename = f'{upload_data["viewId"]}.blend'
+        await create_blend_file(datafile, clean_file_path, filename)
 
-            proc = subprocess.Popen(
-                [
-                    binary_path,
-                    "--background",
-                    "-noaudio",
-                    clean_file_path,
-                    "--python",
-                    os.path.join(script_path, "upload_bg.py"),
-                    "--",
-                    datafile,
-                    HANA3D_NAME,
-                    skip_post_process,
-                ],
-                bufsize=5000,
-                stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE,
+        skip_post_process = 'false'
+        if any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes):
+            ui.add_report(
+                'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map',
+            )
+            skip_post_process = 'true'
+
+        files = []
+        if 'THUMBNAIL' in upload_set:
+            files.append(
+                {
+                    'type': 'thumbnail',
+                    'index': 0,
+                    'file_path': export_data['thumbnail_path'],
+                    'publish_message': None,
+                }
+            )
+        if 'MAINFILE' in upload_set:
+            files.append(
+                {
+                    'type': 'blend',
+                    'index': 0,
+                    'file_path': os.path.join(data['temp_dir'], filename),
+                    'publish_message': export_data['publish_message'],
+                }
             )
 
-            bg_blender.add_bg_process(
-                process_type='UPLOAD',
-                process=proc,
-                location=location,
-                **bg_process_params,
-            )
+        for file_ in files:
+            upload = await get_upload_url(correlation_id, upload_data, file_)
+            await upload_file(file_, upload['s3UploadUrl'])
+            await confirm_upload(correlation_id, upload['id'], skip_post_process)
 
-            if autopack:
-                bpy.ops.file.autopack_toggle()
-
-        except Exception as e:
-            logger.show_report(props, text=str(e))
-            props.uploading = False
-            logging.error(e)
-            return {'CANCELLED'}
+        if autopack:
+            bpy.ops.file.autopack_toggle()
 
         if props.remote_thumbnail:
             thread = render.RenderThread(
@@ -388,23 +337,7 @@ class UploadOperator(Operator):
             render.render_threads.append(thread)
 
         props.view_workspace = workspace
+
+        await finish_asset_creation(correlation_id, upload_data['id'])
+
         return {'FINISHED'}
-
-
-classes = (
-    UploadAssetOperator,
-    # UploadVersionOperator,
-    # UploadVariantOperator,
-)
-
-
-def register():
-    """Upload register."""
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
-
-def unregister():
-    """Upload unregister."""
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
