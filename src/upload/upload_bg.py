@@ -34,8 +34,8 @@ def _set_origin_zero(coll):
             child.parent = None
         parent.location = (0, 0, 0)
 
-        for child in list_children:
-            child.parent = parent
+        for child_object in list_children:
+            child_object.parent = parent
     else:
         bpy.context.view_layer.objects.active = parent
         parent.select_set(True)
@@ -44,22 +44,18 @@ def _set_origin_zero(coll):
 
 
 def _fix_objects_origin(objects_group, coll):
-    """Move a group of objects to the center of the XY plane at height zero.
-
-    Origin of parent object is set to (0, 0, 0)
-    """
     utils.centralize(objects_group)
     _set_origin_zero(coll)
 
 
 if __name__ == '__main__':
     try:
-        with open(HANA3D_EXPORT_DATA, 'r') as data_file:
-            data = json.load(data_file)
+        with open(HANA3D_EXPORT_DATA, 'r') as opened_file:
+            data_file = json.load(opened_file)
 
-        export_data = data['export_data']
-        upload_data = data['upload_data']
-        correlation_id = data['correlation_id']
+        export_data = data_file['export_data']
+        upload_data = data_file['upload_data']
+        correlation_id = data_file['correlation_id']
 
         bpy.data.scenes.new('upload')
         for scene in bpy.data.scenes:
@@ -69,19 +65,19 @@ if __name__ == '__main__':
         if export_data['type'] == 'MODEL':
             obnames = export_data['models']
             main_source, all_objects = append_link.append_objects(
-                file_name=data['source_filepath'],
+                file_name=data_file['source_filepath'],
                 obnames=obnames,
                 rotation=(0, 0, 0),
             )
             collection = bpy.data.collections.new(upload_data['name'])
             for object_link in all_objects:
                 collection.objects.link(object_link)
-            bpy.context.scene.collection.children.link(collection)
+            bpy.context.scene.collection.children.link(collection)  # noqa: WPS219
             _fix_objects_origin(all_objects, collection)
         elif export_data['type'] == 'SCENE':
             sname = export_data['scene']
             main_source = append_link.append_scene(
-                file_name=data['source_filepath'],
+                file_name=data_file['source_filepath'],
                 scenename=sname,
             )
             bpy.data.scenes.remove(bpy.data.scenes['upload'])
@@ -89,7 +85,7 @@ if __name__ == '__main__':
         elif export_data['type'] == 'MATERIAL':
             matname = export_data['material']
             main_source = append_link.append_material(
-                file_name=data['source_filepath'],
+                file_name=data_file['source_filepath'],
                 matname=matname,
             )
 
@@ -97,10 +93,10 @@ if __name__ == '__main__':
 
         main_source_props = getattr(main_source, HANA3D_NAME)
         main_source_props.uploading = False
-        fpath = os.path.join(data['temp_dir'], FILENAME)
+        fpath = os.path.join(data_file['temp_dir'], FILENAME)
 
         bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)
-        os.remove(data['source_filepath'])
+        os.remove(data_file['source_filepath'])
 
     except Exception as error:
         logging.exception(error)

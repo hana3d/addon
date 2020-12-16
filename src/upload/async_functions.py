@@ -71,9 +71,9 @@ async def create_asset(
             )
             ui.add_report(text='uploaded metadata')
             return asset_id
-        except requests.exceptions.RequestException as error:
-            logging.error(error)
-            ui.add_report(text=str(error))
+        except requests.exceptions.RequestException as err:
+            logging.error(err)
+            ui.add_report(text=str(err))
             props.uploading = False
             return {'CANCELLED'}
 
@@ -190,7 +190,7 @@ async def upload_file(ui: UI, file_info: dict, upload_url: str) -> bool:
     ui.add_report(text='uploading file')
     request = Request()
     uploaded = False
-    for _a in range(0, 5):
+    for index in range(0, 5):
         if not uploaded:
             try:
                 upload_response = await request.put(
@@ -204,13 +204,13 @@ async def upload_file(ui: UI, file_info: dict, upload_url: str) -> bool:
                 else:
                     logging.error(upload_response.text)
             except Exception as error:
-                logging.error(error)
+                logging.error(f'{index}: {error}')
                 time.sleep(1)
 
     return uploaded
 
 
-async def confirm_upload(
+async def confirm_upload(   # noqa: WPS210
     props: hana3d_types.Props,
     ui: UI,
     correlation_id: str,
@@ -247,7 +247,7 @@ async def confirm_upload(
         return {'CANCELLED'}
 
     dict_response = upload_response.json()
-    if type(dict_response) == dict:
+    if isinstance(dict_response, dict):
         tempdir = paths.get_temp_dir()
         json_filepath = os.path.join(tempdir, 'post_process.json')
         with open(json_filepath, 'w') as json_file:
