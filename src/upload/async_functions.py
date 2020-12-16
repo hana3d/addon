@@ -22,7 +22,7 @@ async def create_asset(
     ui: UI,
     asset_id: str,
     upload_data: dict,
-    correlation_id: str
+    correlation_id: str,
 ) -> str:
     """Send request to create asset.
 
@@ -55,9 +55,9 @@ async def create_asset(
             dict_response = response.json()
             logging.debug(dict_response)
             return dict_response['id']
-        except requests.exceptions.RequestException as e:
-            logging.error(e)
-            ui.add_report(text=str(e))
+        except requests.exceptions.RequestException as error:
+            logging.error(error)
+            ui.add_report(text=str(error))
             props.uploading = False
             return {'CANCELLED'}
     else:
@@ -92,7 +92,7 @@ async def create_blend_file(
         ui: UI object
         datafile: filepath containing the upload data
         clean_file_path: Clean file path
-        flename: Name that the blend file will be saved as
+        filename: Name that the blend file will be saved as
 
     Returns:
         Subprocess output
@@ -115,12 +115,12 @@ async def create_blend_file(
         filename,
     ]
 
-    subprocess = Subprocess()
+    blender_subprocess = Subprocess()
 
     try:
-        result = await subprocess.subprocess(cmd)
+        output = await blender_subprocess.subprocess(cmd)
         ui.add_report(text='created upload file')
-        return result
+        return output
     except Exception as error:
         logging.error(error)
         ui.add_report(text=str(error))
@@ -133,7 +133,7 @@ async def get_upload_url(
     ui: UI,
     correlation_id: str,
     upload_data: dict,
-    file_: dict,
+    file_info: dict,
 ) -> dict:
     """Get upload url from backend.
 
@@ -142,7 +142,7 @@ async def get_upload_url(
         ui: UI object
         correlation_id: Correlation ID
         upload_data: Upload data
-        file_: File information
+        file_info: File information
 
     Returns:
         dict: Request response
@@ -155,17 +155,15 @@ async def get_upload_url(
         'assetId': upload_data['id'],
         'libraries': upload_data['libraries'],
         'tags': upload_data['tags'],
-        'fileType': file_['type'],
-        'fileIndex': file_['index'],
-        'originalFilename': os.path.basename(file_['file_path']),
-        'comment': file_['publish_message']
+        'fileType': file_info['type'],
+        'fileIndex': file_info['index'],
+        'originalFilename': os.path.basename(file_info['file_path']),
+        'comment': file_info['publish_message'],
     }
-    if 'workspace' in upload_data:
-        upload_info['workspace'] = upload_data['workspace']
-    if file_['type'] == 'blend':
-        upload_info['viewId'] = upload_data['viewId']
-        if 'id_parent' in upload_data:
-            upload_info['id_parent'] = upload_data['id_parent']
+    upload_info['workspace'] = upload_data.get('workspace')
+    if file_info['type'] == 'blend':
+        upload_info['viewId'] = upload_data.get('viewId')
+        upload_info['id_parent'] = upload_data.get('id_parent')
     upload_create_url = paths.get_api_url('uploads')
 
     try:
@@ -178,12 +176,12 @@ async def get_upload_url(
         return {'CANCELLED'}
 
 
-async def upload_file(ui: UI, file_: dict, upload_url: str) -> bool:
+async def upload_file(ui: UI, file_info: dict, upload_url: str) -> bool:
     """Upload file.
 
     Arguments:
         ui: UI object
-        file_: File information
+        file_info: File information
         upload_url: URL to send PUT request
 
     Returns:
@@ -192,21 +190,21 @@ async def upload_file(ui: UI, file_: dict, upload_url: str) -> bool:
     ui.add_report(text='uploading file')
     request = Request()
     uploaded = False
-    for a in range(0, 5):
+    for _a in range(0, 5):
         if not uploaded:
             try:
                 upload_response = await request.put(
                     upload_url,
-                    data=UploadInChunks(file_['file_path'], CHUNK_SIZE, file_['type']),
+                    data=UploadInChunks(file_info['file_path'], CHUNK_SIZE, file_info['type']),
                     stream=True,
                 )
 
-                if upload_response.status_code == 200:
+                if upload_response.status_code == 200:  # noqa: WPS432
                     uploaded = True
                 else:
                     logging.error(upload_response.text)
-            except Exception as e:
-                logging.error(e)
+            except Exception as error:
+                logging.error(error)
                 time.sleep(1)
 
     return uploaded
@@ -238,7 +236,7 @@ async def confirm_upload(
         'uploads_s3',
         upload_id,
         'upload-file',
-        query={'skip_post_process': skip_post_process}
+        query={'skip_post_process': skip_post_process},
     )
     try:
         upload_response = await request.post(upload_done_url, headers=headers)
@@ -275,7 +273,7 @@ async def finish_asset_creation(
     """
     request = Request()
 
-    confirm_data = {"verificationStatus": "uploaded"}
+    confirm_data = {'verificationStatus': 'uploaded'}
 
     url = paths.get_api_url('assets', asset_id)
     headers = request.get_headers(correlation_id)

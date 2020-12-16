@@ -104,8 +104,6 @@ def _get_export_data(   # noqa: WPS210
         upload_data['workspace'] = props.workspace
 
     metadata = {}
-    if hasattr(props, 'custom_props'):
-        metadata.update(props.custom_props)
     if metadata:
         upload_data['metadata'] = metadata
 
@@ -122,14 +120,14 @@ def _get_export_data(   # noqa: WPS210
             library.update({
                 'id': library_id,
             })
-            if props.custom_props.keys() != []:
+            if props.custom_props.keys():
                 custom_props = {}
                 for prop_name in props.custom_props.keys():
                     prop_value = props.custom_props[prop_name]
                     slug = props.custom_props_info[prop_name]['slug']
                     prop_library_id = props.custom_props_info[prop_name]['library_id']
                     if prop_library_id == library_id:
-                        custom_props.update({slug: prop_value})
+                        custom_props.update({slug: prop_value})  # noqa: WPS220
                 library.update({'metadata': {'view_props': custom_props}})
             upload_data['libraries'].append(library)
 
@@ -138,7 +136,7 @@ def _get_export_data(   # noqa: WPS210
     return export_data, upload_data, bg_process_params
 
 
-class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS217,WPS210
+class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):
     """Hana3D upload asset operator."""
 
     bl_idname = f'object.{HANA3D_NAME}_upload'
@@ -181,7 +179,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         props = utils.get_upload_props()
         return bpy.context.view_layer.objects.active is not None and not props.uploading
 
-    async def async_execute(self, context):
+    async def async_execute(self, context):  # noqa: WPS217,WPS210
         """Upload async execute.
 
         Parameters:
@@ -215,7 +213,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         if not self.reupload:
             props.view_id = ''
-            props.id = ''
+            props.id = ''   # noqa: WPS125
         export_data, upload_data, bg_process_params = _get_export_data(props)
 
         upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
@@ -230,7 +228,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             return {'CANCELLED'}
 
         asset_id = await create_asset(props, ui, props.id, upload_data, correlation_id)
-        props.id = asset_id
+        props.id = asset_id  # noqa: WPS125
 
         workspace = props.workspace
 
@@ -287,7 +285,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                     'index': 0,
                     'file_path': export_data['thumbnail_path'],
                     'publish_message': None,
-                }
+                },
             )
         if 'MAINFILE' in upload_set:
             files.append(
@@ -296,12 +294,12 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                     'index': 0,
                     'file_path': os.path.join(data['temp_dir'], filename),
                     'publish_message': export_data['publish_message'],
-                }
+                },
             )
 
-        for file_ in files:
-            upload = await get_upload_url(props, ui, correlation_id, upload_data, file_)
-            uploaded = await upload_file(ui, file_, upload['s3UploadUrl'])
+        for file_info in files:
+            upload = await get_upload_url(props, ui, correlation_id, upload_data, file_info)
+            uploaded = await upload_file(ui, file_info, upload['s3UploadUrl'])
             if uploaded:
                 await confirm_upload(props, ui, correlation_id, upload['id'], skip_post_process)
             else:
