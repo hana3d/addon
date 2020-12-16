@@ -1,24 +1,7 @@
 """Auxiliary data manipulation functions."""
-import json
-import os
-import tempfile
-import uuid
-
 import bpy
-from bpy.props import BoolProperty, EnumProperty
 
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
-from .async_functions import (
-    confirm_upload,
-    create_asset,
-    create_blend_file,
-    finish_asset_creation,
-    get_upload_url,
-    upload_file,
-)
+from ... import hana3d_types, utils
 
 
 def _get_model_data(export_data: dict):
@@ -83,11 +66,19 @@ def _get_scene_data(export_data: dict):
 
 
 def get_export_data(   # noqa: WPS210
-    props: hana3d_types.Props,
-    path_computing: str = 'uploading',
-    path_state: str = 'upload_state',
+    props: hana3d_types.Props
 ):
-    """Get required data from Blender for upload."""
+    """Get required data from Blender for upload.
+
+    Arguments:
+        props: Hana3D upload props
+
+    Returns:
+        export_data, upload_data
+
+    Raises:
+        Exception: Unexpected asset_type
+    """
     export_data = {
         'type': props.asset_type,
         'thumbnail_path': bpy.path.abspath(props.thumbnail),
