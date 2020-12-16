@@ -3,13 +3,51 @@
 import asyncio
 import functools
 import logging
+import sys
 import uuid
 
 import requests
 
-from ..preferences.preferences import Preferences
 from ... import hana3d_oauth, logger
 from ...config import HANA3D_DESCRIPTION
+from ..preferences.preferences import Preferences
+
+
+class upload_in_chunks:
+    """Helper class that creates iterable for uploading file in chunks.
+    Must be used only with an async request."""
+
+    def __init__(self, filename: str, chunksize: int = 2 ** 20, report_name: str = 'file'):
+        """Create upload in chunks object.
+
+        Parameters:
+            filename (str): Name of the file
+            chunksize (int): Size of the chunks in bytes
+            report_name (str): Report name
+        """
+        self.filename = filename
+        self.chunksize = chunksize
+        self.totalsize = os.path.getsize(filename)
+        self.readsofar = 0
+        self.report_name = report_name
+
+    def __iter__(self):
+        """Upload in chunks iterator."""
+        with open(self.filename, 'rb') as file_:
+            while True:
+                data = file_.read(self.chunksize)
+                if not data:
+                    sys.stderr.write("\n")
+                    break
+                self.readsofar += len(data)
+                # percent = 100 * self.readsofar / self.totalsize
+                # progress('uploading %s' % self.report_name, percent)
+                # sys.stderr.write("\r{percent:3.0f}%".format(percent=percent))
+                yield data
+
+    def __len__(self):
+        """Total size of the file."""
+        return self.totalsize
 
 
 class Request(object):  # noqa : WPS214
@@ -26,7 +64,7 @@ class Request(object):  # noqa : WPS214
         partial = functools.partial(requests.request, method, url, **kwargs)
         response = await loop.run_in_executor(None, partial)
 
-        logging.debug(f'{method.upper()} {url} ({response.status_code})') # noqa : WPS221
+        logging.debug(f'{method.upper()} {url} ({response.status_code})')  # noqa : WPS221
 
         if not response.ok:
             status_code = response.status_code
