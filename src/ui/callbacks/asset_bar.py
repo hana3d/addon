@@ -5,11 +5,11 @@ import os
 
 import bpy
 
-from .. import bgl_helper
-from ...preferences.preferences import Preferences
-from ...search.search import Search
 from .... import paths, utils
 from ....config import HANA3D_NAME, HANA3D_UI
+from ...preferences.preferences import Preferences
+from ...search.search import Search
+from .. import bgl_helper
 
 verification_icons = {
     'ready': 'vs_ready.png',

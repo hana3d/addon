@@ -4,7 +4,6 @@ from typing import List
 
 from bpy.types import Context
 
-from ..asset.asset_type import AssetType
 from ...config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -12,6 +11,7 @@ from ...config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from ..asset.asset_type import AssetType
 
 
 @dataclass

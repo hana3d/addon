@@ -4,10 +4,10 @@ from typing import List, Tuple
 
 import bpy
 
+from ..metaclasses.singleton import Singleton
 from . import colors
 from .report import Report
 from .ui_types import Color
-from ..metaclasses.singleton import Singleton
 
 
 class UI(object, metaclass=Singleton):

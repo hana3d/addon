@@ -1,8 +1,8 @@
 """Login panel."""
 from bpy.types import Panel
 
-from ..preferences.preferences import Preferences
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from ..preferences.preferences import Preferences
 
 
 class Hana3DLoginPanel(Panel):

@@ -2,10 +2,10 @@
 import bpy
 from bpy.types import Panel
 
-from .lib import draw_assetbar_show_hide
-from ..search.search import Search
 from ... import utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ..search.search import Search
+from .lib import draw_assetbar_show_hide
 
 
 class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
