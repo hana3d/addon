@@ -65,9 +65,7 @@ def _get_scene_data(export_data: dict):
     return upload_data, upload_params
 
 
-def get_export_data(   # noqa: WPS210
-    props: hana3d_types.Props
-):
+def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
     """Get required data from Blender for upload.
 
     Arguments:
