@@ -4,15 +4,16 @@ import logging
 import os
 import subprocess  # noqa: S404
 import time
+from typing import Set, Union
 
 import bpy
 import requests
 
+from ... import hana3d_types, paths
+from ...config import HANA3D_NAME
 from ..requests_async.requests_async import Request, UploadInChunks
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui.main import UI
-from ... import hana3d_types, paths
-from ...config import HANA3D_NAME
 
 CHUNK_SIZE = 1024 * 1024 * 2
 
@@ -23,7 +24,7 @@ async def create_asset(
     asset_id: str,
     upload_data: dict,
     correlation_id: str,
-) -> str:
+) -> Union[str, Set[str]]:
     """Send request to create asset.
 
     Arguments:
@@ -84,7 +85,7 @@ async def create_blend_file(
     datafile: str,
     clean_file_path: str,
     filename: str,
-) -> subprocess.CompletedProcess:
+) -> Union[Set[str], subprocess.CompletedProcess]:
     """Create blend file in a subprocess.
 
     Arguments:
@@ -134,7 +135,7 @@ async def get_upload_url(
     correlation_id: str,
     upload_data: dict,
     file_info: dict,
-) -> dict:
+) -> Union[Set[str], dict]:
     """Get upload url from backend.
 
     Arguments:

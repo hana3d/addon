@@ -1,4 +1,6 @@
 """Auxiliary data manipulation functions."""
+from typing import List
+
 import bpy
 
 from ... import hana3d_types, utils
@@ -22,13 +24,13 @@ def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
     }
 
     if props.asset_type.upper() == 'MODEL':
-        upload_data, upload_params = _get_model_data()
+        upload_data, upload_params = _get_model_data(export_data, props)
 
     elif props.asset_type.upper() == 'SCENE':
-        upload_data, upload_params = _get_scene_data()
+        upload_data, upload_params = _get_scene_data(export_data)
 
     elif props.asset_type.upper() == 'MATERIAL':
-        upload_data, upload_params = _get_material_data()
+        upload_data, upload_params = _get_material_data(export_data)
 
     else:
         raise Exception(f'Unexpected asset_type={props.asset_type}')
@@ -41,7 +43,7 @@ def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
     if props.workspace != '' and not props.is_public:
         upload_data['workspace'] = props.workspace
 
-    metadata = {}
+    metadata: dict = {}
     if metadata:
         upload_data['metadata'] = metadata
 
@@ -53,7 +55,7 @@ def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
     return export_data, upload_data
 
 
-def _get_model_data(export_data: dict):  # noqa: WPS210
+def _get_model_data(export_data: dict, props: hana3d_types.Props):  # noqa: WPS210
     mainmodel = utils.get_active_model(bpy.context)
 
     obs = utils.get_hierarchy(mainmodel)
@@ -94,7 +96,7 @@ def _get_material_data(export_data: dict):
         'assetType': 'material',
     }
 
-    upload_params = {}
+    upload_params: dict = {}
 
     return upload_data, upload_params
 
@@ -109,13 +111,13 @@ def _get_scene_data(export_data: dict):
         'assetType': 'scene',
     }
 
-    upload_params = {}
+    upload_params: dict = {}
 
     return upload_data, upload_params
 
 
 def _get_tags(props: hana3d_types.Props):
-    tags = []
+    tags: List[str] = []
     for tag in props.tags_list.keys():
         if props.tags_list[tag].selected is True:
             tags['tags'].append(tag)
@@ -123,7 +125,7 @@ def _get_tags(props: hana3d_types.Props):
 
 
 def _get_libraries(props: hana3d_types.Props):  # noqa: WPS210
-    libraries = []
+    libraries: List[dict] = []
     for library_name in props.libraries_list.keys():
         if props.libraries_list[library_name].selected is True:
             library_id = props.libraries_list[library_name].id_

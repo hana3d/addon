@@ -10,6 +10,10 @@ from typing import List, Union
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
+from ... import hana3d_types, paths, render, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -19,10 +23,6 @@ from .async_functions import (
     upload_file,
 )
 from .export_data import get_export_data
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -45,25 +45,25 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     # type of upload - model, material, textures, e.t.c.
-    asset_type: EnumProperty(
+    asset_type: EnumProperty(   # type: ignore
         name='Type',
         items=asset_types,
         description='Type of upload',
         default='MODEL',
     )
 
-    reupload: BoolProperty(
+    reupload: BoolProperty(  # type: ignore
         name='reupload',
         description='reupload but also draw so that it asks what to reupload',
         default=False,
         options={'SKIP_SAVE'},
     )
 
-    metadata: BoolProperty(name='metadata', default=True, options={'SKIP_SAVE'})
+    metadata: BoolProperty(name='metadata', default=True, options={'SKIP_SAVE'})    # type: ignore
 
-    thumbnail: BoolProperty(name='thumbnail', default=False, options={'SKIP_SAVE'})
+    thumbnail: BoolProperty(name='thumbnail', default=False, options={'SKIP_SAVE'})  # type: ignore
 
-    main_file: BoolProperty(name='main file', default=False, options={'SKIP_SAVE'})
+    main_file: BoolProperty(name='main file', default=False, options={'SKIP_SAVE'})  # type: ignore
 
     @classmethod
     def poll(cls, context):
@@ -157,9 +157,14 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
     def _get_basic_data(self):  # noqa: WPS210
         active_asset = utils.get_active_asset()
+
+        if self.asset_type == 'MODEL':
+            utils.fill_object_metadata(active_asset)
+
         props = getattr(active_asset, HANA3D_NAME)
         workspace = props.workspace
         correlation_id = str(uuid.uuid4())
+
         basename, ext = os.path.splitext(bpy.data.filepath)
         if not ext:
             ext = '.blend'
@@ -175,9 +180,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         if 'jobs' not in props.render_data:
             props.render_data['jobs'] = []
-
-        if self.asset_type == 'MODEL':
-            utils.fill_object_metadata(active_asset)
 
         if props.has_thumbnail:
             upload_set.append('THUMBNAIL')

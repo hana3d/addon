@@ -12,8 +12,8 @@ HANA3D_NAME = sys.argv[-2]
 HANA3D_EXPORT_DATA = sys.argv[-3]
 
 module = import_module(HANA3D_NAME)
-append_link = module.append_link
-utils = module.utils
+append_link = module.append_link    # type: ignore
+utils = module.utils    # type: ignore
 
 
 def _get_parent_object():
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         bpy.data.scenes.new('upload')
         for scene in bpy.data.scenes:
             if scene.name != 'upload':
-                bpy.data.scenes.remove(s)
+                bpy.data.scenes.remove(scene)
 
         if export_data['type'] == 'MODEL':
             obnames = export_data['models']
