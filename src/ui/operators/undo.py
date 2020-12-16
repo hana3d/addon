@@ -3,9 +3,9 @@ from typing import Set
 
 import bpy
 
+from ..main import UI
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ....report_tools import execute_wrapper
-from ..main import UI
 
 
 class UndoWithContext(bpy.types.Operator):

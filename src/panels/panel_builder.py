@@ -1,15 +1,15 @@
 """Panel builder."""
 import bpy
 
-from ... import addon_updater_ops, utils
-from ...config import HANA3D_NAME, HANA3D_UI
-from ..search.search import Search
 from .download import Hana3DDownloadPanel
 from .lib import draw_assetbar_show_hide
 from .login import Hana3DLoginPanel
 from .render import Hana3DRenderPanel
 from .unified import Hana3DUnifiedPanel
 from .updater import Hana3DUpdaterPanel
+from ..search.search import Search
+from ... import addon_updater_ops, utils
+from ...config import HANA3D_NAME, HANA3D_UI
 
 
 def header_search_draw(self, context):

@@ -8,10 +8,6 @@ import uuid
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -20,6 +16,10 @@ from .async_functions import (
     get_upload_url,
     upload_file,
 )
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
+from ... import hana3d_types, paths, render, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 

@@ -8,14 +8,14 @@ from typing import Callable, Union
 
 import bpy
 
-from ... import hana3d_types, paths, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
-from ...report_tools import execute_wrapper
 from ..asset.asset_type import AssetType
 from ..async_loop import run_async_function
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui import colors
 from ..ui.main import UI
+from ... import hana3d_types, paths, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from ...report_tools import execute_wrapper
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 

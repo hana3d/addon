@@ -9,8 +9,8 @@ from concurrent import futures
 
 import bpy
 
-from ...config import HANA3D_NAME
 from .loop_status import LoopStatus
+from ...config import HANA3D_NAME
 
 MODAL_TIMER = 0.00001
 
