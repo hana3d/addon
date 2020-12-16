@@ -47,6 +47,8 @@ from .src import async_loop, autothumb
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder
+from .src.ui import render as ui_render
+from .src.ui.operators import render_image
 
 bl_info = {
     'name': 'Hana3D',
@@ -309,12 +311,14 @@ modules = (
     libraries,
     logger,
     render,
+    render_image,
     search,
     tags,
     tasks_queue,
     thread_tools,
     hana3d_types,
     ui,
+    ui_render,
     panel_builder,
     upload,
 )

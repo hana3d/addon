@@ -25,6 +25,7 @@ from . import hana3d_types, paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.search.search import Search
+from .src.upload import upload
 
 
 def update_libraries(workspace):
@@ -76,7 +77,7 @@ class RemoveLibraryUpload(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         props.libraries_list[self.library].selected = False
 
         if 'view_props' in props.libraries_list[self.library].metadata:
@@ -103,7 +104,7 @@ class RefreshLibraries(bpy.types.Operator):
         update_libraries(search_props.workspace)
         hana3d_types.update_libraries_list(search_props, context)
 
-        upload_props = utils.get_upload_props()
+        upload_props = upload.get_upload_props()
         update_libraries(upload_props.workspace)
         hana3d_types.update_libraries_list(upload_props, context)
 

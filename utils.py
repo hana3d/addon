@@ -114,8 +114,6 @@ def get_selected_models():
     return parents
 
 
-
-
 def get_active_asset():
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.asset_type == 'MODEL':
@@ -134,12 +132,6 @@ def get_active_asset():
             return bpy.context.active_object.active_material
     return None
 
-
-def get_upload_props():
-    active_asset = get_active_asset()
-    if active_asset is None:
-        return None
-    return getattr(active_asset, HANA3D_NAME)
 
 
 def previmg_name(index, fullsize=False):
