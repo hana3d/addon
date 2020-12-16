@@ -21,18 +21,15 @@ following. This uses the Blender-specific `async_loop` module.
 
 ```
 lang=python,name=async_example.py
-import asyncio
-from src import async_loop
+from src.async_loop import run_async_function()
 
-async def some_async_func():
-    return 1 + 1
+async def some_async_func(x, y):
+    return x + y
 
 def done_callback(task):
     print('Task result: ', task.result())
 
-async_task = asyncio.ensure_future(some_async_func())
-async_task.add_done_callback(done_callback)
-async_loop.ensure_async_loop()
+run_async_function(some_async_function, done_callback, x=1, y=1)
 ```
 
 To start an asynchronous task and block until it is done, use the
@@ -50,7 +47,7 @@ res = loop.run_until_complete(some_async_func())
 print('Task result:', res)
 ```
 
-To make an operator run asynchronously use the `async_mixin`.
+To make an operator run asynchronously use `async_mixin`.
 
 ```
 lang=python,name=mixin_example.py
