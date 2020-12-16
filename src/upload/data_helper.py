@@ -4,7 +4,7 @@ import bpy
 from ... import hana3d_types, utils
 
 
-def _get_model_data(export_data: dict):
+def _get_model_data(export_data: dict):  # noqa: WPS210
     mainmodel = utils.get_active_model(bpy.context)
 
     obs = utils.get_hierarchy(mainmodel)
