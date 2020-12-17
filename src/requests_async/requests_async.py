@@ -56,7 +56,7 @@ class Request(BasicRequest):
     """Hana3D requests async."""
 
     async def _request(self, method: str, url: str, **kwargs) -> requests.Response:    # noqa : WPS210
-        response = await super(Request, self)._request(method, url, **kwargs)
+        response = await super()._request(method, url, **kwargs)
 
         if not response.ok:
             if status_code == 401 and code == 'token_expired':  # noqa : WPS432
