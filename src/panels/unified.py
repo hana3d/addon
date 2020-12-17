@@ -2,11 +2,11 @@
 import bpy
 from bpy.types import Panel
 
-from .lib import draw_assetbar_show_hide
-from ..search.search import Search
-from ..upload.upload import get_upload_props
 from ... import utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ..search.search import Search
+from ..upload import upload
+from .lib import draw_assetbar_show_hide
 
 
 class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
@@ -189,7 +189,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         layout = self.layout
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
-        props = get_upload_props()
+        props = upload.get_upload_props()
 
         box = layout.box()
         box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
@@ -253,14 +253,19 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
             op.asset_type = asset_type
 
         if props.view_id != '' and props.workspace == props.view_workspace:
-            op = row.operator(f'object.{HANA3D_NAME}_upload', text='Reupload asset', icon='EXPORT')
+            op = row.operator(
+                f'object.{HANA3D_NAME}_upload',
+                text='Upload as New Version',
+                icon='RECOVER_LAST',
+            )
             op.asset_type = asset_type
             op.reupload = True
 
+            row = layout.row()
             op = row.operator(
                 f'object.{HANA3D_NAME}_upload',
-                text='Upload as new asset',
-                icon='EXPORT',
+                text='Upload as New Asset',
+                icon='PLUS',
             )
             op.asset_type = asset_type
             op.reupload = False
