@@ -264,7 +264,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
             row = layout.row()
             op = row.operator(
                 f'object.{HANA3D_NAME}_upload',
-                text='Upload as New Model',
+                text='Upload as New Asset',
                 icon='PLUS',
             )
             op.asset_type = asset_type
