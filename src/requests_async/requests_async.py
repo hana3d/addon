@@ -8,11 +8,11 @@ import uuid
 
 import requests
 
-from ... import hana3d_oauth
-from ...config import HANA3D_DESCRIPTION
 from ..preferences.preferences import Preferences
 from ..ui import colors
 from ..ui.main import UI
+from ... import hana3d_oauth
+from ...config import HANA3D_DESCRIPTION
 
 
 class UploadInChunks(object):

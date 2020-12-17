@@ -2,11 +2,11 @@
 import bpy
 from bpy.types import Panel
 
-from ... import utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .lib import draw_assetbar_show_hide
 from ..search.search import Search
 from ..upload.upload import get_upload_props
-from .lib import draw_assetbar_show_hide
+from ... import utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 
 class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
