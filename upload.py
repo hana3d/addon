@@ -31,6 +31,7 @@ from bpy.types import Operator
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
 from .src.ui.main import UI
+from .src.upload import upload
 
 from . import bg_blender, hana3d_types, logger, paths, render, rerequests, utils  # isort:skip
 
@@ -224,7 +225,7 @@ class UploadOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         return bpy.context.view_layer.objects.active is not None and not props.uploading
 
     @execute_wrapper
@@ -245,7 +246,7 @@ class UploadOperator(Operator):
         return self.start_upload(context, props, upload_set)
 
     def draw(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         layout = self.layout
 
         if self.reupload:

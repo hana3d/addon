@@ -8,6 +8,7 @@ import bpy
 from .. import bgl_helper
 from ...preferences.preferences import Preferences
 from ...search.search import Search
+from ...upload import upload
 from .... import paths, utils
 from ....config import HANA3D_NAME, HANA3D_UI
 
@@ -180,7 +181,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
 
 def draw_callback_2d_upload_preview(self, context):
     ui_props = getattr(context.window_manager, HANA3D_UI)
-    props = utils.get_upload_props()
+    props = upload.get_upload_props()
 
     if props is not None and ui_props.draw_tooltip:
         ui_props.thumbnail_image = props.thumbnail
@@ -498,5 +499,5 @@ def draw_callback_3d(self, context):
                 ui.snapped_location,
                 ui.snapped_rotation,
                 ui.snapped_bbox_min,
-                ui.snapped_bbox_max
+                ui.snapped_bbox_max,
             )

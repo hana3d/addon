@@ -519,9 +519,11 @@ def set_asset_props(asset, asset_data):
     asset_props.name = asset_data['name']
     asset_props.tags = ','.join(asset_data['tags'])
     asset_props.description = asset_data['description']
+    asset_props.asset_type = asset_data['asset_type']
 
     jobs = render_tools.get_render_jobs(asset_data['asset_type'], asset_data['view_id'])
     asset_props.render_data['jobs'] = jobs
+    render_tools.update_render_list(asset_props)
 
     if 'tags' in asset_data:
         hana3d_types.update_tags_list(asset_props, bpy.context)

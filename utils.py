@@ -133,12 +133,6 @@ def get_active_asset():
     return None
 
 
-def get_upload_props():
-    active_asset = get_active_asset()
-    if active_asset is None:
-        return None
-    return getattr(active_asset, HANA3D_NAME)
-
 
 def previmg_name(index, fullsize=False):
     if not fullsize:
