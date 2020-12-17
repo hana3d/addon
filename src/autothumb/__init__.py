@@ -13,7 +13,7 @@ from ..async_loop import run_async_function
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui import colors
 from ..ui.main import UI
-from ... import paths, utils
+from ... import hana3d_types, paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 from ...report_tools import execute_wrapper
 
@@ -21,7 +21,7 @@ HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
 
 def _common_setup(  # noqa: WPS211,WPS210
-    props,
+    props: hana3d_types.Props,
     asset_name: str,
     asset_type: AssetType,
     json_data: dict,

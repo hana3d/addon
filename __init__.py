@@ -39,11 +39,10 @@ from . import (  # noqa: WPS235
     tasks_queue,
     thread_tools,
     ui,
-    upload,
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from .src import async_loop, autothumb
+from .src import async_loop, autothumb, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder

@@ -3,7 +3,7 @@ import logging
 
 import bpy
 
-from ..requests_async.requests_async import Request
+from ..requests_async.basic_request import BasicRequest
 from ... import config, paths
 
 
@@ -23,7 +23,7 @@ class Profile(object):
 
     async def update_async(self) -> None:
         """Update the User Profile asynchronously."""
-        request = Request()
+        request = BasicRequest()
         logging.info('update_profile')  # noqa: WPS421
         url = paths.get_api_url('me')
         headers = request.get_headers(include_id_token=True)
