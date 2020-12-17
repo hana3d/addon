@@ -30,7 +30,7 @@ def get_upload_props_by_view_id(asset_type: AssetType, view_id: str):
     """
     asset = None
     if asset_type == 'model':
-        assets = context.blend_data.objects
+        assets = bpy.context.blend_data.objects
     elif asset_type == 'scene':
         assets = bpy.data.scenes
     elif asset_type == 'material':
