@@ -2,10 +2,11 @@
 import bpy
 from bpy.types import Panel
 
-from .lib import draw_assetbar_show_hide
-from ..search.search import Search
 from ... import utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ..search.search import Search
+from ..upload.upload import get_upload_props
+from .lib import draw_assetbar_show_hide
 
 
 class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
@@ -188,7 +189,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         layout = self.layout
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
-        props = utils.get_upload_props()
+        props = get_upload_props()
 
         box = layout.box()
         box.label(text='Workspace and Lib', icon='ASSET_MANAGER')

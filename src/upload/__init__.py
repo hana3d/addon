@@ -23,6 +23,7 @@ from .async_functions import (
     upload_file,
 )
 from .export_data import get_export_data
+from .upload import get_upload_props
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -75,7 +76,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         Returns:
             bool: if there is a active object and if it is not already uploading
         """
-        props = utils.get_upload_props()
+        props = get_upload_props()
         return bpy.context.view_layer.objects.active is not None and not props.uploading
 
     async def async_execute(self, context):  # noqa: WPS217,WPS210
