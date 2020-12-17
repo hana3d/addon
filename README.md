@@ -59,7 +59,8 @@ async def some_async_func():
 
 class SomeOperator(AsyncModalOperatorMixin, bpy.types.Operator):
     async def async_execute(self, context):
-        await some_async_func()
+        result = await some_async_func()
+        print(result)
 ```
 
 ### Testing
