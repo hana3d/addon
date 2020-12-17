@@ -59,9 +59,7 @@ def _get_model_data(export_data: dict, props: hana3d_types.Props):  # noqa: WPS2
     mainmodel = utils.get_active_model(bpy.context)
 
     obs = utils.get_hierarchy(mainmodel)
-    obnames = []
-    for ob in obs:
-        obnames.append(ob.name)
+    obnames = [ob for ob in obs]
     export_data['type'] = 'MODEL'
     export_data['models'] = obnames
 

@@ -10,6 +10,10 @@ from typing import List, Union
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
+from ... import hana3d_types, paths, render, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -19,10 +23,6 @@ from .async_functions import (
     upload_file,
 )
 from .export_data import get_export_data
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -41,7 +41,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
     bl_idname = f'object.{HANA3D_NAME}_upload'
     bl_description = f'Upload or re-upload asset + thumbnail + metadata to {HANA3D_DESCRIPTION}'
 
-    bl_label = 'hana3d asset upload'
+    bl_label = f'{HANA3D_DESCRIPTION} asset upload'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     # type of upload - model, material, textures, e.t.c.

@@ -8,14 +8,14 @@ import uuid
 
 import requests
 
+from ... import hana3d_oauth
+from ...config import HANA3D_DESCRIPTION
 from ..preferences.preferences import Preferences
 from ..ui import colors
 from ..ui.main import UI
-from ... import hana3d_oauth
-from ...config import HANA3D_DESCRIPTION
 
 
-class UploadInChunks:  # noqa : WPS306
+class UploadInChunks(object):
     """Helper class that creates iterable for uploading file in chunks."""
 
     def __init__(self, filename: str, chunksize: int = 2 ** 20, report_name: str = 'file'):  # noqa : WPS404,WPS432
