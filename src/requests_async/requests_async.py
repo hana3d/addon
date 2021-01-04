@@ -7,10 +7,10 @@ import sys
 
 import requests
 
+from .basic_request import BasicRequest
+from ..ui.main import UI
 from ... import hana3d_oauth
 from ...config import HANA3D_DESCRIPTION
-from ..ui.main import UI
-from .basic_request import BasicRequest
 
 
 class UploadInChunks(object):
