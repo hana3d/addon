@@ -23,6 +23,8 @@ from bpy.types import Operator
 from . import utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
+from .src.search.search import Search
+from .src.upload import upload
 
 
 class Hana3DAddTag(Operator):
@@ -40,14 +42,15 @@ class Hana3DAddTag(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         current_workspace = props.workspace
 
         new_tag = props.tags_list.add()
         new_tag['name'] = self.tag
         new_tag.selected = True
 
-        search_props = utils.get_search_props()
+        search = Search(context)
+        search_props = search.props
         new_tag = search_props.tags_list.add()
         new_tag['name'] = self.tag
 
@@ -72,8 +75,8 @@ class RemoveTagSearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_search_props()
-        props.tags_list[self.tag].selected = False
+        search = Search(context)
+        search.props.tags_list[self.tag].selected = False
         return {'INTERFACE'}
 
 
@@ -88,7 +91,7 @@ class RemoveTagUpload(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         props.tags_list[self.tag].selected = False
         return {'INTERFACE'}
 

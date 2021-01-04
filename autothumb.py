@@ -15,17 +15,19 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
+import logging
 import os
 import subprocess
 import tempfile
 
 import bpy
 
-from . import bg_blender, colors, paths, ui, utils
+from . import bg_blender, paths, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
+from .src.ui import colors
+from .src.ui.main import UI
 
 HANA3D_EXPORT_DATA_FILE = f"{HANA3D_NAME}_data.json"
 
@@ -174,6 +176,7 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
         except Exception as e:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
+            ui = UI()
             ui.add_report(f'Error in thumbnailer: {e}', color=colors.RED)
             return {'CANCELLED'}
         return {'FINISHED'}
@@ -329,7 +332,7 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
         except Exception as e:
             props.is_generating_thumbnail = False
             props.thumbnail_generating_state = ''
-            self.report({'WARNING'}, "Error while packing file: %s" % str(e))
+            logging.warning(f'Error while packing file: {str(e)}')
             return {'CANCELLED'}
         return {'FINISHED'}
 
@@ -437,7 +440,7 @@ class GenerateSceneThumbnailOperator(bpy.types.Operator):
             props = getattr(get_active_scene(context), HANA3D_NAME)
             generate_scene_thumbnail(props)
         except Exception as e:
-            self.report({'WARNING'}, "Error while exporting file: %s" % str(e))
+            logging.warning(f'Error while exporting file: {str(e)}')
             return {'CANCELLED'}
         finally:
             props.thumbnail_generating_state = 'Finished'

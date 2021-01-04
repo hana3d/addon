@@ -15,46 +15,49 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import bpy
 import bpy.utils.previews
 from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy.types import AddonPreferences
 
-from . import (
+from . import (  # noqa: WPS235
     addon_updater_ops,
     append_link,
     asset,
-    autothumb,
     bg_blender,
     download,
     hana3d_oauth,
+    hana3d_types,
     icons,
     libraries,
+    logger,
     paths,
     render,
     search,
     tags,
     tasks_queue,
     thread_tools,
-    types,
     ui,
-    ui_panels,
-    upload,
-    utils
+    utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .src import async_loop, autothumb, upload
+from .src.application.application import Application
+from .src.authentication.authentication import Authentication
+from .src.panels import panel_builder
+from .src.ui import render as ui_render
+from .src.ui.operators import render_image
 
 bl_info = {
-    "name": "Hana3D",
-    "author": "Vilem Duha, Petr Dlouhy, R2U",
-    "version": (0, 7, 7),
-    "blender": (2, 90, 0),
-    "location": "View3D > Properties > Hana3D",
-    "description": "Online Hana3D library (materials, models, scenes and more). Connects to the internet.",  # noqa: E501
-    "warning": "",
-    "category": "3D View",
+    'name': 'Hana3D',
+    'author': 'Vilem Duha, Petr Dlouhy, R2U',
+    'version': (0, 8, 0),
+    'blender': (2, 90, 0),
+    'location': 'View3D > Properties > Hana3D',
+    'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
+    'warning': '',
+    'category': '3D View',
 }
 
 
@@ -67,6 +70,12 @@ def scene_load(context):
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.login_attempt = False
     preferences.refresh_in_progress = False
+
+    application = Application()
+    authentication = Authentication()
+    if not application.background():
+        if not bpy.app.timers.is_registered(authentication.refresh_token_timer):
+            bpy.app.timers.register(authentication.refresh_token_timer)
 
 
 @bpy.app.handlers.persistent
@@ -290,6 +299,7 @@ class Hana3DAddonPreferences(AddonPreferences):
 
 
 modules = (
+    async_loop,
     append_link,
     asset,
     autothumb,
@@ -298,14 +308,17 @@ modules = (
     hana3d_oauth,
     icons,
     libraries,
+    logger,
     render,
+    render_image,
     search,
     tags,
     tasks_queue,
     thread_tools,
-    types,
+    hana3d_types,
     ui,
-    ui_panels,
+    ui_render,
+    panel_builder,
     upload,
 )
 
@@ -331,3 +344,6 @@ def unregister():
 
     bpy.utils.unregister_class(Hana3DAddonPreferences)
     addon_updater_ops.unregister()
+
+
+logger.setup_logger()

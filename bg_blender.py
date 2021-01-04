@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import os
 import re
 import sys
@@ -27,6 +27,7 @@ from bpy.props import EnumProperty
 from . import tasks_queue, utils
 from .config import HANA3D_NAME
 from .report_tools import execute_wrapper
+from .src.upload import upload
 
 bg_processes = []
 
@@ -82,7 +83,7 @@ def threadread(tcom: threadCom):
             tcom.output_msg = line[start + 13: end]
             break
         if len(line) > 3:
-            print(line, len(line))
+            logging.info(f'{line} {len(line)}')
 
 
 class upload_in_chunks:
@@ -204,13 +205,12 @@ class KillBgProcess(bpy.types.Operator):
     @execute_wrapper
     def execute(self, context):
         # first do the easy stuff...TODO all cases.
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         if self.process_type == 'UPLOAD':
             props.uploading = False
         if self.process_type == 'THUMBNAILER':
             props.is_generating_thumbnail = False
         global hana3d_bg_process
-        # print('killing', self.process_source, self.process_type)
         # then go kill the process. this wasn't working for unsetting props
         # and that was the reason for changing to the method above.
 
@@ -219,8 +219,8 @@ class KillBgProcess(bpy.types.Operator):
             tcom = p[1]
             if tcom.process_type == self.process_type:
                 source = eval(tcom.eval_path)
-                print(source.bl_rna.name, self.process_source)
-                print(source.name)
+                logging.info(f'{source.bl_rna.name} {self.process_source}')
+                logging.info(source.name)
                 kill = False
                 if source.bl_rna.name == 'Object' and self.process_source == 'MODEL':
                     if source.name == bpy.context.active_object.name:

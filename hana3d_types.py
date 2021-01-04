@@ -15,9 +15,8 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import math
-import os
 from typing import Union
 
 import bpy
@@ -29,11 +28,11 @@ from bpy.props import (
     FloatVectorProperty,
     IntProperty,
     PointerProperty,
-    StringProperty
+    StringProperty,
 )
 from bpy.types import PropertyGroup
 
-from . import paths, render, search, utils
+from . import paths, render, render_tools, search
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -42,8 +41,11 @@ from .config import (
     HANA3D_PROFILE,
     HANA3D_RENDER,
     HANA3D_SCENES,
-    HANA3D_UI
+    HANA3D_UI,
 )
+from .src.search.asset_search import AssetSearch
+from .src.search.search import Search
+from .src.upload import upload
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -69,10 +71,10 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        wm = context.window_manager
-        # TODO remove inconsistency between e.g. `model` and `MODEL`
-        wm[f'{HANA3D_NAME}_search_results'] = wm.get(f'{HANA3D_NAME}_{self.asset_type.lower()}_search') # noqa E501
-        wm[f'{HANA3D_NAME}_search_results_orig'] = wm.get(f'{HANA3D_NAME}_{self.asset_type}_search_orig') # noqa E501
+        asset_search = AssetSearch(context, self.asset_type.lower())
+        search_object = Search(context)
+        search_object.results = asset_search.results  # noqa : WPS110
+        search_object.results_orig = asset_search.results_orig
         search.load_previews()
 
     def switch_active_asset_type(self, context):
@@ -106,10 +108,10 @@ class Hana3DUIProps(PropertyGroup):
             )
         else:
             items = (
-                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0), # noqa E501
-                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1), # noqa E501
-                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2), # noqa E501
-                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3),
+                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0),  # noqa E501
+                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1),  # noqa E501
+                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2),  # noqa E501
+                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3), # noqa : E800
             )
         return items
 
@@ -220,7 +222,7 @@ class Hana3DUIProps(PropertyGroup):
 
 class Hana3DRenderProps(PropertyGroup):
     def get_render_asset_name(self) -> str:
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         if props is not None:
             return props.name
         return ''
@@ -294,7 +296,7 @@ def workspace_items(self, context):
 
 
 def search_update(self, context):
-    utils.p('search updater')
+    logging.debug('search updater')
     # if self.search_keywords != '':
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.down_up != 'SEARCH':
@@ -329,6 +331,18 @@ def update_libraries_list(props, context):
 class Hana3DTagItem(PropertyGroup):
     name: StringProperty(name="Tag Name", default="Unknown")
     selected: BoolProperty(name="Tag Selected", default=False)
+
+
+class Hana3DRenderItem(PropertyGroup):
+    """Property group of Render Item."""
+
+    name: StringProperty(name='Render Name', default='')
+    job_id: StringProperty(name='Render Job Id', default='')
+    icon_id: IntProperty(name='Render Icon Id')
+    file_path: StringProperty(name='Render File Path', default='')
+    index: IntProperty(name='Render Index')
+    # the next property is only to show a custom text on hover label
+    not_working: StringProperty(name='Not Working', default='Not working')
 
 
 class Hana3DLibraryItem(PropertyGroup):
@@ -428,32 +442,6 @@ class Hana3DCommonSearchProps:
 
 
 class Hana3DCommonUploadProps:
-    def get_render_job_outputs(self, context):
-        preview_collection = render.render_previews[self.view_id]
-        if not hasattr(preview_collection, 'previews'):
-            preview_collection.previews = []
-
-        n_render_jobs = len(self.render_data['jobs']) if 'jobs' in self.render_data else 0
-        if len(preview_collection.previews) != n_render_jobs:
-            # Sort jobs to avoid error when appending newer render jobs
-            sorted_jobs = sorted(self.render_data['jobs'], key=lambda x: x['created'])
-            available_previews = []
-            for n, job in enumerate(sorted_jobs):
-                job_id = job['id']
-                if job_id not in preview_collection:
-                    file_path = job['file_path']
-                    if not os.path.exists(file_path):
-                        continue
-                    preview_img = preview_collection.load(job_id, file_path, 'IMAGE')
-                else:
-                    preview_img = preview_collection[job_id]
-
-                enum_item = (job_id, job['job_name'] or '', '', preview_img.icon_id, n)
-                available_previews.append(enum_item)
-            preview_collection.previews = available_previews
-
-        return preview_collection.previews
-
     def get_active_image(self, context):
         preview_collection = render.render_previews['active_images']
         if not hasattr(preview_collection, 'previews'):
@@ -484,6 +472,7 @@ class Hana3DCommonUploadProps:
     def on_workspace_update(self, context):
         update_libraries_list(self, context)
         update_tags_list(self, context)
+        render_tools.update_render_list(self)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
@@ -664,16 +653,18 @@ class Hana3DCommonUploadProps:
         description='Container for holding data of completed render jobs',
     )
 
-    render_job_output: EnumProperty(
-        name="Previous renders",
-        description='Render name',
-        items=get_render_job_outputs,
-    )
-
     active_image: EnumProperty(
         name="Local Images",
         description='Images in .blend file',
         items=get_active_image,
+    )
+
+    render_list: CollectionProperty(type=Hana3DRenderItem)
+
+    render_list_index: IntProperty(
+        name='Render of the asset',
+        description='Index of the active render',
+        default=0,
     )
 
     render_job_name: StringProperty(
@@ -996,6 +987,7 @@ Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUplo
 classes = (
     Hana3DTagItem,
     Hana3DLibraryItem,
+    Hana3DRenderItem,
     Hana3DUIProps,
     Hana3DRenderProps,
     Hana3DModelSearchProps,

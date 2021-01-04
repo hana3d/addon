@@ -18,9 +18,9 @@
 
 import bpy
 
-from . import utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
+from .src.upload import upload
 
 
 class ShareAsset(bpy.types.Operator):
@@ -32,7 +32,7 @@ class ShareAsset(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         context.window_manager.clipboard = f"view_id:{props.view_id}"
         utils.show_popup('Copied to clipboard!')
         return {'FINISHED'}

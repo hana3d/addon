@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import queue
 
 import bpy
@@ -33,7 +33,7 @@ def threads_state_update():
             exec(cmd)
             state_update_queue.task_done()
         except Exception as e:
-            print(f'Failed to execute command {cmd!r} ({e})')
+            logging.error(f'Failed to execute command {cmd!r} ({e})')
     return 0.02
 
 
@@ -56,6 +56,20 @@ def update_in_foreground(
     """Update blender objects in foreground to avoid threading errors"""
     global_object_name = get_global_name(asset_type, asset_name)
     cmd = f'{global_object_name}.{HANA3D_NAME}.{property_name} {operation} {value!r}'
+    state_update_queue.put(cmd)
+
+
+def update_renders_in_foreground(asset_type: str, view_id: str):
+    """Update blender renders of object in foreground.
+
+    Parameters:
+        asset_type: str (model|scene|material)
+        view_id: str
+    """
+    imports = 'from . import render_tools; from .src.upload import upload'
+    props = f'props = upload.get_upload_props_by_view_id("{asset_type}", "{view_id}")'
+    update = 'render_tools.update_render_list(props, set_jobs=False)'
+    cmd = f'{imports}; {props}; {update}'
     state_update_queue.put(cmd)
 
 

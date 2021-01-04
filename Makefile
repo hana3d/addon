@@ -24,6 +24,7 @@ endef
 export PYTHON=python
 export PRINT_HELP_PYSCRIPT
 export BLENDER_VERSION=2.90
+SHELL=/bin/bash -o pipefail
 BLENDER_SCRIPTS_PATH ?= $(shell dirname $(shell readlink -f $(shell which blender)))/$(BLENDER_VERSION)/scripts/
 STAGE ?= production
 HANA3D_DESCRIPTION=$(shell sed -e 's/HANA3D_DESCRIPTION: \(.*\)/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).yml)
@@ -38,8 +39,13 @@ help: ## show this message
 
 
 lint: ## lint code
-	python3 -m flake8 .
-	python3 -m isort .
+	git diff -U0 origin/$(STAGE).. | flake8 --diff
+	isort --recursive --check .
+	# new code should always get better
+	xenon --max-absolute B --max-modules A --max-average A src/ --exclude src/ui/operators/asset_bar.py,src/ui/callbacks/asset_bar.py,src/panels/unified.py
+	# do not let old code get worse
+	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py,ui.py,search.py
+	mypy ../hana3d | grep '../hana3d/src/' && exit 1 || exit 0
 
 
 test: ## test code
@@ -58,7 +64,7 @@ build: ## build addon according to stage
 	# copy relevant files to addon folder
 	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' -o -name '*.yml' \) | xargs cp --parents -t hana3d_$(STAGE)
 	# replace addon description strings: static properties are evaluated before runtime
-	LC_ALL=C sed -i "s/\(\".*\)Hana3D\(.*\"\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
+	LC_ALL=C sed -i "s/\(\'.*\)Hana3D\(.*\'\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
 	# zip addon folder
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
 	# copy to ~/Downloads for easy manual install

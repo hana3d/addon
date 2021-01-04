@@ -15,7 +15,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import logging
 import os
 import shutil
 import tempfile
@@ -34,25 +34,25 @@ from bpy.props import BoolProperty, CollectionProperty, StringProperty
 from bpy.types import Operator
 from bpy_extras.image_utils import load_image
 
-from . import (
-    autothumb,
-    colors,
-    paths,
-    render_tools,
-    rerequests,
-    thread_tools,
-    ui,
-    utils
-)
+from . import autothumb, paths, render_tools, rerequests, thread_tools
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
+from .src.async_loop import run_async_function
+from .src.preferences.profile import Profile
+from .src.ui import colors
+from .src.ui.main import UI
+from .src.upload import upload
 
 render_threads = []
 upload_threads = []
 
 
 def threads_cleanup():
-    """Cleanup finished threads"""
+    """Cleanup finished threads.
+
+    Returns:
+        int: 10 if no render threads, 2 otherwise
+    """
     if len(render_threads) == 0:
         return 10
 
@@ -91,7 +91,7 @@ class UploadFileMixin:
         self.upload_state = ''
 
         correlation_id = str(uuid.uuid4())
-        self.headers = utils.get_headers(correlation_id)
+        self.headers = rerequests.get_headers(correlation_id)
 
         self.finished = False
 
@@ -101,7 +101,7 @@ class UploadFileMixin:
             self.asset_name,
             property_name,
             value,
-            operation
+            operation,
         )
         if hasattr(self, property_name):
             setattr(self, property_name, value)
@@ -113,8 +113,9 @@ class UploadFileMixin:
         self.update_state('render_state', text)
         color = colors.RED if error else colors.GREEN
         if self.add_report:
+            ui = UI()
             ui.add_report(text, color=color)
-        print(text)
+        logging.info(text)
 
     @property
     def upload_progress(self):
@@ -141,10 +142,11 @@ class UploadFileMixin:
 
 class _read_in_chunks:
     def __init__(
-            self,
-            render_thread: UploadFileMixin,
-            blocksize: int = 2 ** 20):
-        """Helper class that allows for streaming upload and update progress"""
+        self,
+        render_thread: UploadFileMixin,
+        blocksize: int = 2 ** 20,  # noqa WPS432,WPS404
+    ):  # noqa DAR101
+        """Helper class that allows for streaming upload and update progress"""  # noqa DAR101
         self.render_thread = render_thread
         self.blocksize = blocksize
 
@@ -171,7 +173,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             frame_start: int = None,
             frame_end: int = None,
             cameras: List[str] = None,
-            is_thumbnail: bool = False):
+            is_thumbnail: bool = False,
+    ):
         super().__init__(daemon=True)
         self.asset_name = props.id_data.name
         self.engine = engine
@@ -238,12 +241,14 @@ class RenderThread(UploadFileMixin, threading.Thread):
         else:
             self.finished = True
             if not self.cancelled:
+                thread_tools.update_renders_in_foreground(self.asset_type, self.view_id)
                 self.log('Job finished successfully')
         finally:
             self._set_running_flag(False)
             time.sleep(5)
             self.update_state(self.log_state_name, '')
-            utils.update_profile()
+            profile = Profile()
+            run_async_function(profile.update_async)
 
     def _set_running_flag(self, flag: bool):
         if self.is_thumbnail:
@@ -294,8 +299,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
                     'file_type': 'scene',
                     'job_name': self.render_job_name,
                     'is_thumbnail': self.is_thumbnail,
-                }
-            }
+                },
+            },
         }
         response = rerequests.post(url, json=data, headers=self.headers)
         assert response.ok, f'Error when creating render view on url={url}'
@@ -322,7 +327,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         }
         if self.is_multiple_cameras:
             add_data = {
-                'cameras': self.cameras
+                'cameras': self.cameras,
             }
         else:
             add_data = {
@@ -371,7 +376,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             render = {
                 'file_type': 'output',
                 'job_name': self.render_job_name,
-                'environment': 'notrenderfarm'
+                'environment': 'notrenderfarm',
             }
             if self.is_multiple_cameras:
                 camera = os.path.splitext(paths.extract_filename_from_url(render_url))
@@ -388,8 +393,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
                 'id_parent': render_scene_id,
                 'url': render_url,
                 'metadata': {
-                    'render': render
-                }
+                    'render': render,
+                },
             }
             response = rerequests.post(url, json=data, headers=self.headers)
             assert response.ok, response.text
@@ -418,7 +423,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
         url = paths.get_api_url('assets', self.asset_id)
         data = {
             'thumbnail_url': thumbnail_url,
-            'metadata_only': True
+            'metadata_only': True,
         }
         response = rerequests.put(url, json=data, headers=self.headers)
         assert response.ok, response.text
@@ -438,34 +443,36 @@ class RenderThread(UploadFileMixin, threading.Thread):
 class RenderScene(Operator):
     """Render Scene online at notrenderfarm.com"""
 
-    bl_idname = f"{HANA3D_NAME}.render_scene"
-    bl_label = "Render Scene"
+    bl_idname = f'{HANA3D_NAME}.render_scene'
+    bl_label = 'Render Scene'
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         return props is not None and not props.rendering
 
     @execute_wrapper
     def execute(self, context):
         if context.scene.camera is None:
-            self.report({'WARNING'}, "No active camera found in scene")
+            logging.warning('No active camera found in scene')
             return {'CANCELLED'}
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
 
         if props.view_id == '':
             def draw_message(self, context):
                 self.layout.label(text=message)
             title = "Can't render"
-            message = "Please upload selected asset or select uploaded asset"
+            message = 'Please upload selected asset or select uploaded asset'
             bpy.context.window_manager.popup_menu(draw_message, title=title, icon='INFO')
             return {'FINISHED'}
 
         render_props = getattr(context.window_manager, HANA3D_RENDER)
         if render_props.cameras == 'VISIBLE_CAMERAS':
-            cameras = [ob.name_full for ob in context.scene.objects
-                       if ob.type == 'CAMERA' and ob.visible_get()]
+            cameras = [
+                ob.name_full for ob in context.scene.objects
+                if ob.type == 'CAMERA' and ob.visible_get()
+            ]
             thread = RenderThread(props, render_props.engine, cameras=cameras)
         elif render_props.cameras == 'ALL_CAMERAS':
             cameras = [ob.name_full for ob in context.scene.objects if ob.type == 'CAMERA']
@@ -488,15 +495,15 @@ class RenderScene(Operator):
 class CancelJob(Operator):
     """Render Scene online at notrenderfarm.com"""
 
-    bl_idname = f"{HANA3D_NAME}.cancel_render_job"
-    bl_label = "Render Scene"
+    bl_idname = f'{HANA3D_NAME}.cancel_render_job'
+    bl_label = 'Render Scene'
     bl_options = {'REGISTER', 'INTERNAL'}
 
     view_id: StringProperty()
 
     @classmethod
     def poll(cls, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         return props is not None and props.rendering
 
     @execute_wrapper
@@ -509,68 +516,30 @@ class CancelJob(Operator):
         if len(view_thread_jobs) == 1:
             thread_job = view_thread_jobs[0]
             thread_job.cancelled = True
-        props = utils.get_upload_props()  # TODO: get props using thread's view_id
+        props = upload.get_upload_props()  # TODO: get props using thread's view_id
         props.rendering = False
 
         return {'FINISHED'}
 
 
-class ImportRender(Operator):
-    """Import finished render job"""
-
-    bl_idname = f"{HANA3D_NAME}.import_render"
-    bl_label = "Import render to scene"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        props = utils.get_upload_props()
-        return len(props.render_data['jobs']) > 0
-
-    @execute_wrapper
-    def execute(self, context):
-        props = utils.get_upload_props()
-        for job in props.render_data['jobs']:
-            if job['id'] != props.render_job_output:
-                continue
-
-            if job.get('image') is not None:
-                # Image was already imported
-                return {'FINISHED'}
-
-            image = bpy.data.images.load(job['file_path'], check_existing=True)
-            image.name = job['job_name']
-            image['active'] = True
-            job['image'] = image
-
-            def draw(self, context):
-                self.layout.label(text="Your render is now on your scene's Image Data list")
-            context.window_manager.popup_menu(draw, title='Success')
-
-            return {'FINISHED'}
-        print(f'Cound not find render job id={job["id"]}')
-        return {'CANCELLED'}
-
-
 class RemoveRender(Operator):
     """Remove finished render job"""
 
-    bl_idname = f"{HANA3D_NAME}.remove_render"
-    bl_label = "Remove render"
+    bl_idname = f'{HANA3D_NAME}.remove_render'
+    bl_label = 'Remove render'
     bl_options = {'REGISTER', 'UNDO'}
 
-    @classmethod
-    def poll(cls, context):
-        props = utils.get_upload_props()
-        return props.render_job_output != ''
+    job_id: StringProperty(
+        name='job_id',
+    )
 
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
-        id_job = props.render_job_output
+        props = upload.get_upload_props()
+        id_job = self.job_id
         job, = [j for j in props.render_data['jobs'] if j['id'] == id_job]
 
         if job.get('image') is not None:  # Case when image was not imported to scene
@@ -580,15 +549,16 @@ class RemoveRender(Operator):
 
         name = job['job_name']  # Get name before job is de-referenced
         self.remove_from_props(id_job, props)
-        self.switch_active_render_job(props)
+        render_tools.update_render_list(props)
 
+        ui = UI()
         ui.add_report(f'Deleted render {name}')
         return {'FINISHED'}
 
     @staticmethod
     def remove_from_backend(id_job: str):
         url = paths.get_api_url('renders', id_job)
-        response = rerequests.delete(url, headers=utils.get_headers())
+        response = rerequests.delete(url, headers=rerequests.get_headers())
         assert response.ok, f'Error deleting render using DELETE on {url}: {response.text}'
 
     @staticmethod
@@ -600,30 +570,23 @@ class RemoveRender(Operator):
         ]
         props.render_data['jobs'] = jobs
 
-    @staticmethod
-    def switch_active_render_job(props):
-        if len(props.render_data['jobs']) == 0:
-            return
-        id_first_job = props.render_data['jobs'][0]['id']
-        props.render_job_output = id_first_job
-
 
 class OpenImage(Operator):
     """Open image from computer"""
 
-    bl_idname = f"{HANA3D_NAME}.open_image"
-    bl_label = "Open image"
+    bl_idname = f'{HANA3D_NAME}.open_image'
+    bl_label = 'Open image'
     bl_options = {'REGISTER', 'UNDO'}
 
     file_path: StringProperty(name='File', subtype='FILE_PATH')
     files: CollectionProperty(
         type=bpy.types.OperatorFileListElement,
-        options={'HIDDEN', 'SKIP_SAVE'}
+        options={'HIDDEN', 'SKIP_SAVE'},
     )
     directory: StringProperty(
         maxlen=1024,
         subtype='FILE_PATH',
-        options={'HIDDEN', 'SKIP_SAVE'}
+        options={'HIDDEN', 'SKIP_SAVE'},
     )
 
     filter_image: BoolProperty(default=True, options={'HIDDEN', 'SKIP_SAVE'})
@@ -641,7 +604,7 @@ class OpenImage(Operator):
                 file.name,
                 self.directory,
                 check_existing=True,
-                force_reload=False
+                force_reload=False,
             )
             image['active'] = True
         return {'FINISHED'}
@@ -687,13 +650,13 @@ class UploadThread(UploadFileMixin, threading.Thread):
             }
 
             self.upload_render(job)
-            self.append_job_to_props(job)
         except Exception as e:
             self.log(f'Error when uploading render {self.render_job_name}:{e!r}')
             raise e
         else:
             self.finished = True
             self.log('Uploaded render image')
+            thread_tools.update_renders_in_foreground(self.asset_type, self.view_id)
         finally:
             self.update_state('uploading_render', False)
             time.sleep(5)
@@ -732,8 +695,8 @@ class UploadThread(UploadFileMixin, threading.Thread):
                     'file_type': 'output',
                     'job_name': job['job_name'],
                     'environment': 'local',
-                }
-            }
+                },
+            },
         }
         response = rerequests.post(url, json=data, headers=self.headers)
         assert response.ok, f'Error when creating render output view on url={url}:\n{response.text}'
@@ -748,27 +711,23 @@ class UploadThread(UploadFileMixin, threading.Thread):
         url = paths.get_api_url('uploads_s3', render_scene_id, 'upload-file')
         rerequests.post(url, headers=self.headers)
 
-    def append_job_to_props(self, job: dict):
-        operation = '=' if self.no_previous_jobs else '+='
-        self.update_state("render_data['jobs']", [job], operation)
-
 
 class UploadImage(Operator):
     """Upload existing render image"""
 
-    bl_idname = f"{HANA3D_NAME}.upload_render_image"
-    bl_label = f"Upload to {HANA3D_DESCRIPTION}"
+    bl_idname = f'{HANA3D_NAME}.upload_render_image'
+    bl_label = f'Upload to {HANA3D_DESCRIPTION}'
     bl_options = {'REGISTER', 'UNDO'}
     bl_icon = 'EXPORT'
 
     @classmethod
     def poll(cls, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         return props is not None and props.active_image != '' and not props.uploading_render
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
 
         thread = UploadThread(context, props)
         thread.start()
@@ -780,7 +739,6 @@ class UploadImage(Operator):
 classes = (
     RenderScene,
     CancelJob,
-    ImportRender,
     RemoveRender,
     OpenImage,
     UploadImage,

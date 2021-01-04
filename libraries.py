@@ -15,23 +15,26 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import logging
 
 import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
 
-from . import paths, rerequests, types, utils
+from . import hana3d_types, paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
+from .src.search.search import Search
+from .src.upload import upload
 
 
 def update_libraries(workspace):
-    utils.p('update_libraries')
+    logging.debug('update_libraries')
     query = {
         'workspace_id': workspace
     }
     url = paths.get_api_url('libraries', query=query)
-    headers = utils.get_headers()
+    headers = rerequests.get_headers()
 
     r = rerequests.get(url, headers=headers)
     assert r.ok, f'Failed to get library data: {r.text}'
@@ -58,8 +61,8 @@ class RemoveLibrarySearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_search_props()
-        props.libraries_list[self.library].selected = False
+        search = Search(context)
+        search.props.libraries_list[self.library].selected = False
         return {'INTERFACE'}
 
 
@@ -74,7 +77,7 @@ class RemoveLibraryUpload(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        props = utils.get_upload_props()
+        props = upload.get_upload_props()
         props.libraries_list[self.library].selected = False
 
         if 'view_props' in props.libraries_list[self.library].metadata:
@@ -96,13 +99,14 @@ class RefreshLibraries(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        search_props = utils.get_search_props()
+        search = Search(context)
+        search_props = search.props
         update_libraries(search_props.workspace)
-        types.update_libraries_list(search_props, context)
+        hana3d_types.update_libraries_list(search_props, context)
 
-        upload_props = utils.get_upload_props()
+        upload_props = upload.get_upload_props()
         update_libraries(upload_props.workspace)
-        types.update_libraries_list(upload_props, context)
+        hana3d_types.update_libraries_list(upload_props, context)
 
         utils.show_popup('Libraries updated!')
         return {'FINISHED'}

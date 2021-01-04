@@ -15,27 +15,22 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
 import json
+import logging
 import os
 import sys
 import time
-import uuid
 from typing import List, Tuple
 
 import bpy
-from idprop.types import IDPropertyGroup
 from mathutils import Vector
 
-from . import paths, rerequests, tasks_queue
-from .config import (
-    HANA3D_MATERIALS,
-    HANA3D_MODELS,
-    HANA3D_NAME,
-    HANA3D_PROFILE,
-    HANA3D_SCENES,
-    HANA3D_UI
-)
+from idprop.types import IDPropertyGroup
+
+from . import paths
+from .config import HANA3D_MATERIALS, HANA3D_NAME, HANA3D_PROFILE, HANA3D_UI
+from .src.ui import colors
+from .src.ui.main import UI
 
 ABOVE_NORMAL_PRIORITY_CLASS = 0x00008000
 BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
@@ -119,27 +114,6 @@ def get_selected_models():
     return parents
 
 
-def get_search_props():
-    scene = bpy.context.window_manager
-    if scene is None:
-        return
-    uiprops = getattr(scene, HANA3D_UI)
-    props = None
-    if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, HANA3D_MODELS):
-            return
-        props = getattr(scene, HANA3D_MODELS)
-    if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, HANA3D_SCENES):
-            return
-        props = getattr(scene, HANA3D_SCENES)
-    if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, HANA3D_MATERIALS):
-            return
-        props = getattr(scene, HANA3D_MATERIALS)
-    return props
-
-
 def get_active_asset():
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.asset_type == 'MODEL':
@@ -158,12 +132,6 @@ def get_active_asset():
             return bpy.context.active_object.active_material
     return None
 
-
-def get_upload_props():
-    active_asset = get_active_asset()
-    if active_asset is None:
-        return None
-    return getattr(active_asset, HANA3D_NAME)
 
 
 def previmg_name(index, fullsize=False):
@@ -198,8 +166,8 @@ def save_prefs(self, context):
             # reset the api key in case the user writes some nonsense,
             # e.g. a search string instead of the Key
             user_preferences.api_key = ''
-            props = get_search_props()
-            props.report = 'Login failed. Please paste a correct API Key.'
+            ui = UI()
+            ui.add_report(text='Login failed. Please paste a correct API Key.', color=colors.RED)
 
         prefs = {
             'API_key': user_preferences.api_key,
@@ -216,22 +184,7 @@ def save_prefs(self, context):
             with open(fpath, 'w') as s:
                 json.dump(prefs, s)
         except Exception as e:
-            print(e)
-
-
-def update_profile():
-    p('update_profile')
-    url = paths.get_api_url('me')
-    headers = get_headers(include_id_token=True)
-
-    r = rerequests.get(url, headers=headers)
-    assert r.ok, f'Failed to get profile data: {r.text}'
-
-    bpy.context.window_manager[HANA3D_PROFILE] = r.json()
-
-
-def update_profile_async():
-    tasks_queue.add_task(update_profile)
+            logging.error(e)
 
 
 def get_hidden_image(
@@ -271,17 +224,6 @@ def get_thumbnail(name):
         img.name = name
 
     return img
-
-
-def p(text, text1='', text2='', text3='', text4='', text5=''):
-    '''debug printing depending on blender's debug value'''
-    if os.getenv('HANA3D_ENV') in ('local', 'dev'):
-        print(text, text1, text2, text3, text4, text5)
-
-
-def pprint(data):
-    '''pretty print jsons'''
-    p(json.dumps(data, indent=4, sort_keys=True))
 
 
 def get_hierarchy(ob):
@@ -405,27 +347,6 @@ def get_dimensions(obs):
     bbmax = Vector((maxx, maxy, maxz))
     dim = Vector((maxx - minx, maxy - miny, maxz - minz))
     return dim, bbmin, bbmax
-
-
-def get_headers(
-        correlation_id: str = None,
-        api_key: str = None,
-        include_id_token: bool = False,
-) -> dict:
-    headers = {
-        'accept': 'application/json',
-        'X-Request-Id': str(uuid.uuid4())
-    }
-    if correlation_id:
-        headers['X-Correlation-Id'] = correlation_id
-    if api_key is None:
-        api_key = bpy.context.preferences.addons[HANA3D_NAME].preferences.api_key
-    if api_key != '':
-        headers["Authorization"] = "Bearer %s" % api_key
-    if include_id_token:
-        id_token = bpy.context.preferences.addons[HANA3D_NAME].preferences.id_token
-        headers['X-ID-Token'] = id_token
-    return headers
 
 
 def scale_2d(v, s, p):
@@ -810,7 +731,7 @@ def save_file(filepath, **kwargs):
         except RuntimeError as e:
             if n == n_tries - 1:
                 raise e
-            print(f'Error when saving file ({e}), retrying...')
+            logging.error(f'Error when saving file ({e}), retrying...')
             time.sleep(1)
 
 
