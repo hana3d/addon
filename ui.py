@@ -15,24 +15,16 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-import logging
-import math
+"""Loads UI."""
 import os
-import time
-from typing import List
 
 import bpy
-import mathutils
 from bpy.app.handlers import persistent
-from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
-from mathutils import Vector
 
 from . import bg_blender, download, paths, render, utils
-from .config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
-from .report_tools import execute_wrapper
+from .config import HANA3D_NAME, HANA3D_UI
 from .src.preferences.preferences import Preferences
-from .src.search.search import Search
 from .src.ui import bgl_helper, colors
 from .src.ui.main import UI
 from .src.ui.operators import (
@@ -43,11 +35,16 @@ from .src.ui.operators import (
     UndoWithContext,
 )
 
-handler_2d = None
-handler_3d = None
 
+def draw_downloader(x, y, percent=0, img=None):  # noqa: WPS111
+    """Draw downloader on screen.
 
-def draw_downloader(x, y, percent=0, img=None):
+    Parameters:
+        x: x-coordinate where the downloader should be displayed
+        y: y-coordinate where the downloader should be displayed
+        percent: Downloader percentage
+        img: Image to be displayed
+    """
     width = 50
     if img is not None:
         height = 50
@@ -57,7 +54,7 @@ def draw_downloader(x, y, percent=0, img=None):
     bgl_helper.draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, 0.3))  # noqa: WPS221
 
 
-def draw_progress(x, y, text='', percent=None, color=colors.GREEN):  # noqa: WPS111
+def draw_progress(x, y, text='', percent=0, color=colors.GREEN):  # noqa: WPS111
     """Draw progress bar on screen.
 
     Parameters:
@@ -72,41 +69,40 @@ def draw_progress(x, y, text='', percent=None, color=colors.GREEN):  # noqa: WPS
     bgl_helper.draw_text(text, x, y + 8, font_size, color)
 
 
-def draw_callback_3d_progress(self, context):
-    # 'star trek' mode gets here, blocked by now ;)
+def draw_callback_progress3d(self, context):  # noqa: D103
     for thread in download.download_threads.values():
         if thread.asset_data['asset_type'] == 'model':
-            for param in thread.tcom.passargs.get('import_params', []):
+            for import_param in thread.tcom.passargs.get('import_params', []):
                 bgl_helper.draw_bbox(
-                    param['location'],
-                    param['rotation'],
+                    import_param['location'],
+                    import_param['rotation'],
                     thread.asset_data['bbox_min'],
                     thread.asset_data['bbox_max'],
                     progress=thread.tcom.progress,
                 )
 
 
-def draw_callback_2d_progress(self, context):
+def draw_callback_progress2d(self, context):  # noqa: D103
     ui = getattr(bpy.context.window_manager, HANA3D_UI)
 
     x = ui.reports_x  # noqa: WPS111
     y = ui.reports_y  # noqa: WPS111
     line_size = 30
     index = 0
-    for thread in download.download_threads.values():
-        asset_data = thread.asset_data
-        tcom = thread.tcom
+    for download_thread in download.download_threads.values():
+        asset_data = download_thread.asset_data
+        tcom = download_thread.tcom
 
-        directory = paths.get_temp_dir('%s_search' % asset_data['asset_type'])
+        directory = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')
         tpath = os.path.join(directory, asset_data['thumbnail_small'])
         img = utils.get_hidden_image(tpath, asset_data['id'])
 
         if tcom.passargs.get('import_params'):
-            for param in tcom.passargs['import_params']:
+            for import_param in tcom.passargs['import_params']:
                 loc = view3d_utils.location_3d_to_region_2d(
                     bpy.context.region,
                     bpy.context.space_data.region_3d,
-                    param['location']
+                    import_param['location'],
                 )
                 if loc is not None:
                     # models now draw with star trek mode,
@@ -124,19 +120,19 @@ def draw_callback_2d_progress(self, context):
         tcom = process[1]
         draw_progress(x, y - index * line_size, f'{tcom.lasttext}', tcom.progress)  # noqa: WPS221
         index += 1
-    for thread in render.render_threads:
+    for render_thread in render.render_threads:
         percentage_progress = 0
-        if thread.uploading:
-            percentage_progress = int(thread.upload_progress * 100)
-        elif thread.job_running:
-            percentage_progress = int(thread.job_progress * 100)
-        text = thread.render_state
+        if render_thread.uploading:
+            percentage_progress = int(render_thread.upload_progress * 100)
+        elif render_thread.job_running:
+            percentage_progress = int(render_thread.job_progress * 100)
+        text = render_thread.render_state
         draw_progress(x, y - index * line_size, text, percentage_progress)
         index += 1
-    for thread in render.upload_threads:  # noqa: WPS440
-        if thread.uploading_render:
-            text = thread.upload_state
-            percentage_progress = int(thread.upload_progress * 100)
+    for upload_thread in render.upload_threads:
+        if upload_thread.uploading_render:
+            text = upload_thread.upload_state
+            percentage_progress = int(upload_thread.upload_progress * 100)
             draw_progress(x, y - index * line_size, text, percentage_progress)
             index += 1
     ui = UI()
@@ -147,40 +143,28 @@ def draw_callback_2d_progress(self, context):
             ui.reports.remove(report)
 
 
-classes = (
-    AssetBarOperator,
-    DefaultNamesOperator,
-    RunAssetBarWithContext,
-    TransferHana3DData,
-    UndoWithContext,
-)
-
-# store keymap items here to access after registration
-addon_keymapitems = []
-
-
 @persistent
-def default_name_handler(dummy):
-    C_dict = bpy.context.copy()
-    C_dict.update(region='WINDOW')
+def default_name_handler(dummy):  # noqa: D103
+    context_dict = bpy.context.copy()
+    context_dict.update(region='WINDOW')
     if bpy.context.area is None or bpy.context.area.type != 'VIEW_3D':
         window, area, region = UI().get_largest_view3d()
         override = {'window': window, 'screen': window.screen, 'area': area, 'region': region}
-        C_dict.update(override)
+        context_dict.update(override)
     default_name_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_default_name')
-    default_name_op(C_dict, 'INVOKE_REGION_WIN')
+    default_name_op(context_dict, 'INVOKE_REGION_WIN')
 
 
 # @persistent
-def pre_load(context):
-    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
+def pre_load(context):  # noqa: D103
+    ui_props = getattr(context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
     ui_props.turn_off = True
-    preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+    preferences = Preferences().get()
     preferences.login_attempt = False
 
 
-def redraw_regions():
+def redraw_regions():  # noqa: D103
     for area in bpy.context.window.screen.areas:
         if area.type == 'VIEW_3D':
             for region in area.regions:
@@ -189,25 +173,39 @@ def redraw_regions():
     return 0.1
 
 
-def register():
-    global handler_2d, handler_3d
+classes = (
+    AssetBarOperator,
+    DefaultNamesOperator,
+    RunAssetBarWithContext,
+    TransferHana3DData,
+    UndoWithContext,
+)
 
-    for c in classes:
+handler2d = None
+handler3d = None
+addon_keymapitems = []
+
+
+def register():
+    """Register ui in Blender."""
+    global handler2d, handler3d, addon_keymapitems  # noqa: WPS420
+
+    for c in classes:  # noqa: WPS111
         bpy.utils.register_class(c)
 
     args = (None, bpy.context)
 
-    handler_2d = bpy.types.SpaceView3D.draw_handler_add(
-        draw_callback_2d_progress,
+    handler2d = bpy.types.SpaceView3D.draw_handler_add(  # noqa: WPS442
+        draw_callback_progress2d,
         args,
         'WINDOW',
-        'POST_PIXEL'
+        'POST_PIXEL',
     )
-    handler_3d = bpy.types.SpaceView3D.draw_handler_add(
-        draw_callback_3d_progress,
+    handler3d = bpy.types.SpaceView3D.draw_handler_add(  # noqa: WPS442
+        draw_callback_progress3d,
         args,
         'WINDOW',
-        'POST_VIEW'
+        'POST_VIEW',
     )
 
     wm = bpy.context.window_manager
@@ -215,13 +213,13 @@ def register():
     # spaces solved by registering shortcut to Window. Couldn't register object mode before somehow.
     if not wm.keyconfigs.addon:
         return
-    km = wm.keyconfigs.addon.keymaps.new(name="Window", space_type='EMPTY')
+    km = wm.keyconfigs.addon.keymaps.new(name='Window', space_type='EMPTY')
     kmi = km.keymap_items.new(
         AssetBarOperator.bl_idname,
         'SEMI_COLON',
         'PRESS',
         ctrl=False,
-        shift=False
+        shift=False,
     )
     kmi.properties.keep_running = False
     kmi.properties.do_search = False
@@ -233,7 +231,7 @@ def register():
         'PRESS',
         ctrl=True,
         shift=True,
-        alt=True
+        alt=True,
     )
     addon_keymapitems.append(kmi)
 
@@ -242,15 +240,16 @@ def register():
 
 
 def unregister():
-    global handler_2d, handler_3d
+    """Unregister ui in Blender."""
+    global handler2d, handler3d, addon_keymapitems  # noqa: WPS420
     pre_load(bpy.context)
 
     bpy.app.handlers.load_post.remove(default_name_handler)
 
-    bpy.types.SpaceView3D.draw_handler_remove(handler_2d, 'WINDOW')
-    bpy.types.SpaceView3D.draw_handler_remove(handler_3d, 'WINDOW')
+    bpy.types.SpaceView3D.draw_handler_remove(handler2d, 'WINDOW')
+    bpy.types.SpaceView3D.draw_handler_remove(handler3d, 'WINDOW')
 
-    for c in classes:
+    for c in classes:  # noqa: WPS111
         bpy.utils.unregister_class(c)
 
     wm = bpy.context.window_manager
@@ -260,4 +259,4 @@ def unregister():
     km = wm.keyconfigs.addon.keymaps['Window']
     for kmi in addon_keymapitems:
         km.keymap_items.remove(kmi)
-    del addon_keymapitems[:]
+    addon_keymapitems = []  # noqa: WPS442

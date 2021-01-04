@@ -32,9 +32,6 @@ classes = (
     RENDER_UL_List,
 )
 
-keymaps = []
-
-
 def register():
     """Register."""
     for cl in classes:
