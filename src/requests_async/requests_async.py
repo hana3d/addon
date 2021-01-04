@@ -1,4 +1,5 @@
 """Hana3D requests async."""
+import asyncio
 import functools
 import logging
 import os
@@ -6,9 +7,10 @@ import sys
 
 import requests
 
-from .basic_request import BasicRequest
 from ... import hana3d_oauth
 from ...config import HANA3D_DESCRIPTION
+from ..ui.main import UI
+from .basic_request import BasicRequest
 
 
 class UploadInChunks(object):
@@ -59,8 +61,15 @@ class Request(BasicRequest):
         response = await super()._request(method, url, **kwargs)
 
         if not response.ok:
-            if status_code == 401 and code == 'token_expired':  # noqa : WPS432
+            try:
+                code = response.json()['code']
+            except Exception:
+                code = None
+
+            if response.status_code == 401 and code == 'token_expired':  # noqa : WPS432
+                loop = asyncio.get_event_loop()
                 logging.debug('refreshing token')
+                ui = UI()
                 ui.add_report(
                     f'Refreshing token. If this fails, login in {HANA3D_DESCRIPTION} Login panel.',
                     10,
