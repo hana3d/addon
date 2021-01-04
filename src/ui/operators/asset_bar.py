@@ -11,6 +11,7 @@ from mathutils import Vector
 
 from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
 from ..main import UI
+from ...preferences.preferences import Preferences
 from ...search.search import Search
 from ...upload import upload
 from .... import search, utils
@@ -167,7 +168,7 @@ def mouse_in_region(r, mx, my):
 def update_ui_size(area, region):
     wm = bpy.context.window_manager
     ui = getattr(wm, HANA3D_UI)
-    user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+    user_preferences = Preferences().get()
     ui_scale = bpy.context.preferences.view.ui_scale
 
     ui.margin = ui.bl_rna.properties['margin'].default * ui_scale
