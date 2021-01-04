@@ -11,7 +11,7 @@ from mathutils import Vector
 
 from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
 from ..main import UI
-from ..preferences.preferences import Preferences
+from ...preferences.preferences import Preferences
 from ...search.search import Search
 from ...upload import upload
 from .... import search, utils
