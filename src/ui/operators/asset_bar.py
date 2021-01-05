@@ -9,11 +9,6 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
-from ..main import UI
-from ...preferences.preferences import Preferences
-from ...search.search import Search
-from ...upload import upload
 from .... import search, utils
 from ....config import (
     HANA3D_DESCRIPTION,
@@ -22,6 +17,11 @@ from ....config import (
     HANA3D_UI,
 )
 from ....report_tools import execute_wrapper
+from ...preferences.preferences import Preferences
+from ...search.search import Search
+from ...upload import upload
+from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
+from ..main import UI
 
 
 def get_asset_under_mouse(mousex, mousey):
@@ -79,7 +79,7 @@ def mouse_raycast(context, mx, my):
         face_index,
         object,
         matrix,
-    ) = bpy.context.scene.ray_cast(bpy.context.view_layer, ray_origin, vec)
+    ) = bpy.context.scene.ray_cast(bpy.context.view_layer.depsgraph, ray_origin, vec)
 
     # rote = mathutils.Euler((0, 0, math.pi))
     randoffset = math.pi
