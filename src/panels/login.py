@@ -1,6 +1,7 @@
 """Login panel."""
 from bpy.types import Panel
 
+from .lib import draw_login_buttons, draw_login_progress
 from ..preferences.preferences import Preferences
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
@@ -23,26 +24,7 @@ class Hana3DLoginPanel(Panel):
         user_preferences = Preferences().get()
 
         if user_preferences.login_attempt:
-            self._draw_login_progress()
+            draw_login_progress(self.layout)
             return
 
-        self._draw_login_buttons()
-
-    def _draw_login_progress(self):
-        layout = self.layout
-
-        layout.label(text='Login through browser')
-        layout.label(text='in progress.')
-        layout.operator(f'wm.{HANA3D_NAME}_login_cancel', text='Cancel', icon='CANCEL')
-
-    def _draw_login_buttons(self):
-        user_preferences = Preferences().get()
-
-        if user_preferences.login_attempt:
-            self._draw_login_progress()
-        else:
-            layout = self.layout
-            if user_preferences.api_key == '':
-                layout.operator(f'wm.{HANA3D_NAME}_login', text='Login / Sign up', icon='URL')
-            else:
-                layout.operator(f'wm.{HANA3D_NAME}_logout', text='Logout', icon='URL')
+        draw_login_buttons(self.layout)
