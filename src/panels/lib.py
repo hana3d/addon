@@ -48,8 +48,7 @@ def draw_login_buttons(layout):
 
     if user_preferences.login_attempt:
         draw_login_progress(layout)
+    elif user_preferences.api_key == '':
+        layout.operator(f'wm.{HANA3D_NAME}_login', text='Login / Sign up', icon='URL')
     else:
-        if user_preferences.api_key == '':
-            layout.operator(f'wm.{HANA3D_NAME}_login', text='Login / Sign up', icon='URL')
-        else:
-            layout.operator(f'wm.{HANA3D_NAME}_logout', text='Logout', icon='URL')
+        layout.operator(f'wm.{HANA3D_NAME}_logout', text='Logout', icon='URL')
