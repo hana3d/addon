@@ -3,8 +3,8 @@ import logging
 
 import bpy
 
-from ..requests_async.basic_request import BasicRequest
 from ... import config, paths
+from ..requests_async.basic_request import BasicRequest
 
 
 class Profile(object):
@@ -33,3 +33,6 @@ class Profile(object):
             logging.error(f'Failed to get profile data: {response.text}')  # noqa: WPS421
 
         bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
+
+        operator = getattr(bpy.ops.object, f'{config.HANA3D_NAME}_refresh_libraries')
+        operator()
