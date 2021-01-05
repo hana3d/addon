@@ -91,8 +91,6 @@ if __name__ == '__main__':
 
         bpy.ops.file.pack_all()
 
-        main_source_props = getattr(main_source, HANA3D_NAME)
-        main_source_props.uploading = False
         fpath = os.path.join(data_file['temp_dir'], FILENAME)
 
         bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)
