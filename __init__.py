@@ -52,7 +52,7 @@ from .src.ui.operators import render_image
 bl_info = {
     'name': 'Hana3D',
     'author': 'Vilem Duha, Petr Dlouhy, R2U',
-    'version': (0, 8, 0),
+    'version': (0, 8, 1),
     'blender': (2, 90, 0),
     'location': 'View3D > Properties > Hana3D',
     'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
@@ -281,7 +281,7 @@ class Hana3DAddonPreferences(AddonPreferences):
         layout.prop(self, "show_on_start")
 
         if self.api_key.strip() == '':
-            ui_panels.draw_login_buttons(layout)
+            panel_builder.draw_login_buttons(layout)
         else:
             layout.operator(f"wm.{HANA3D_NAME}_logout", text="Logout", icon='URL')
 

@@ -12,7 +12,7 @@ class ShowRenderImage(bpy.types.Operator):
     bl_idname = f'{HANA3D_NAME}.show_image'
     bl_label = ''
 
-    index: bpy.props.IntProperty(
+    index: bpy.props.IntProperty(  # type: ignore
         name='index',
     )
 
