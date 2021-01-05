@@ -79,7 +79,7 @@ def mouse_raycast(context, mx, my):
         face_index,
         object,
         matrix,
-    ) = bpy.context.scene.ray_cast(bpy.context.view_layer, ray_origin, vec)
+    ) = bpy.context.scene.ray_cast(bpy.context.view_layer.depsgraph, ray_origin, vec)
 
     # rote = mathutils.Euler((0, 0, math.pi))
     randoffset = math.pi
