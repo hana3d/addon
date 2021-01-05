@@ -62,7 +62,6 @@ class Search(object):
         elif self.asset_type == 'material' and hasattr(self.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
             return getattr(self.context.window_manager, HANA3D_MATERIALS)
 
-
     @property
     def results_orig(self) -> List[SearchResult]:
         """Get original search results (FIXME).
@@ -71,7 +70,7 @@ class Search(object):
             List: original search results
         """
         if f'{HANA3D_NAME}_search_results_orig' not in self.context.window_manager:
-            return []
+            return {}
         return self.context.window_manager[f'{HANA3D_NAME}_search_results_orig']
 
     @results.setter  # noqa : WPS110
