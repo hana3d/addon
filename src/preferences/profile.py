@@ -3,8 +3,8 @@ import logging
 
 import bpy
 
-from ... import config, paths
 from ..requests_async.basic_request import BasicRequest
+from ... import config, paths
 
 
 class Profile(object):
