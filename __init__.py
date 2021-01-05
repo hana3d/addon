@@ -281,7 +281,7 @@ class Hana3DAddonPreferences(AddonPreferences):
         layout.prop(self, "show_on_start")
 
         if self.api_key.strip() == '':
-            ui_panels.draw_login_buttons(layout)
+            panel_builder.draw_login_buttons(layout)
         else:
             layout.operator(f"wm.{HANA3D_NAME}_logout", text="Logout", icon='URL')
 

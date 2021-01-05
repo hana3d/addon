@@ -2,7 +2,7 @@
 import bpy
 
 from .download import Hana3DDownloadPanel
-from .lib import draw_assetbar_show_hide
+from .lib import draw_assetbar_show_hide, draw_login_buttons  # noqa: F401
 from .login import Hana3DLoginPanel
 from .render import Hana3DRenderPanel
 from .unified import Hana3DUnifiedPanel
