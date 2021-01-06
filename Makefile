@@ -50,6 +50,7 @@ lint: ## lint code
 
 test: ## test code
 	HANA3D_ENV=$(STAGE) blender -b -P tests/install.py -noaudio
+	HANA3D_ENV=$(STAGE) blender -b -P tests/credentials.py -noaudio
 
 
 clean: ## clean blender Hana3D addons
