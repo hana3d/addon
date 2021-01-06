@@ -531,11 +531,14 @@ def set_asset_props(asset, asset_data):
             asset_props.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
-        libraries_list = asset_props.libraries_list
         hana3d_types.update_libraries_list(asset_props, bpy.context)
+        libraries_list = asset_props.libraries_list
         for asset_library in asset_data['libraries']:  # noqa : WPS529
+            print(asset_library)
             library = libraries_list[asset_library['name']]
+            print(library)
             library.selected = True
+            print(library.selected)
             if 'metadata' in asset_library and asset_library['metadata'] is not None:
                 for view_prop in library.metadata['view_props']:
                     name = f'{library.name} {view_prop["name"]}'

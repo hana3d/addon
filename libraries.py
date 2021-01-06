@@ -77,6 +77,7 @@ class RemoveLibraryUpload(Operator):
 
     @execute_wrapper
     def execute(self, context):
+        print('REMOVED')
         props = upload.get_upload_props()
         props.libraries_list[self.library].selected = False
 
