@@ -56,7 +56,7 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
                 y = (  # noqa: WPS111
                     ui_props.bar_y
                     - ui_props.margin
-                    - (ui_props.thumb_size + ui_props.margin) * (b + 1)
+                    - (ui_props.thumb_size + ui_props.margin) * (column + 1)
                 )
                 width = ui_props.thumb_size
                 height = ui_props.thumb_size
