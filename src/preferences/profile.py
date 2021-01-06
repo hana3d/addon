@@ -3,10 +3,10 @@ import logging
 
 import bpy
 
-from ... import config, paths
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import Search
 from ..upload.upload import get_upload_props
+from ... import config, paths
 
 
 def update_tags_list(props, context):
