@@ -3,7 +3,6 @@ from typing import Set
 
 import bpy
 
-from ...search.search import Search
 from .... import utils
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
@@ -25,9 +24,6 @@ class DefaultNamesOperator(bpy.types.Operator):
         if event.type not in {'LEFTMOUSE', 'RIGHTMOUSE', 'ENTER'}:
             return {'PASS_THROUGH'}
 
-        if ui_props.down_up == 'SEARCH':
-            self._search()
-
         asset = utils.get_active_asset()
         if asset is None:
             return {'PASS_THROUGH'}
@@ -45,19 +41,7 @@ class DefaultNamesOperator(bpy.types.Operator):
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
-    def _search(self):
-        search_object = Search(bpy.context)
-        search_props = search_object.props
-        if search_props.workspace != '' and search_props.tags_list:
-            # This is done to force the UI to update
-            # TODO: refactor this so this happens more explicitly?
-            search_props.workspace = search_props.workspace
-
     def _upload(self, props, asset):
-        if props.workspace != '' and props.tags_list:
-            # This is done to force the UI to update
-            # TODO: refactor this so this happens more explicitly?
-            props.workspace = props.workspace
         if props.name == '' and props.name != asset.name:
             props.name = asset.name
 

@@ -24,51 +24,70 @@ from ....config import (
 from ....report_tools import execute_wrapper
 
 
-def get_asset_under_mouse(mousex, mousey):
+def get_asset_under_mouse(mousex: float, mousey: float) -> int:
+    """Return the asset under the mouse.
+
+    Parameters:
+        mousex: mouse x-coordinate
+        mousey: mouse y-coordinate
+
+    Returns:
+        int: index of the asset under the mouse
+    """
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
 
     search_object = Search(bpy.context)
     search_results = search_object.results
+    len_search = len(search_results)
     if search_results is not None:
 
-        h_draw = min(ui_props.hcount, math.ceil(len(search_results) / ui_props.wcount))
-        for b in range(0, h_draw):
+        h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))
+        for row in range(0, h_draw):
             w_draw = min(
-                ui_props.wcount,
-                len(search_results) - b * ui_props.wcount - ui_props.scrolloffset,
+                ui_props.wcount, len_search - row * ui_props.wcount - ui_props.scrolloffset,
             )
-            for a in range(0, w_draw):
-                x = (
+            for column in range(0, w_draw):
+                x = (  # noqa: WPS111
                     ui_props.bar_x
-                    + a * (ui_props.margin + ui_props.thumb_size)
+                    + column * (ui_props.margin + ui_props.thumb_size)
                     + ui_props.margin
                     + ui_props.drawoffset
                 )
-                y = (
+                y = (  # noqa: WPS111
                     ui_props.bar_y
                     - ui_props.margin
-                    - (ui_props.thumb_size + ui_props.margin) * (b + 1)
+                    - (ui_props.thumb_size + ui_props.margin) * (row + 1)
                 )
-                w = ui_props.thumb_size
-                h = ui_props.thumb_size
+                width = ui_props.thumb_size
+                height = ui_props.thumb_size
 
-                if x < mousex < x + w and y < mousey < y + h:
-                    return a + ui_props.wcount * b + ui_props.scrolloffset
-
-                #   return search_results[a]
+                if x < mousex < x + width and y < mousey < y + height:
+                    return column + ui_props.wcount * row + ui_props.scrolloffset
 
     return -3
 
 
-def mouse_raycast(context, mx, my):
-    r = context.region
+def mouse_raycast(context: bpy.types.Context, mx: float, my: float) -> tuple:
+    """Perform a raycast from the mouse.
+
+    Parameters:
+        context: Blender context
+        mx: mouse x-coordinate
+        my: mouse y-coordinate
+
+    Returns:
+        tuple: Tuple containing: if a object was hit; location; normal; rotation;
+        face index; object; matrix;
+    """
+    region = context.region
     rv3d = context.region_data
     coord = mx, my
 
     # get the ray from the viewport and mouse
-    view_vector = view3d_utils.region_2d_to_vector_3d(r, rv3d, coord)
-    ray_origin = view3d_utils.region_2d_to_origin_3d(r, rv3d, coord)
-    ray_target = ray_origin + (view_vector * 1000000000)
+    target_distance = 1e9
+    view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+    ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
+    ray_target = ray_origin + (view_vector * target_distance)
 
     vec = ray_target - ray_origin
 
@@ -77,95 +96,119 @@ def mouse_raycast(context, mx, my):
         snapped_location,
         snapped_normal,
         face_index,
-        object,
+        obj_hit,
         matrix,
     ) = bpy.context.scene.ray_cast(bpy.context.view_layer.depsgraph, ray_origin, vec)
 
-    # rote = mathutils.Euler((0, 0, math.pi))
     randoffset = math.pi
     if has_hit:
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
         up = Vector((0, 0, 1))
         props = getattr(bpy.context.window_manager, HANA3D_MODELS)
-        if snapped_normal.angle(up) < math.radians(10.0):
+        angle_threshold = 10.0
+        if snapped_normal.angle(up) < math.radians(angle_threshold):
             randoffset = props.offset_rotation_amount + math.pi
         else:
-            # we don't rotate this way on walls and ceilings. + math.pi
+            # we don't rotate this way on walls and ceilings.
             randoffset = props.offset_rotation_amount
-        # snapped_rotation.z += math.pi + (random.random() - 0.5) * .2
 
     else:
         snapped_rotation = mathutils.Quaternion((0, 0, 0, 0)).to_euler()
 
     snapped_rotation.rotate_axis('Z', randoffset)
 
-    return has_hit, snapped_location, snapped_normal, snapped_rotation, face_index, object, matrix
+    return has_hit, snapped_location, snapped_normal, snapped_rotation, face_index, obj_hit, matrix
 
 
-def floor_raycast(context, mx, my):
-    r = context.region
+def floor_raycast(context: bpy.types.Context, mx: float, my: float) -> tuple:
+    """Perform a raycast from the floor.
+
+    Parameters:
+        context: Blender context
+        mx: mouse x-coordinate
+        my: mouse y-coordinate
+
+    Returns:
+        tuple: Tuple containing: if a object was hit; location; normal; rotation;
+        face index; object; matrix;
+    """
+    region = context.region
     rv3d = context.region_data
     coord = mx, my
 
     # get the ray from the viewport and mouse
-    view_vector = view3d_utils.region_2d_to_vector_3d(r, rv3d, coord)
-    ray_origin = view3d_utils.region_2d_to_origin_3d(r, rv3d, coord)
+    view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+    ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
     ray_target = ray_origin + (view_vector * 1000)
 
     # various intersection plane normals are needed for corner cases
     # that might actually happen quite often - in front and side view.
     # default plane normal is scene floor.
+    tolerance = 1e-4
     plane_normal = (0, 0, 1)
-    if (
-        math.isclose(view_vector.x, 0, abs_tol=1e-4)
-        and math.isclose(view_vector.z, 0, abs_tol=1e-4)
-    ):
-        plane_normal = (0, 1, 0)
-    elif math.isclose(view_vector.z, 0, abs_tol=1e-4):
-        plane_normal = (1, 0, 0)
+    if math.isclose(view_vector.z, 0, abs_tol=tolerance):
+        if math.isclose(view_vector.x, 0, abs_tol=tolerance):
+            plane_normal = (0, 1, 0)
+        else:
+            plane_normal = (1, 0, 0)
 
+    origin = (0, 0, 0)
     snapped_location = mathutils.geometry.intersect_line_plane(
-        ray_origin,
-        ray_target,
-        (0, 0, 0),
-        plane_normal,
-        False,
+        ray_origin, ray_target, origin, plane_normal,
     )
     if snapped_location is not None:
         has_hit = True
         snapped_normal = Vector((0, 0, 1))
         face_index = None
-        object = None
+        obj_hit = None
         matrix = None
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
         props = getattr(bpy.context.window_manager, HANA3D_MODELS)
         randoffset = props.offset_rotation_amount + math.pi
         snapped_rotation.rotate_axis('Z', randoffset)
 
-    return has_hit, snapped_location, snapped_normal, snapped_rotation, face_index, object, matrix
+    return has_hit, snapped_location, snapped_normal, snapped_rotation, face_index, obj_hit, matrix
 
 
-def mouse_in_asset_bar(mx, my):
+def mouse_in_asset_bar(mx: float, my: float) -> bool:
+    """Return whether the mouse is or is not in the asset bar.
+
+    Parameters:
+        mx: mouse x-coordinate
+        my: mouse y-coordinate
+
+    Returns:
+        bool: True if the mouse is in the asset bar, False otherwise
+    """
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
 
-    if (
+    return (
         ui_props.bar_y - ui_props.bar_height < my < ui_props.bar_y
-        and mx > ui_props.bar_x
-        and mx < ui_props.bar_x + ui_props.bar_width
-    ):
-        return True
-    else:
-        return False
+        and ui_props.bar_x < mx < ui_props.bar_x + ui_props.bar_width
+    )
 
 
-def mouse_in_region(r, mx, my):
-    if 0 < my < r.height and 0 < mx < r.width:
-        return True
-    else:
-        return False
+def mouse_in_region(region: bpy.types.Region, mx: float, my: float) -> bool:
+    """Return whether the mouse is or is not in the region.
+
+    Parameters:
+        region: Blender region
+        mx: mouse x-coordinate
+        my: mouse y-coordinate
+
+    Returns:
+        bool: True if the mouse is in the region, False otherwise
+    """
+    return 0 < my < region.height and 0 < mx < region.width
 
 
-def update_ui_size(area, region):
+def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
+    """Update ui size.
+
+    Parameters:
+        area: Blender area
+        region: Blender region
+    """
     wm = bpy.context.window_manager
     ui = getattr(wm, HANA3D_UI)
     user_preferences = Preferences().get()
@@ -178,11 +221,11 @@ def update_ui_size(area, region):
     if not bpy.context.preferences.system.use_region_overlap:
         reg_multiplier = 0
 
-    for r in area.regions:
-        if r.type == 'TOOLS':
-            ui.bar_x = r.width * reg_multiplier + ui.margin + ui.bar_x_offset * ui_scale
-        elif r.type == 'UI':
-            ui.bar_end = r.width * reg_multiplier + 100 * ui_scale
+    for re in area.regions:
+        if re.type == 'TOOLS':
+            ui.bar_x = re.width * reg_multiplier + ui.margin + ui.bar_x_offset * ui_scale
+        elif re.type == 'UI':
+            ui.bar_end = re.width * reg_multiplier + 100 * ui_scale
 
     ui.bar_width = region.width - ui.bar_x - ui.bar_end
     ui.wcount = math.floor((ui.bar_width - 2 * ui.drawoffset) / (ui.thumb_size + ui.margin))
@@ -199,7 +242,7 @@ def update_ui_size(area, region):
     ui.bar_height = (ui.thumb_size + ui.margin) * ui.hcount + ui.margin
     ui.bar_y = region.height - ui.bar_y_offset * ui_scale
     if ui.down_up == 'UPLOAD':
-        ui.reports_y = ui.bar_y - 600
+        ui.reports_y = ui.bar_y - 600  # noqa: WPS432
         ui.reports_x = ui.bar_x
     else:
         ui.reports_y = ui.bar_y - ui.bar_height - 100
@@ -244,8 +287,8 @@ class AssetBarOperator(bpy.types.Operator):
 
     def exit_modal(self):
         try:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle_2d, 'WINDOW')
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d, 'WINDOW')
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle2d, 'WINDOW')
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle3d, 'WINDOW')
         except Exception:
             pass
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
@@ -468,13 +511,14 @@ class AssetBarOperator(bpy.types.Operator):
 
             search_object = Search(bpy.context)
             search_results = search_object.results
+            len_search = len(search_results)
 
             if not ui_props.dragging:
                 bpy.context.window.cursor_set('DEFAULT')
 
                 if (  # noqa: WPS337
                     search_results is not None
-                    and ui_props.wcount * ui_props.hcount > len(search_results)
+                    and ui_props.wcount * ui_props.hcount > len_search
                     and ui_props.scrolloffset > 0
                 ):
                     ui_props.scrolloffset = 0
@@ -502,8 +546,18 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.active_index = -2
                     return {'RUNNING_MODAL'}
 
-            else:
-                if ui_props.dragging and mouse_in_region(r, mx, my):
+            elif ui_props.dragging and mouse_in_region(r, mx, my):
+                (
+                    ui_props.has_hit,
+                    ui_props.snapped_location,
+                    ui_props.snapped_normal,
+                    ui_props.snapped_rotation,
+                    face_index,
+                    object,
+                    matrix,
+                ) = mouse_raycast(context, mx, my)
+                # MODELS can be dragged on scene floor
+                if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
                     (
                         ui_props.has_hit,
                         ui_props.snapped_location,
@@ -512,32 +566,22 @@ class AssetBarOperator(bpy.types.Operator):
                         face_index,
                         object,
                         matrix,
-                    ) = mouse_raycast(context, mx, my)
-                    # MODELS can be dragged on scene floor
-                    if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
-                        (
-                            ui_props.has_hit,
-                            ui_props.snapped_location,
-                            ui_props.snapped_normal,
-                            ui_props.snapped_rotation,
-                            face_index,
-                            object,
-                            matrix,
-                        ) = floor_raycast(context, mx, my)
-                if ui_props.has_hit and ui_props.asset_type == 'MODEL':
-                    # this condition is here to fix a bug for a scene
-                    # submitted by a user, so this situation shouldn't
-                    # happen anymore, but there might exists scenes
-                    # which have this problem for some reason.
-                    if ui_props.active_index < len(search_results) and ui_props.active_index > -1:  # noqa: WPS333
-                        ui_props.draw_snapped_bounds = True  # noqa: WPS220
-                        active_mod = search_results[ui_props.active_index]  # noqa: WPS220
-                        ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])  # noqa: WPS220
-                        ui_props.snapped_bbox_max = Vector(active_mod['bbox_max'])  # noqa: WPS220
+                    ) = floor_raycast(context, mx, my)
+            elif ui_props.has_hit and ui_props.asset_type == 'MODEL':
+                # this condition is here to fix a bug for a scene
+                # submitted by a user, so this situation shouldn't
+                # happen anymore, but there might exists scenes
+                # which have this problem for some reason.
+                if ui_props.active_index < len_search and ui_props.active_index > -1:  # noqa: WPS333
+                    ui_props.draw_snapped_bounds = True  # noqa: WPS220
+                    active_mod = search_results[ui_props.active_index]  # noqa: WPS220
+                    ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])  # noqa: WPS220
+                    ui_props.snapped_bbox_max = Vector(active_mod['bbox_max'])  # noqa: WPS220
 
-                else:
-                    ui_props.draw_snapped_bounds = False
-                    ui_props.draw_drag_image = True
+            else:
+                ui_props.draw_snapped_bounds = False
+                ui_props.draw_drag_image = True
+
             return {'RUNNING_MODAL'}
 
         if event.type == 'RIGHTMOUSE':
@@ -552,7 +596,7 @@ class AssetBarOperator(bpy.types.Operator):
 
             ui_props = getattr(context.window_manager, HANA3D_UI)
             if event.value == 'PRESS' and ui_props.active_index > -1:
-                if ui_props.asset_type == 'MODEL' or ui_props.asset_type == 'MATERIAL':
+                if ui_props.asset_type in {'MODEL', 'MATERIAL'}:
                     # check if asset is locked and let the user know in that case
                     asset_search_index = ui_props.active_index
                     asset_data = search_results[asset_search_index]
@@ -573,9 +617,9 @@ class AssetBarOperator(bpy.types.Operator):
             # this can happen by switching result asset types - length of search result changes
             if (
                 ui_props.scrolloffset > 0
-                and (ui_props.wcount * ui_props.hcount) > len(search_results) - ui_props.scrolloffset  # noqa: E501
+                and (ui_props.wcount * ui_props.hcount) > len_search - ui_props.scrolloffset  # noqa: E501
             ):
-                ui_props.scrolloffset = len(search_results) - (ui_props.wcount * ui_props.hcount)  # noqa: E501
+                ui_props.scrolloffset = len_search - (ui_props.wcount * ui_props.hcount)  # noqa: E501
 
             if event.value == 'RELEASE':  # Confirm
                 ui_props.drag_init = False
@@ -583,11 +627,11 @@ class AssetBarOperator(bpy.types.Operator):
                 # scroll by a whole page
                 if (
                     mx > ui_props.bar_x + ui_props.bar_width - 50  # noqa: WPS432
-                    and len(search_results) - ui_props.scrolloffset > ui_props.wcount * ui_props.hcount  # noqa: E501
+                    and len_search - ui_props.scrolloffset > ui_props.wcount * ui_props.hcount  # noqa: E501
                 ):
                     ui_props.scrolloffset = min(
                         ui_props.scrolloffset + (ui_props.wcount * ui_props.hcount),
-                        len(search_results) - ui_props.wcount * ui_props.hcount,
+                        len_search - ui_props.wcount * ui_props.hcount,
                     )
                     return {'RUNNING_MODAL'}
                 if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
@@ -727,7 +771,7 @@ class AssetBarOperator(bpy.types.Operator):
                             loc = scene.cursor.location  # noqa: WPS220
                             rotation = scene.cursor.rotation_euler  # noqa: WPS220
 
-                        download_op = getattr(bpy.ops.scene, HANA3D_NAME + '_download')
+                        download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                         download_op(
                             True,
                             asset_type=ui_props.asset_type,
@@ -738,7 +782,7 @@ class AssetBarOperator(bpy.types.Operator):
                         )
 
                     else:
-                        download_op = getattr(bpy.ops.scene, HANA3D_NAME + '_download')
+                        download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                         download_op(
                             asset_type=ui_props.asset_type,
                             asset_index=asset_search_index,
@@ -773,8 +817,6 @@ class AssetBarOperator(bpy.types.Operator):
                 # these props so we can restart after 2 clicks
                 ui_props.assetbar_on = False
 
-            else:
-                pass
             return {'FINISHED'}
 
         ui_props.dragging = False  # only for cases where assetbar ended with an error.
@@ -798,11 +840,11 @@ class AssetBarOperator(bpy.types.Operator):
         self.area = context.area
         self.scene = bpy.context.scene
 
-        self.has_quad_views = len(bpy.context.area.spaces[0].region_quadviews) > 0
+        self.has_quad_views = len(bpy.context.area.spaces[0].region_quadviews) > 0  # noqa: WPS507
 
-        for r in self.area.regions:
-            if r.type == 'WINDOW':
-                self.region = r
+        for region in self.area.regions:
+            if region.type == 'WINDOW':
+                self.region = region
 
         ui = UI()
         ui.active_window = self.window
@@ -811,13 +853,13 @@ class AssetBarOperator(bpy.types.Operator):
 
         update_ui_size(self.area, self.region)
 
-        self._handle_2d = bpy.types.SpaceView3D.draw_handler_add(
+        self._handle2d = bpy.types.SpaceView3D.draw_handler_add(
             draw_callback_2d,
             args,
             'WINDOW',
             'POST_PIXEL',
         )
-        self._handle_3d = bpy.types.SpaceView3D.draw_handler_add(
+        self._handle3d = bpy.types.SpaceView3D.draw_handler_add(
             draw_callback_3d,
             args,
             'WINDOW',

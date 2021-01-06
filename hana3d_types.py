@@ -43,6 +43,7 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from .src.preferences.profile import update_libraries_list, update_tags_list
 from .src.search.asset_search import AssetSearch
 from .src.search.search import Search
 from .src.upload import upload
@@ -302,30 +303,6 @@ def search_update(self, context):
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
     search.search()
-
-
-def update_tags_list(props, context):
-    props.tags_list.clear()
-    current_workspace = props.workspace
-    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            for tag in workspace['tags']:
-                new_tag = props.tags_list.add()
-                new_tag['name'] = tag
-
-
-def update_libraries_list(props, context):
-    props.libraries_list.clear()
-    current_workspace = props.workspace
-    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            for library in workspace['libraries']:
-                new_library = props.libraries_list.add()
-                new_library['name'] = library['name']
-                new_library.id_ = library['id']
-                if library['metadata'] is not None:
-                    new_library.metadata['library_props'] = library['metadata']['library_props']
-                    new_library.metadata['view_props'] = library['metadata']['view_props']
 
 
 class Hana3DTagItem(PropertyGroup):

@@ -43,6 +43,7 @@ from .config import (
     HANA3D_SCENES,
 )
 from .report_tools import execute_wrapper
+from .src.preferences.profile import update_libraries_list, update_tags_list
 from .src.search.query import Query
 from .src.search.search import Search
 from .src.ui import colors
@@ -526,13 +527,13 @@ def set_asset_props(asset, asset_data):
     render_tools.update_render_list(asset_props)
 
     if 'tags' in asset_data:
-        hana3d_types.update_tags_list(asset_props, bpy.context)
+        update_tags_list(asset_props, bpy.context)
         for tag in asset_data['tags']:
             asset_props.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
+        update_libraries_list(asset_props, bpy.context)
         libraries_list = asset_props.libraries_list
-        hana3d_types.update_libraries_list(asset_props, bpy.context)
         for asset_library in asset_data['libraries']:  # noqa : WPS529
             library = libraries_list[asset_library['name']]
             library.selected = True
