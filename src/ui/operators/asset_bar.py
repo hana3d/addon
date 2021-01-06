@@ -1,3 +1,4 @@
+# flake8: noqa
 """Runs search and displays the asset bar at the same time."""
 import logging
 import math
