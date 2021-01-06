@@ -1,5 +1,6 @@
 """Hana3D Profile."""
 import logging
+from typing import TYPE_CHECKING
 
 import bpy
 
@@ -8,8 +9,17 @@ from ..search.search import Search
 from ..upload.upload import get_upload_props
 from ... import config, paths
 
+if TYPE_CHECKING:
+    from ...hana3d_types import Props
 
-def update_tags_list(props, context):
+
+def update_tags_list(props: 'Props', context: bpy.types.Context):
+    """Update tags list
+
+    Arguments:
+        props: hana3d_types.Props,
+        context: Blender context
+    """
     props.tags_list.clear()
     current_workspace = props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
@@ -19,7 +29,13 @@ def update_tags_list(props, context):
                 new_tag['name'] = tag
 
 
-def update_libraries_list(props, context):
+def update_libraries_list(props: 'Props', context: bpy.types.Context):
+    """Update libraries list
+
+    Arguments:
+        props: hana3d_types.Props,
+        context: Blender context
+    """
     props.libraries_list.clear()
     current_workspace = props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
