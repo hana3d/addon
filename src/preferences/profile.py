@@ -10,11 +10,11 @@ from ..upload.upload import get_upload_props
 from ... import config, paths
 
 if TYPE_CHECKING:
-    from ...hana3d_types import Props
+    from ...hana3d_types import Props   # noqa: WPS433
 
 
 def update_tags_list(props: 'Props', context: bpy.types.Context):
-    """Update tags list
+    """Update tags list.
 
     Arguments:
         props: hana3d_types.Props,
@@ -30,7 +30,7 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
 
 
 def update_libraries_list(props: 'Props', context: bpy.types.Context):
-    """Update libraries list
+    """Update libraries list.
 
     Arguments:
         props: hana3d_types.Props,
