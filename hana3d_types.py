@@ -182,6 +182,7 @@ class Hana3DUIProps(PropertyGroup):
 
     wcount: IntProperty(name="Width Count", default=10, min=0, max=5000)
     hcount: IntProperty(name="Rows", default=5, min=0, max=5000)
+    total_count: IntProperty(name='Total Count', default=5, min=0, max=5000)  # noqa: WPS432
 
     reports_y: IntProperty(name="Reports Y", default=5, min=0, max=5000)
     reports_x: IntProperty(name="Reports X", default=5, min=0, max=5000)

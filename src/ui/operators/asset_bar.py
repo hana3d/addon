@@ -239,6 +239,7 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
         )
     else:
         ui.hcount = 1
+    ui.total_count = ui.wcount * ui.hcount
     ui.bar_height = (ui.thumb_size + ui.margin) * ui.hcount + ui.margin
     ui.bar_y = region.height - ui.bar_y_offset * ui_scale
     if ui.down_up == 'UPLOAD':
@@ -249,7 +250,7 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
         ui.reports_x = ui.bar_x
 
 
-class AssetBarOperator(bpy.types.Operator):
+class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
     """Runs search and displays the asset bar at the same time."""
 
     bl_idname = f'view3d.{HANA3D_NAME}_asset_bar'
@@ -286,11 +287,12 @@ class AssetBarOperator(bpy.types.Operator):
             search.search(get_next=True)
 
     def exit_modal(self):
+        """Exit modal."""
         try:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handle3d, 'WINDOW')
         except Exception:
-            pass
+            logging.info('Could not remove draw handlers')
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
 
         ui_props.dragging = False
@@ -301,7 +303,46 @@ class AssetBarOperator(bpy.types.Operator):
         ui_props.has_hit = False
         ui_props.assetbar_on = False
 
-    def modal(self, context, event):
+    def _generate_tooltip(self, event, ui_props):
+        ui_props.draw_tooltip = True
+
+        mouse_event = event.type in {'LEFTMOUSE', 'RIGHTMOUSE'} and event.value == 'RELEASE'
+        if mouse_event or event.type == 'ENTER' or ui_props.tooltip == '':
+            active_obj = bpy.context.active_object
+
+            if active_obj is None:
+                return
+
+            model = ui_props.asset_type == 'MODEL'
+            material = ui_props.asset_type == 'MATERIAL' and active_obj.active_material is not None
+            if model or material:
+                props = upload.get_upload_props()
+                asset_data = {
+                    'name': props.name,
+                    'description': props.description,
+                    'dimensions': getattr(props, 'dimensions', None),
+                    'face_count': getattr(props, 'face_count', None),
+                    'face_count_render': getattr(props, 'face_count_render', None),
+                    'object_count': getattr(props, 'object_count', None),
+                }
+                ui_props.tooltip = utils.generate_tooltip(**asset_data)
+
+    def _raycast_update_props(self, ui_props, context, mx, my):
+        raycast = mouse_raycast(context, mx, my)
+        has_hit, *_ = raycast
+
+        # MODELS can be dragged on scene floor
+        if not has_hit and ui_props.asset_type == 'MODEL':
+            raycast = floor_raycast(context, mx, my)
+
+        ui_props.has_hit = raycast[0]
+        ui_props.snapped_location = raycast[1]
+        ui_props.snapped_normal = raycast[2]
+        ui_props.snapped_rotation = raycast[3]
+
+        return raycast
+
+    def modal(self, context, event):  # noqa: D102
         # This is for case of closing the area or changing type:
         ui_props = getattr(context.window_manager, HANA3D_UI)
         areas = []
@@ -310,14 +351,11 @@ class AssetBarOperator(bpy.types.Operator):
             self.exit_modal()
             return {'CANCELLED'}
 
-        for w in context.window_manager.windows:
-            areas.extend(w.screen.areas)
+        for window in context.window_manager.windows:
+            areas.extend(window.screen.areas)
 
-        if (
-            self.area not in areas
-            or self.area.type != 'VIEW_3D'
-            or self.has_quad_views != (len(self.area.spaces[0].region_quadviews) > 0)
-        ):
+        quad_views_differ = self.has_quad_views != bool(self.area.spaces[0].region_quadviews)
+        if self.area not in areas or self.area.type != 'VIEW_3D' or quad_views_differ:
             # logging.info('search areas')   bpy.context.area.spaces[0].region_quadviews
             # stopping here model by now - because of:
             #   switching layouts or maximizing area now fails to assign new area throwing the bug
@@ -325,28 +363,12 @@ class AssetBarOperator(bpy.types.Operator):
             self.exit_modal()
             return {'CANCELLED'}
 
-            newarea = None
-            for a in context.window.screen.areas:
-                if a.type == 'VIEW_3D':
-                    self.area = a
-                    for r in a.regions:
-                        if r.type == 'WINDOW':
-                            self.region = r
-                    newarea = a
-                    break
-                    # context.area = a
-
-            # we check again and quit if things weren't fixed this way.
-            if newarea is None:
-                self.exit_modal()
-                return {'CANCELLED'}
-
         update_ui_size(self.area, self.region)
 
         # this was here to check if sculpt stroke is running, but obviously that didn't help,
         # since the RELEASE event is cought by operator and thus
         # there is no way to detect a stroke has ended...
-        if bpy.context.mode in ('SCULPT', 'PAINT_TEXTURE'):
+        if bpy.context.mode in {'SCULPT', 'PAINT_TEXTURE'}:
             # ASSUME THAT SCULPT OPERATOR ACTUALLY STEALS THESE EVENTS,
             if event.type == 'MOUSEMOVE':
                 bpy.context.window_manager['appendable'] = True
@@ -364,7 +386,7 @@ class AssetBarOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         if context.region != self.region:
-            return {'PASS_THROUGH'}
+            return {'PASS_THROUGH'}  # noqa: WPS204
 
         if ui_props.down_up == 'UPLOAD':
 
@@ -374,38 +396,11 @@ class AssetBarOperator(bpy.types.Operator):
             mx = event.mouse_x
             my = event.mouse_y
 
-            ui_props.draw_tooltip = True
-
-            # only generate tooltip once in a while
-            if (
-                (event.type == 'LEFTMOUSE' or event.type == 'RIGHTMOUSE')
-                and event.value == 'RELEASE'
-                or event.type == 'ENTER'
-                or ui_props.tooltip == ''
-            ):
-                ao = bpy.context.active_object
-                if (
-                    ui_props.asset_type == 'MODEL'
-                    and ao is not None
-                    or ui_props.asset_type == 'MATERIAL'
-                    and ao is not None
-                    and ao.active_material is not None
-                ):
-                    props = upload.get_upload_props()
-                    asset_data = {
-                        'name': props.name,
-                        'description': props.description,
-                        'dimensions': getattr(props, 'dimensions', None),
-                        'face_count': getattr(props, 'face_count', None),
-                        'face_count_render': getattr(props, 'face_count_render', None),
-                        'object_count': getattr(props, 'object_count', None),
-                    }
-                    ui_props.tooltip = utils.generate_tooltip(**asset_data)
+            self._generate_tooltip(event, ui_props)
 
             return {'PASS_THROUGH'}
 
         # TODO add one more condition here to take less performance.
-        r = self.region
         scene = bpy.context.scene
         search_object = Search(context)
         search_results = search_object.results
@@ -413,66 +408,37 @@ class AssetBarOperator(bpy.types.Operator):
         # If there aren't any results, we need no interaction(yet)
         if search_results is None:
             return {'PASS_THROUGH'}
-        if len(search_results) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount) + 10:  # noqa: WPS221,WPS204
+        len_search = len(search_results)
+        if len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
             self.search_more()
-        if (
-            event.type == 'WHEELUPMOUSE'
-            or event.type == 'WHEELDOWNMOUSE'
-            or event.type == 'TRACKPADPAN'
-        ):
+        if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'TRACKPADPAN'}:
             # scrolling
             mx = event.mouse_region_x
             my = event.mouse_region_y
 
             if ui_props.dragging and not mouse_in_asset_bar(mx, my):
-                # and my < r.height - ui_props.bar_height \
-                # and mx > 0 and mx < r.width and my > 0:
                 sprops = getattr(context.window_manager, HANA3D_MODELS)
                 if event.type == 'WHEELUPMOUSE':
                     sprops.offset_rotation_amount += sprops.offset_rotation_step
                 elif event.type == 'WHEELDOWNMOUSE':
                     sprops.offset_rotation_amount -= sprops.offset_rotation_step
 
-                # TODO - this snapping code below is 3x in this file.... refactor it.
-                (
-                    ui_props.has_hit,
-                    ui_props.snapped_location,
-                    ui_props.snapped_normal,
-                    ui_props.snapped_rotation,
-                    face_index,
-                    object,
-                    matrix,
-                ) = mouse_raycast(context, mx, my)
+                self._raycast_update_props(ui_props, context, mx, my)
 
-                # MODELS can be dragged on scene floor
-                if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
-                    (
-                        ui_props.has_hit,
-                        ui_props.snapped_location,
-                        ui_props.snapped_normal,
-                        ui_props.snapped_rotation,
-                        face_index,
-                        object,
-                        matrix,
-                    ) = floor_raycast(context, mx, my)
-
-                return {'RUNNING_MODAL'}
+                return {'RUNNING_MODAL'}  # noqa: WPS204
 
             if not mouse_in_asset_bar(mx, my):
                 return {'PASS_THROUGH'}
 
-            if (
-                (event.type == 'WHEELDOWNMOUSE')
-                and len(search_results) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount)  # noqa: E501
-            ):
+            if event.type == 'WHEELDOWNMOUSE' and len_search - ui_props.scrolloffset > ui_props.total_count:  # noqa: E501
                 if ui_props.hcount > 1:
                     ui_props.scrolloffset += ui_props.wcount
                 else:
                     ui_props.scrolloffset += 1
-                if len(search_results) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount):  # noqa: N400
-                    ui_props.scrolloffset = len(search_results) - (ui_props.wcount * ui_props.hcount)  # noqa: E501
+                if len_search - ui_props.scrolloffset < ui_props.total_count:
+                    ui_props.scrolloffset = len_seach - ui_props.total_count
 
-            if event.type == 'WHEELUPMOUSE' and ui_props.scrolloffset > 0:
+            if event.type == 'WHEELUPMOUSE' and ui_props.scrolloffset > 0:  # noqa: WPS204
                 if ui_props.hcount > 1:
                     ui_props.scrolloffset -= ui_props.wcount
                 else:
@@ -483,7 +449,7 @@ class AssetBarOperator(bpy.types.Operator):
             return {'RUNNING_MODAL'}
         if event.type == 'MOUSEMOVE':  # Apply
 
-            r = self.region
+            region = self.region
             mx = event.mouse_region_x
             my = event.mouse_region_y
 
@@ -496,10 +462,8 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.dragging = True
                     ui_props.drag_init = False
 
-            if (
-                not (ui_props.dragging and mouse_in_region(r, mx, my))
-                and not mouse_in_asset_bar(mx, my)
-            ):
+            mouse_dragging_in_region = ui_props.dragging and mouse_in_region(region, mx, my)
+            if not mouse_dragging_in_region and not mouse_in_asset_bar(mx, my):
                 ui_props.dragging = False
                 ui_props.has_hit = False
                 ui_props.active_index = -3
@@ -513,14 +477,10 @@ class AssetBarOperator(bpy.types.Operator):
             search_results = search_object.results
             len_search = len(search_results)
 
-            if not ui_props.dragging:
+            if not ui_props.dragging:  # noqa: WPS504
                 bpy.context.window.cursor_set('DEFAULT')
 
-                if (  # noqa: WPS337
-                    search_results is not None
-                    and ui_props.wcount * ui_props.hcount > len_search
-                    and ui_props.scrolloffset > 0
-                ):
+                if search_results is not None and ui_props.total_count > len_search and ui_props.scrolloffset > 0:
                     ui_props.scrolloffset = 0
 
                 asset_search_index = get_asset_under_mouse(mx, my)
@@ -538,7 +498,7 @@ class AssetBarOperator(bpy.types.Operator):
                 if (
                     mx > ui_props.bar_x + ui_props.bar_width - 50
                     and search_results_orig['count'] - ui_props.scrolloffset
-                    > (ui_props.wcount * ui_props.hcount) + 1
+                    > ui_props.total_count + 1
                 ):
                     ui_props.active_index = -1
                     return {'RUNNING_MODAL'}
@@ -546,27 +506,9 @@ class AssetBarOperator(bpy.types.Operator):
                     ui_props.active_index = -2
                     return {'RUNNING_MODAL'}
 
-            elif ui_props.dragging and mouse_in_region(r, mx, my):
-                (
-                    ui_props.has_hit,
-                    ui_props.snapped_location,
-                    ui_props.snapped_normal,
-                    ui_props.snapped_rotation,
-                    face_index,
-                    object,
-                    matrix,
-                ) = mouse_raycast(context, mx, my)
-                # MODELS can be dragged on scene floor
-                if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
-                    (
-                        ui_props.has_hit,
-                        ui_props.snapped_location,
-                        ui_props.snapped_normal,
-                        ui_props.snapped_rotation,
-                        face_index,
-                        object,
-                        matrix,
-                    ) = floor_raycast(context, mx, my)
+            elif ui_props.dragging and mouse_in_region(region, mx, my):
+                self._raycast_update_props(ui_props, context, mx, my)
+
             elif ui_props.has_hit and ui_props.asset_type == 'MODEL':
                 # this condition is here to fix a bug for a scene
                 # submitted by a user, so this situation shouldn't
@@ -585,14 +527,15 @@ class AssetBarOperator(bpy.types.Operator):
             return {'RUNNING_MODAL'}
 
         if event.type == 'RIGHTMOUSE':
-            mx = event.mouse_x - r.x
-            my = event.mouse_y - r.y
+            region = self.region
+            mx = event.mouse_x - region.x
+            my = event.mouse_y - region.y
 
         if event.type == 'LEFTMOUSE':
 
-            r = self.region
-            mx = event.mouse_x - r.x
-            my = event.mouse_y - r.y
+            region = self.region
+            mx = event.mouse_x - region.x
+            my = event.mouse_y - region.y
 
             ui_props = getattr(context.window_manager, HANA3D_UI)
             if event.value == 'PRESS' and ui_props.active_index > -1:
@@ -617,9 +560,9 @@ class AssetBarOperator(bpy.types.Operator):
             # this can happen by switching result asset types - length of search result changes
             if (
                 ui_props.scrolloffset > 0
-                and (ui_props.wcount * ui_props.hcount) > len_search - ui_props.scrolloffset  # noqa: E501
+                and ui_props.total_count > len_search - ui_props.scrolloffset  # noqa: E501
             ):
-                ui_props.scrolloffset = len_search - (ui_props.wcount * ui_props.hcount)  # noqa: E501
+                ui_props.scrolloffset = len_search - ui_props.total_count  # noqa: E501
 
             if event.value == 'RELEASE':  # Confirm
                 ui_props.drag_init = False
@@ -627,68 +570,47 @@ class AssetBarOperator(bpy.types.Operator):
                 # scroll by a whole page
                 if (
                     mx > ui_props.bar_x + ui_props.bar_width - 50  # noqa: WPS432
-                    and len_search - ui_props.scrolloffset > ui_props.wcount * ui_props.hcount  # noqa: E501
+                    and len_search - ui_props.scrolloffset > ui_props.total_count  # noqa: E501
                 ):
                     ui_props.scrolloffset = min(
-                        ui_props.scrolloffset + (ui_props.wcount * ui_props.hcount),
-                        len_search - ui_props.wcount * ui_props.hcount,
+                        ui_props.scrolloffset + ui_props.total_count,
+                        len_search - ui_props.total_count,
                     )
                     return {'RUNNING_MODAL'}
                 if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
                     ui_props.scrolloffset = max(
                         0,
-                        ui_props.scrolloffset - ui_props.wcount * ui_props.hcount,
+                        ui_props.scrolloffset - ui_props.total_count,
                     )
                     return {'RUNNING_MODAL'}
 
                 # Drag-drop interaction
-                if ui_props.dragging and mouse_in_region(r, mx, my):
+                if ui_props.dragging and mouse_in_region(region, mx, my):
                     asset_search_index = ui_props.active_index
                     # raycast here
                     ui_props.active_index = -3
 
                     if ui_props.asset_type == 'MODEL':
-
-                        (
-                            ui_props.has_hit,
-                            ui_props.snapped_location,
-                            ui_props.snapped_normal,
-                            ui_props.snapped_rotation,
-                            face_index,
-                            object,
-                            matrix,
-                        ) = mouse_raycast(context, mx, my)
-
-                        # MODELS can be dragged on scene floor
-                        if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
-                            (
-                                ui_props.has_hit,
-                                ui_props.snapped_location,
-                                ui_props.snapped_normal,
-                                ui_props.snapped_rotation,
-                                face_index,
-                                object,
-                                matrix,
-                            ) = floor_raycast(context, mx, my)
+                        raycast = self._raycast_update_props(ui_props, context, mx, my)
 
                         if not ui_props.has_hit:
                             return {'RUNNING_MODAL'}
 
+                        obj_hit = raycast[5]
                         target_object = ''
-                        if object is not None:
-                            target_object = object.name
+                        if obj_hit is not None:
+                            target_object = obj_hit.name
                         target_slot = ''
 
-                    if ui_props.asset_type == 'MATERIAL':
-                        (
-                            ui_props.has_hit,
-                            ui_props.snapped_location,
-                            ui_props.snapped_normal,
-                            ui_props.snapped_rotation,
-                            face_index,
-                            object,
-                            matrix,
-                        ) = mouse_raycast(context, mx, my)
+                    elif ui_props.asset_type == 'MATERIAL':
+                        raycast = mouse_raycast(context, mx, my)
+
+                        ui_props.has_hit = raycast[0]
+                        ui_props.snapped_location = raycast[1]
+                        ui_props.snapped_normal = raycast[2]
+                        ui_props.snapped_rotation = raycast[3]
+                        face_index = raycast[4]
+                        obj_hit = raycast[5]
 
                         if not ui_props.has_hit:
                             # this is last attempt to get object under mouse
@@ -700,7 +622,7 @@ class AssetBarOperator(bpy.types.Operator):
                             )
                             sel1 = utils.selection_get()
                             if sel[0] != sel1[0] and sel1[0].type != 'MESH':
-                                object = sel1[0]
+                                obj_hit = sel1[0]
                                 target_slot = sel1[0].active_material_index
                                 ui_props.has_hit = True
                             utils.selection_set(sel)
@@ -708,31 +630,26 @@ class AssetBarOperator(bpy.types.Operator):
                         if not ui_props.has_hit:
                             return {'RUNNING_MODAL'}
 
+                        # first, test if object can have material applied.
+                        # TODO add other types here if droppable.
+                        if obj_hit is not None and not obj_hit.is_library_indirect and obj_hit.type == 'MESH':
+                            target_object = obj_hit.name
+                            # create final mesh to extract correct material slot
+                            depsgraph = bpy.context.evaluated_depsgraph_get()
+                            object_eval = object.evaluated_get(depsgraph)
+                            temp_mesh = object_eval.to_mesh()
+                            target_slot = temp_mesh.polygons[face_index].material_index
+                            object_eval.to_mesh_clear()
                         else:
-                            # first, test if object can have material applied.
-                            # TODO add other types here if droppable.
-                            if (
-                                object is not None
-                                and not object.is_library_indirect
-                                and object.type == 'MESH'
-                            ):
-                                target_object = object.name
-                                # create final mesh to extract correct material slot
-                                depsgraph = bpy.context.evaluated_depsgraph_get()
-                                object_eval = object.evaluated_get(depsgraph)
-                                temp_mesh = object_eval.to_mesh()
-                                target_slot = temp_mesh.polygons[face_index].material_index
-                                object_eval.to_mesh_clear()
-                            else:
-                                logging.warning('Invalid or library object as input:')  # noqa: WPS220
-                                target_object = ''
-                                target_slot = ''
+                            logging.warning('Invalid or library object as input:')  # noqa: WPS220
+                            target_object = ''
+                            target_slot = ''
 
                 # Click interaction
                 else:
                     asset_search_index = get_asset_under_mouse(mx, my)
 
-                    if ui_props.asset_type in ('MATERIAL', 'MODEL'):  # noqa: WPS220
+                    if ui_props.asset_type in {'MATERIAL', 'MODEL'}:  # noqa: WPS220
                         ao = bpy.context.active_object
                         if ao is not None and not ao.is_library_indirect:
                             target_object = bpy.context.active_object.name
@@ -794,7 +711,7 @@ class AssetBarOperator(bpy.types.Operator):
                 return {'RUNNING_MODAL'}
         return {'PASS_THROUGH'}
 
-    def invoke(self, context, event):
+    def invoke(self, context, event):  # noqa: D102
         # FIRST START SEARCH
         ui_props = getattr(context.window_manager, HANA3D_UI)
 
@@ -840,7 +757,7 @@ class AssetBarOperator(bpy.types.Operator):
         self.area = context.area
         self.scene = bpy.context.scene
 
-        self.has_quad_views = len(bpy.context.area.spaces[0].region_quadviews) > 0  # noqa: WPS507
+        self.has_quad_views = bool(bpy.context.area.spaces[0].region_quadviews)  # noqa: WPS219
 
         for region in self.area.regions:
             if region.type == 'WINDOW':
@@ -871,5 +788,5 @@ class AssetBarOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     @execute_wrapper
-    def execute(self, context):
+    def execute(self, context):  # noqa: D102
         return {'RUNNING_MODAL'}
