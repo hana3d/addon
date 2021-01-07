@@ -21,6 +21,11 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
 
     _state = 'INITIALIZING'
     stop_upon_exception = False
+    run_synchronously = bpy.props.BoolProperty(  # type: ignore
+        name='run_synchronously',
+        description='tells the operator to run synchronously',
+        default=False,
+    )
 
     def invoke(self, context, event):
         """Mixin invoke.
@@ -63,7 +68,12 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
-        return self.invoke(context, None)
+        if self.run_synchronously:
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.async_execute(context))
+            return {'FINISHED'}
+        else:
+            return self.invoke(context, None)
 
     def modal(self, context, event):
         """Mixin modal.
