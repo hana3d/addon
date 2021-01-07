@@ -21,7 +21,7 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
 
     _state = 'INITIALIZING'
     stop_upon_exception = False
-    run_synchronously = bpy.props.BoolProperty(  # type: ignore
+    run_synchronously: bpy.props.BoolProperty(  # type: ignore
         name='run_synchronously',
         description='tells the operator to run synchronously',
         default=False,
