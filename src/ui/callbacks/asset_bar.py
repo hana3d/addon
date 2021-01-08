@@ -477,6 +477,7 @@ def draw_callback2d(self, context):
     if not utils.guard_from_crash():
         return
 
+    area = context.area
     try:
         # self.area might throw error just by itself.
         self_area = self.area
@@ -487,7 +488,7 @@ def draw_callback2d(self, context):
                 go = False
     except Exception:
         go = False
-    if go and context.area == self_area and context.window == self_window:
+    if go and area == self_area and context.window == self_window:
 
         props = getattr(context.window_manager, HANA3D_UI)
         if props.down_up == 'SEARCH':
