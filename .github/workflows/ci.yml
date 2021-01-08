@@ -78,7 +78,7 @@ jobs:
           asset_content_type: application/zip
   e2e:
     name: Run E2E tests
-    needs: [lint, integration-tests, release]
+    needs: [lint, integration-tests]
     if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     steps:
