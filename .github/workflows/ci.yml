@@ -82,7 +82,7 @@ jobs:
     if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     steps:
-      - uses: convictional/trigger-workflow-and-wait@master
+      - uses: convictional/trigger-workflow-and-wait@v1.2.0
         with:
           owner: hana3d
           repo: e2e-tests
