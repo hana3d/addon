@@ -82,20 +82,27 @@ jobs:
     if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production' || github.ref == 'refs/heads/helder.e2e-trigger'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set stage
-        # run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        run: echo "STAGE=dev" >> $GITHUB_ENV
-      - run: make e2e
-        env:
-          # STAGE: ${{ env.STAGE }}
-          STAGE: dev
-          HANA3D_BOT_ACCESS_TOKEN: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
-      - name: Wait on tests
-        uses: lewagon/wait-on-check-action@master
+      # - uses: actions/checkout@v2
+      # - name: Set stage
+      #   # run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      #   run: echo "STAGE=dev" >> $GITHUB_ENV
+      # - run: make e2e
+      #   env:
+      #     # STAGE: ${{ env.STAGE }}
+      #     STAGE: dev
+      #     HANA3D_BOT_ACCESS_TOKEN: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
+      # - name: Wait on tests
+      #   uses: lewagon/wait-on-check-action@master
+      #   with:
+      #     # ref: ${{ env.STAGE }}
+      #     ref: dev
+      #     # check-name: test # name of the existing check - omit to wait for all checks
+      #     repo-token: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
+      #     wait-interval: 300 # seconds
+
+      - uses: convictional/trigger-workflow-and-wait
         with:
-          # ref: ${{ env.STAGE }}
-          ref: dev
-          # check-name: test # name of the existing check - omit to wait for all checks
-          repo-token: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
-          wait-interval: 300 # seconds
+          owner: hana3d
+          repo: e2e-tests
+          github_token: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
+          event_type: dev
