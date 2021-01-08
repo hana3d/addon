@@ -9,8 +9,8 @@ from concurrent import futures
 
 import bpy
 
-from ...config import HANA3D_NAME
 from .loop_status import LoopStatus
+from ...config import HANA3D_NAME
 
 MODAL_TIMER = 0.00001
 
@@ -176,9 +176,6 @@ class AsyncLoopModalOperator(bpy.types.Operator):
         self.loop_status.update_operator_status(True)
 
         wm = context.window_manager
-        print(wm.name)
-        print(context.window.workspace)
-        print(context.mode)
         self.timer = wm.event_timer_add(MODAL_TIMER, window=context.window)  # noqa: WPS601
 
         return {'RUNNING_MODAL'}
@@ -196,7 +193,6 @@ class AsyncLoopModalOperator(bpy.types.Operator):
         If self.loop_status.get_operator_status() is set to False, someone called
         erase_async_loop(). This is a signal that we really should stop running.
         """
-        # print('modal')
         if not self.loop_status.get_operator_status():
             return {'FINISHED'}
 

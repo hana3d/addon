@@ -10,10 +10,6 @@ from typing import List, Union
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -24,6 +20,10 @@ from .async_functions import (
 )
 from .export_data import get_export_data
 from .upload import get_upload_props
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
+from ... import hana3d_types, paths, render, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -88,7 +88,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
-        print('upload')
         ui = UI()
         ui.add_report(text='preparing upload')
 
