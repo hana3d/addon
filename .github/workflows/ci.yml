@@ -99,7 +99,6 @@ jobs:
       #     # check-name: test # name of the existing check - omit to wait for all checks
       #     repo-token: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
       #     wait-interval: 300 # seconds
-
       - uses: convictional/trigger-workflow-and-wait
         with:
           owner: hana3d
