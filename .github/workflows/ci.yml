@@ -78,14 +78,24 @@ jobs:
           asset_content_type: application/zip
   e2e:
     name: Run E2E tests
-    needs: [lint, integration-tests]
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
+    # needs: [lint, integration-tests]
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production' || github.ref == 'refs/heads/helder.e2e-trigger'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set stage
-        run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        # run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        run: echo "STAGE=dev" >> $GITHUB_ENV
       - run: make e2e
         env:
-          STAGE: ${{ env.STAGE }}
+          # STAGE: ${{ env.STAGE }}
+          STAGE: dev
           HANA3D_BOT_ACCESS_TOKEN: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
+      - name: Wait on tests
+        uses: lewagon/wait-on-check-action@master
+        with:
+          # ref: ${{ env.STAGE }}
+          ref: dev
+          # check-name: test # name of the existing check - omit to wait for all checks
+          repo-token: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
+          wait-interval: 300 # seconds
