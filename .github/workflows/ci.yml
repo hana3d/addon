@@ -105,3 +105,4 @@ jobs:
           repo: e2e-tests
           github_token: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
           event_type: dev
+          workflow_file_name: Webhook
