@@ -9,7 +9,7 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from ..callbacks.asset_bar import draw_callback_2d, draw_callback_3d
+from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
 from ..main import UI
 from ...preferences.preferences import Preferences
 from ...search.search import Search
@@ -342,7 +342,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         return raycast
 
-    def modal(self, context, event):  # noqa: D102
+    def modal(self, context, event):  # noqa: D102, WPS344
         # This is for case of closing the area or changing type:
         ui_props = getattr(context.window_manager, HANA3D_UI)
         areas = []
@@ -668,8 +668,8 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                             loc = ui_props.snapped_location
                             rotation = (0, 0, 0)
 
-                            asset_data = search_results[asset_search_index]  # noqa: WPS220
-                            download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')  # noqa: WPS220
+                            asset_data = search_results[asset_search_index]
+                            download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                             download_op(
                                 True,
                                 asset_type=ui_props.asset_type,
@@ -771,13 +771,13 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         update_ui_size(self.area, self.region)
 
         self._handle2d = bpy.types.SpaceView3D.draw_handler_add(
-            draw_callback_2d,
+            draw_callback2d,
             args,
             'WINDOW',
             'POST_PIXEL',
         )
         self._handle3d = bpy.types.SpaceView3D.draw_handler_add(
-            draw_callback_3d,
+            draw_callback3d,
             args,
             'WINDOW',
             'POST_VIEW',
