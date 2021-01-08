@@ -52,7 +52,7 @@ from .src.ui.operators import render_image
 bl_info = {
     'name': 'Hana3D',
     'author': 'Vilem Duha, Petr Dlouhy, R2U',
-    'version': (0, 8, 2),
+    'version': (0, 8, 3),
     'blender': (2, 90, 0),
     'location': 'View3D > Properties > Hana3D',
     'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
