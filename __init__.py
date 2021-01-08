@@ -336,12 +336,11 @@ def register():
 
 
 def unregister():
-    bpy.app.handlers.load_post.remove(scene_load)
-    bpy.app.timers.unregister(check_timers_timer)
-
     for module in reversed(modules):
         module.unregister()
 
+    bpy.app.timers.unregister(check_timers_timer)
+    bpy.app.handlers.load_post.remove(scene_load)
     bpy.utils.unregister_class(Hana3DAddonPreferences)
     addon_updater_ops.unregister()
 
