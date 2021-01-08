@@ -72,8 +72,8 @@ class AsyncModalOperatorMixin:  # noqa : WPS306,WPS214
             loop = asyncio.get_event_loop()
             loop.run_until_complete(self.async_execute(context))
             return {'FINISHED'}
-        else:
-            return self.invoke(context, None)
+
+        return self.invoke(context, None)
 
     def modal(self, context, event):
         """Mixin modal.
