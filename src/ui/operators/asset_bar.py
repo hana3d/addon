@@ -1,4 +1,3 @@
-# flake8: noqa
 """Runs search and displays the asset bar at the same time."""
 import logging
 import math
@@ -243,7 +242,7 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
     ui.bar_height = (ui.thumb_size + ui.margin) * ui.hcount + ui.margin
     ui.bar_y = region.height - ui.bar_y_offset * ui_scale
     if ui.down_up == 'UPLOAD':
-        ui.reports_y = ui.bar_y - 600  # noqa: WPS432
+        ui.reports_y = ui.bar_y - 600
         ui.reports_x = ui.bar_x
     else:
         ui.reports_y = ui.bar_y - ui.bar_height - 100
@@ -342,7 +341,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         return raycast
 
-    def modal(self, context, event):  # noqa: D102, WPS344
+    def modal(self, context, event):  # noqa: D102, WPS344, WPS212
         # This is for case of closing the area or changing type:
         ui_props = getattr(context.window_manager, HANA3D_UI)
         areas = []
@@ -480,8 +479,9 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             if not ui_props.dragging:  # noqa: WPS504
                 bpy.context.window.cursor_set('DEFAULT')
 
-                if search_results is not None and ui_props.total_count > len_search and ui_props.scrolloffset > 0:
-                    ui_props.scrolloffset = 0
+                if search_results is not None and ui_props.total_count > len_search:
+                    if ui_props.scrolloffset > 0:
+                        ui_props.scrolloffset = 0
 
                 asset_search_index = get_asset_under_mouse(mx, my)
                 ui_props.active_index = asset_search_index
@@ -495,13 +495,10 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 else:
                     ui_props.draw_tooltip = False
 
-                if (
-                    mx > ui_props.bar_x + ui_props.bar_width - 50
-                    and search_results_orig['count'] - ui_props.scrolloffset
-                    > ui_props.total_count + 1
-                ):
-                    ui_props.active_index = -1
-                    return {'RUNNING_MODAL'}
+                if mx > ui_props.bar_x + ui_props.bar_width - 50:
+                    if search_results_orig['count'] - ui_props.scrolloffset > ui_props.total_count + 1:  # noqa: E501
+                        ui_props.active_index = -1
+                        return {'RUNNING_MODAL'}
                 if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
                     ui_props.active_index = -2
                     return {'RUNNING_MODAL'}
@@ -514,7 +511,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 # submitted by a user, so this situation shouldn't
                 # happen anymore, but there might exists scenes
                 # which have this problem for some reason.
-                if ui_props.active_index < len_search and ui_props.active_index > -1:  # noqa: WPS333
+                if -1 < ui_props.active_index < len_search:
                     ui_props.draw_snapped_bounds = True  # noqa: WPS220
                     active_mod = search_results[ui_props.active_index]  # noqa: WPS220
                     ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])  # noqa: WPS220
@@ -558,25 +555,20 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 return {'PASS_THROUGH'}
 
             # this can happen by switching result asset types - length of search result changes
-            if (
-                ui_props.scrolloffset > 0
-                and ui_props.total_count > len_search - ui_props.scrolloffset  # noqa: E501
-            ):
+            if ui_props.scrolloffset > 0 and ui_props.total_count > len_search - ui_props.scrolloffset:  # noqa: E501
                 ui_props.scrolloffset = len_search - ui_props.total_count  # noqa: E501
 
             if event.value == 'RELEASE':  # Confirm
                 ui_props.drag_init = False
 
                 # scroll by a whole page
-                if (
-                    mx > ui_props.bar_x + ui_props.bar_width - 50  # noqa: WPS432
-                    and len_search - ui_props.scrolloffset > ui_props.total_count  # noqa: E501
-                ):
-                    ui_props.scrolloffset = min(
-                        ui_props.scrolloffset + ui_props.total_count,
-                        len_search - ui_props.total_count,
-                    )
-                    return {'RUNNING_MODAL'}
+                if mx > ui_props.bar_x + ui_props.bar_width - 50:
+                    if len_search - ui_props.scrolloffset > ui_props.total_count:
+                        ui_props.scrolloffset = min(
+                            ui_props.scrolloffset + ui_props.total_count,
+                            len_search - ui_props.total_count,
+                        )
+                        return {'RUNNING_MODAL'}
                 if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
                     ui_props.scrolloffset = max(
                         0,
@@ -632,7 +624,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
                         # first, test if object can have material applied.
                         # TODO add other types here if droppable.
-                        if obj_hit is not None and not obj_hit.is_library_indirect and obj_hit.type == 'MESH':
+                        if obj_hit is not None and not obj_hit.is_library_indirect and obj_hit.type == 'MESH':  # noqa: E501
                             target_object = obj_hit.name
                             # create final mesh to extract correct material slot
                             depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -671,7 +663,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                             asset_data = search_results[asset_search_index]
                             download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                             download_op(
-                                True,
+                                True,  # noqa: WPS425
                                 asset_type=ui_props.asset_type,
                                 asset_index=asset_search_index,
                                 model_location=loc,
@@ -690,7 +682,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
                         download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                         download_op(
-                            True,
+                            True,  # noqa: WPS425
                             asset_type=ui_props.asset_type,
                             asset_index=asset_search_index,
                             model_location=loc,
