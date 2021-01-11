@@ -2,11 +2,11 @@
 import bpy
 from bpy.types import Panel
 
-from .lib import draw_assetbar_show_hide
-from ..search.search import Search
-from ..upload import upload
 from ... import utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ..search.search import Search
+from ..upload import upload
+from .lib import draw_assetbar_show_hide
 
 
 class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
@@ -156,11 +156,12 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
 
         search = Search(context)
         search_props = search.props
+        unified_props = getattr(context.window_manager, HANA3D_NAME)
 
         row = layout.row()
         row.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
         draw_assetbar_show_hide(row)
-        layout.prop(search_props, 'workspace', expand=False, text='Workspace')
+        layout.prop(unified_props, 'workspace', expand=False, text='Workspace')
         row = layout.row()
         row.prop_search(search_props, 'libraries_input', search_props, 'libraries_list', icon='VIEWZOOM')  # noqa: E501
         row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
@@ -190,10 +191,11 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
         props = upload.get_upload_props()
+        unified_props = getattr(context.window_manager, HANA3D_NAME)
 
         box = layout.box()
         box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
-        box.prop(props, 'workspace', expand=False, text='Workspace')
+        box.prop(unified_props, 'workspace', expand=False, text='Workspace')
         row = box.row()
         row.prop_search(props, 'libraries_input', props, 'libraries_list', icon='VIEWZOOM')
         row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')

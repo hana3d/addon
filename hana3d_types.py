@@ -959,6 +959,25 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     )
 
 
+class Hana3DUnifiedProps(PropertyGroup):
+    def on_workspace_update(self, context):
+        search = Search(context)
+        update_libraries_list(search.props, context)
+        update_tags_list(search.props, context)
+
+        upload_props = upload.get_upload_props()
+        update_libraries_list(upload_props, context)
+        update_tags_list(upload_props, context)
+
+    workspace: EnumProperty(
+        items=workspace_items,
+        name='User workspaces',
+        description='User option to choose between workspaces',
+        options={'ANIMATABLE'},
+        update=on_workspace_update
+    )
+
+
 Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
 
 
@@ -973,7 +992,8 @@ classes = (
     Hana3DSceneSearchProps,
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
-    Hana3DMaterialSearchProps
+    Hana3DMaterialSearchProps,
+    Hana3DUnifiedProps
 )
 
 
@@ -983,6 +1003,7 @@ def register():
 
     setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
     setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
+    setattr(bpy.types.WindowManager, HANA3D_NAME, PointerProperty(type=Hana3DUnifiedProps))
 
     # MODELS
     setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))
