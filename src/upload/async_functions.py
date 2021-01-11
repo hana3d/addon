@@ -9,11 +9,11 @@ from typing import Set, Union
 import bpy
 import requests
 
+from ... import hana3d_types, paths
+from ...config import HANA3D_NAME
 from ..requests_async.requests_async import Request, UploadInChunks
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui.main import UI
-from ... import hana3d_types, paths
-from ...config import HANA3D_NAME
 
 CHUNK_SIZE = 1024 * 1024 * 2
 
@@ -118,15 +118,9 @@ async def create_blend_file(
 
     blender_subprocess = Subprocess()
 
-    try:
-        output = await blender_subprocess.subprocess(cmd)
-        ui.add_report(text='created upload file')
-        return output
-    except Exception as error:
-        logging.error(error)
-        ui.add_report(text=str(error))
-        props.uploading = False
-        return {'CANCELLED'}
+    output = await blender_subprocess.subprocess(cmd)
+    ui.add_report(text='created upload file')
+    return output
 
 
 async def get_upload_url(

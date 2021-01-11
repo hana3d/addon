@@ -10,6 +10,10 @@ from typing import List, Union
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
+from ... import hana3d_types, paths, render, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -20,10 +24,6 @@ from .async_functions import (
 )
 from .export_data import get_export_data
 from .upload import get_upload_props
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -129,7 +129,13 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             correlation_id,
         )
 
-        await create_blend_file(props, ui, datafile, clean_file_path, filename)
+        try:
+            await create_blend_file(props, ui, datafile, clean_file_path, filename)
+        except Exception as error:
+            logging.error(error)
+            ui.add_report(text='failed to create blend file')
+            props.uploading = False
+            return {'CANCELLED'}
 
         files = self._get_files_info(upload_set, export_data, tempdir, filename)
 
