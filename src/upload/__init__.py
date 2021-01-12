@@ -237,12 +237,14 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         return datafile
 
-    def _check_uv_layers(self, ui: UI):
+    def _check_uv_layers(self, ui: UI) -> str:
         skip_post_process = 'false'
-        if any(len(mesh.uv_layers) > 1 for mesh in bpy.data.meshes):
+        multiple_uv_meshes = [mesh.name for mesh in bpy.data.meshes if len(mesh.uv_layers) > 1]
+        if multiple_uv_meshes:
             ui.add_report(
                 'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map',
             )
+            ui.add_report(f'Meshes with more than 1 UV Map: {", ".join(multiple_uv_meshes)}')
             skip_post_process = 'true'
 
         return skip_post_process
