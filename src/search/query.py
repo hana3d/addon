@@ -3,8 +3,8 @@ from typing import Dict
 
 from bpy.types import Context
 
-from ...config import HANA3D_NAME
 from ..asset.asset_type import AssetType
+from ...config import HANA3D_NAME
 
 
 class Query(object):  # noqa : WPS230,WPS214
