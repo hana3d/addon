@@ -1,6 +1,7 @@
 """Upload assets module."""
 
 import json
+import logging
 import os
 import pathlib
 import tempfile
