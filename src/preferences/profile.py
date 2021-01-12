@@ -6,6 +6,7 @@ import bpy
 
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import Search
+from ..unified_props import Unified
 from ..upload.upload import get_upload_props
 from ... import config, paths
 
@@ -20,7 +21,7 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
-    unified_props = getattr(context.window_manager, config.HANA3D_NAME)
+    unified_props = Unified(context).props
     props.tags_list.clear()
     current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
@@ -37,12 +38,12 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
-    unified_props = getattr(context.window_manager, config.HANA3D_NAME)
+    unified_props = Unified(context).props
     props.libraries_list.clear()
-    if hasattr(props, 'custom_props'):
+    if hasattr(props, 'custom_props'):  # noqa: WPS421
         for name in props.custom_props.keys():
-            del props.custom_props[name]
-            del props.custom_props_info[name]
+            del props.custom_props[name]    # noqa: WPS420
+            del props.custom_props_info[name]   # noqa: WPS420
     current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:

@@ -24,6 +24,7 @@ from . import utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.search.search import Search
+from .src.unified_props import Unified
 from .src.upload import upload
 
 
@@ -42,7 +43,7 @@ class Hana3DAddTag(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        unified_props = getattr(context.window_manager, HANA3D_NAME)
+        unified_props = Unified(context).props
         props = upload.get_upload_props()
         current_workspace = unified_props.workspace
 

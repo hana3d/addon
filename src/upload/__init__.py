@@ -23,6 +23,7 @@ from .export_data import get_export_data
 from .upload import get_upload_props
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..ui.main import UI
+from ..unified_props import Unified
 from ... import hana3d_types, paths, render, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
@@ -164,7 +165,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         return {'FINISHED'}
 
     def _get_basic_data(self):  # noqa: WPS210
-        unified_props = getattr(bpy.context.window_manager, HANA3D_NAME)
+        unified_props = Unified(bpy.context).props
         active_asset = utils.get_active_asset()
 
         if self.asset_type == 'MODEL':

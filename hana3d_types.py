@@ -935,10 +935,12 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
 
 
 class Hana3DUnifiedProps(PropertyGroup):
-    def on_workspace_update(self, context):
-        search = Search(context)
-        update_libraries_list(search.props, context)
-        update_tags_list(search.props, context)
+    """Hana3D Unified Props."""
+
+    def _on_workspace_update(self, context):
+        search_class = Search(context)
+        update_libraries_list(search_class.props, context)
+        update_tags_list(search_class.props, context)
 
         upload_props = upload.get_upload_props()
         if upload_props is not None:
@@ -951,7 +953,7 @@ class Hana3DUnifiedProps(PropertyGroup):
         name='User workspaces',
         description='User option to choose between workspaces',
         options={'ANIMATABLE'},
-        update=on_workspace_update
+        update=_on_workspace_update,
     )
 
 
@@ -970,7 +972,7 @@ classes = (
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
     Hana3DMaterialSearchProps,
-    Hana3DUnifiedProps
+    Hana3DUnifiedProps,
 )
 
 
