@@ -966,8 +966,9 @@ class Hana3DUnifiedProps(PropertyGroup):
         update_tags_list(search.props, context)
 
         upload_props = upload.get_upload_props()
-        update_libraries_list(upload_props, context)
-        update_tags_list(upload_props, context)
+        if upload_props is not None:
+            update_libraries_list(upload_props, context)
+            update_tags_list(upload_props, context)
 
     workspace: EnumProperty(
         items=workspace_items,

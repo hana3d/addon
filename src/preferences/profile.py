@@ -39,6 +39,10 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
     """
     unified_props = getattr(context.window_manager, config.HANA3D_NAME)
     props.libraries_list.clear()
+    if hasattr(props, 'custom_props'):
+        for name in props.custom_props.keys():
+            del props.custom_props[name]
+            del props.custom_props_info[name]
     current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
