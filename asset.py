@@ -18,10 +18,10 @@
 
 import bpy
 
+from . import utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
 from .src.upload import upload
-from . import utils
 
 
 class ShareAsset(bpy.types.Operator):
