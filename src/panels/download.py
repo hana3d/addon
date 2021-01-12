@@ -1,7 +1,7 @@
 """Download panel."""
 from bpy.types import Panel
 
-from ... import download
+from .. import download
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 
@@ -23,6 +23,6 @@ class Hana3DDownloadPanel(Panel):
         for view_id, thread in download.download_threads.items():
             row = layout.row()
             row.label(text=thread.asset_data['name'])
-            row.label(text=f'{int(thread.tcom.progress)}%')
+            row.label(text=f'{int(thread.progress())}%')
             op = row.operator(f'scene.{HANA3D_NAME}_download_kill', text='', icon='CANCEL')
             op.view_id = view_id

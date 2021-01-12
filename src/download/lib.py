@@ -3,7 +3,6 @@ import shutil
 
 from ... import paths
 
-
 def check_existing(asset_data):
     ''' check if the object exists on the hard drive'''
     file_names = paths.get_download_filenames(asset_data)

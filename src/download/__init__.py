@@ -36,7 +36,8 @@ from bpy.props import (
     StringProperty,
 )
 
-from .downloader import Dowloader, ThreadCom
+from .downloader import Downloader, ThreadCom
+from .lib import check_existing
 from ..preferences.profile import update_libraries_list, update_tags_list
 from ..search.query import Query
 from ..search.search import Search
@@ -149,7 +150,7 @@ def update_downloaded_progress(downloader: Downloader):
         return
     for search_result in search.results:
         if search_result.get('view_id') == downloader.asset_data['view_id']:
-            search_result['downloaded'] = downloader.tcom.progress
+            search_result['downloaded'] = downloader.progress()
             return
 
 
@@ -180,7 +181,7 @@ def process_finished_thread(downloader: Downloader):
                 library.filepath = file_names[-1]
                 library.reload()
         return
-    append_asset_safe(asset_data, **tcom.passargs)
+    append_asset_safe(asset_data, **downloader.tcom.passargs)
 
 
 def cleanup_threads():
@@ -243,7 +244,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
             continue
 
-        downloader.tcom.progress = 100
+        downloader._progress = 100
         update_downloaded_progress(downloader)
         process_finished_thread(downloader)
         downloader.finish()
