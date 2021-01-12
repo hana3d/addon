@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 import bpy
 
+from ... import config, paths
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import Search
 from ..upload.upload import get_upload_props
-from ... import config, paths
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props   # noqa: WPS433
@@ -20,8 +20,9 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
+    unified_props = getattr(context.window_manager, HANA3D_NAME)
     props.tags_list.clear()
-    current_workspace = props.workspace
+    current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for tag in workspace['tags']:
@@ -36,8 +37,9 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
+    unified_props = getattr(context.window_manager, HANA3D_NAME)
     props.libraries_list.clear()
-    current_workspace = props.workspace
+    current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for library in workspace['libraries']:

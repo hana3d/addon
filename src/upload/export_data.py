@@ -18,6 +18,7 @@ def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
     Raises:
         Exception: Unexpected asset_type
     """
+    unified_props = getattr(bpy.context.window_manager, HANA3D_NAME)
     export_data = {
         'type': props.asset_type,
         'thumbnail_path': bpy.path.abspath(props.thumbnail),
@@ -40,8 +41,8 @@ def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
     upload_data['parameters'] = upload_params
     upload_data['parameters'] = utils.dict_to_params(upload_data['parameters'])
     upload_data['is_public'] = props.is_public
-    if props.workspace != '' and not props.is_public:
-        upload_data['workspace'] = props.workspace
+    if unified_props.workspace != '' and not props.is_public:
+        upload_data['workspace'] = unified_props.workspace
 
     metadata: dict = {}
     if metadata:

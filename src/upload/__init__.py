@@ -163,13 +163,14 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         return {'FINISHED'}
 
     def _get_basic_data(self):  # noqa: WPS210
+        unified_props = getattr(bpy.context.window_manager, HANA3D_NAME)
         active_asset = utils.get_active_asset()
 
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(active_asset)
 
         props = getattr(active_asset, HANA3D_NAME)
-        workspace = props.workspace
+        workspace = unified_props.workspace
         correlation_id = str(uuid.uuid4())
 
         basename, ext = os.path.splitext(bpy.data.filepath)

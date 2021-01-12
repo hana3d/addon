@@ -249,12 +249,12 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
 
         row = layout.row()
         row.scale_y = 2.0
-        if props.view_id == '' or props.workspace != props.view_workspace:
+        if props.view_id == '' or unified_props.workspace != props.view_workspace:
             optext = f'Upload {asset_type.lower()}'
             op = row.operator(f'object.{HANA3D_NAME}_upload', text=optext, icon='EXPORT')
             op.asset_type = asset_type
 
-        if props.view_id != '' and props.workspace == props.view_workspace:
+        if props.view_id != '' and unified_props.workspace == props.view_workspace:
             op = row.operator(
                 f'object.{HANA3D_NAME}_upload',
                 text='Upload as New Version',

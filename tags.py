@@ -42,8 +42,9 @@ class Hana3DAddTag(Operator):
 
     @execute_wrapper
     def execute(self, context):
+        unified_props = getattr(context.window_manager, HANA3D_NAME)
         props = upload.get_upload_props()
-        current_workspace = props.workspace
+        current_workspace = unified_props.workspace
 
         new_tag = props.tags_list.add()
         new_tag['name'] = self.tag
