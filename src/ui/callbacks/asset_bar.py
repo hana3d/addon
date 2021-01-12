@@ -39,9 +39,9 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
     ttipmargin = 5
     textmargin = 10
 
-    font_height = int(12 * scale)  # noqa: WPS432
-    line_height = int(15 * scale)  # noqa: WPS432
-    nameline_height = int(23 * scale)  # noqa: WPS432
+    font_height = int(12 * scale)
+    line_height = int(15 * scale)
+    nameline_height = int(23 * scale)
 
     lines = text.split('\n')
     author_lines = author.split('\n')
@@ -53,8 +53,8 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
     max_dim = max(img.size[0], img.size[1])
     if max_dim == 0:
         return
-    isizex = int(512 * scale * img.size[0] / max_dim)  # noqa: WPS432
-    isizey = int(512 * scale * img.size[1] / max_dim)  # noqa: WPS432
+    isizex = int(512 * scale * img.size[0] / max_dim)
+    isizey = int(512 * scale * img.size[1] / max_dim)
 
     estimated_height = 2 * ttipmargin + textmargin + isizey  # noqa: WPS204
 
@@ -62,17 +62,17 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
         scaledown = y / (estimated_height)
         scale *= scaledown
         # we need to scale these down to have correct size if the tooltip wouldn't fit.
-        font_height = int(12 * scale)  # noqa: WPS432
-        line_height = int(15 * scale)  # noqa: WPS432
-        nameline_height = int(23 * scale)  # noqa: WPS432
+        font_height = int(12 * scale)
+        line_height = int(15 * scale)
+        nameline_height = int(23 * scale)
 
         lines = text.split('\n')
 
         texth = line_height * nlines + nameline_height
-        isizex = int(512 * scale * img.size[0] / max_dim)  # noqa: WPS432
-        isizey = int(512 * scale * img.size[1] / max_dim)  # noqa: WPS432
+        isizex = int(512 * scale * img.size[0] / max_dim)
+        isizey = int(512 * scale * img.size[1] / max_dim)
 
-    name_height = int(18 * scale)  # noqa: WPS432
+    name_height = int(18 * scale)
 
     x += 2 * ttipmargin  # noqa: WPS111
     y -= 2 * ttipmargin  # noqa: WPS111
@@ -90,7 +90,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
     bgcol1 = (bgcol[0], bgcol[1], bgcol[2], 0.6)
     textcol = bpy.context.preferences.themes[0].user_interface.wcol_tooltip.text  # noqa: WPS219
     textcol = (textcol[0], textcol[1], textcol[2], 1)
-    textcol_strong = (textcol[0] * 1.3, textcol[1] * 1.3, textcol[2] * 1.3, 1)  # noqa: WPS432
+    textcol_strong = (textcol[0] * 1.3, textcol[1] * 1.3, textcol[2] * 1.3, 1)
 
     # background
     bgl_helper.draw_rect(
@@ -318,9 +318,9 @@ def draw_callback2d_search(self, context):
                 )
                 bgl_helper.draw_text(
                     pagination_text,
-                    ui_props.bar_x + ui_props.bar_width - 125,  # noqa: WPS432
-                    ui_props.bar_y - ui_props.bar_height - 25,  # noqa: WPS432
-                    14,  # noqa: WPS432
+                    ui_props.bar_x + ui_props.bar_width - 125,
+                    ui_props.bar_y - ui_props.bar_height - 25,
+                    14,
                 )
                 # arrows
                 arrow_y = (
@@ -417,7 +417,7 @@ def draw_callback2d_search(self, context):
                     if v_icon is not None:
                         img = utils.get_thumbnail(v_icon)  # noqa: WPS220
                         bgl_helper.draw_image(  # noqa: WPS220
-                            x + ui_props.thumb_size - 26,  # noqa: WPS432
+                            x + ui_props.thumb_size - 26,
                             y + 2,
                             24,
                             24,
