@@ -4,6 +4,7 @@ from typing import List
 import bpy
 
 from ... import hana3d_types, utils
+from ...config import HANA3D_NAME
 
 
 def get_export_data(props: hana3d_types.Props):  # noqa: WPS210

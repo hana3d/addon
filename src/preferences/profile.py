@@ -20,7 +20,7 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
-    unified_props = getattr(context.window_manager, HANA3D_NAME)
+    unified_props = getattr(context.window_manager, config.HANA3D_NAME)
     props.tags_list.clear()
     current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
@@ -37,7 +37,7 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
-    unified_props = getattr(context.window_manager, HANA3D_NAME)
+    unified_props = getattr(context.window_manager, config.HANA3D_NAME)
     props.libraries_list.clear()
     current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
