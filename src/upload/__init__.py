@@ -137,7 +137,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             upload = await get_upload_url(props, ui, correlation_id, upload_data, file_info)
             uploaded = await upload_file(ui, file_info, upload['s3UploadUrl'])
             if uploaded:
-                skip_post_process = self._check_uv_layers(ui)
+                skip_post_process = self._check_uv_layers(ui, export_data)
                 await confirm_upload(props, ui, correlation_id, upload['id'], skip_post_process)
             else:
                 ui.add_report(text='failed to send file')
@@ -237,14 +237,17 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         return datafile
 
-    def _check_uv_layers(self, ui: UI) -> str:
+    def _check_uv_layers(self, ui: UI, export_data: dict) -> str:
         skip_post_process = 'false'
-        multiple_uv_meshes = [mesh.name for mesh in bpy.data.meshes if len(mesh.uv_layers) > 1]
-        if multiple_uv_meshes:
+        multiple_uv_models = [
+            model for model in export_data.get('models', [])
+            if len(bpy.data.objects[model].data.uv_layers) > 1  # noqa: WPS219
+        ]
+        if multiple_uv_models:
             ui.add_report(
                 'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map',
             )
-            ui.add_report(f'Meshes with more than 1 UV Map: {", ".join(multiple_uv_meshes)}')
+            ui.add_report(f'Meshes with more than 1 UV Map: {", ".join(multiple_uv_models)}')
             skip_post_process = 'true'
 
         return skip_post_process
