@@ -38,7 +38,7 @@ async def create_asset(
         str: Asset ID
         {'CANCELLED'} if it fails
     """
-    ui.add_report(text='uploading metadata')
+    ui.add_report(text='Uploading metadata')
     request = Request()
     headers = request.get_headers(correlation_id)
 
@@ -51,7 +51,7 @@ async def create_asset(
                 json=upload_data,
                 headers=headers,
             )
-            ui.add_report(text='uploaded metadata')
+            ui.add_report(text='Uploaded metadata')
 
             dict_response = response.json()
             logging.debug(dict_response)
@@ -70,7 +70,7 @@ async def create_asset(
                 json=upload_data,
                 headers=headers,
             )
-            ui.add_report(text='uploaded metadata')
+            ui.add_report(text='Uploaded metadata')
             return asset_id
         except requests.exceptions.RequestException as err:
             logging.error(err)
@@ -99,7 +99,7 @@ async def create_blend_file(
         Subprocess output
         {'CANCELLED'} if it fails
     """
-    ui.add_report(text='creating upload file')
+    ui.add_report(text='Creating upload file')
     binary_path = bpy.app.binary_path
     script_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -119,7 +119,7 @@ async def create_blend_file(
     blender_subprocess = Subprocess()
 
     output = await blender_subprocess.subprocess(cmd)
-    ui.add_report(text='created upload file')
+    ui.add_report(text='Created upload file')
     return output
 
 
@@ -143,7 +143,7 @@ async def get_upload_url(
         dict: Request response
         {'CANCELLED'} if it fails
     """
-    ui.add_report(text='getting upload url')
+    ui.add_report(text='Getting upload url')
     request = Request()
     headers = request.get_headers(correlation_id)
     upload_info = {
@@ -182,7 +182,7 @@ async def upload_file(ui: UI, file_info: dict, upload_url: str) -> bool:
     Returns:
         bool: if upload was successful
     """
-    ui.add_report(text='uploading file')
+    ui.add_report(text='Uploading file')
     request = Request()
     uploaded = False
     for index in range(0, 5):

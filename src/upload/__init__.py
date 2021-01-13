@@ -91,7 +91,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         ui = UI()
-        ui.add_report(text='preparing upload')
+        ui.add_report(text='Preparing upload')
 
         props, workspace, correlation_id, basename, ext, tempdir = self._get_basic_data()
         props.uploading = True
@@ -108,7 +108,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         if upload_set == ['METADATA']:
             props.uploading = False
-            ui.add_report(text='upload finished successfully')
+            ui.add_report(text='Upload finished successfully')
             props.view_workspace = workspace
             return {'FINISHED'}
 
@@ -135,7 +135,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             await create_blend_file(props, ui, datafile, clean_file_path, filename)
         except Exception as error:
             logging.error(error)
-            ui.add_report(text='failed to create blend file')
+            ui.add_report(text='Failed to create blend file')
             props.uploading = False
             return {'CANCELLED'}
 
@@ -148,7 +148,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                 skip_post_process = self._check_uv_layers(ui)
                 await confirm_upload(props, ui, correlation_id, upload['id'], skip_post_process)
             else:
-                ui.add_report(text='failed to send file')
+                ui.add_report(text='Failed to send file')
                 props.uploading = False
                 return {'CANCELLED'}
 
@@ -160,7 +160,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         props.view_workspace = workspace
         props.uploading = False
-        ui.add_report(text='upload finished successfully')
+        ui.add_report(text='Upload finished successfully')
 
         return {'FINISHED'}
 
