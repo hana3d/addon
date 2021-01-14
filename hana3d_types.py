@@ -331,10 +331,6 @@ class Hana3DLibraryItem(PropertyGroup):
 
 
 class Hana3DCommonSearchProps:
-    def on_workspace_update(self, context):
-        update_libraries_list(self, context)
-        update_tags_list(self, context)
-
     def update_tags_input(self, context):
         if self.tags_input != '':
             self.tags_list[self.tags_input].selected = True
@@ -396,14 +392,6 @@ class Hana3DCommonSearchProps:
         default='ALL',
     )
 
-    workspace: EnumProperty(
-        items=workspace_items,
-        name='User workspaces',
-        description='User option to choose between workspaces',
-        options={'ANIMATABLE'},
-        update=on_workspace_update
-    )
-
     tags_list: CollectionProperty(type=Hana3DTagItem)
 
     tags_input: StringProperty(
@@ -446,11 +434,6 @@ class Hana3DCommonUploadProps:
             preview_collection.previews = available_previews
 
         return preview_collection.previews
-
-    def on_workspace_update(self, context):
-        update_libraries_list(self, context)
-        update_tags_list(self, context)
-        render_tools.update_render_list(self)
 
     def update_tags_input(self, context):
         if self.tags_input != '':
@@ -589,14 +572,6 @@ class Hana3DCommonUploadProps:
         name="Missing Upload Properties",
         description="used to write down what's missing",
         default='',
-    )
-
-    workspace: EnumProperty(
-        items=workspace_items,
-        name='User workspaces',
-        description='User option to choose between workspaces',
-        options={'ANIMATABLE'},
-        update=on_workspace_update
     )
 
     publish_message: StringProperty(
@@ -959,6 +934,29 @@ class Hana3DSceneSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     )
 
 
+class Hana3DUnifiedProps(PropertyGroup):
+    """Hana3D Unified Props."""
+
+    def _on_workspace_update(self, context):
+        search_class = Search(context)
+        update_libraries_list(search_class.props, context)
+        update_tags_list(search_class.props, context)
+
+        upload_props = upload.get_upload_props()
+        if upload_props is not None:
+            update_libraries_list(upload_props, context)
+            update_tags_list(upload_props, context)
+            render_tools.update_render_list(upload_props)
+
+    workspace: EnumProperty(
+        items=workspace_items,
+        name='User workspaces',
+        description='User option to choose between workspaces',
+        options={'ANIMATABLE'},
+        update=_on_workspace_update,
+    )
+
+
 Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
 
 
@@ -973,7 +971,8 @@ classes = (
     Hana3DSceneSearchProps,
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
-    Hana3DMaterialSearchProps
+    Hana3DMaterialSearchProps,
+    Hana3DUnifiedProps,
 )
 
 
@@ -983,6 +982,7 @@ def register():
 
     setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
     setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
+    setattr(bpy.types.WindowManager, HANA3D_NAME, PointerProperty(type=Hana3DUnifiedProps))
 
     # MODELS
     setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))

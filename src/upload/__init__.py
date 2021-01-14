@@ -1,6 +1,7 @@
 """Upload assets module."""
 
 import json
+import logging
 import os
 import pathlib
 import tempfile
@@ -22,6 +23,7 @@ from .export_data import get_export_data
 from .upload import get_upload_props
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..ui.main import UI
+from ..unified_props import Unified
 from ... import hana3d_types, paths, render, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
@@ -89,7 +91,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         ui = UI()
-        ui.add_report(text='preparing upload')
+        ui.add_report(text='Preparing upload')
 
         props, workspace, correlation_id, basename, ext, tempdir = self._get_basic_data()
         props.uploading = True
@@ -106,7 +108,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         if upload_set == ['METADATA']:
             props.uploading = False
-            ui.add_report(text='upload finished successfully')
+            ui.add_report(text='Upload finished successfully')
             props.view_workspace = workspace
             return {'FINISHED'}
 
@@ -129,7 +131,13 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             correlation_id,
         )
 
-        await create_blend_file(props, ui, datafile, clean_file_path, filename)
+        try:
+            await create_blend_file(props, ui, datafile, clean_file_path, filename)
+        except Exception as error:
+            logging.error(error)
+            ui.add_report(text='Failed to create blend file')
+            props.uploading = False
+            return {'CANCELLED'}
 
         files = self._get_files_info(upload_set, export_data, tempdir, filename)
 
@@ -140,7 +148,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                 skip_post_process = self._check_uv_layers(ui, export_data)
                 await confirm_upload(props, ui, correlation_id, upload['id'], skip_post_process)
             else:
-                ui.add_report(text='failed to send file')
+                ui.add_report(text='Failed to send file')
                 props.uploading = False
                 return {'CANCELLED'}
 
@@ -152,18 +160,19 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         props.view_workspace = workspace
         props.uploading = False
-        ui.add_report(text='upload finished successfully')
+        ui.add_report(text='Upload finished successfully')
 
         return {'FINISHED'}
 
     def _get_basic_data(self):  # noqa: WPS210
+        unified_props = Unified(bpy.context).props
         active_asset = utils.get_active_asset()
 
         if self.asset_type == 'MODEL':
             utils.fill_object_metadata(active_asset)
 
         props = getattr(active_asset, HANA3D_NAME)
-        workspace = props.workspace
+        workspace = unified_props.workspace
         correlation_id = str(uuid.uuid4())
 
         basename, ext = os.path.splitext(bpy.data.filepath)
