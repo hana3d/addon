@@ -36,115 +36,25 @@ from bpy.props import (
     StringProperty,
 )
 
-from .config import (
+from .downloader import Dowloader, ThreadCom
+from ..preferences.profile import update_libraries_list, update_tags_list
+from ..search.query import Query
+from ..search.search import Search
+from ..ui import colors
+from ..ui.main import UI
+from ...config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
     HANA3D_NAME,
     HANA3D_SCENES,
 )
-from .report_tools import execute_wrapper
-from .src.preferences.profile import update_libraries_list, update_tags_list
-from .src.search.query import Query
-from .src.search.search import Search
-from .src.ui import colors
-from .src.ui.main import UI
+from ...report_tools import execute_wrapper
 
-from . import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
+from ... import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
 
 
 download_threads = {}
 append_tasks_queue = Queue()
-
-
-class ThreadCom:  # object passed to threads to read background process stdout info
-    def __init__(self):
-        self.file_size = 1000000000000000  # property that gets written to.
-        self.downloaded = 0
-        self.lasttext = ''
-        self.error = False
-        self.report = ''
-        self.progress = 0.0
-        self.passargs = {}
-
-
-class Downloader(threading.Thread):
-    def __init__(self, asset_data: dict, tcom: ThreadCom):
-        super(Downloader, self).__init__()
-        self.asset_data = asset_data
-        self.tcom = tcom
-        self._stop_event = threading.Event()
-        self._remove_event = threading.Event()
-        self._finish_event = threading.Event()
-
-    def stop(self):
-        self._stop_event.set()
-
-    def stopped(self):
-        return self._stop_event.is_set()
-
-    def mark_remove(self):
-        self._remove_event.set()
-
-    @property
-    def marked_remove(self):
-        return self._remove_event.is_set()
-
-    def finish(self):
-        self._finish_event.set()
-
-    @property
-    def finished(self):
-        return self._finish_event.is_set()
-
-    # def main_download_thread(asset_data, tcom):
-    def run(self):
-        '''try to download file from hana3d'''
-        asset_data = self.asset_data
-        tcom = self.tcom
-
-        if tcom.error:
-            return
-        # only now we can check if the file already exists.
-        # This should have 2 levels, for materials
-        # different than for the non free content.
-        # delete is here when called after failed append tries.
-        if check_existing(asset_data) and not tcom.passargs.get('delete'):
-            # this sends the thread for processing,
-            # where another check should occur,
-            # since the file might be corrupted.
-            tcom.downloaded = 100
-            logging.debug('not downloading, trying to append again')
-            return
-
-        file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
-
-        if self.stopped():
-            logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS204
-            return
-
-        tmp_file_name = f'{file_name}_tmp'
-        with open(tmp_file_name, 'wb') as tmp_file:
-            logging.info(f'Downloading {file_name}')
-
-            response = requests.get(asset_data['download_url'], stream=True)
-            total_length = response.headers.get('Content-Length')
-
-            if total_length is None:  # no content length header
-                tmp_file.write(response.content)
-            else:  # noqa WPS220
-                tcom.file_size = int(total_length)
-                dl = 0
-                for data in response.iter_content(chunk_size=4096):
-                    dl += len(data)
-                    tcom.downloaded = dl
-                    tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
-                    tmp_file.write(data)
-                    if self.stopped():
-                        logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS220
-                        tmp_file.close()  # noqa : WPS220
-                        os.remove(tmp_file_name)  # noqa : WPS220
-                        return
-        os.rename(tmp_file_name, file_name)
 
 
 def check_missing():
@@ -372,33 +282,6 @@ def add_import_params(thread: Downloader, location, rotation):
     thread.tcom.passargs['import_params'].append(params)
 
 
-def check_existing(asset_data):
-    ''' check if the object exists on the hard drive'''
-    file_names = paths.get_download_filenames(asset_data)
-
-    if len(file_names) == 2:
-        # TODO this should check also for failed or running downloads.
-        # If download is running, assign just the running thread.
-        # if download isn't running but the file is wrong size,
-        #  delete file and restart download (or continue downoad? if possible.)
-        if os.path.isfile(file_names[0]) and not os.path.isfile(file_names[1]):
-            shutil.copy(file_names[0], file_names[1])
-        # only in case of changed settings or deleted/moved global dict.
-        elif not os.path.isfile(file_names[0]) and os.path.isfile(file_names[1]):
-            shutil.copy(file_names[1], file_names[0])
-
-    if len(file_names) == 0 or not os.path.isfile(file_names[0]):
-        return False
-
-    newer_asset_in_server = (
-        asset_data.get('created') is not None
-        and float(asset_data['created']) > float(os.path.getctime(file_names[0]))
-    )
-    if newer_asset_in_server:
-        os.remove(file_names[0])
-        return False
-
-    return True
 
 
 def import_scene(asset_data: dict, file_names: list):
