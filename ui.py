@@ -24,8 +24,8 @@ from bpy_extras import view3d_utils
 
 from . import bg_blender, paths, render, utils
 from .config import HANA3D_NAME, HANA3D_UI
-from .src.preferences.preferences import Preferences
 from .src import download
+from .src.preferences.preferences import Preferences
 from .src.ui import bgl_helper, colors
 from .src.ui.main import UI
 from .src.ui.operators import (
@@ -73,7 +73,7 @@ def draw_progress(x, y, text='', percent=0, color=colors.GREEN):  # noqa: WPS111
 def draw_callback_progress3d(self, context):  # noqa: D103
     for thread in download.download_threads.values():
         if thread.asset_data['asset_type'] == 'model':
-            for import_param in thread.tcom.passargs.get('import_params', []):
+            for import_param in thread.passargs.get('import_params', []):
                 bgl_helper.draw_bbox(
                     import_param['location'],
                     import_param['rotation'],
@@ -97,8 +97,8 @@ def draw_callback_progress2d(self, context):  # noqa: D103
         tpath = os.path.join(directory, asset_data['thumbnail_small'])
         img = utils.get_hidden_image(tpath, asset_data['id'])
 
-        if download_thread.tcom.passargs.get('import_params'):
-            for import_param in download_thread.tcom.passargs['import_params']:
+        if download_thread.passargs.get('import_params'):
+            for import_param in download_thread.passargs['import_params']:
                 loc = view3d_utils.location_3d_to_region_2d(
                     bpy.context.region,
                     bpy.context.space_data.region_3d,

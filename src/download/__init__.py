@@ -36,7 +36,7 @@ from bpy.props import (
     StringProperty,
 )
 
-from .downloader import Downloader, ThreadCom
+from .downloader import Downloader
 from .lib import check_existing
 from ..preferences.profile import update_libraries_list, update_tags_list
 from ..search.query import Query
@@ -98,11 +98,11 @@ def check_unused():
                 and ps.settings.instance_collection is not None
                 and ps.settings.instance_collection.library not in used_libs
             ):
-                used_libs.append(ps.settings.instance_collection)
+                used_libs.append(ps.settings.instance_collection.library)
 
     for library in bpy.data.libraries:
         if library not in used_libs:
-            logging.info(f'attempt to remove this library: {library.filepath}')
+            logging.info(f'Attempt to remove this library: {library.filepath}')
             # have to unlink all groups, since the file is a 'user'
             # even if the groups aren't used at all...
             for user_id in library.users_id:
@@ -163,7 +163,6 @@ def remove_file(filepath):
 
 def process_finished_thread(downloader: Downloader):
     asset_data = downloader.asset_data
-    tcom = downloader.tcom
 
     file_names = paths.get_download_filenames(asset_data)
     # duplicate file if the global and subdir are used in prefs
@@ -171,7 +170,7 @@ def process_finished_thread(downloader: Downloader):
     if len(file_names) == 2:
         shutil.copyfile(file_names[0], file_names[1])
 
-    if tcom.passargs.get('redownload'):
+    if downloader.passargs.get('redownload'):
         # handle lost libraries here:
         for library in bpy.data.libraries:
             if (
@@ -181,16 +180,7 @@ def process_finished_thread(downloader: Downloader):
                 library.filepath = file_names[-1]
                 library.reload()
         return
-    append_asset_safe(asset_data, **downloader.tcom.passargs)
-
-
-def cleanup_threads():
-    global download_threads
-    download_threads = {
-        view_id: downloader
-        for view_id, downloader in download_threads.items()
-        if not downloader.marked_remove
-    }
+    append_asset_safe(asset_data, **downloader.passargs)
 
 
 def execute_append_tasks():
@@ -234,22 +224,13 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             update_downloaded_progress(downloader)
             continue
 
-        if downloader.tcom.error:
-            downloader.mark_remove()
-            text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
-            ui = UI()
-            ui.add_report(text=text, color=colors.RED)
-            continue
-
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
             continue
 
-        downloader._progress = 100
+        downloader.set_progress(100)
         update_downloaded_progress(downloader)
         process_finished_thread(downloader)
-        downloader.finish()
-
-    cleanup_threads()
+        downloader.finished = True
 
     return 0.1
 
@@ -259,16 +240,13 @@ def download(asset_data, **kwargs):
 
     logging.debug(f'Downloading asset_data {json.dumps(asset_data)}')
 
-    tcom = ThreadCom()
-    tcom.passargs = kwargs
-
     # incoming data can be either directly dict from python, or blender id property
     # (recovering failed downloads on reload)
     if type(asset_data) == dict:
         asset_data = copy.deepcopy(asset_data)
     else:
         asset_data = asset_data.to_dict()
-    thread = Downloader(asset_data, tcom)
+    thread = Downloader(asset_data, **kwargs)
     thread.start()
 
     view_id = asset_data['view_id']
@@ -280,7 +258,7 @@ def add_import_params(thread: Downloader, location, rotation):
         'location': location,
         'rotation': rotation,
     }
-    thread.tcom.passargs['import_params'].append(params)
+    thread.passargs['import_params'].append(params)
 
 
 
@@ -442,7 +420,7 @@ def set_asset_props(asset, asset_data):
 
 def append_asset(asset_data: dict, **kwargs):
     asset_name = asset_data['name']
-    logging.debug(f'appending asset {asset_name}')
+    logging.debug(f'Appending asset {asset_name}')
 
     file_names = paths.get_download_filenames(asset_data)
     if len(file_names) == 0 or not os.path.isfile(file_names[-1]):
