@@ -33,7 +33,6 @@ from . import (  # noqa: WPS235
     logger,
     paths,
     render,
-    search,
     tags,
     tasks_queue,
     thread_tools,
@@ -41,10 +40,11 @@ from . import (  # noqa: WPS235
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from .src import async_loop, autothumb, download, upload
+from .src import async_loop, autothumb, download, search, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder
+from .src.search.search import load_previews
 from .src.ui import render as ui_render
 from .src.ui.operators import render_image
 
@@ -62,7 +62,7 @@ bl_info = {
 
 @persistent
 def scene_load(context):
-    search.load_previews()
+    load_previews()
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
     ui_props.turn_off = False

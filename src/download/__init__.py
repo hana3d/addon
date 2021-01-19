@@ -148,7 +148,7 @@ def set_thumbnail(asset_data, asset):
 
 
 def update_downloaded_progress(downloader: Downloader):
-    search = Search(bpy.context)
+    search = SearchOperator(bpy.context)
     if search.results is None:
         logging.debug('Empty search results')  # noqa : WPS421:230
         return

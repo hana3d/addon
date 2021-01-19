@@ -31,7 +31,6 @@ from .config import (
     HANA3D_URL,
 )
 from .src.asset.asset_type import AssetType
-from .src.search.query import Query
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), 'presets')
 HANA3D_SETTINGS_FILENAME = os.path.join(_presets, f'{HANA3D_NAME}.json')

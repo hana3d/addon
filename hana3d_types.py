@@ -32,7 +32,7 @@ from bpy.props import (
 )
 from bpy.types import PropertyGroup
 
-from . import paths, render, render_tools, search
+from . import paths, render, render_tools
 from .config import (
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
@@ -44,8 +44,7 @@ from .config import (
     HANA3D_UI,
 )
 from .src.preferences.profile import update_libraries_list, update_tags_list
-from .src.search.asset_search import AssetSearch
-from .src.search.search import Search
+from .src.search import SearchOperator
 from .src.upload import upload
 
 thumbnail_angles = (
@@ -72,10 +71,7 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        asset_search = AssetSearch(context, self.asset_type.lower())
-        search_object = Search(context)
-        search_object.results = asset_search.results  # noqa : WPS110
-        search_object.results_orig = asset_search.results_orig
+        search_object = SearchOperator(context)
         search.load_previews()
 
     def switch_active_asset_type(self, context):

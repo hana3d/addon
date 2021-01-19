@@ -3,23 +3,19 @@
 import json
 import logging
 import os
-import pathlib
-import tempfile
-import uuid
-from typing import Dict, Iterator, List, Tuple
+from typing import Dict, List, Tuple
 
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
-from .asset_search import AssetSearch, SearchResult
+from .asset_search import AssetSearch
 from .async_functions import download_thumbnail, search_assets
 from .query import Query
 from .search import check_errors, load_previews
 from ..asset.asset_type import AssetType
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..ui.main import UI
-from ..unified_props import Unified
-from ... import hana3d_types, paths, utils
+from ... import paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 asset_types = (
@@ -37,44 +33,44 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
     bl_label = f'{HANA3D_DESCRIPTION} asset search'
     bl_description = 'Search online for assets'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-    query : Dict[AssetType, Query] = {}
-    results : Dict[AssetType, AssetSearch] = {}
+    query: Dict[AssetType, Query] = {}
+    results: Dict[AssetType, AssetSearch] = {}
 
-    own: BoolProperty( # type: ignore
-        name='Own assets only', 
-        description='Find all own assets', 
+    own: BoolProperty(  # type: ignore
+        name='Own assets only',
+        description='Find all own assets',
         default=False
     )
 
-    author_id: StringProperty( # type: ignore
+    author_id: StringProperty(  # type: ignore
         name='Author ID',
         description='Author ID - search only assets by this author',
         default='',
         options={'SKIP_SAVE'},
     )
 
-    get_next: BoolProperty( # type: ignore
+    get_next: BoolProperty(  # type: ignore
         name='Next page',
         description='Get next page from previous search',
         default=False,
         options={'SKIP_SAVE'},
     )
 
-    is_searching: BoolProperty( # type: ignore
+    is_searching: BoolProperty(  # type: ignore
         name='Is searching',
         description='True if assets are being searched',
         default=False,
         options={'SKIP_SAVE'},
     )
 
-    search_error: BoolProperty( # type: ignore
+    search_error: BoolProperty(  # type: ignore
         name='Search error',
         description='True if there was an error in search',
         default=False,
         options={'SKIP_SAVE'},
     )
 
-    keywords: StringProperty( # type: ignore
+    keywords: StringProperty(  # type: ignore
         name='Keywords',
         description='Keywords',
         default='',
@@ -128,16 +124,16 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
         search_props.asset_type = ui_props.asset_type.lower()
         query = Query(bpy.context, search_props)
-        
+
         if self.is_searching and self.get_next:
             return
-        
+
         self.is_searching = True
 
         params = {'get_next': self.get_next}
         ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
-        request_data = await search_assets(query, params, search_props, ui)
+        request_data = await search_assets(query, params, ui)
         #search_results = parse(request_data)
 
         tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
@@ -239,7 +235,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             self.set_results(search_props.asset_type, asset_search)
 
             load_previews(asset_type, asset_search)
-            
+
             ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
             if len(result_field) < ui_props.scrolloffset:
                 ui_props.scrolloffset = 0
@@ -319,7 +315,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
 
 classes = (
-    SearchOperator
+    SearchOperator,
 )
 
 
@@ -327,12 +323,10 @@ def register():
     """Search register."""
     for class_ in classes:
         bpy.utils.register_class(class_)
-    bpy.app.timers.register(timer_update)
 
 
 def unregister():
     """Search unregister."""
     for class_ in reversed(classes):
         bpy.utils.unregister_class(class_)
-    if bpy.app.timers.is_registered(timer_update):
-        bpy.app.timers.unregister(timer_update)
+

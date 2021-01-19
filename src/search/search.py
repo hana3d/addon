@@ -1,15 +1,10 @@
 """Auxiliary search functions."""
-import json
 import logging
 import os
-import pathlib
-import tempfile
-import uuid
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import bpy
-from bpy.props import BoolProperty, StringProperty
 from bpy.types import Context
 
 from .asset_search import AssetSearch
@@ -23,6 +18,9 @@ from ...config import (
     HANA3D_UI,
 )
 
+
+def get_search_props():
+    return getattr(bpy.context.window_manager, f'{HANA3D_NAME}_search_props')
 
 def check_errors(request_data: Dict) -> Tuple[bool, str]:
     if request_data.get('status_code') == 401:

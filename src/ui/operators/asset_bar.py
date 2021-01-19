@@ -13,7 +13,7 @@ from ..main import UI
 from ...preferences.preferences import Preferences
 from ...search import SearchOperator
 from ...upload import upload
-from .... import search, utils
+from .... import utils
 from ....config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -286,7 +286,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         asset_type = search_object._get_asset_type_from_ui()
         search_results_orig = search_object.get_results_original(asset_type)
         if search_results_orig is not None and search_results_orig.get('next') is not None:
-            search.async_execute(get_next=True)
+            search_object.async_execute(get_next=True)
 
     def exit_modal(self):
         """Exit modal."""

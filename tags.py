@@ -23,7 +23,7 @@ from bpy.types import Operator
 from . import utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
-from .src.search.search import Search
+from .src.search import SearchOperator
 from .src.unified_props import Unified
 from .src.upload import upload
 

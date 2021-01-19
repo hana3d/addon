@@ -2,25 +2,18 @@
 import json
 import logging
 import os
-import subprocess  # noqa: S404
-import time
 from typing import Dict, Set, Union
 
-import bpy
 import requests
 
 from .query import Query
-from ..requests_async.requests_async import Request
-from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui.main import UI
-from ... import hana3d_types, paths, rerequests
-from ...config import HANA3D_NAME
+from ... import paths, rerequests
 
 
 async def search_assets(
     query: Query,
     params: Dict,
-    props: hana3d_types.Props,
     ui: UI
 ) -> Union[Dict, Set[str]]:
     """Sends request to search assets.
@@ -28,7 +21,6 @@ async def search_assets(
     Arguments:
         query: Search query
         params: Additional parameters
-        props: Hana3D search props
         ui: UI object
 
     Returns:
