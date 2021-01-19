@@ -4,6 +4,7 @@ from bpy.types import Panel
 
 from .lib import draw_assetbar_show_hide
 from ..search.search import Search
+from ..unified_props import Unified
 from ..upload import upload
 from ... import utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
@@ -156,11 +157,12 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
 
         search = Search(context)
         search_props = search.props
+        unified_props = Unified(context).props
 
         row = layout.row()
         row.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
         draw_assetbar_show_hide(row)
-        layout.prop(search_props, 'workspace', expand=False, text='Workspace')
+        layout.prop(unified_props, 'workspace', expand=False, text='Workspace')
         row = layout.row()
         row.prop_search(search_props, 'libraries_input', search_props, 'libraries_list', icon='VIEWZOOM')  # noqa: E501
         row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
@@ -190,10 +192,11 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
         props = upload.get_upload_props()
+        unified_props = Unified(context).props
 
         box = layout.box()
         box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
-        box.prop(props, 'workspace', expand=False, text='Workspace')
+        box.prop(unified_props, 'workspace', expand=False, text='Workspace')
         row = box.row()
         row.prop_search(props, 'libraries_input', props, 'libraries_list', icon='VIEWZOOM')
         row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
@@ -247,12 +250,12 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
 
         row = layout.row()
         row.scale_y = 2.0
-        if props.view_id == '' or props.workspace != props.view_workspace:
+        if props.view_id == '' or unified_props.workspace != props.view_workspace:
             optext = f'Upload {asset_type.lower()}'
             op = row.operator(f'object.{HANA3D_NAME}_upload', text=optext, icon='EXPORT')
             op.asset_type = asset_type
 
-        if props.view_id != '' and props.workspace == props.view_workspace:
+        if props.view_id != '' and unified_props.workspace == props.view_workspace:
             op = row.operator(
                 f'object.{HANA3D_NAME}_upload',
                 text='Upload as New Version',
