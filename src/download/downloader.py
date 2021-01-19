@@ -88,7 +88,7 @@ class Downloader(object):  # noqa: WPS214
             return
 
         if self.stopped():
-            logging.debug(f'Stopping download: {asset_data["name"]}')  # noqa WPS204
+            logging.debug(f'Stopping download: {asset_data["name"]}')
             return
 
         self._task = run_async_function(self._download_async)
@@ -115,12 +115,14 @@ class Downloader(object):  # noqa: WPS214
                 tmp_file.write(response.content)
                 return
 
-            file_size = int(total_length)
+            chunk_size = 500 * 1000  # noqa: WPS432
+            iterator = response.iter_content(chunk_size=chunk_size)
+
             downloaded = 0
-            iterator = response.iter_content(chunk_size=4096)  # noqa: WPS432
+            file_size = int(total_length)
+
             loop = asyncio.get_event_loop()
             while True:
-                # TODO: try to use thread pool for speeding this up?
                 download_data = await loop.run_in_executor(None, self._read_chunk, iterator)
                 if not download_data:
                     break
