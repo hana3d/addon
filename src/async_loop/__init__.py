@@ -106,7 +106,7 @@ def run_async_function(
     async_function: typing.Callable,
     done_callback: typing.Optional[typing.Callable] = None,
     **kwargs,
-) -> asyncio.Task:
+) -> asyncio.Future:
     """Start an asynchronous task from an async function.
 
     Args:

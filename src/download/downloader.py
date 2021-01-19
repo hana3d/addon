@@ -3,6 +3,7 @@ import asyncio
 import logging
 import os
 import threading
+from typing import Optional
 
 import requests
 
@@ -26,8 +27,8 @@ class Downloader(object):  # noqa: WPS214
 
         self.finished = False
 
-        self._task = None
-        self._queue = asyncio.LifoQueue()
+        self._task: Optional[asyncio.Task] = None
+        self._queue: asyncio.Queue = asyncio.LifoQueue()
         self._progress = 0
         self._stop_event = threading.Event()
 

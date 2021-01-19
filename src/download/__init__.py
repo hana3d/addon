@@ -55,7 +55,7 @@ from ... import append_link, hana3d_types, logger, paths, render_tools, utils  #
 
 
 download_threads = {}
-append_tasks_queue = Queue()
+append_tasks_queue: 'Queue[functools.partial]' = Queue()
 
 
 def check_missing():
@@ -82,23 +82,27 @@ def check_missing():
             download(library['asset_data'], redownload=True)
 
 
-def check_unused():
-    '''find assets that have been deleted from scene but their library is still present.'''
+def get_used_libs() -> set:
+    """Get used libs.
 
-    used_libs = []
+    Returns:
+        set: Set of used libraries
+    """
+    used_libs = set()
     for ob in bpy.data.objects:
         if ob.instance_collection is not None and ob.instance_collection.library is not None:
-            # used_libs[ob.instance_collection.name] = True
-            if ob.instance_collection.library not in used_libs:
-                used_libs.append(ob.instance_collection.library)
+            used_libs.add(ob.instance_collection.library)
 
         for ps in ob.particle_systems:
-            if (
-                ps.settings.render_type == 'GROUP'
-                and ps.settings.instance_collection is not None
-                and ps.settings.instance_collection.library not in used_libs
-            ):
-                used_libs.append(ps.settings.instance_collection.library)
+            if ps.settings.render_type == 'GROUP' and ps.settings.instance_collection is not None:
+                used_libs.add(ps.settings.instance_collection.library)
+
+    return used_libs
+
+
+def check_unused():
+    """Find assets that have been deleted from scene but their library is still present."""
+    used_libs = get_used_libs()
 
     for library in bpy.data.libraries:
         if library not in used_libs:
@@ -273,7 +277,76 @@ def import_scene(asset_data: dict, file_names: list):
     return scene
 
 
+def _import_model_with_params(asset_data: dict, file_name: str, link: bool, **kwargs):
+    for import_param in kwargs['import_params']:
+        if link is True:
+            parent, newobs = append_link.link_collection(
+                file_name,
+                location=import_param['location'],
+                rotation=import_param['rotation'],
+                link=link,
+                name=asset_data['name'],
+                parent=kwargs.get('parent'),
+            )
+        else:
+            parent, newobs = append_link.append_objects(
+                file_name,
+                location=import_param['location'],
+                rotation=import_param['rotation'],
+                link=link,
+                name=asset_data['name'],
+                parent=kwargs.get('parent'),
+            )
+
+        if parent.type == 'EMPTY' and link:
+            bmin = asset_data['bbox_min']
+            bmax = asset_data['bbox_max']
+            size_min = min(
+                1.0,
+                (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,  # noqa : WPS221
+            )
+            parent.empty_display_size = size_min
+    return parent
+
+
+def _import_model_with_location(asset_data: dict, file_name: str, link: bool, **kwargs):
+    if link is True:
+        parent, newobs = append_link.link_collection(
+            file_name,
+            location=kwargs['model_location'],
+            rotation=kwargs['model_rotation'],
+            link=link,
+            name=asset_data['name'],
+            parent=kwargs.get('parent'),
+        )
+    else:
+        parent, newobs = append_link.append_objects(
+            file_name,
+            location=kwargs['model_location'],
+            rotation=kwargs['model_rotation'],
+            link=link,
+            parent=kwargs.get('parent'),
+        )
+    if parent.type == 'EMPTY' and link:
+        bmin = asset_data['bbox_min']
+        bmax = asset_data['bbox_max']
+        size_min = min(1.0, (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3)
+        parent.empty_display_size = size_min
+    return parent
+
+
 def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
+    """Import model to scene.
+
+    Parameters:
+        window_manager: Blender window manager
+        asset_data: Asset Data
+        file_names: list of files
+        kwargs: keyword arguments
+
+    Returns:
+        Parent of the imported object
+    """
     sprops = getattr(window_manager, HANA3D_MODELS)
     if sprops.append_method == 'LINK_COLLECTION':
         sprops.append_link = 'LINK'
@@ -287,58 +360,10 @@ def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
     link = (asset_in_scene == 'LINK') or (append_or_link == 'LINK')
 
     if kwargs.get('import_params'):
-        for param in kwargs['import_params']:
-            if link is True:
-                parent, newobs = append_link.link_collection(
-                    file_names[-1],
-                    location=param['location'],
-                    rotation=param['rotation'],
-                    link=link,
-                    name=asset_data['name'],
-                    parent=kwargs.get('parent'),
-                )
-            else:
-                parent, newobs = append_link.append_objects(
-                    file_names[-1],
-                    location=param['location'],
-                    rotation=param['rotation'],
-                    link=link,
-                    name=asset_data['name'],
-                    parent=kwargs.get('parent'),
-                )
-
-            if parent.type == 'EMPTY' and link:
-                bmin = asset_data['bbox_min']
-                bmax = asset_data['bbox_max']
-                size_min = min(
-                    1.0,
-                    (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,  # noqa : WPS221
-                )
-                parent.empty_display_size = size_min
+        parent = _import_model_with_params(asset_data, file_names[-1], link, **kwargs)
 
     elif kwargs.get('model_location') is not None:
-        if link is True:
-            parent, newobs = append_link.link_collection(
-                file_names[-1],
-                location=kwargs['model_location'],
-                rotation=kwargs['model_rotation'],
-                link=link,
-                name=asset_data['name'],
-                parent=kwargs.get('parent'),
-            )
-        else:
-            parent, newobs = append_link.append_objects(
-                file_names[-1],
-                location=kwargs['model_location'],
-                rotation=kwargs['model_rotation'],
-                link=link,
-                parent=kwargs.get('parent'),
-            )
-        if parent.type == 'EMPTY' and link:
-            bmin = asset_data['bbox_min']
-            bmax = asset_data['bbox_max']
-            size_min = min(1.0, (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3)
-            parent.empty_display_size = size_min
+        parent = _import_model_with_location(asset_data, file_names[-1], link, **kwargs)
 
     if link:
         group = parent.instance_collection
@@ -369,6 +394,34 @@ def import_material(asset_data: dict, file_names: list, **kwargs):
     return material
 
 
+def set_library_props(asset_data, asset_props):
+    """Set libraries on asset props.
+
+    Parameters:
+        asset_data: Asset Data
+        asset_props: Asset Props
+    """
+    update_libraries_list(asset_props, bpy.context)
+    libraries_list = asset_props.libraries_list
+    for asset_library in asset_data['libraries']:
+        library = libraries_list[asset_library['name']]
+        library.selected = True
+        if 'metadata' in asset_library and asset_library['metadata'] is not None:
+            for view_prop in library.metadata['view_props']:
+                name = f'{library.name} {view_prop["name"]}'
+                slug = view_prop['slug']
+                if name not in asset_props.custom_props:
+                    asset_props.custom_props_info[name] = {
+                        'slug': slug,
+                        'library_name': library.name,
+                        'library_id': library.id_,
+                    }
+                if 'view_props' in asset_library['metadata'] and slug in asset_library['metadata']['view_props']:  # noqa: E501
+                    asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]
+                else:
+                    asset_props.custom_props[name] = ''
+
+
 def set_asset_props(asset, asset_data):
     asset_props = getattr(asset, HANA3D_NAME)
     asset_props.clear_data()
@@ -394,28 +447,7 @@ def set_asset_props(asset, asset_data):
             asset_props.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
-        update_libraries_list(asset_props, bpy.context)
-        libraries_list = asset_props.libraries_list
-        for asset_library in asset_data['libraries']:  # noqa : WPS529
-            library = libraries_list[asset_library['name']]
-            library.selected = True
-            if 'metadata' in asset_library and asset_library['metadata'] is not None:
-                for view_prop in library.metadata['view_props']:
-                    name = f'{library.name} {view_prop["name"]}'
-                    slug = view_prop['slug']
-                    if name not in asset_props.custom_props:
-                        asset_props.custom_props_info[name] = {
-                            'slug': slug,
-                            'library_name': library.name,
-                            'library_id': library.id_,
-                        }
-                    if (
-                        'view_props' in asset_library['metadata']
-                        and slug in asset_library['metadata']['view_props']
-                    ):
-                        asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]  # noqa E501
-                    else:
-                        asset_props.custom_props[name] = ''
+        set_library_props(asset_data, asset_props)
 
 
 def append_asset(asset_data: dict, **kwargs):
@@ -518,7 +550,7 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
     bl_label = f'{HANA3D_DESCRIPTION} Kill Asset Download'
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    view_id: StringProperty()
+    view_id: StringProperty()  # type: ignore
 
     @execute_wrapper
     def execute(self, context):
@@ -544,39 +576,43 @@ class Hana3DDownloadOperator(bpy.types.Operator):
     bl_label = f'{HANA3D_DESCRIPTION} Asset Download'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    asset_type: EnumProperty(
+    asset_type: EnumProperty(  # type: ignore
         name='Type',
         items=asset_types,
         description='Type of download',
         default='MODEL',
     )
-    asset_index: IntProperty(
+    asset_index: IntProperty(  # type: ignore
         name='Asset Index',
         description='asset index in search results',
         default=-1,
     )
 
-    target_object: StringProperty(
+    target_object: StringProperty(  # type: ignore
         name='Target Object',
         description='Material or object target for replacement',
         default='',
     )
 
-    material_target_slot: IntProperty(
+    material_target_slot: IntProperty(  # type: ignore
         name='Asset Index',
         description='asset index in search results',
         default=0,
     )
-    model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))
-    model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))
+    model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))  # type: ignore
+    model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))  # type: ignore
 
-    replace: BoolProperty(
+    replace: BoolProperty(  # type: ignore
         name='Replace',
         description='replace selection with the asset',
         default=False,
     )
 
-    cast_parent: StringProperty(name='Particles Target Object', description='', default='')
+    cast_parent: StringProperty(  # type: ignore
+        name='Particles Target Object',
+        description='',
+        default='',
+    )
 
     @execute_wrapper
     def execute(self, context):
@@ -632,21 +668,21 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     bl_label = f'{HANA3D_DESCRIPTION} Batch Download'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    object_count: IntProperty(
+    object_count: IntProperty(  # type: ignore
         name='Object Count',
         description='number of objects imported to scene',
         default=0,
         options={'HIDDEN'},
     )
 
-    last_query: StringProperty(
+    last_query: StringProperty(  # type: ignore
         name='Last Searched Query',
         description='string representing the last performed query',
         default='',
         options={'HIDDEN'},
     )
 
-    grid_distance: FloatProperty(
+    grid_distance: FloatProperty(  # type: ignore
         name='Grid Distance',
         description='distance between objects on the grid',
         precision=1,
@@ -654,7 +690,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         default=3,
     )
 
-    batch_size: IntProperty(
+    batch_size: IntProperty(  # type: ignore
         name='Batch Size',
         description='number of objects to download in parallel',
         default=20,  # noqa : WPS432
