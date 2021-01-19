@@ -7,7 +7,7 @@ from .login import Hana3DLoginPanel
 from .render import Hana3DRenderPanel
 from .unified import Hana3DUnifiedPanel
 from .updater import Hana3DUpdaterPanel
-from ..search.search import Search
+from ..search import SearchOperator
 from ... import addon_updater_ops, utils
 from ...config import HANA3D_NAME, HANA3D_UI
 
@@ -21,7 +21,7 @@ def header_search_draw(self, context):
     if preferences.search_in_header:
         layout = self.layout
         ui_props = getattr(context.window_manager, HANA3D_UI)
-        search = Search(context)
+        search = SearchOperator(context)
         search_props = search.props
 
         if context.space_data.show_region_tool_header or context.mode[:4] not in {'EDIT', 'OBJE'}:

@@ -1,10 +1,20 @@
-"""Search."""
+"""Auxiliary search functions."""
+import json
+import logging
+import os
+import pathlib
+import tempfile
+import uuid
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List, Tuple
 
+import bpy
+from bpy.props import BoolProperty, StringProperty
 from bpy.types import Context
 
+from .asset_search import AssetSearch
 from ..asset.asset_type import AssetType
+from ... import hana3d_oauth, paths, utils
 from ...config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -14,73 +24,72 @@ from ...config import (
 )
 
 
-@dataclass
-class SearchResult(object):
-    """Hana3D search result."""
+def check_errors(request_data: Dict) -> Tuple[bool, str]:
+    if request_data.get('status_code') == 401:
+        logging.debug(request_data)
+        if request_data.get('code') == 'token_expired':
+            user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+            if user_preferences.api_key != '':
+                hana3d_oauth.refresh_token(immediate=False)
+                return False, request_data.get('description', '')
+            return False, 'Missing or wrong api_key in addon preferences'
+    elif request_data.get('status_code') == 403:
+        logging.debug(request_data)
+        if request_data.get('code') == 'invalid_permissions':
+            return False, request_data.get('description', '')
+    return True, ''
 
-    view_id: str
-    file_name: str
-    download_url: str
-    asset_type: AssetType
 
+def load_previews(asset_type: AssetType, asset_search: AssetSearch):
+    mappingdict = {
+        'MODEL': 'model',
+        'SCENE': 'scene',
+        'MATERIAL': 'material',
+    }
 
-class Search(object):
-    """Hana3D search information."""
+    directory = paths.get_temp_dir(f'{mappingdict[asset_type]}_search')
+    search_results = asset_search.original_results
 
-    def __init__(self, context: Context, asset_type: AssetType = None):
-        """Create a Search object.
+    if search_results is not None:
+        index = 0
+        for search_result in search_results:
+            if search_result['thumbnail_small'] == '':
+                load_placeholder_thumbnail(index, search_result['id'])
+                index += 1
+                continue
 
-        Args:
-            context: Blender context.
-            asset_type: Asset Type
+            thumbnail_path = os.path.join(directory, search_result['thumbnail_small'])
+
+            image_name = utils.previmg_name(index)
+
+            if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
+                img = bpy.data.images.get(image_name)
+                if img is None:
+                    img = bpy.data.images.load(thumbnail_path)
+                    img.name = image_name
+                elif img.filepath != thumbnail_path:
+                    # had to add this check for autopacking files...
+                    if img.packed_file is not None:
+                        img.unpack(method='USE_ORIGINAL')
+                    img.filepath = thumbnail_path
+                    img.reload()
+                img.colorspace_settings.name = 'Linear'
+            index += 1
+
+    def load_placeholder_thumbnail(index: int, asset_id: str):
+        """Load placeholder thumbnail for assets without one.
+
+        Parameters:
+            index: index number of the asset in search results
+            asset_id: asset id
         """
-        self.context = context
-        self.asset_type = asset_type if asset_type else self._get_asset_type_from_ui()
+        placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
 
-    @property  # noqa : WPS110
-    def results(self) -> List[SearchResult]:  # noqa : WPS110
-        """Get search results.
+        img = bpy.data.images.load(placeholder_path)
+        img.name = utils.previmg_name(index)
 
-        Returns:
-            List: search results
-        """
-        if f'{HANA3D_NAME}_search_results' not in self.context.window_manager:
-            return []
-        return self.context.window_manager[f'{HANA3D_NAME}_search_results']
+        hidden_img = bpy.data.images.load(placeholder_path)
+        hidden_img.name = f'.{asset_id}'
 
-    @property
-    def props(self):
-        """Get search props.
-
-        Returns:
-            Any | None: search props if available
-        """
-        if self.asset_type == 'model' and hasattr(self.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
-            return getattr(self.context.window_manager, HANA3D_MODELS)
-        elif self.asset_type == 'scene' and hasattr(self.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
-            return getattr(self.context.window_manager, HANA3D_SCENES)
-        elif self.asset_type == 'material' and hasattr(self.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
-            return getattr(self.context.window_manager, HANA3D_MATERIALS)
-
-    @property
-    def results_orig(self) -> List[SearchResult]:
-        """Get original search results (FIXME).
-
-        Returns:
-            List: original search results
-        """
-        if f'{HANA3D_NAME}_search_results_orig' not in self.context.window_manager:
-            return {}
-        return self.context.window_manager[f'{HANA3D_NAME}_search_results_orig']
-
-    @results.setter  # noqa : WPS110
-    def results(self, results_value: List[SearchResult]):  # noqa : WPS110
-        self.context.window_manager[f'{HANA3D_NAME}_search_results'] = results_value
-
-    @results_orig.setter
-    def results_orig(self, results_orig_value: List[SearchResult]):
-        self.context.window_manager[f'{HANA3D_NAME}_search_results_orig'] = results_orig_value
-
-    def _get_asset_type_from_ui(self) -> AssetType:
-        uiprops = getattr(self.context.window_manager, HANA3D_UI)
-        return uiprops.asset_type.lower()
+        fullsize_img = bpy.data.images.load(placeholder_path)
+        fullsize_img.name = utils.previmg_name(index, fullsize=True)

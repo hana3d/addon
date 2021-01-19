@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import bpy
 
 from ..requests_async.basic_request import BasicRequest
-from ..search.search import Search
+from ..search import SearchOperator
 from ..unified_props import Unified
 from ..upload.upload import get_upload_props
 from ... import config, paths
@@ -83,7 +83,7 @@ class Profile(object):
 
         bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
 
-        search = Search(bpy.context)
+        search = SearchOperator(bpy.context)
 
         update_libraries_list(search.props, bpy.context)
         update_tags_list(search.props, bpy.context)

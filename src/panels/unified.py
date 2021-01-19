@@ -3,7 +3,7 @@ import bpy
 from bpy.types import Panel
 
 from .lib import draw_assetbar_show_hide
-from ..search.search import Search
+from ..search import SearchOperator
 from ..unified_props import Unified
 from ..upload import upload
 from ... import utils
@@ -34,7 +34,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
 
         if ui_props.down_up == 'SEARCH':
             if utils.profile_is_validator():
-                search = Search(context)
+                search = SearchOperator(context)
                 search_props = search.props
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type in {'MODEL', 'SCENE', 'MATERIAL'}:
