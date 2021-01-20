@@ -19,16 +19,26 @@ if TYPE_CHECKING:
 
 
 def configure_bugsnag(api_key: str):
+    """Configure bugsnag.
+
+    Arguments:
+        spi_key: str
+    """
     bugsnag.configure(
         api_key=api_key,
-        project_root=Path(__file__).parent.parent.parent
+        project_root=Path(__file__).parent.parent.parent,
     )
 
 
 def configure_sentry(url: str):
+    """Configure sentry.
+
+    Arguments:
+        url: str
+    """
     sentry_sdk.init(
         url,
-        traces_sample_rate=1.0
+        traces_sample_rate=1.0,
     )
 
 
@@ -99,7 +109,8 @@ class Profile(object):
         if not response.ok:
             logging.error(f'Failed to get profile data: {response.text}')  # noqa: WPS421
 
-        bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
+        window_manager = bpy.context.window_manager
+        window_manager[config.HANA3D_PROFILE] = response.json()
 
         search = Search(bpy.context)
 
@@ -111,7 +122,5 @@ class Profile(object):
         update_tags_list(upload_props, bpy.context)
 
         if config.HANA3D_NAME == 'hana3d_production':
-            configure_bugsnag(
-                bpy.context.window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
-            configure_sentry(
-                bpy.context.window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])
+            configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
+            configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])
