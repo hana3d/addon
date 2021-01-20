@@ -61,7 +61,7 @@ class Downloader(object):  # noqa: WPS214
         self._progress = progress
 
     def progress(self) -> int:
-        """Lazily updates the download progress and returns it.
+        """Get download progress, lazily updating its value.
 
         Returns:
             int: progress of the download

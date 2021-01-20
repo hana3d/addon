@@ -43,12 +43,12 @@ def check_existing(asset_data: dict) -> bool:
     """
     file_names = paths.get_download_filenames(asset_data)
 
-    if not file_names or not os.path.isfile(file_names[0]):  # noqa: WPS204
-        return False
-
     if len(file_names) == 2:
-        copy_file(file_names[0], file_names[1])
+        copy_file(file_names[0], file_names[1])  # noqa: WPS204
         copy_file(file_names[1], file_names[0])
+
+    if not file_names or not os.path.isfile(file_names[0]):
+        return False
 
     if newer_asset_in_server(asset_data, file_names[0]):
         os.remove(file_names[0])
