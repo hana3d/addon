@@ -16,6 +16,7 @@ class UserPreferences(object):
     api_key_life: str
     id_token: str
     max_assetbar_rows: int
+    thumb_size: int
 
 class Preferences(object):
     """Hana3D addon preferences."""

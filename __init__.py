@@ -26,7 +26,6 @@ from . import (  # noqa: WPS235
     append_link,
     asset,
     bg_blender,
-    download,
     hana3d_oauth,
     hana3d_types,
     icons,
@@ -42,7 +41,7 @@ from . import (  # noqa: WPS235
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from .src import async_loop, autothumb, upload
+from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder

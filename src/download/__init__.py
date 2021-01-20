@@ -36,115 +36,26 @@ from bpy.props import (
     StringProperty,
 )
 
-from .config import (
+from .downloader import Downloader
+from .lib import check_existing
+from ..preferences.profile import update_libraries_list, update_tags_list
+from ..search.query import Query
+from ..search.search import Search
+from ..ui import colors
+from ..ui.main import UI
+from ...config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
     HANA3D_NAME,
     HANA3D_SCENES,
 )
-from .report_tools import execute_wrapper
-from .src.preferences.profile import update_libraries_list, update_tags_list
-from .src.search.query import Query
-from .src.search.search import Search
-from .src.ui import colors
-from .src.ui.main import UI
+from ...report_tools import execute_wrapper
 
-from . import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
+from ... import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
 
 
 download_threads = {}
-append_tasks_queue = Queue()
-
-
-class ThreadCom:  # object passed to threads to read background process stdout info
-    def __init__(self):
-        self.file_size = 1000000000000000  # property that gets written to.
-        self.downloaded = 0
-        self.lasttext = ''
-        self.error = False
-        self.report = ''
-        self.progress = 0.0
-        self.passargs = {}
-
-
-class Downloader(threading.Thread):
-    def __init__(self, asset_data: dict, tcom: ThreadCom):
-        super(Downloader, self).__init__()
-        self.asset_data = asset_data
-        self.tcom = tcom
-        self._stop_event = threading.Event()
-        self._remove_event = threading.Event()
-        self._finish_event = threading.Event()
-
-    def stop(self):
-        self._stop_event.set()
-
-    def stopped(self):
-        return self._stop_event.is_set()
-
-    def mark_remove(self):
-        self._remove_event.set()
-
-    @property
-    def marked_remove(self):
-        return self._remove_event.is_set()
-
-    def finish(self):
-        self._finish_event.set()
-
-    @property
-    def finished(self):
-        return self._finish_event.is_set()
-
-    # def main_download_thread(asset_data, tcom):
-    def run(self):
-        '''try to download file from hana3d'''
-        asset_data = self.asset_data
-        tcom = self.tcom
-
-        if tcom.error:
-            return
-        # only now we can check if the file already exists.
-        # This should have 2 levels, for materials
-        # different than for the non free content.
-        # delete is here when called after failed append tries.
-        if check_existing(asset_data) and not tcom.passargs.get('delete'):
-            # this sends the thread for processing,
-            # where another check should occur,
-            # since the file might be corrupted.
-            tcom.downloaded = 100
-            logging.debug('not downloading, trying to append again')
-            return
-
-        file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
-
-        if self.stopped():
-            logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS204
-            return
-
-        tmp_file_name = f'{file_name}_tmp'
-        with open(tmp_file_name, 'wb') as tmp_file:
-            logging.info(f'Downloading {file_name}')
-
-            response = requests.get(asset_data['download_url'], stream=True)
-            total_length = response.headers.get('Content-Length')
-
-            if total_length is None:  # no content length header
-                tmp_file.write(response.content)
-            else:  # noqa WPS220
-                tcom.file_size = int(total_length)
-                dl = 0
-                for data in response.iter_content(chunk_size=4096):
-                    dl += len(data)
-                    tcom.downloaded = dl
-                    tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
-                    tmp_file.write(data)
-                    if self.stopped():
-                        logging.debug(f'stopping download: {asset_data["name"]}')  # noqa WPS220
-                        tmp_file.close()  # noqa : WPS220
-                        os.remove(tmp_file_name)  # noqa : WPS220
-                        return
-        os.rename(tmp_file_name, file_name)
+append_tasks_queue: 'Queue[functools.partial]' = Queue()
 
 
 def check_missing():
@@ -171,27 +82,31 @@ def check_missing():
             download(library['asset_data'], redownload=True)
 
 
-def check_unused():
-    '''find assets that have been deleted from scene but their library is still present.'''
+def get_used_libs() -> set:
+    """Get used libs.
 
-    used_libs = []
+    Returns:
+        set: Set of used libraries
+    """
+    used_libs = set()
     for ob in bpy.data.objects:
         if ob.instance_collection is not None and ob.instance_collection.library is not None:
-            # used_libs[ob.instance_collection.name] = True
-            if ob.instance_collection.library not in used_libs:
-                used_libs.append(ob.instance_collection.library)
+            used_libs.add(ob.instance_collection.library)
 
         for ps in ob.particle_systems:
-            if (
-                ps.settings.render_type == 'GROUP'
-                and ps.settings.instance_collection is not None
-                and ps.settings.instance_collection.library not in used_libs
-            ):
-                used_libs.append(ps.settings.instance_collection)
+            if ps.settings.render_type == 'GROUP' and ps.settings.instance_collection is not None:
+                used_libs.add(ps.settings.instance_collection.library)
+
+    return used_libs
+
+
+def check_unused():
+    """Find assets that have been deleted from scene but their library is still present."""
+    used_libs = get_used_libs()
 
     for library in bpy.data.libraries:
         if library not in used_libs:
-            logging.info(f'attempt to remove this library: {library.filepath}')
+            logging.info(f'Attempt to remove this library: {library.filepath}')
             # have to unlink all groups, since the file is a 'user'
             # even if the groups aren't used at all...
             for user_id in library.users_id:
@@ -239,7 +154,7 @@ def update_downloaded_progress(downloader: Downloader):
         return
     for search_result in search.results:
         if search_result.get('view_id') == downloader.asset_data['view_id']:
-            search_result['downloaded'] = downloader.tcom.progress
+            search_result['downloaded'] = downloader.progress()
             return
 
 
@@ -252,7 +167,6 @@ def remove_file(filepath):
 
 def process_finished_thread(downloader: Downloader):
     asset_data = downloader.asset_data
-    tcom = downloader.tcom
 
     file_names = paths.get_download_filenames(asset_data)
     # duplicate file if the global and subdir are used in prefs
@@ -260,7 +174,7 @@ def process_finished_thread(downloader: Downloader):
     if len(file_names) == 2:
         shutil.copyfile(file_names[0], file_names[1])
 
-    if tcom.passargs.get('redownload'):
+    if downloader.passargs.get('redownload'):
         # handle lost libraries here:
         for library in bpy.data.libraries:
             if (
@@ -270,16 +184,7 @@ def process_finished_thread(downloader: Downloader):
                 library.filepath = file_names[-1]
                 library.reload()
         return
-    append_asset_safe(asset_data, **tcom.passargs)
-
-
-def cleanup_threads():
-    global download_threads
-    download_threads = {
-        view_id: downloader
-        for view_id, downloader in download_threads.items()
-        if not downloader.marked_remove
-    }
+    append_asset_safe(asset_data, **downloader.passargs)
 
 
 def execute_append_tasks():
@@ -323,22 +228,13 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             update_downloaded_progress(downloader)
             continue
 
-        if downloader.tcom.error:
-            downloader.mark_remove()
-            text = f'Error when downloading {asset_data["name"]}\n{downloader.tcom.report}'
-            ui = UI()
-            ui.add_report(text=text, color=colors.RED)
-            continue
-
         if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
             continue
 
-        downloader.tcom.progress = 100
+        downloader.set_progress(100)
         update_downloaded_progress(downloader)
         process_finished_thread(downloader)
-        downloader.finish()
-
-    cleanup_threads()
+        downloader.finished = True
 
     return 0.1
 
@@ -348,16 +244,13 @@ def download(asset_data, **kwargs):
 
     logging.debug(f'Downloading asset_data {json.dumps(asset_data)}')
 
-    tcom = ThreadCom()
-    tcom.passargs = kwargs
-
     # incoming data can be either directly dict from python, or blender id property
     # (recovering failed downloads on reload)
     if type(asset_data) == dict:
         asset_data = copy.deepcopy(asset_data)
     else:
         asset_data = asset_data.to_dict()
-    thread = Downloader(asset_data, tcom)
+    thread = Downloader(asset_data, **kwargs)
     thread.start()
 
     view_id = asset_data['view_id']
@@ -369,36 +262,9 @@ def add_import_params(thread: Downloader, location, rotation):
         'location': location,
         'rotation': rotation,
     }
-    thread.tcom.passargs['import_params'].append(params)
+    thread.passargs['import_params'].append(params)
 
 
-def check_existing(asset_data):
-    ''' check if the object exists on the hard drive'''
-    file_names = paths.get_download_filenames(asset_data)
-
-    if len(file_names) == 2:
-        # TODO this should check also for failed or running downloads.
-        # If download is running, assign just the running thread.
-        # if download isn't running but the file is wrong size,
-        #  delete file and restart download (or continue downoad? if possible.)
-        if os.path.isfile(file_names[0]) and not os.path.isfile(file_names[1]):
-            shutil.copy(file_names[0], file_names[1])
-        # only in case of changed settings or deleted/moved global dict.
-        elif not os.path.isfile(file_names[0]) and os.path.isfile(file_names[1]):
-            shutil.copy(file_names[1], file_names[0])
-
-    if len(file_names) == 0 or not os.path.isfile(file_names[0]):
-        return False
-
-    newer_asset_in_server = (
-        asset_data.get('created') is not None
-        and float(asset_data['created']) > float(os.path.getctime(file_names[0]))
-    )
-    if newer_asset_in_server:
-        os.remove(file_names[0])
-        return False
-
-    return True
 
 
 def import_scene(asset_data: dict, file_names: list):
@@ -411,7 +277,76 @@ def import_scene(asset_data: dict, file_names: list):
     return scene
 
 
+def _import_model_with_params(asset_data: dict, file_name: str, link: bool, **kwargs):
+    for import_param in kwargs['import_params']:
+        if link is True:
+            parent, newobs = append_link.link_collection(
+                file_name,
+                location=import_param['location'],
+                rotation=import_param['rotation'],
+                link=link,
+                name=asset_data['name'],
+                parent=kwargs.get('parent'),
+            )
+        else:
+            parent, newobs = append_link.append_objects(
+                file_name,
+                location=import_param['location'],
+                rotation=import_param['rotation'],
+                link=link,
+                name=asset_data['name'],
+                parent=kwargs.get('parent'),
+            )
+
+        if parent.type == 'EMPTY' and link:
+            bmin = asset_data['bbox_min']
+            bmax = asset_data['bbox_max']
+            size_min = min(
+                1.0,
+                (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,  # noqa : WPS221
+            )
+            parent.empty_display_size = size_min
+    return parent
+
+
+def _import_model_with_location(asset_data: dict, file_name: str, link: bool, **kwargs):
+    if link is True:
+        parent, newobs = append_link.link_collection(
+            file_name,
+            location=kwargs['model_location'],
+            rotation=kwargs['model_rotation'],
+            link=link,
+            name=asset_data['name'],
+            parent=kwargs.get('parent'),
+        )
+    else:
+        parent, newobs = append_link.append_objects(
+            file_name,
+            location=kwargs['model_location'],
+            rotation=kwargs['model_rotation'],
+            link=link,
+            parent=kwargs.get('parent'),
+        )
+    if parent.type == 'EMPTY' and link:
+        bmin = asset_data['bbox_min']
+        bmax = asset_data['bbox_max']
+        size_min = min(1.0, (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3)
+        parent.empty_display_size = size_min
+    return parent
+
+
 def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
+    """Import model to scene.
+
+    Parameters:
+        window_manager: Blender window manager
+        asset_data: Asset Data
+        file_names: list of files
+        kwargs: keyword arguments
+
+    Returns:
+        Parent of the imported object
+    """
     sprops = getattr(window_manager, HANA3D_MODELS)
     if sprops.append_method == 'LINK_COLLECTION':
         sprops.append_link = 'LINK'
@@ -425,58 +360,10 @@ def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
     link = (asset_in_scene == 'LINK') or (append_or_link == 'LINK')
 
     if kwargs.get('import_params'):
-        for param in kwargs['import_params']:
-            if link is True:
-                parent, newobs = append_link.link_collection(
-                    file_names[-1],
-                    location=param['location'],
-                    rotation=param['rotation'],
-                    link=link,
-                    name=asset_data['name'],
-                    parent=kwargs.get('parent'),
-                )
-            else:
-                parent, newobs = append_link.append_objects(
-                    file_names[-1],
-                    location=param['location'],
-                    rotation=param['rotation'],
-                    link=link,
-                    name=asset_data['name'],
-                    parent=kwargs.get('parent'),
-                )
-
-            if parent.type == 'EMPTY' and link:
-                bmin = asset_data['bbox_min']
-                bmax = asset_data['bbox_max']
-                size_min = min(
-                    1.0,
-                    (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,  # noqa : WPS221
-                )
-                parent.empty_display_size = size_min
+        parent = _import_model_with_params(asset_data, file_names[-1], link, **kwargs)
 
     elif kwargs.get('model_location') is not None:
-        if link is True:
-            parent, newobs = append_link.link_collection(
-                file_names[-1],
-                location=kwargs['model_location'],
-                rotation=kwargs['model_rotation'],
-                link=link,
-                name=asset_data['name'],
-                parent=kwargs.get('parent'),
-            )
-        else:
-            parent, newobs = append_link.append_objects(
-                file_names[-1],
-                location=kwargs['model_location'],
-                rotation=kwargs['model_rotation'],
-                link=link,
-                parent=kwargs.get('parent'),
-            )
-        if parent.type == 'EMPTY' and link:
-            bmin = asset_data['bbox_min']
-            bmax = asset_data['bbox_max']
-            size_min = min(1.0, (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3)
-            parent.empty_display_size = size_min
+        parent = _import_model_with_location(asset_data, file_names[-1], link, **kwargs)
 
     if link:
         group = parent.instance_collection
@@ -507,6 +394,34 @@ def import_material(asset_data: dict, file_names: list, **kwargs):
     return material
 
 
+def set_library_props(asset_data, asset_props):
+    """Set libraries on asset props.
+
+    Parameters:
+        asset_data: Asset Data
+        asset_props: Asset Props
+    """
+    update_libraries_list(asset_props, bpy.context)
+    libraries_list = asset_props.libraries_list
+    for asset_library in asset_data['libraries']:
+        library = libraries_list[asset_library['name']]
+        library.selected = True
+        if 'metadata' in asset_library and asset_library['metadata'] is not None:
+            for view_prop in library.metadata['view_props']:
+                name = f'{library.name} {view_prop["name"]}'
+                slug = view_prop['slug']
+                if name not in asset_props.custom_props:
+                    asset_props.custom_props_info[name] = {
+                        'slug': slug,
+                        'library_name': library.name,
+                        'library_id': library.id_,
+                    }
+                if 'view_props' in asset_library['metadata'] and slug in asset_library['metadata']['view_props']:  # noqa: E501
+                    asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]
+                else:
+                    asset_props.custom_props[name] = ''
+
+
 def set_asset_props(asset, asset_data):
     asset_props = getattr(asset, HANA3D_NAME)
     asset_props.clear_data()
@@ -532,33 +447,12 @@ def set_asset_props(asset, asset_data):
             asset_props.tags_list[tag].selected = True
 
     if 'libraries' in asset_data:
-        update_libraries_list(asset_props, bpy.context)
-        libraries_list = asset_props.libraries_list
-        for asset_library in asset_data['libraries']:  # noqa : WPS529
-            library = libraries_list[asset_library['name']]
-            library.selected = True
-            if 'metadata' in asset_library and asset_library['metadata'] is not None:
-                for view_prop in library.metadata['view_props']:
-                    name = f'{library.name} {view_prop["name"]}'
-                    slug = view_prop['slug']
-                    if name not in asset_props.custom_props:
-                        asset_props.custom_props_info[name] = {
-                            'slug': slug,
-                            'library_name': library.name,
-                            'library_id': library.id_,
-                        }
-                    if (
-                        'view_props' in asset_library['metadata']
-                        and slug in asset_library['metadata']['view_props']
-                    ):
-                        asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]  # noqa E501
-                    else:
-                        asset_props.custom_props[name] = ''
+        set_library_props(asset_data, asset_props)
 
 
 def append_asset(asset_data: dict, **kwargs):
     asset_name = asset_data['name']
-    logging.debug(f'appending asset {asset_name}')
+    logging.debug(f'Appending asset {asset_name}')
 
     file_names = paths.get_download_filenames(asset_data)
     if len(file_names) == 0 or not os.path.isfile(file_names[-1]):
@@ -656,7 +550,7 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
     bl_label = f'{HANA3D_DESCRIPTION} Kill Asset Download'
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    view_id: StringProperty()
+    view_id: StringProperty()  # type: ignore
 
     @execute_wrapper
     def execute(self, context):
@@ -682,39 +576,43 @@ class Hana3DDownloadOperator(bpy.types.Operator):
     bl_label = f'{HANA3D_DESCRIPTION} Asset Download'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    asset_type: EnumProperty(
+    asset_type: EnumProperty(  # type: ignore
         name='Type',
         items=asset_types,
         description='Type of download',
         default='MODEL',
     )
-    asset_index: IntProperty(
+    asset_index: IntProperty(  # type: ignore
         name='Asset Index',
         description='asset index in search results',
         default=-1,
     )
 
-    target_object: StringProperty(
+    target_object: StringProperty(  # type: ignore
         name='Target Object',
         description='Material or object target for replacement',
         default='',
     )
 
-    material_target_slot: IntProperty(
+    material_target_slot: IntProperty(  # type: ignore
         name='Asset Index',
         description='asset index in search results',
         default=0,
     )
-    model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))
-    model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))
+    model_location: FloatVectorProperty(name='Asset Location', default=(0, 0, 0))  # type: ignore
+    model_rotation: FloatVectorProperty(name='Asset Rotation', default=(0, 0, 0))  # type: ignore
 
-    replace: BoolProperty(
+    replace: BoolProperty(  # type: ignore
         name='Replace',
         description='replace selection with the asset',
         default=False,
     )
 
-    cast_parent: StringProperty(name='Particles Target Object', description='', default='')
+    cast_parent: StringProperty(  # type: ignore
+        name='Particles Target Object',
+        description='',
+        default='',
+    )
 
     @execute_wrapper
     def execute(self, context):
@@ -770,21 +668,21 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     bl_label = f'{HANA3D_DESCRIPTION} Batch Download'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    object_count: IntProperty(
+    object_count: IntProperty(  # type: ignore
         name='Object Count',
         description='number of objects imported to scene',
         default=0,
         options={'HIDDEN'},
     )
 
-    last_query: StringProperty(
+    last_query: StringProperty(  # type: ignore
         name='Last Searched Query',
         description='string representing the last performed query',
         default='',
         options={'HIDDEN'},
     )
 
-    grid_distance: FloatProperty(
+    grid_distance: FloatProperty(  # type: ignore
         name='Grid Distance',
         description='distance between objects on the grid',
         precision=1,
@@ -792,7 +690,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         default=3,
     )
 
-    batch_size: IntProperty(
+    batch_size: IntProperty(  # type: ignore
         name='Batch Size',
         description='number of objects to download in parallel',
         default=20,  # noqa : WPS432
