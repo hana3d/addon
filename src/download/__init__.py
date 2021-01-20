@@ -148,11 +148,13 @@ def set_thumbnail(asset_data, asset):
 
 
 def update_downloaded_progress(downloader: Downloader):
-    search = SearchOperator(bpy.context)
-    if search.results is None:
+    search_object = SearchOperator(bpy.context)
+    asset_type = search_object._get_asset_type_from_ui()
+    search_results = search_object.get_results(asset_type)
+    if search_results is None:
         logging.debug('Empty search results')  # noqa : WPS421:230
         return
-    for search_result in search.results:
+    for search_result in search_results:
         if search_result.get('view_id') == downloader.asset_data['view_id']:
             search_result['downloaded'] = downloader.progress()
             return

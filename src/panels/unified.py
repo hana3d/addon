@@ -32,12 +32,15 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         row.prop(ui_props, 'down_up', expand=True, icon_only=False)
         layout.prop(ui_props, 'asset_type', expand=False, text='')
 
+        logging.debug(ui_props.asset_type)
         if ui_props.down_up == 'SEARCH':
+            logging.debug("Search selected!")
             if utils.profile_is_validator():
                 search = SearchOperator(context)
                 search_props = search.props
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type in {'MODEL', 'SCENE', 'MATERIAL'}:
+                logging.debug("Is correct props, will draw")
                 self._draw_panel_common_search(context)
 
         elif ui_props.down_up == 'UPLOAD':
@@ -63,7 +66,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
                 if bpy.context.view_layer.objects.active is not None:
                     self._draw_panel_common_upload(context)
                 else:
-                    layout.label(text='selet object to upload')
+                    layout.label(text='select object to upload')
             elif ui_props.asset_type == 'SCENE':
                 self._draw_panel_common_upload(context)
             elif ui_props.asset_type == 'MATERIAL':
@@ -155,7 +158,8 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
 
-        search = Search(context)
+        logging.debug("trying to draw panel!")
+        search = SearchOperator(context)
         search_props = search.props
         unified_props = Unified(context).props
 

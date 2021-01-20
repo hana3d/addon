@@ -51,7 +51,7 @@ class Hana3DAddTag(Operator):
         new_tag['name'] = self.tag
         new_tag.selected = True
 
-        search = Search(context)
+        search = SearchOperator(context)
         search_props = search.props
         new_tag = search_props.tags_list.add()
         new_tag['name'] = self.tag
@@ -77,7 +77,7 @@ class RemoveTagSearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        search = Search(context)
+        search = SearchOperator(context)
         search.props.tags_list[self.tag].selected = False
         return {'INTERFACE'}
 

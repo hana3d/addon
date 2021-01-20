@@ -63,7 +63,7 @@ class RemoveLibrarySearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        search = Search(context)
+        search = SearchOperator(context)
         search.props.libraries_list[self.library].selected = False
         return {'INTERFACE'}
 
@@ -103,7 +103,7 @@ class RefreshLibraries(bpy.types.Operator):
     def execute(self, context):
         unified_props = Unified(context).props
 
-        search = Search(context)
+        search = SearchOperator(context)
         search_props = search.props
         update_libraries(unified_props.workspace)
         update_libraries_list(search_props, context)

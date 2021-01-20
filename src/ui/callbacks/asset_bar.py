@@ -282,9 +282,11 @@ def draw_callback2d_search(self, context):
     # background of asset bar
     if not ui_props.dragging:
         search_object = SearchOperator(bpy.context)
-        search_results = search_object.results
+        asset_type = search_object._get_asset_type_from_ui()
+        asset_search = search_object.get_results(asset_type)
+        search_results = asset_search.results
         len_search = len(search_results)
-        search_results_orig = search_object.results_orig
+        search_results_orig = asset_search.original_results
         if search_results is None:
             return
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))
