@@ -1,17 +1,35 @@
 """Hana3D Profile."""
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import bpy
 
+import bugsnag
+import sentry_sdk
+
+from ... import config, paths
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import Search
 from ..unified_props import Unified
 from ..upload.upload import get_upload_props
-from ... import config, paths
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props   # noqa: WPS433
+
+
+def configure_bugsnag(api_key: str):
+    bugsnag.configure(
+        api_key=api_key,
+        project_root=Path(__file__).parent.parent.parent
+    )
+
+
+def configure_sentry(url: str):
+    sentry_sdk.init(
+        url,
+        traces_sample_rate=1.0
+    )
 
 
 def update_tags_list(props: 'Props', context: bpy.types.Context):
@@ -91,3 +109,9 @@ class Profile(object):
         upload_props = get_upload_props()
         update_libraries_list(upload_props, bpy.context)
         update_tags_list(upload_props, bpy.context)
+
+        if config.HANA3D_NAME == 'hana3d_production':
+            configure_bugsnag(
+                bpy.context.window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
+            configure_sentry(
+                bpy.context.window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])

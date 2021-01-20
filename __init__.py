@@ -61,7 +61,7 @@ bl_info = {
 }
 
 
-@persistent
+@ persistent
 def scene_load(context):
     search.load_previews()
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
@@ -78,7 +78,7 @@ def scene_load(context):
             bpy.app.timers.register(authentication.refresh_token_timer)
 
 
-@bpy.app.handlers.persistent
+@ bpy.app.handlers.persistent
 def check_timers_timer():
     '''Checks if all timers are registered regularly.
     Prevents possible bugs from stopping the addon.
@@ -102,7 +102,7 @@ def check_timers_timer():
     return 5.0
 
 
-@addon_updater_ops.make_annotations
+@ addon_updater_ops.make_annotations
 class Hana3DAddonPreferences(AddonPreferences):
     # this must match the addon name, use '__package__'
     # when defining this in a submodule of a python package.

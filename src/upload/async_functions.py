@@ -9,11 +9,11 @@ from typing import Set, Union
 import bpy
 import requests
 
+from ... import hana3d_types, paths
+from ...config import HANA3D_NAME
 from ..requests_async.requests_async import Request, UploadInChunks
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
 from ..ui.main import UI
-from ... import hana3d_types, paths
-from ...config import HANA3D_NAME
 
 CHUNK_SIZE = 1024 * 1024 * 2
 
