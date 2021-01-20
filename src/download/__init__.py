@@ -40,7 +40,7 @@ from .downloader import Downloader
 from .lib import check_existing
 from ..preferences.profile import update_libraries_list, update_tags_list
 from ..search.query import Query
-from ..search.search import Search
+from ..search import search
 from ..ui import colors
 from ..ui.main import UI
 from ...config import (
@@ -50,7 +50,6 @@ from ...config import (
     HANA3D_SCENES,
 )
 from ...report_tools import execute_wrapper
-
 from ... import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
 
 
@@ -148,9 +147,7 @@ def set_thumbnail(asset_data, asset):
 
 
 def update_downloaded_progress(downloader: Downloader):
-    search_object = SearchOperator(bpy.context)
-    asset_type = search_object._get_asset_type_from_ui()
-    search_results = search_object.get_results(asset_type)
+    search_results = search.get_search_results()
     if search_results is None:
         logging.debug('Empty search results')  # noqa : WPS421:230
         return
@@ -618,10 +615,10 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        search = Search(context)
+        search_results = search.get_search_results()
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
-        asset_data = search.results[self.asset_index].to_dict()
+        asset_data = search_results[self.asset_index].to_dict()
         assets_used = context.window_manager.get(f'{HANA3D_NAME}_assets_used')
         if assets_used is None:
             context.window_manager[f'{HANA3D_NAME}_assets_used'] = {}
@@ -715,9 +712,9 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
 
     @execute_wrapper
     def execute(self, context):
-        search = Search(context)
+        search_results = search.get_search_results()
         ui = UI()
-        if not search.results:
+        if not search_results:
             ui.add_report('Empty search results')
             return {'CANCELLED'}
 

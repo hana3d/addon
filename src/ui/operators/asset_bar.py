@@ -11,7 +11,7 @@ from mathutils import Vector
 from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
 from ..main import UI
 from ...preferences.preferences import Preferences
-from ...search import SearchOperator
+from ...search import search
 from ...upload import upload
 from .... import utils
 from ....config import (
@@ -34,11 +34,7 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
         int: index of the asset under the mouse
     """
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-
-    search_object = SearchOperator(bpy.context)
-    asset_type = search_object._get_asset_type_from_ui()
-    search_results = search_object.get_results(asset_type).results
-    len_search = len(search_results)
+    search_results = search.get_search_results()
     if search_results is not None:
 
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))
@@ -230,9 +226,7 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
     ui.bar_width = region.width - ui.bar_x - ui.bar_end
     ui.wcount = math.floor((ui.bar_width - 2 * ui.drawoffset) / (ui.thumb_size + ui.margin))
 
-    search_object = SearchOperator(bpy.context)
-    asset_type = search_object._get_asset_type_from_ui()
-    search_results = search_object.get_results(asset_type).results
+    search_results = search.get_search_results()
     if search_results is not None and ui.wcount > 0:
         ui.hcount = min(
             user_preferences.max_assetbar_rows,
@@ -282,11 +276,9 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
     def search_more(self):
         """Search more results."""
-        search_object = SearchOperator(bpy.context)
-        asset_type = search_object._get_asset_type_from_ui()
-        search_results_orig = search_object.get_results_original(asset_type)
-        if search_results_orig is not None and search_results_orig.get('next') is not None:
-            search_object.async_execute(get_next=True)
+        original_search_results = search.get_original_search_results()
+        if original_search_results is not None and original_search_results.get('next') is not None:
+            search.run_operator(get_next=True)
 
     def exit_modal(self):
         """Exit modal."""
@@ -404,9 +396,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         # TODO add one more condition here to take less performance.
         scene = bpy.context.scene
-        search_object = SearchOperator(context)
-        asset_type = search_object._get_asset_type_from_ui()
-        search_results = search_object.get_results(asset_type).results
+        search_results = search.get_search_results()
         # If there aren't any results, we need no interaction(yet)
         if search_results is None:
             return {'PASS_THROUGH'}
@@ -475,9 +465,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 bpy.context.window.cursor_set('DEFAULT')
                 return {'PASS_THROUGH'}
 
-            search_object = SearchOperator(bpy.context)
-            asset_type = search_object._get_asset_type_from_ui()
-            search_results = search_object.get_results(asset_type).results
+            search_results = search.get_search_results()
             len_search = len(search_results)
 
             if not ui_props.dragging:  # noqa: WPS504
@@ -736,12 +724,9 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props.assetbar_on = True
         ui_props.turn_off = False
 
-        search_object = SearchOperator(bpy.context)
-        asset_type = search_object._get_asset_type_from_ui()
-        search_results = search_object.get_results(asset_type).results
+        search_results = search.get_search_results()
         if search_results is None:
-            search_object = SearchOperator(bpy.context)
-            search_object.set_results(asset_type, [])
+            search.set_results([])
 
         if context.area.type != 'VIEW_3D':
             logging.warning('View3D not found, cannot run operator')

@@ -1,9 +1,10 @@
 """Search/Upload Panel."""
 import bpy
+import logging
 from bpy.types import Panel
 
 from .lib import draw_assetbar_show_hide
-from ..search import SearchOperator
+from ..search import search
 from ..unified_props import Unified
 from ..upload import upload
 from ... import utils
@@ -32,15 +33,11 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         row.prop(ui_props, 'down_up', expand=True, icon_only=False)
         layout.prop(ui_props, 'asset_type', expand=False, text='')
 
-        logging.debug(ui_props.asset_type)
         if ui_props.down_up == 'SEARCH':
-            logging.debug("Search selected!")
             if utils.profile_is_validator():
-                search = SearchOperator(context)
-                search_props = search.props
+                search_props = search.get_search_props()
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type in {'MODEL', 'SCENE', 'MATERIAL'}:
-                logging.debug("Is correct props, will draw")
                 self._draw_panel_common_search(context)
 
         elif ui_props.down_up == 'UPLOAD':
@@ -158,9 +155,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
 
-        logging.debug("trying to draw panel!")
-        search = SearchOperator(context)
-        search_props = search.props
+        search_props = search.get_search_props()
         unified_props = Unified(context).props
 
         row = layout.row()
@@ -174,7 +169,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         layout.prop_search(search_props, 'tags_input', search_props, 'tags_list', icon='VIEWZOOM')
         self._draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
         layout.prop(search_props, 'public_only')
-        self._label_multiline(text=search_props.report)
+        self._label_multiline(text=search_props.get('report'))
 
         if asset_type == 'MODEL':
             layout.separator()

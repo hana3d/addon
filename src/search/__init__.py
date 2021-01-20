@@ -8,10 +8,9 @@ from typing import Dict, List, Tuple
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
-from .asset_search import AssetSearch
+from . import search
 from .async_functions import download_thumbnail, search_assets
 from .query import Query
-from .search import check_errors, load_previews
 from ..asset.asset_type import AssetType
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..ui.main import UI
@@ -33,8 +32,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
     bl_label = f'{HANA3D_DESCRIPTION} asset search'
     bl_description = 'Search online for assets'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
-    query: Dict[AssetType, Query] = {}
-    results: Dict[AssetType, AssetSearch] = {}
 
     own: BoolProperty(  # type: ignore
         name='Own assets only',
@@ -57,15 +54,8 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
     )
 
     is_searching: BoolProperty(  # type: ignore
-        name='Is searching',
-        description='True if assets are being searched',
-        default=False,
-        options={'SKIP_SAVE'},
-    )
-
-    search_error: BoolProperty(  # type: ignore
-        name='Search error',
-        description='True if there was an error in search',
+        name='Next page',
+        description='Get next page from previous search',
         default=False,
         options={'SKIP_SAVE'},
     )
@@ -77,32 +67,9 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         options={'SKIP_SAVE'},
     )
 
-    def get_query(self, asset_type: AssetType) -> Query:
-        """Get current query by asset type.
-
-        Returns:
-            Query: query by asset type.
-        """
-        return self.queries[asset_type]
-
-    def set_query(self, asset_type: AssetType, query: Query):
-        self.queries[asset_type] = query
-
-    def get_results(self, asset_type: AssetType) -> AssetSearch:
-        """Get current search results by asset type.
-
-        Returns:
-            Query: query by asset type.
-        """
-        return self.results[asset_type]
-
-    def set_results(self, asset_type: AssetType, results: AssetSearch):
-        self.results[asset_type] = results
-
-
     @classmethod
     def poll(cls, context):
-        return not self.is_searching
+        return True
 
     async def async_execute(self, context):
         """Search async execute.
@@ -114,35 +81,38 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’}
         """
 
-        search_props = self.props
+        logging.debug('STARTING ASYNC SEARCH')
+        search_props = search.get_search_props()
         if self.author_id != '':
-            search_props.search_keywords = ''
+            search_props['search_keywords'] = ''
         if self.keywords != '':
-            search_props.search_keywords = self.keywords
+            search_props['search_keywords'] = self.keywords
 
+        logging.debug(f'GOT SEARCH_PROPS: {search_props}')
         ui = UI()
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-        search_props.asset_type = ui_props.asset_type.lower()
-        query = Query(bpy.context, search_props)
+        asset_type = ui_props.asset_type.lower()
 
-        if self.is_searching and self.get_next:
+        search_props['asset_type'] = asset_type
+
+        logging.debug('CREATING QUERY OBJECT')
+        query = Query(bpy.context, search_props)
+        logging.debug(f'GOT QUERY OBJECT: {query.to_dict()}')
+
+        if search_props.get('is_searching') and self.get_next:
             return
 
-        self.is_searching = True
+        search_props['is_searching'] = True
 
         params = {'get_next': self.get_next}
         ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
         request_data = await search_assets(query, params, ui)
-        #search_results = parse(request_data)
 
         tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
-        asset_type = search_props.asset_type
-        asset_search = AssetSearch(bpy.context, asset_type)
-        asset_search.results = []  # noqa : WPS110
 
         result_field = []
-        ok, error = check_errors(request_data)
+        ok, error = self._check_errors(request_data)
         if ok:
             run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
             run_assetbar_op()
@@ -230,17 +200,13 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
                             result_field.append(asset_data)  # noqa : WPS220
 
-            asset_search.results = result_field  # noqa : WPS110
-            asset_search.results_original = request_data
-            self.set_results(search_props.asset_type, asset_search)
+            search.set_results(asset_type, result_field)
+            search.set_original_results(asset_type, request_data)
+            search.load_previews(asset_type, result_field)
 
-            load_previews(asset_type, asset_search)
-
-            ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
             if len(result_field) < ui_props.scrolloffset:
                 ui_props.scrolloffset = 0
             self.is_searching = False
-            self.search_error = False
             text = f'Found {search_object.results_original["count"]} results. '  # noqa #501
             ui.add_report(text=text)
 
@@ -248,9 +214,9 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             logging.error(error)
             ui = UI()
             ui.add_report(text=error, color=colors.RED)
-            props.search_error = True
+            #se.search_error = True
 
-        mt('preview loading finished')
+        #mt('preview loading finished')
 
         #search_assets(query, params, props, ui)
 
@@ -268,6 +234,20 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
         return {'FINISHED'}
 
+    def _check_errors(request_data: Dict) -> Tuple[bool, str]:
+        if request_data.get('status_code') == 401:
+            logging.debug(request_data)
+            if request_data.get('code') == 'token_expired':
+                user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+                if user_preferences.api_key != '':
+                    hana3d_oauth.refresh_token(immediate=False)
+                    return False, request_data.get('description', '')
+                return False, 'Missing or wrong api_key in addon preferences'
+        elif request_data.get('status_code') == 403:
+            logging.debug(request_data)
+            if request_data.get('code') == 'invalid_permissions':
+                return False, request_data.get('description', '')
+        return True, ''
 
     def _get_thumbnails(tempdir: str, request_data: Dict) -> Tuple:
         thumb_small_urls = []

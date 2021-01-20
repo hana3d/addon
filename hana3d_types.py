@@ -44,7 +44,7 @@ from .config import (
     HANA3D_UI,
 )
 from .src.preferences.profile import update_libraries_list, update_tags_list
-from .src.search import SearchOperator
+from .src.search import search
 from .src.upload import upload
 
 thumbnail_angles = (
@@ -71,7 +71,6 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        search_object = SearchOperator(context)
         search.load_previews()
 
     def switch_active_asset_type(self, context):
@@ -299,7 +298,7 @@ def search_update(self, context):
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     if ui_props.down_up != 'SEARCH':
         ui_props.down_up = 'SEARCH'
-    search.search()
+    search.run_operator()
 
 
 class Hana3DTagItem(PropertyGroup):
@@ -330,12 +329,12 @@ class Hana3DCommonSearchProps:
     def update_tags_input(self, context):
         if self.tags_input != '':
             self.tags_list[self.tags_input].selected = True
-            search.search()
+            search.run_operator()
 
     def update_libraries_input(self, context):
         if self.libraries_input != '':
             self.libraries_list[self.libraries_input].selected = True
-            search.search()
+            search.run_operator()
 
     # STATES
     search_keywords: StringProperty(
@@ -934,9 +933,9 @@ class Hana3DUnifiedProps(PropertyGroup):
     """Hana3D Unified Props."""
 
     def _on_workspace_update(self, context):
-        search_class = Search(context)
-        update_libraries_list(search_class.props, context)
-        update_tags_list(search_class.props, context)
+        search_props = search.get_search_props()
+        update_libraries_list(search_props, context)
+        update_tags_list(search_props, context)
 
         upload_props = upload.get_upload_props()
         if upload_props is not None:

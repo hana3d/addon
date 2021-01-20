@@ -6,7 +6,7 @@ import bpy
 
 from .. import bgl_helper
 from ...preferences.preferences import Preferences
-from ...search import SearchOperator
+from ...search import search
 from ...upload import upload
 from .... import paths, utils
 from ....config import HANA3D_NAME, HANA3D_UI
@@ -281,12 +281,9 @@ def draw_callback2d_search(self, context):
     highlight = (1, 1, 1, 0.2)
     # background of asset bar
     if not ui_props.dragging:
-        search_object = SearchOperator(bpy.context)
-        asset_type = search_object._get_asset_type_from_ui()
-        asset_search = search_object.get_results(asset_type)
-        search_results = asset_search.results
+        search_results = search.get_search_results()
         len_search = len(search_results)
-        search_results_orig = asset_search.original_results
+        search_results_orig = search.get_original_search_results()
         if search_results is None:
             return
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))

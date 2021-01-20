@@ -23,7 +23,7 @@ from bpy.types import Operator
 from . import utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
-from .src.search import SearchOperator
+from .src.search import search
 from .src.unified_props import Unified
 from .src.upload import upload
 
@@ -51,9 +51,8 @@ class Hana3DAddTag(Operator):
         new_tag['name'] = self.tag
         new_tag.selected = True
 
-        search = SearchOperator(context)
-        search_props = search.props
-        new_tag = search_props.tags_list.add()
+        search_props = search.get_search_props()
+        new_tag = search_props['tags_list'].add()
         new_tag['name'] = self.tag
 
         for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
@@ -77,8 +76,9 @@ class RemoveTagSearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        search = SearchOperator(context)
-        search.props.tags_list[self.tag].selected = False
+        # SEARCH REFACTOR VERIFY
+        search_props = search.get_search_props()
+        search_props['tags_list'][self.tag].selected = False
         return {'INTERFACE'}
 
 
