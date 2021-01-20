@@ -9,7 +9,7 @@ my_dir = os.path.join(os.path.dirname(__file__))
 log = logging.getLogger(__name__)
 
 
-def load_wheel(module_name, fname_prefix):
+def load_wheel(module_name: str, fname_prefix: str):
     """Load a wheel from 'fname_prefix*.whl', unless the named module can be imported.
 
     This allows us to use system-installed packages before falling back to the shipped wheels.
