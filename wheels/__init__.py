@@ -25,13 +25,14 @@ def load_wheel(module_name, fname_prefix):
         log.debug(f'Unable to import {module_name} directly, will try wheel: {ex}')
     else:
         log.debug(
-            f'Loaded {module_name} from {module.__file__}, no need to load wheel {fname_prefix}'
+            f'Loaded {module_name} from {module.__file__}, \
+            no need to load wheel {fname_prefix}',  # noqa: WPS609
         )
         return
 
     sys.path.append(wheel_filename(fname_prefix))
-    module = __import__(module_name)
-    log.debug('Loaded %s from %s', module_name, module.__file__)
+    module = __import__(module_name)    # noqa: WPS421
+    log.debug(f'Loaded {module_name} from {module.__file__}')    # noqa: WPS609
 
 
 def wheel_filename(fname_prefix: str) -> str:
@@ -39,6 +40,12 @@ def wheel_filename(fname_prefix: str) -> str:
 
     Arguments:
         fname_prefix: str
+
+    Returns:
+        str: latest matching wheel name
+
+    Exception:
+        RuntimeError: Unable to find wheel
     """
     path_pattern = os.path.join(my_dir, f'{fname_prefix}*.whl')
     wheels = glob.glob(path_pattern)

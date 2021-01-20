@@ -22,7 +22,7 @@ def configure_bugsnag(api_key: str):
     """Configure bugsnag.
 
     Arguments:
-        spi_key: str
+        api_key: str
     """
     bugsnag.configure(
         api_key=api_key,
