@@ -7,7 +7,7 @@ import bpy
 from bpy.types import Context
 
 from ..asset.asset_type import AssetType
-from ... import hana3d_oauth, paths, utils
+from ... import paths, utils
 from ...config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -16,6 +16,7 @@ from ...config import (
     HANA3D_UI,
 )
 
+
 @dataclass
 class SearchResult(object):
     """Hana3D search result."""
@@ -23,10 +24,17 @@ class SearchResult(object):
     view_id: str
     file_name: str
     download_url: str
+    downloaded: float
     asset_type: AssetType
 
 
 def load_previews(asset_type: AssetType, search_results: Dict):
+    """Load small preview thumbnails for search results.
+
+    Parameters:
+        asset_type: type of the asset
+        search_results: search results
+    """
     mappingdict = {
         'MODEL': 'model',
         'SCENE': 'scene',
@@ -34,32 +42,33 @@ def load_previews(asset_type: AssetType, search_results: Dict):
     }
 
     directory = paths.get_temp_dir(f'{mappingdict[asset_type]}_search')
+    if search_results is None:
+        return
 
-    if search_results is not None:
-        index = 0
-        for search_result in search_results:
-            if search_result['thumbnail_small'] == '':
-                load_placeholder_thumbnail(index, search_result['id'])
-                index += 1
-                continue
-
-            thumbnail_path = os.path.join(directory, search_result['thumbnail_small'])
-
-            image_name = utils.previmg_name(index)
-
-            if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
-                img = bpy.data.images.get(image_name)
-                if img is None:
-                    img = bpy.data.images.load(thumbnail_path)
-                    img.name = image_name
-                elif img.filepath != thumbnail_path:
-                    # had to add this check for autopacking files...
-                    if img.packed_file is not None:
-                        img.unpack(method='USE_ORIGINAL')
-                    img.filepath = thumbnail_path
-                    img.reload()
-                img.colorspace_settings.name = 'Linear'
+    index = 0
+    for search_result in search_results:
+        if search_result['thumbnail_small'] == '':
+            load_placeholder_thumbnail(index, search_result['id'])
             index += 1
+            continue
+
+        thumbnail_path = os.path.join(directory, search_result['thumbnail_small'])
+
+        image_name = utils.previmg_name(index)
+
+        if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
+            img = bpy.data.images.get(image_name)
+            if img is None:
+                img = bpy.data.images.load(thumbnail_path)
+                img.name = image_name
+            elif img.filepath != thumbnail_path:
+                # had to add this check for autopacking files...
+                if img.packed_file is not None:
+                    img.unpack(method='USE_ORIGINAL')
+                img.filepath = thumbnail_path
+                img.reload()
+            img.colorspace_settings.name = 'Linear'
+        index += 1
 
 
 def load_placeholder_thumbnail(index: int, asset_id: str):
@@ -84,6 +93,9 @@ def load_placeholder_thumbnail(index: int, asset_id: str):
 def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:  # noqa : WPS110
     """Get search results.
 
+    Parameters:
+        asset_type: type of the assets searched
+
     Returns:
         List: search results
     """
@@ -95,10 +107,24 @@ def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:  # n
 
 
 def set_search_results(asset_type: AssetType, results_value: List[SearchResult]):
+    """Set search results for given asset type.
+
+    Parameters:
+        asset_type: asset type
+        results_value: search results
+    """
     bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search'] = results_value
 
 
 def get_original_search_results(asset_type: AssetType = None):
+    """Get original search results.
+
+    Parameters:
+        asset_type: type of the assets searched
+
+    Returns:
+        List: original search results
+    """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
     if f'{HANA3D_NAME}_{asset_type}_search_original' not in bpy.context.window_manager:
@@ -107,16 +133,22 @@ def get_original_search_results(asset_type: AssetType = None):
 
 
 def set_original_search_results(asset_type: AssetType, original_results_value: Dict):
+    """Set original search results for given asset type.
+
+    Parameters:
+        asset_type: asset type
+        original_results_value: original search results
+    """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
     bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original'] = original_results_value
 
 
-def get_search_props(asset_type: AssetType = None) -> Dict:
+def get_search_props(asset_type: AssetType = None):
     """Get search props.
 
     Returns:
-        Any | None: search props if available
+        Dict | None: search props if available
     """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
@@ -127,11 +159,16 @@ def get_search_props(asset_type: AssetType = None) -> Dict:
     elif asset_type == 'material' and hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
         return getattr(bpy.context.window_manager, HANA3D_MATERIALS)
 
+def run_operator(get_next=False):
+    """Run search operator
+    
+    Parameters:
+        get_next: get next batch of results
+    """
+    search_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_search')
+    search_op(get_next=get_next)
+
 
 def _get_asset_type_from_ui() -> AssetType:
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
     return uiprops.asset_type.lower()
-
-def run_operator(get_next=False):
-    search_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_search')
-    search_op(get_next=get_next)

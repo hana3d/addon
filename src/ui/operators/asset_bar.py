@@ -35,6 +35,7 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
     """
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     search_results = search.get_search_results()
+    len_search = len(search_results)
     if search_results is not None:
 
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))

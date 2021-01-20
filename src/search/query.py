@@ -6,7 +6,6 @@ from bpy.types import Context
 from ..asset.asset_type import AssetType
 from ..unified_props import Unified
 from ...config import HANA3D_NAME
-#from ...hana3d_types import Dict
 
 
 class Query(object):  # noqa : WPS230,WPS214

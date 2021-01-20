@@ -39,8 +39,8 @@ from bpy.props import (
 from .downloader import Downloader
 from .lib import check_existing
 from ..preferences.profile import update_libraries_list, update_tags_list
-from ..search.query import Query
 from ..search import search
+from ..search.query import Query
 from ..ui import colors
 from ..ui.main import UI
 from ...config import (
@@ -50,6 +50,7 @@ from ...config import (
     HANA3D_SCENES,
 )
 from ...report_tools import execute_wrapper
+
 from ... import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
 
 
@@ -152,8 +153,8 @@ def update_downloaded_progress(downloader: Downloader):
         logging.debug('Empty search results')  # noqa : WPS421:230
         return
     for search_result in search_results:
-        if search_result.get('view_id') == downloader.asset_data['view_id']:
-            search_result['downloaded'] = downloader.progress()
+        if search_result.view_id == downloader.asset_data['view_id']:
+            search_result.downloaded = downloader.progress()
             return
 
 

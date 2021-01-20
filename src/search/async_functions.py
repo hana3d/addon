@@ -11,16 +11,12 @@ from ..ui.main import UI
 from ... import paths, rerequests
 
 
-async def search_assets(
-    query: Query,
-    params: Dict,
-    ui: UI
-) -> Union[Dict, Set[str]]:
-    """Sends request to search assets.
+async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[str]]:
+    """Send request to search assets.
 
     Arguments:
         query: Search query
-        params: Additional parameters
+        options: Additional parameters
         ui: UI object
 
     Returns:
@@ -34,10 +30,10 @@ async def search_assets(
 
     headers = rerequests.get_headers()
 
-    request_data : dict = {}
+    request_data: dict = {}
     request_data['results'] = []
 
-    if params['get_next']:
+    if options['get_next']:
         with open(json_filepath, 'r') as infile:
             try:
                 original_data = json.load(infile)
@@ -48,17 +44,17 @@ async def search_assets(
                     return {'CANCELLED'}
             except Exception:
                 # In case no search results found on drive we don't do next page loading.
-                params['get_next'] = False
-    if not params['get_next']:
+                options['get_next'] = False
+    if not options['get_next']:
         query.save_last_query()
         urlquery = paths.get_api_url('search', query=query.to_dict())
-    
+
     try:
         logging.debug(urlquery)
         request = rerequests.get(urlquery, headers=headers)
-    except requests.exceptions.RequestException as e:
-        logging.error(e)
-        ui.add_report(text=str(e))
+    except requests.exceptions.RequestException as error:
+        logging.error(error)
+        ui.add_report(text=str(error))
         return {'CANCELLED'}
     logging.debug('Response is back ')
     try:
@@ -73,7 +69,13 @@ async def search_assets(
 
 
 async def download_thumbnail(image_path: str, url: str):
+    """Download thumbnail from url to image_path.
+
+    Parameters:
+        image_path: path for saving on the hard drive
+        url: link for where the image is hosted
+    """
     request = rerequests.get(url, stream=False)
-    if request.status_code == 200:
-        with open(image_path, 'wb') as f:
-            f.write(request.content)
+    if request.status_code == 200:  # noqa: WPS432
+        with open(image_path, 'wb') as image_file:
+            image_file.write(request.content)

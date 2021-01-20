@@ -1,6 +1,5 @@
 """Search/Upload Panel."""
 import bpy
-import logging
 from bpy.types import Panel
 
 from .lib import draw_assetbar_show_hide

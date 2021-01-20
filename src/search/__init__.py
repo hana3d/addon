@@ -14,7 +14,7 @@ from .query import Query
 from ..asset.asset_type import AssetType
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..ui.main import UI
-from ... import paths, utils
+from ... import hana3d_oauth, paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 asset_types = (
@@ -36,7 +36,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
     own: BoolProperty(  # type: ignore
         name='Own assets only',
         description='Find all own assets',
-        default=False
+        default=False,
     )
 
     author_id: StringProperty(  # type: ignore
@@ -69,6 +69,14 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
     @classmethod
     def poll(cls, context):
+        """Search poll.
+
+        Parameters:
+            context: Blender context
+
+        Returns:
+            bool: can always search
+        """
         return True
 
     async def async_execute(self, context):
@@ -80,7 +88,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’}
         """
-
         logging.debug('STARTING ASYNC SEARCH')
         search_props = search.get_search_props()
         if self.author_id != '':
@@ -234,7 +241,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
         return {'FINISHED'}
 
-    def _check_errors(request_data: Dict) -> Tuple[bool, str]:
+    def _check_errors(self, request_data: Dict) -> Tuple[bool, str]:
         if request_data.get('status_code') == 401:
             logging.debug(request_data)
             if request_data.get('code') == 'token_expired':
@@ -249,7 +256,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 return False, request_data.get('description', '')
         return True, ''
 
-    def _get_thumbnails(tempdir: str, request_data: Dict) -> Tuple:
+    def _get_thumbnails(self, tempdir: str, request_data: Dict) -> Tuple:
         thumb_small_urls = []
         thumb_small_filepaths = []
         thumb_full_urls = []
@@ -288,7 +295,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         uiprops = getattr(self.context.window_manager, HANA3D_UI)
         return uiprops.asset_type.lower()
 
-    async def _download_thumbnails(thumbnails: List[Tuple]):
+    async def _download_thumbnails(self, thumbnails: List[Tuple]):
         for imgpath, url in thumbnails:
             if os.path.exists(imgpath):
                 await download_thumbnail(imgpath, url)
@@ -309,4 +316,3 @@ def unregister():
     """Search unregister."""
     for class_ in reversed(classes):
         bpy.utils.unregister_class(class_)
-
