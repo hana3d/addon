@@ -25,8 +25,8 @@ def load_wheel(module_name, fname_prefix):
         log.debug(f'Unable to import {module_name} directly, will try wheel: {ex}')
     else:
         log.debug(
-            f'Loaded {module_name} from {module.__file__}, \
-            no need to load wheel {fname_prefix}',  # noqa: WPS609
+            f'Loaded {module_name} from {module.__file__}'    # noqa: WPS609
+            + f'instead of wheel {fname_prefix}',
         )
         return
 
@@ -44,7 +44,7 @@ def wheel_filename(fname_prefix: str) -> str:
     Returns:
         str: latest matching wheel name
 
-    Exception:
+    Raises:
         RuntimeError: Unable to find wheel
     """
     path_pattern = os.path.join(my_dir, f'{fname_prefix}*.whl')
