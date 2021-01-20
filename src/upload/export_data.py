@@ -7,7 +7,7 @@ from ..unified_props import Unified
 from ... import hana3d_types, utils
 
 
-def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
+def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210
     """Get required data from Blender for upload.
 
     Arguments:
@@ -57,7 +57,7 @@ def get_export_data(props: hana3d_types.Props):  # noqa: WPS210
     return export_data, upload_data
 
 
-def _get_model_data(export_data: dict, props: hana3d_types.Props):  # noqa: WPS210
+def _get_model_data(export_data: dict, props: hana3d_types.UploadProps):  # noqa: WPS210
     mainmodel = utils.get_active_model(bpy.context)
 
     obs = utils.get_hierarchy(mainmodel)
@@ -116,7 +116,7 @@ def _get_scene_data(export_data: dict):
     return upload_data, upload_params
 
 
-def _get_tags(props: hana3d_types.Props):
+def _get_tags(props: hana3d_types.UploadProps):
     tags: List[str] = []
     for tag in props.tags_list.keys():
         if props.tags_list[tag].selected is True:
@@ -124,7 +124,7 @@ def _get_tags(props: hana3d_types.Props):
     return tags
 
 
-def _get_libraries(props: hana3d_types.Props):  # noqa: WPS210
+def _get_libraries(props: hana3d_types.UploadProps):  # noqa: WPS210
     libraries: List[dict] = []
     for library_name in props.libraries_list.keys():
         if props.libraries_list[library_name].selected is True:

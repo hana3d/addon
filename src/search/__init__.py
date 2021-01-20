@@ -8,11 +8,12 @@ from typing import Dict, List, Tuple
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
-from . import search
 from .async_functions import download_thumbnail, search_assets
 from .query import Query
+from .search import SearchResult
 from ..asset.asset_type import AssetType
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..preferences.preferences import Preferences
 from ..ui.main import UI
 from ... import hana3d_oauth, paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
@@ -91,30 +92,29 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         logging.debug('STARTING ASYNC SEARCH')
         search_props = search.get_search_props()
         if self.author_id != '':
-            search_props['search_keywords'] = ''
+            search_props.search_keywords = ''
         if self.keywords != '':
-            search_props['search_keywords'] = self.keywords
+            search_props.search_keywords = self.keywords
 
         logging.debug(f'GOT SEARCH_PROPS: {search_props}')
         ui = UI()
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = ui_props.asset_type.lower()
-
-        search_props['asset_type'] = asset_type
+        search_props.asset_type = asset_type
 
         logging.debug('CREATING QUERY OBJECT')
         query = Query(bpy.context, search_props)
         logging.debug(f'GOT QUERY OBJECT: {query.to_dict()}')
 
-        if search_props.get('is_searching') and self.get_next:
-            return
+        if search_props.is_searching and self.get_next:
+            return {'FINISHED'}
 
-        search_props['is_searching'] = True
+        search_props.is_searching = True
 
-        params = {'get_next': self.get_next}
+        options = {'get_next': self.get_next}
         ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
-        request_data = await search_assets(query, params, ui)
+        request_data = await search_assets(query, options, ui)
 
         tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
 
@@ -123,89 +123,8 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         if ok:
             run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
             run_assetbar_op()
-            for r in request_data['results']:
-                if r['assetType'] == asset_type:
-                    if len(r['files']) > 0:
-                        tname = None
-                        allthumbs = []
-                        durl, tname = None, None
-                        for f in r['files']:
-                            if f['fileType'] == 'thumbnail':
-                                tname = paths.extract_filename_from_url(f['fileThumbnailLarge'])
-                                small_tname = paths.extract_filename_from_url(
-                                    f['fileThumbnail'],
-                                )
-                                allthumbs.append(tname)
 
-                            tdict = {}
-                            for i, t in enumerate(allthumbs):
-                                tdict['thumbnail_%i'] = t
-                            if f['fileType'] == 'blend':
-                                durl = f['downloadUrl']
-                        if durl:    # noqa: WPS220
-                            # Check for assetBaseId for backwards compatibility
-                            view_id = r.get('viewId') or r.get('assetBaseId') or ''
-                            tooltip = utils.generate_tooltip(
-                                r['name'],
-                                r['description'],
-                            )
-                            asset_data = {
-                                'thumbnail': tname,
-                                'thumbnail_small': small_tname,
-                                'download_url': durl,
-                                'id': r['id'],
-                                'view_id': view_id,
-                                'name': r['name'],
-                                'asset_type': r['assetType'],
-                                'tooltip': tooltip,
-                                'tags': r['tags'],
-                                'verification_status': r['verificationStatus'],
-                                'author_id': str(r['author']['id']),
-                                'description': r['description'] or '',
-                                'render_jobs': r.get('render_jobs', []),
-                                'workspace': r.get('workspace', ''),
-                            }
-                            asset_data['downloaded'] = 0
-
-                            if 'metadata' in r and r['metadata'] is not None:
-                                asset_data['metadata'] = r['metadata']
-                            if 'created' in r and r['created'] is not None:
-                                asset_data['created'] = r['created']
-                            if 'libraries' in r and r['libraries'] is not None:
-                                asset_data['libraries'] = r['libraries']
-
-                            params = utils.params_to_dict(r['parameters'])
-
-                            if asset_type == 'model':
-                                if params.get('boundBoxMinX') is not None:
-                                    bbox = {
-                                        'bbox_min': (
-                                            float(params['boundBoxMinX']),
-                                            float(params['boundBoxMinY']),
-                                            float(params['boundBoxMinZ']),
-                                        ),
-                                        'bbox_max': (
-                                            float(params['boundBoxMaxX']),
-                                            float(params['boundBoxMaxY']),
-                                            float(params['boundBoxMaxZ']),
-                                        ),
-                                    }
-
-                                else:
-                                    bbox = {
-                                        'bbox_min': (-0.5, -0.5, 0),
-                                        'bbox_max': (0.5, 0.5, 1),
-                                    }
-                                asset_data.update(bbox)
-
-                            asset_data.update(tdict)
-                            assets_used = bpy.context.window_manager.get(  # noqa : WPS220
-                                f'{HANA3D_NAME}_assets_used', {},
-                            )
-                            if view_id in assets_used.keys():  # noqa : WPS220
-                                asset_data['downloaded'] = 100  # noqa : WPS220
-
-                            result_field.append(asset_data)  # noqa : WPS220
+            result_field = self._parse_request(request_data)
 
             search.set_results(asset_type, result_field)
             search.set_original_results(asset_type, request_data)
@@ -213,24 +132,19 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
             if len(result_field) < ui_props.scrolloffset:
                 ui_props.scrolloffset = 0
-            self.is_searching = False
+            search_props.is_searching = False
             text = f'Found {search_object.results_original["count"]} results. '  # noqa #501
             ui.add_report(text=text)
-
         else:
             logging.error(error)
             ui = UI()
             ui.add_report(text=error, color=colors.RED)
-            #se.search_error = True
-
-        #mt('preview loading finished')
-
-        #search_assets(query, params, props, ui)
+            seach_props.search_error = True
 
         # we save here because a missing thumbnail check is in the previous loop
         # we can also prepend previous results. These have downloaded thumbnails already...
-        if params['get_next']:
-            request_data['results'][0:0] = origdata['results']
+        if options['get_next']:
+            request_data['results'][0] = request_data['results']
 
         json_filepath = os.path.join(tempdir, f'{asset_type}_searchresult.json')
         with open(json_filepath, 'w') as outfile:
@@ -242,19 +156,117 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         return {'FINISHED'}
 
     def _check_errors(self, request_data: Dict) -> Tuple[bool, str]:
-        if request_data.get('status_code') == 401:
+        if request_data.get('status_code') == 401:  # noqa: WPS432
             logging.debug(request_data)
             if request_data.get('code') == 'token_expired':
-                user_preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
+                user_preferences = Preferences().get()
                 if user_preferences.api_key != '':
                     hana3d_oauth.refresh_token(immediate=False)
                     return False, request_data.get('description', '')
                 return False, 'Missing or wrong api_key in addon preferences'
-        elif request_data.get('status_code') == 403:
+        elif request_data.get('status_code') == 403:  # noqa: WPS432
             logging.debug(request_data)
             if request_data.get('code') == 'invalid_permissions':
                 return False, request_data.get('description', '')
         return True, ''
+
+    def _parse_response(self, asset_type: AssetType, request_data: Dict) -> List[SearchResult]:
+        result_field = []
+        for response in request_data['results']:
+            if response['assetType'] != asset_type or not response['files']:
+                continue
+
+            download_url, thumbnail, small_thumbnail = self._parse_files(response['files'])
+
+            if not download_url:
+                continue
+
+            asset_data = self._create_asset_data(
+                thumbnail,
+                small_thumbnail,
+                download_url,
+                response,
+            )
+            options = utils.params_to_dict(response['parameters'])
+
+            if asset_type == 'model':
+                if options.get('boundBoxMinX') is not None:
+                    asset_data.bbox_min = (
+                        float(options['boundBoxMinX']),
+                        float(options['boundBoxMinY']),
+                        float(options['boundBoxMinZ']),
+                    )
+                    asset_data.bbox_max = (
+                        float(options['boundBoxMaxX']),
+                        float(options['boundBoxMaxY']),
+                        float(options['boundBoxMaxZ']),
+                    )
+
+            assets_used = bpy.context.window_manager.get(
+                f'{HANA3D_NAME}_assets_used', {},
+            )
+            if asset_data.view_id in assets_used.keys():
+                asset_data.downloaded = 100
+
+            result_field.append(asset_data)
+        return result_field
+
+    def _parse_files(self, files: List[Dict]) -> Tuple[str, str, str]:
+        all_thumbnails: List[str] = []
+        for rfile in files:
+            if rfile['fileType'] == 'thumbnail':
+                thumbnail_name = paths.extract_filename_from_url(
+                    rfile['fileThumbnailLarge'],
+                )
+                small_thumbnail_name = paths.extract_filename_from_url(
+                    rfile['fileThumbnail'],
+                )
+                all_thumbnails.append(thumbnail_name)
+
+            thumbnail_dict = {}
+            for index, thumbnail in enumerate(all_thumbnails):
+                thumbnail_dict[f'thumbnail_{index}'] = thumbnail
+            if rfile['fileType'] == 'blend':
+                download_url = rfile['downloadUrl']
+        return download_url, thumbnail_name, small_thumbnail_name
+
+    def _create_asset_data(
+        self,
+        thumbnail_name: str,
+        small_thumbnail_name: str,
+        download_url: str,
+        response: Dict,
+    ) -> SearchResult:
+        # Check for assetBaseId for backwards compatibility
+        view_id = response.get('viewId') or response.get('assetBaseId') or ''
+        tooltip = utils.generate_tooltip(
+            response['name'],
+            response['description'],
+        )
+        asset_data = SearchResult(
+            thumbnail_name,
+            small_thumbnail_name,
+            download_url,
+            response['id'],
+            view_id,
+            response['name'],
+            response['assetType'],
+            tooltip,
+            response['tags'],
+            response['verificationStatus'],
+            str(response['author']['id']),
+            response['description'] or '',
+            response.get('render_jobs', []),
+            response.get('workspace', ''),
+        )
+
+        if 'metadata' in response and response['metadata'] is not None:
+            asset_data.metadata = response['metadata']
+        if 'created' in response and response['created'] is not None:
+            asset_data.created = response['created']
+        if 'libraries' in response and response['libraries'] is not None:
+            asset_data.libraries = response['libraries']
+        return asset_data
 
     def _get_thumbnails(self, tempdir: str, request_data: Dict) -> Tuple:
         thumb_small_urls = []
@@ -262,29 +274,33 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         thumb_full_urls = []
         thumb_full_filepaths = []
         # END OF PARSING
-        for d in request_data.get('results', []):
-            for f in d['files']:
+        for rdata in request_data.get('results', []):
+            for rfile in rdata['files']:
                 # TODO move validation of published assets to server, too many checks here.
-                if (
-                    f['fileType'] == 'thumbnail'
-                    and f['fileThumbnail'] is not None
-                    and f['fileThumbnailLarge'] is not None
+                thumbnail = rfile['fileThumbnailLarge']
+                small_thumbnail = rfile['fileThumbnail']
+                if (  # noqa: WPS337
+                    rfile['fileType'] != 'thumbnail'
+                    or small_thumbnail is None
+                    or thumbnail is None
                 ):
-                    if f['fileThumbnail'] is None:
-                        f['fileThumbnail'] = 'NONE'
-                    if f['fileThumbnailLarge'] is None:
-                        f['fileThumbnailLarge'] = 'NONE'
+                    continue
 
-                    thumb_small_urls.append(f['fileThumbnail'])
-                    thumb_full_urls.append(f['fileThumbnailLarge'])
+                if small_thumbnail is None:
+                    small_thumbnail = 'NONE'
+                if thumbnail is None:
+                    thumbnail = 'NONE'
 
-                    imgname = paths.extract_filename_from_url(f['fileThumbnail'])
-                    imgpath = os.path.join(tempdir, imgname)
-                    thumb_small_filepaths.append(imgpath)
+                thumb_small_urls.append(small_thumbnail)
+                thumb_full_urls.append(thumbnail)
 
-                    imgname = paths.extract_filename_from_url(f['fileThumbnailLarge'])
-                    imgpath = os.path.join(tempdir, imgname)
-                    thumb_full_filepaths.append(imgpath)
+                imgname = paths.extract_filename_from_url(small_thumbnail)
+                imgpath = os.path.join(tempdir, imgname)
+                thumb_small_filepaths.append(imgpath)
+
+                imgname = paths.extract_filename_from_url(rfile['fileThumbnailLarge'])
+                imgpath = os.path.join(tempdir, imgname)
+                thumb_full_filepaths.append(imgpath)
 
         small_thumbnails = zip(thumb_small_filepaths, thumb_small_urls)
         full_thumbnails = zip(thumb_full_filepaths, thumb_full_urls)

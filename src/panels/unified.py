@@ -168,7 +168,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         layout.prop_search(search_props, 'tags_input', search_props, 'tags_list', icon='VIEWZOOM')
         self._draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
         layout.prop(search_props, 'public_only')
-        self._label_multiline(text=search_props.get('report'))
+        self._label_multiline(text=search_props.report)
 
         if asset_type == 'MODEL':
             layout.separator()

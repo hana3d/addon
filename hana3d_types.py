@@ -952,8 +952,9 @@ class Hana3DUnifiedProps(PropertyGroup):
     )
 
 
-Props = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
-
+UploadProps = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
+SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMaterialSearchProps]
+Props = Union[UploadProps, SearchProps]
 
 classes = (
     Hana3DTagItem,

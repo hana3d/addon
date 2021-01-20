@@ -181,7 +181,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         tempdir = tempfile.mkdtemp()
         return props, workspace, correlation_id, basename, ext, tempdir
 
-    def _update_props(self, props: hana3d_types.Props, upload_set: List[str]):
+    def _update_props(self, props: hana3d_types.UploadProps, upload_set: List[str]):
         utils.name_update()
 
         if not self.reupload:
@@ -199,7 +199,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
     def _thumbnail_check(
         self,
-        props: hana3d_types.Props,
+        props: hana3d_types.UploadProps,
         ui: UI,
         upload_set: List[str],
         export_data: dict,
@@ -289,7 +289,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             )
         return files
 
-    def _start_remote_thumbnail(self, props: hana3d_types.Props):
+    def _start_remote_thumbnail(self, props: hana3d_types.UploadProps):
         thread = render.RenderThread(
             props,
             engine='CYCLES',

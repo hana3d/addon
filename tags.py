@@ -52,7 +52,7 @@ class Hana3DAddTag(Operator):
         new_tag.selected = True
 
         search_props = search.get_search_props()
-        new_tag = search_props['tags_list'].add()
+        new_tag = search_props.tags_list.add()
         new_tag['name'] = self.tag
 
         for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
@@ -78,7 +78,7 @@ class RemoveTagSearch(Operator):
     def execute(self, context):
         # SEARCH REFACTOR VERIFY
         search_props = search.get_search_props()
-        search_props['tags_list'][self.tag].selected = False
+        search_props.tags_list[self.tag].selected = False
         return {'INTERFACE'}
 
 

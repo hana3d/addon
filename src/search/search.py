@@ -1,7 +1,7 @@
 """Auxiliary search functions."""
 import os
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import bpy
 from bpy.types import Context
@@ -21,11 +21,26 @@ from ...config import (
 class SearchResult(object):
     """Hana3D search result."""
 
-    view_id: str
-    file_name: str
+    thumbnail: str
+    thumbnail_small: str
     download_url: str
-    downloaded: float
+    id: str  # noqa: WPS125
+    view_id: str
+    name: str
     asset_type: AssetType
+    tooltip: str
+    tags: List[str]
+    verification_status: str
+    author_id: str
+    description: str
+    render_jobs: List[str]
+    workspace: str
+    downloaded: float = 0
+    metadata: Dict = {}
+    created: str = ''
+    libraries: List[Dict] = []
+    bbox_min: Tuple[float, float, float] = (-0.5, -0.5, 0)
+    bbox_max: Tuple[float, float, float] = (0.5, 0.5, 1)
 
 
 def load_previews(asset_type: AssetType, search_results: Dict):
@@ -90,7 +105,7 @@ def load_placeholder_thumbnail(index: int, asset_id: str):
     fullsize_img.name = utils.previmg_name(index, fullsize=True)
 
 
-def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:  # noqa : WPS110
+def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:
     """Get search results.
 
     Parameters:
@@ -132,20 +147,23 @@ def get_original_search_results(asset_type: AssetType = None):
     return bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original']
 
 
-def set_original_search_results(asset_type: AssetType, original_results_value: Dict):
+def set_original_search_results(asset_type: AssetType, results_value: Dict):
     """Set original search results for given asset type.
 
     Parameters:
         asset_type: asset type
-        original_results_value: original search results
+        results_value: original search results
     """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
-    bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original'] = original_results_value
+    bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original'] = results_value
 
 
 def get_search_props(asset_type: AssetType = None):
     """Get search props.
+
+    Parameters:
+        asset_type: asset type currently being searched
 
     Returns:
         Dict | None: search props if available
@@ -159,9 +177,10 @@ def get_search_props(asset_type: AssetType = None):
     elif asset_type == 'material' and hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
         return getattr(bpy.context.window_manager, HANA3D_MATERIALS)
 
+
 def run_operator(get_next=False):
-    """Run search operator
-    
+    """Run search operator.
+
     Parameters:
         get_next: get next batch of results
     """
