@@ -276,6 +276,9 @@ def import_scene(asset_data: SearchResult, file_names: list):
     Parameters:
         asset_data: scene info
         file_names: list of filenames
+
+    Returns:
+        linked scene
     """
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
     scene.name = asset_data.name
@@ -390,7 +393,10 @@ def import_material(asset_data: SearchResult, file_names: list, **kwargs):
     Parameters:
         asset_data: material info
         file_names: list of filenames
-        **kwargs: additional parameters
+        kwargs: additional parameters
+    
+    Returns:
+        imported material
     """
     for mat in bpy.data.materials:
         if getattr(mat, HANA3D_NAME).view_id == asset_data.view_id:
@@ -467,6 +473,12 @@ def set_asset_props(asset, asset_data):
 
 
 def append_asset(asset_data: SearchResult, **kwargs):
+    """Append asset to scene.
+
+    Parameters:
+        asset_data: asset info
+        kwargs: additional parameters
+    """
     asset_name = asset_data.name
     logging.debug(f'Appending asset {asset_name}')
 
@@ -754,6 +766,14 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
 
     @classmethod
     def poll(cls, context):
+        """Batch download poll.
+
+        Parameters:
+            context: Blender context
+
+        Returns:
+            bool: existence of download threads running
+        """
         return not download_threads
 
     @execute_wrapper
