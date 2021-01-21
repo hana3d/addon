@@ -395,7 +395,7 @@ def import_material(asset_data: SearchResult, file_names: list, **kwargs):
         asset_data: material info
         file_names: list of filenames
         kwargs: additional parameters
-    
+
     Returns:
         imported material
     """
@@ -479,6 +479,9 @@ def append_asset(asset_data: SearchResult, **kwargs):
     Parameters:
         asset_data: asset info
         kwargs: additional parameters
+
+    Raises:
+        FileNotFoundError: when the asset file is not found
     """
     asset_name = asset_data.name
     logging.debug(f'Appending asset {asset_name}')
