@@ -269,7 +269,6 @@ def add_import_params(thread: Downloader, location, rotation):
     thread.passargs['import_params'].append(params)
 
 
-
 def import_scene(asset_data: SearchResult, file_names: list):
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
     scene.name = asset_data.name
@@ -432,7 +431,7 @@ def set_asset_props(asset, asset_data):
 
     set_thumbnail(asset_data, asset)
 
-    asset_props.id = asset_data.id
+    asset_props.id = asset_data.id  # noqa: WPS125
     asset_props.view_id = asset_data.view_id
     asset_props.view_workspace = asset_data.workspace
     asset_props.name = asset_data.name
@@ -491,7 +490,7 @@ def check_asset_in_scene(asset_data: SearchResult) -> str:
     """Check if asset is already in scene.
 
     If it is, modifies asset data so it can be reached again.
-    
+
     Parameters:
         asset_data: asset data
 
@@ -523,7 +522,7 @@ def start_download(asset_data: SearchResult, **kwargs):
 
     Parameters:
         asset_data: asset data
-        **kwargs: additional parameters
+        kwargs: additional parameters
     """
     view_id = asset_data.view_id
     if view_id in download_threads and download_threads[view_id].is_alive():
@@ -540,11 +539,11 @@ def start_download(asset_data: SearchResult, **kwargs):
         return
 
     if asset_data.asset_type in {'model', 'material'}:
-        parameters = {
+        transform = {
             'location': kwargs['model_location'],
             'rotation': kwargs['model_rotation'],
         }
-        download(asset_data, import_params=[parameters], **kwargs)
+        download(asset_data, import_params=[transform], **kwargs)
 
     elif asset_data.asset_type == 'scene':
         download(asset_data, **kwargs)

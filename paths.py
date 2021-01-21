@@ -190,9 +190,9 @@ def extract_filename_from_url(url: str) -> str:
 
     Parameters:
         url: str
-    
+
     Returns:
-        filename: str
+        str: filename
     """
     if url is None:
         return ''
