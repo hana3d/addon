@@ -39,6 +39,7 @@ from bpy.props import (
 
 from .downloader import Downloader
 from .lib import check_existing
+from ..async_loop import ensure_async_loop
 from ..preferences.profile import update_libraries_list, update_tags_list
 from ..search.query import Query
 from ..search.search import SearchResult, get_search_results
@@ -805,6 +806,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         else:
             ui.add_report(f'Downloading {n_assets_to_download} assets')
 
+        ensure_async_loop()
         for _, asset_data in zip(  # noqa : WPS352
             range(self.batch_size),
             search.get_search_results()[self.object_count:],
