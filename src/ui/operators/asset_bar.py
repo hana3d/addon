@@ -467,6 +467,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 return {'PASS_THROUGH'}
 
             search_results = search.get_search_results()
+            original_search_results = search.get_original_search_results()
             len_search = len(search_results)
 
             if not ui_props.dragging:  # noqa: WPS504
@@ -483,13 +484,13 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     asset_data = search_results[asset_search_index]
                     ui_props.draw_tooltip = True
 
-                    ui_props.tooltip = asset_data['tooltip']
+                    ui_props.tooltip = asset_data.tooltip
 
                 else:
                     ui_props.draw_tooltip = False
 
                 if mx > ui_props.bar_x + ui_props.bar_width - 50:
-                    if search_results_orig['count'] - ui_props.scrolloffset > ui_props.total_count + 1:  # noqa: E501
+                    if original_search_results['count'] - ui_props.scrolloffset > ui_props.total_count + 1:  # noqa: E501
                         ui_props.active_index = -1
                         return {'RUNNING_MODAL'}
                 if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:

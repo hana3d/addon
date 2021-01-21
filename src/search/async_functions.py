@@ -65,6 +65,7 @@ async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[
         ui.add_report(text=request.text)
         return {'CANCELLED'}
 
+    logging.debug('SEARCH ASSETS FUNCTION DONE')
     return request_data
 
 

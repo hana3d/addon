@@ -2,10 +2,11 @@
 import os
 import shutil
 
+from ..search.search import SearchResult
 from ... import paths
 
 
-def newer_asset_in_server(asset_data: dict, file_name: str) -> bool:
+def newer_asset_in_server(asset_data: SearchResult, file_name: str) -> bool:
     """Check if there is a newer version of the asset in the server.
 
     Parameters:
@@ -16,12 +17,12 @@ def newer_asset_in_server(asset_data: dict, file_name: str) -> bool:
         bool: True if there is a newer version, False otherwise
     """
     return (
-        asset_data.get('created') is not None
-        and float(asset_data['created']) > float(os.path.getctime(file_name))
+        asset_data.created is not None
+        and float(asset_data.created) > float(os.path.getctime(file_name))
     )
 
 
-def copy_file(source, target):
+def copy_file(source: str, target: str):
     """Copy source file to target file if source exists and target does not.
 
     Parameters:
@@ -32,7 +33,7 @@ def copy_file(source, target):
         shutil.copy(source, target)
 
 
-def check_existing(asset_data: dict) -> bool:
+def check_existing(asset_data: SearchResult) -> bool:
     """Check if the object exists on the hard drive.
 
     Parameters:

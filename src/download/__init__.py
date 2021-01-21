@@ -22,6 +22,7 @@ import logging
 import os
 import shutil
 import threading
+from dataclasses import asdict
 from queue import Queue
 
 import bpy
@@ -39,8 +40,8 @@ from bpy.props import (
 from .downloader import Downloader
 from .lib import check_existing
 from ..preferences.profile import update_libraries_list, update_tags_list
-from ..search import search
 from ..search.query import Query
+from ..search.search import SearchResult, get_search_results
 from ..ui import colors
 from ..ui.main import UI
 from ...config import (
@@ -133,14 +134,14 @@ def scene_load(context):
 
 
 def set_thumbnail(asset_data, asset):
-    if asset_data['thumbnail'] == '':
+    if asset_data.thumbnail == '':
         asset_props = getattr(asset, HANA3D_NAME)
         asset_props.thumbnail = ''
     else:
-        thumbnail_name = asset_data['thumbnail'].split(os.sep)[-1]  # noqa: WPS204
-        tempdir = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')  # noqa: WPS204
+        thumbnail_name = asset_data.thumbnail.split(os.sep)[-1]  # noqa: WPS204
+        tempdir = paths.get_temp_dir(f'{asset_data.asset_type}_search')  # noqa: WPS204
         thumbpath = os.path.join(tempdir, thumbnail_name)
-        asset_thumbs_dir = paths.get_download_dirs(asset_data['asset_type'])[0]
+        asset_thumbs_dir = paths.get_download_dirs(asset_data.asset_type)[0]
         asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
         shutil.copy(thumbpath, asset_thumb_path)
         asset_props = getattr(asset, HANA3D_NAME)
@@ -148,12 +149,17 @@ def set_thumbnail(asset_data, asset):
 
 
 def update_downloaded_progress(downloader: Downloader):
-    search_results = search.get_search_results()
+    """Update download progress.
+    
+    Parameters:
+        downloader: Downloader class
+    """
+    search_results = get_search_results()
     if search_results is None:
         logging.debug('Empty search results')  # noqa : WPS421:230
         return
     for search_result in search_results:
-        if search_result.view_id == downloader.asset_data['view_id']:
+        if search_result.view_id == downloader.asset_data.view_id:
             search_result.downloaded = downloader.progress()
             return
 
@@ -179,7 +185,7 @@ def process_finished_thread(downloader: Downloader):
         for library in bpy.data.libraries:
             if (
                 library.get('asset_data') is not None
-                and library['asset_data']['view_id'] == asset_data['view_id']
+                and library['asset_data']['view_id'] == asset_data.view_id
             ):
                 library.filepath = file_names[-1]
                 library.reload()
@@ -203,14 +209,14 @@ def execute_append_tasks():
         for f in file_names:
             remove_file(f)
         ui = UI()
-        ui.add_report(f'Error when appending {asset_data["name"]} to scene: {e}', color=colors.RED)
+        ui.add_report(f'Error when appending {asset_data.name} to scene: {e}', color=colors.RED)
 
         # cleanup failed downloads
         file_names = paths.get_download_filenames(asset_data)
         for file_name in file_names:
             remove_file(file_name)
         download_kill_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download_kill')
-        download_kill_op(view_id=asset_data['view_id'])
+        download_kill_op(view_id=asset_data.view_id)
     return 0.01
 
 
@@ -228,7 +234,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             update_downloaded_progress(downloader)
             continue
 
-        if bpy.context.mode == 'EDIT' and asset_data['asset_type'] in ('model', 'material'):
+        if bpy.context.mode == 'EDIT' and asset_data.asset_type in ('model', 'material'):
             continue
 
         downloader.set_progress(100)
@@ -242,18 +248,16 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
 def download(asset_data, **kwargs):
     '''start the download thread'''
 
-    logging.debug(f'Downloading asset_data {json.dumps(asset_data)}')
-
     # incoming data can be either directly dict from python, or blender id property
     # (recovering failed downloads on reload)
     if type(asset_data) == dict:
-        asset_data = copy.deepcopy(asset_data)
-    else:
-        asset_data = asset_data.to_dict()
+        asset_data = SearchResult(**asset_data)
+
+    logging.debug(f'Downloading asset_data {json.dumps(asdict(asset_data))}')
     thread = Downloader(asset_data, **kwargs)
     thread.start()
 
-    view_id = asset_data['view_id']
+    view_id = asset_data.view_id
     download_threads[view_id] = thread
 
 
@@ -267,17 +271,17 @@ def add_import_params(thread: Downloader, location, rotation):
 
 
 
-def import_scene(asset_data: dict, file_names: list):
+def import_scene(asset_data: SearchResult, file_names: list):
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
-    scene.name = asset_data['name']
+    scene.name = asset_data.name
     props = getattr(bpy.context.window_manager, HANA3D_SCENES)
     if props.merge_add == 'ADD':
         for window in bpy.context.window_manager.windows:
-            window.scene = bpy.data.scenes[asset_data['name']]
+            window.scene = bpy.data.scenes[asset_data.name]
     return scene
 
 
-def _import_model_with_params(asset_data: dict, file_name: str, link: bool, **kwargs):
+def _import_model_with_params(asset_data: SearchResult, file_name: str, link: bool, **kwargs):
     for import_param in kwargs['import_params']:
         if link is True:
             parent, newobs = append_link.link_collection(
@@ -285,7 +289,7 @@ def _import_model_with_params(asset_data: dict, file_name: str, link: bool, **kw
                 location=import_param['location'],
                 rotation=import_param['rotation'],
                 link=link,
-                name=asset_data['name'],
+                name=asset_data.name,
                 parent=kwargs.get('parent'),
             )
         else:
@@ -294,13 +298,13 @@ def _import_model_with_params(asset_data: dict, file_name: str, link: bool, **kw
                 location=import_param['location'],
                 rotation=import_param['rotation'],
                 link=link,
-                name=asset_data['name'],
+                name=asset_data.name,
                 parent=kwargs.get('parent'),
             )
 
         if parent.type == 'EMPTY' and link:
-            bmin = asset_data['bbox_min']
-            bmax = asset_data['bbox_max']
+            bmin = asset_data.bbox_min
+            bmax = asset_data.bbox_max
             size_min = min(
                 1.0,
                 (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3,  # noqa : WPS221
@@ -309,14 +313,14 @@ def _import_model_with_params(asset_data: dict, file_name: str, link: bool, **kw
     return parent
 
 
-def _import_model_with_location(asset_data: dict, file_name: str, link: bool, **kwargs):
+def _import_model_with_location(asset_data: SearchResult, file_name: str, link: bool, **kwargs):
     if link is True:
         parent, newobs = append_link.link_collection(
             file_name,
             location=kwargs['model_location'],
             rotation=kwargs['model_rotation'],
             link=link,
-            name=asset_data['name'],
+            name=asset_data.name,
             parent=kwargs.get('parent'),
         )
     else:
@@ -328,14 +332,14 @@ def _import_model_with_location(asset_data: dict, file_name: str, link: bool, **
             parent=kwargs.get('parent'),
         )
     if parent.type == 'EMPTY' and link:
-        bmin = asset_data['bbox_min']
-        bmax = asset_data['bbox_max']
+        bmin = asset_data.bbox_min
+        bmax = asset_data.bbox_max
         size_min = min(1.0, (bmax[0] - bmin[0] + bmax[1] - bmin[1] + bmax[2] - bmin[2]) / 3)
         parent.empty_display_size = size_min
     return parent
 
 
-def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
+def import_model(window_manager, asset_data: SearchResult, file_names: list, **kwargs):
     """Import model to scene.
 
     Parameters:
@@ -369,15 +373,15 @@ def import_model(window_manager, asset_data: dict, file_names: list, **kwargs):
         group = parent.instance_collection
 
         lib = group.library
-        lib['asset_data'] = asset_data
+        lib['asset_data'] = asdict(asset_data)
 
     utils.fill_object_metadata(parent)
     return parent
 
 
-def import_material(asset_data: dict, file_names: list, **kwargs):
+def import_material(asset_data: SearchResult, file_names: list, **kwargs):
     for m in bpy.data.materials:
-        if getattr(m, HANA3D_NAME).view_id == asset_data['view_id']:
+        if getattr(m, HANA3D_NAME).view_id == asset_data.view_id:
             inscene = True
             material = m
             break
@@ -403,10 +407,10 @@ def set_library_props(asset_data, asset_props):
     """
     update_libraries_list(asset_props, bpy.context)
     libraries_list = asset_props.libraries_list
-    for asset_library in asset_data['libraries']:
+    for asset_library in asset_data.libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
-        if 'metadata' in asset_library and asset_library['metadata'] is not None:
+        if 'metadata' in asset_library and asset_library.metadata is not None:
             for view_prop in library.metadata['view_props']:
                 name = f'{library.name} {view_prop["name"]}'
                 slug = view_prop['slug']
@@ -429,74 +433,74 @@ def set_asset_props(asset, asset_data):
 
     set_thumbnail(asset_data, asset)
 
-    asset_props.id = asset_data['id']
-    asset_props.view_id = asset_data['view_id']
-    asset_props.view_workspace = asset_data['workspace']
-    asset_props.name = asset_data['name']
-    asset_props.tags = ','.join(asset_data['tags'])
-    asset_props.description = asset_data['description']
-    asset_props.asset_type = asset_data['asset_type']
+    asset_props.id = asset_data.id
+    asset_props.view_id = asset_data.view_id
+    asset_props.view_workspace = asset_data.workspace
+    asset_props.name = asset_data.name
+    asset_props.tags = ','.join(asset_data.tags)
+    asset_props.description = asset_data.description
+    asset_props.asset_type = asset_data.asset_type
 
-    jobs = render_tools.get_render_jobs(asset_data['asset_type'], asset_data['view_id'])
+    jobs = render_tools.get_render_jobs(asset_data.asset_type, asset_data.view_id)
     asset_props.render_data['jobs'] = jobs
     render_tools.update_render_list(asset_props)
 
-    if 'tags' in asset_data:
+    if asset_data.tags:
         update_tags_list(asset_props, bpy.context)
-        for tag in asset_data['tags']:
+        for tag in asset_data.tags:
             asset_props.tags_list[tag].selected = True
 
-    if 'libraries' in asset_data:
+    if asset_data.libraries:
         set_library_props(asset_data, asset_props)
 
 
-def append_asset(asset_data: dict, **kwargs):
-    asset_name = asset_data['name']
+def append_asset(asset_data: SearchResult, **kwargs):
+    asset_name = asset_data.name
     logging.debug(f'Appending asset {asset_name}')
 
     file_names = paths.get_download_filenames(asset_data)
     if len(file_names) == 0 or not os.path.isfile(file_names[-1]):
         raise FileNotFoundError(f'Could not find file for asset {asset_name}')
 
-    kwargs['name'] = asset_data['name']
+    kwargs['name'] = asset_data.name
     wm = bpy.context.window_manager
 
-    if asset_data['asset_type'] == 'scene':
+    if asset_data.asset_type == 'scene':
         asset = import_scene(asset_data, file_names)
-    if asset_data['asset_type'] == 'model':
+    if asset_data.asset_type == 'model':
         asset = import_model(wm, asset_data, file_names, **kwargs)
-    elif asset_data['asset_type'] == 'material':
+    elif asset_data.asset_type == 'material':
         asset = import_material(asset_data, file_names, **kwargs)
 
     wm[f'{HANA3D_NAME}_assets_used'] = wm.get(f'{HANA3D_NAME}_assets_used', {})
-    wm[f'{HANA3D_NAME}_assets_used'][asset_data['view_id']] = asset_data.copy()
+    wm[f'{HANA3D_NAME}_assets_used'][asset_data.view_id] = asset_data.copy()
 
     set_asset_props(asset, asset_data)
-    if asset_data['view_id'] in download_threads:
-        download_threads.pop(asset_data['view_id'])
+    if asset_data.view_id in download_threads:
+        download_threads.pop(asset_data.view_id)
 
     undo_push_context_op = getattr(bpy.ops.wm, f'{HANA3D_NAME}_undo_push_context')
-    undo_push_context_op(message='add %s to scene' % asset_data['name'])
+    undo_push_context_op(message='add %s to scene' % asset_data.name)
 
 
-def append_asset_safe(asset_data: dict, **kwargs):
+def append_asset_safe(asset_data: SearchResult, **kwargs):
     task = functools.partial(append_asset, asset_data, **kwargs)
     append_tasks_queue.put(task)
 
 
-def check_asset_in_scene(asset_data):
+def check_asset_in_scene(asset_data: SearchResult):
     '''checks if the asset is already in scene. If yes,
     modifies asset data so the asset can be reached again.'''
     wm = bpy.context.window_manager
     au = wm.get(f'{HANA3D_NAME}_assets_used', {})
 
-    id = asset_data.get('view_id')
+    id = asset_data.view_id
     if id in au.keys():
         ad = au[id]
         if ad.get('file_name') is not None:
 
-            asset_data['file_name'] = ad['file_name']
-            asset_data['download_url'] = ad['download_url']
+            asset_data.file_name = ad['file_name']
+            asset_data.download_url = ad['download_url']
 
             c = bpy.data.collections.get(ad['name'])
             if c is not None:
@@ -506,13 +510,13 @@ def check_asset_in_scene(asset_data):
     return ''
 
 
-def start_download(asset_data, **kwargs):
+def start_download(asset_data: SearchResult, **kwargs):
     '''
     check if file isn't downloading or doesn't exist, then start new download
     '''
-    view_id = asset_data['view_id']
+    view_id = asset_data.view_id
     if view_id in download_threads and download_threads[view_id].is_alive():
-        if asset_data['asset_type'] in ('model', 'material'):
+        if asset_data.asset_type in ('model', 'material'):
             thread = download_threads[view_id]
             add_import_params(thread, kwargs['model_location'], kwargs['model_rotation'])
         return
@@ -524,14 +528,14 @@ def start_download(asset_data, **kwargs):
         append_asset_safe(asset_data, **kwargs)
         return
 
-    if asset_data['asset_type'] in ('model', 'material'):
+    if asset_data.asset_type in ('model', 'material'):
         params = {
             'location': kwargs['model_location'],
             'rotation': kwargs['model_rotation'],
         }
         download(asset_data, import_params=[params], **kwargs)
 
-    elif asset_data['asset_type'] == 'scene':
+    elif asset_data.asset_type == 'scene':
         download(asset_data, **kwargs)
 
 
@@ -616,15 +620,23 @@ class Hana3DDownloadOperator(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
-        search_results = search.get_search_results()
+        """Download execute.
+
+        Parameters:
+            context: Blender context
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’}
+        """
+        search_results = get_search_results()
 
         # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
-        asset_data = search_results[self.asset_index].to_dict()
+        asset_data = search_results[self.asset_index]
         assets_used = context.window_manager.get(f'{HANA3D_NAME}_assets_used')
         if assets_used is None:
             context.window_manager[f'{HANA3D_NAME}_assets_used'] = {}
 
-        atype = asset_data['asset_type']
+        atype = asset_data.asset_type
         if (
             bpy.context.mode != 'OBJECT'
             and (atype == 'model' or atype == 'material')
@@ -697,23 +709,23 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     )
 
     def _get_location(self):
-        x = y = 0
+        pos_x = pos_y = 0
         dx = 0
         dy = -1
         for _ in range(self.object_count):  # noqa : WPS122
-            if x == y or (x < 0 and x == -y) or (x > 0 and x == 1 - y):  # noqa : WPS220,WPS221
+            if pos_x == pos_y or (pos_x < 0 and pos_x == -pos_y) or (pos_x > 0 and pos_x == 1 - pos_y):  # noqa : WPS220,WPS221
                 dx, dy = -dy, dx
-            x, y = x + dx, y + dy
+            pos_x, pos_y = pos_x + dx, pos_y + dy
         self.object_count += 1
-        return (self.grid_distance * x, self.grid_distance * y, 0)
+        return (self.grid_distance * pos_x, self.grid_distance * pos_y, 0)
 
     @classmethod
     def poll(cls, context):
-        return len(download_threads) == 0
+        return not download_threads
 
     @execute_wrapper
     def execute(self, context):
-        search_results = search.get_search_results()
+        search_results = get_search_results()
         ui = UI()
         if not search_results:
             ui.add_report('Empty search results')
@@ -732,11 +744,10 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         else:
             ui.add_report(f'Downloading {n_assets_to_download} assets')
 
-        for _, search_result in zip(  # noqa : WPS352
+        for _, asset_data in zip(  # noqa : WPS352
             range(self.batch_size),
-            search.results[self.object_count:],
+            search.get_search_results()[self.object_count:],
         ):
-            asset_data = search_result.to_dict()
             location = self._get_location()
             kwargs = {
                 'cast_parent': '',

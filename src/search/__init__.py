@@ -25,6 +25,8 @@ asset_types = (
     ('ADDON', 'Addon', 'addon'),
 )
 
+Thumbnail = Tuple[str, str]
+
 
 class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS214
     """Hana3D search operator."""
@@ -116,24 +118,31 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
         request_data = await search_assets(query, options, ui)
 
-        tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
+        tempdir = paths.get_temp_dir(f'{asset_type}_search')
+        logging.debug(f'GOT TEMPDIR: {tempdir}')
 
         result_field = []
         ok, error = self._check_errors(request_data)
+        logging.debug(f'GOT TEMPDIR: {tempdir}')
         if ok:
             run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
-            run_assetbar_op()
+            status = run_assetbar_op()
+            logging.debug(f'RAN ASSET_BAR: {status}')
 
-            result_field = self._parse_request(request_data)
+            result_field = self._parse_response(asset_type, request_data)
+            logging.debug(f'PARSED RESULTS: {len(result_field)}')
 
-            search.set_results(asset_type, result_field)
-            search.set_original_results(asset_type, request_data)
+            search.set_search_results(asset_type, result_field)
+            search.set_original_search_results(asset_type, request_data)
+            logging.debug('SET SEARCH_RESULTS')
+
             search.load_previews(asset_type, result_field)
+            logging.debug('LOADED PREVIEWS')
 
             if len(result_field) < ui_props.scrolloffset:
                 ui_props.scrolloffset = 0
             search_props.is_searching = False
-            text = f'Found {search_object.results_original["count"]} results. '  # noqa #501
+            text = f'Found {request_data["count"]} results. '  # noqa #501
             ui.add_report(text=text)
         else:
             logging.error(error)
@@ -147,11 +156,18 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             request_data['results'][0] = request_data['results']
 
         json_filepath = os.path.join(tempdir, f'{asset_type}_searchresult.json')
+        logging.debug(f'SAVING RESULTS ON DISK: {json_filepath}')
         with open(json_filepath, 'w') as outfile:
             json.dump(request_data, outfile)
 
-        small_thumbnails, full_thumbnails = _get_thumbnails(tempdir, request_data)
-        await _download_thumbnails(small_thumbnails)
+        small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
+        await self._download_thumbnails(small_thumbnails)
+        logging.debug(f'FINISHED DOWNLOADING {len(small_thumbnails)} small')
+        await self._download_thumbnails(full_thumbnails)
+        logging.debug(f'FINISHED DOWNLOADING {len(full_thumbnails)} large')
+
+        status = run_assetbar_op()
+        logging.debug(f'ASSET BAR CALLBACK STATUS: {status}')
 
         return {'FINISHED'}
 
@@ -268,7 +284,11 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             asset_data.libraries = response['libraries']
         return asset_data
 
-    def _get_thumbnails(self, tempdir: str, request_data: Dict) -> Tuple:
+    def _get_thumbnails(
+        self,
+        tempdir: str,
+        request_data: Dict,
+    ) -> Tuple[List[Thumbnail], List[Thumbnail]]:
         thumb_small_urls = []
         thumb_small_filepaths = []
         thumb_full_urls = []
@@ -305,7 +325,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         small_thumbnails = zip(thumb_small_filepaths, thumb_small_urls)
         full_thumbnails = zip(thumb_full_filepaths, thumb_full_urls)
 
-        return small_thumbnails, full_thumbnails
+        return list(small_thumbnails), list(full_thumbnails)
 
     def _get_asset_type_from_ui(self) -> AssetType:
         uiprops = getattr(self.context.window_manager, HANA3D_UI)

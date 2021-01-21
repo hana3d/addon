@@ -9,13 +9,14 @@ import requests
 
 from .lib import check_existing
 from ..async_loop import run_async_function
+from ..search.search import SearchResult
 from ... import paths
 
 
 class Downloader(object):  # noqa: WPS214
     """Class responsible for downloading assets asynchronously."""
 
-    def __init__(self, asset_data: dict, **passargs):
+    def __init__(self, asset_data: SearchResult, **passargs):
         """Create a Downloader object.
 
         Parameters:
@@ -89,7 +90,7 @@ class Downloader(object):  # noqa: WPS214
             return
 
         if self.stopped():
-            logging.debug(f'Stopping download: {asset_data["name"]}')
+            logging.debug(f'Stopping download: {asset_data.name}')
             return
 
         self._task = run_async_function(self._download_async)
@@ -109,7 +110,7 @@ class Downloader(object):  # noqa: WPS214
         with open(tmp_file_name, 'wb') as tmp_file:
             logging.info(f'Downloading {file_name}')
 
-            response = requests.get(asset_data['download_url'], stream=True)
+            response = requests.get(asset_data.download_url, stream=True)
             total_length = response.headers.get('Content-Length')
 
             if total_length is None:  # no content length header
@@ -132,7 +133,7 @@ class Downloader(object):  # noqa: WPS214
                 await self._queue.put(progress)
                 tmp_file.write(download_data)
                 if self.stopped():
-                    logging.debug(f'Stopping download: {asset_data["name"]}')
+                    logging.debug(f'Stopping download: {asset_data.name}')
                     tmp_file.close()
                     os.remove(tmp_file_name)
                     return

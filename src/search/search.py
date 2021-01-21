@@ -1,6 +1,7 @@
 """Auxiliary search functions."""
+import json
 import os
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Tuple
 
 import bpy
@@ -40,33 +41,36 @@ class SearchResult(object):
     libraries: List[Dict] = field(default_factory=list)
     bbox_min: Tuple[float, float, float] = (-0.5, -0.5, 0.0)
     bbox_max: Tuple[float, float, float] = (0.5, 0.5, 1.0)
+    file_name: str = ''
+
+    def copy(self):
+        """Create copy of object.
+
+        Returns:
+            SearchResult: copied object
+        """
+        return SearchResult(**asdict(self))
 
 
-def load_previews(asset_type: AssetType, search_results: Dict):
+def load_previews(asset_type: AssetType, search_results: List[SearchResult]):
     """Load small preview thumbnails for search results.
 
     Parameters:
         asset_type: type of the asset
         search_results: search results
     """
-    mappingdict = {
-        'MODEL': 'model',
-        'SCENE': 'scene',
-        'MATERIAL': 'material',
-    }
-
-    directory = paths.get_temp_dir(f'{mappingdict[asset_type]}_search')
+    directory = paths.get_temp_dir(f'{asset_type}_search')
     if search_results is None:
         return
 
     index = 0
     for search_result in search_results:
-        if search_result['thumbnail_small'] == '':
-            load_placeholder_thumbnail(index, search_result['id'])
+        if search_result.thumbnail_small == '':
+            load_placeholder_thumbnail(index, search_result.id)
             index += 1
             continue
 
-        thumbnail_path = os.path.join(directory, search_result['thumbnail_small'])
+        thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
 
         image_name = utils.previmg_name(index)
 
@@ -117,7 +121,10 @@ def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:
         asset_type = _get_asset_type_from_ui()
     if f'{HANA3D_NAME}_{asset_type}_search' not in bpy.context.window_manager:
         return []
-    return bpy.context.window_manager.get(f'{HANA3D_NAME}_{asset_type}_search')
+    return [
+        SearchResult(**json.loads(json.dumps(props.to_dict())))
+        for props in bpy.context.window_manager.get(f'{HANA3D_NAME}_{asset_type}_search')
+    ]
 
 
 def set_search_results(asset_type: AssetType, results_value: List[SearchResult]):
@@ -127,7 +134,9 @@ def set_search_results(asset_type: AssetType, results_value: List[SearchResult])
         asset_type: asset type
         results_value: search results
     """
-    bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search'] = results_value
+    bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search'] = [
+        search.__dict__ for search in results_value  # noqa: WPS609
+    ]
 
 
 def get_original_search_results(asset_type: AssetType = None):
@@ -143,7 +152,7 @@ def get_original_search_results(asset_type: AssetType = None):
         asset_type = _get_asset_type_from_ui()
     if f'{HANA3D_NAME}_{asset_type}_search_original' not in bpy.context.window_manager:
         return {}
-    return bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original']
+    return bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original'].to_dict()
 
 
 def set_original_search_results(asset_type: AssetType, results_value: Dict):
