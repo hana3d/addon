@@ -8,7 +8,7 @@ from ..unified_props import Unified
 from ...config import HANA3D_NAME
 
 if TYPE_CHECKING:
-    from ...hana3d_types import SearchProps
+    from ...hana3d_types import SearchProps  # noqa: WPS433
 
 
 class Query(object):  # noqa : WPS230,WPS214
