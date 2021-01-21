@@ -270,6 +270,13 @@ def add_import_params(thread: Downloader, location, rotation):
 
 
 def import_scene(asset_data: SearchResult, file_names: list):
+    """
+    Import scene.
+
+    Parameters:
+        asset_data: scene info
+        file_names: list of filenames
+    """
     scene = append_link.append_scene(file_names[0], link=False, fake_user=False)
     scene.name = asset_data.name
     props = getattr(bpy.context.window_manager, HANA3D_SCENES)
@@ -378,6 +385,13 @@ def import_model(window_manager, asset_data: SearchResult, file_names: list, **k
 
 
 def import_material(asset_data: SearchResult, file_names: list, **kwargs):
+    """Import material.
+
+    Parameters:
+        asset_data: material info
+        file_names: list of filenames
+        **kwargs: additional parameters
+    """
     for mat in bpy.data.materials:
         if getattr(mat, HANA3D_NAME).view_id == asset_data.view_id:
             inscene = True
@@ -457,7 +471,7 @@ def append_asset(asset_data: SearchResult, **kwargs):
     logging.debug(f'Appending asset {asset_name}')
 
     file_names = paths.get_download_filenames(asset_data)
-    if len(file_names) == 0 or not os.path.isfile(file_names[-1]):
+    if not file_names or not os.path.isfile(file_names[-1]):
         raise FileNotFoundError(f'Could not find file for asset {asset_name}')
 
     kwargs['name'] = asset_data.name
@@ -482,6 +496,14 @@ def append_asset(asset_data: SearchResult, **kwargs):
 
 
 def append_asset_safe(asset_data: SearchResult, **kwargs):
+    """Safely append asset.
+
+    Creates append task and adds it to the task queue.
+
+    Parameters:
+        asset_data: asset data
+        kwargs: additional parameters
+    """
     task = functools.partial(append_asset, asset_data, **kwargs)
     append_tasks_queue.put(task)
 
@@ -508,9 +530,9 @@ def check_asset_in_scene(asset_data: SearchResult) -> str:
             asset_data.file_name = ad['file_name']
             asset_data.download_url = ad['download_url']
 
-            c = bpy.data.collections.get(ad['name'])
-            if c is not None:
-                if c.users > 0:
+            collection = bpy.data.collections.get(ad['name'])
+            if collection is not None:
+                if collection.users > 0:
                     return 'LINK'
             return 'APPEND'
     return ''
@@ -736,6 +758,14 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
 
     @execute_wrapper
     def execute(self, context):
+        """Execute batch download operator.
+
+        Parameters:
+            context: Blender context
+
+        Returns:
+            enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’}
+        """
         search_results = get_search_results()
         ui = UI()
         if not search_results:
