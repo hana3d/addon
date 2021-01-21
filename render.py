@@ -37,8 +37,8 @@ from bpy_extras.image_utils import load_image
 from . import autothumb, paths, render_tools, rerequests, thread_tools
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER
 from .report_tools import execute_wrapper
-from .src.async_loop import run_async_function
-from .src.preferences.profile import Profile
+#from .src.async_loop import run_async_function
+#from .src.preferences.profile import Profile
 from .src.ui import colors
 from .src.ui.main import UI
 from .src.upload import upload
@@ -247,8 +247,8 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self._set_running_flag(False)
             time.sleep(5)
             self.update_state(self.log_state_name, '')
-            profile = Profile()
-            run_async_function(profile.update_async)
+            #profile = Profile()
+            #run_async_function(profile.update_async)
 
     def _set_running_flag(self, flag: bool):
         if self.is_thumbnail:

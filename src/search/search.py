@@ -1,10 +1,9 @@
 """Auxiliary search functions."""
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
 import bpy
-from bpy.types import Context
 
 from ..asset.asset_type import AssetType
 from ... import paths, utils
@@ -36,11 +35,11 @@ class SearchResult(object):
     render_jobs: List[str]
     workspace: str
     downloaded: float = 0
-    metadata: Dict = {}
+    metadata: Dict = field(default_factory=dict)
     created: str = ''
-    libraries: List[Dict] = []
-    bbox_min: Tuple[float, float, float] = (-0.5, -0.5, 0)
-    bbox_max: Tuple[float, float, float] = (0.5, 0.5, 1)
+    libraries: List[Dict] = field(default_factory=list)
+    bbox_min: Tuple[float, float, float] = (-0.5, -0.5, 0.0)
+    bbox_max: Tuple[float, float, float] = (0.5, 0.5, 1.0)
 
 
 def load_previews(asset_type: AssetType, search_results: Dict):

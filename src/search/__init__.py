@@ -100,10 +100,10 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         ui = UI()
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = ui_props.asset_type.lower()
-        search_props.asset_type = asset_type
 
         logging.debug('CREATING QUERY OBJECT')
         query = Query(bpy.context, search_props)
+        query.asset_type = asset_type
         logging.debug(f'GOT QUERY OBJECT: {query.to_dict()}')
 
         if search_props.is_searching and self.get_next:

@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 import bpy
 
 from ..requests_async.basic_request import BasicRequest
-from ..search import search
+from ..search.search import get_search_props
 from ..unified_props import Unified
 from ..upload.upload import get_upload_props
 from ... import config, paths
 
 if TYPE_CHECKING:
-    from ...hana3d_types import Props
+    from ...hana3d_types import Props  # noqa: WPS433
 
 def update_tags_list(props: 'Props', context: bpy.types.Context):
     """Update tags list.
@@ -82,7 +82,7 @@ class Profile(object):
 
         bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
 
-        search_props = search.get_search_props()
+        search_props = get_search_props()
         update_libraries_list(search_props, bpy.context)
         update_tags_list(search_props, bpy.context)
 
