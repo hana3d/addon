@@ -185,7 +185,15 @@ def slugify(slug):
     return slug
 
 
-def extract_filename_from_url(url: str):
+def extract_filename_from_url(url: str) -> str:
+    """Get filename from url path.
+
+    Parameters:
+        url: str
+    
+    Returns:
+        filename: str
+    """
     if url is None:
         return ''
     path = urllib.parse.urlsplit(url).path

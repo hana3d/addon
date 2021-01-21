@@ -150,7 +150,7 @@ def set_thumbnail(asset_data, asset):
 
 def update_downloaded_progress(downloader: Downloader):
     """Update download progress.
-    
+
     Parameters:
         downloader: Downloader class
     """
@@ -234,7 +234,7 @@ def timer_update():  # TODO might get moved to handle all hana3d stuff, not to s
             update_downloaded_progress(downloader)
             continue
 
-        if bpy.context.mode == 'EDIT' and asset_data.asset_type in ('model', 'material'):
+        if bpy.context.mode == 'EDIT' and asset_data.asset_type in {'model', 'material'}:
             continue
 
         downloader.set_progress(100)
@@ -267,7 +267,6 @@ def add_import_params(thread: Downloader, location, rotation):
         'rotation': rotation,
     }
     thread.passargs['import_params'].append(params)
-
 
 
 
@@ -380,10 +379,10 @@ def import_model(window_manager, asset_data: SearchResult, file_names: list, **k
 
 
 def import_material(asset_data: SearchResult, file_names: list, **kwargs):
-    for m in bpy.data.materials:
-        if getattr(m, HANA3D_NAME).view_id == asset_data.view_id:
+    for mat in bpy.data.materials:
+        if getattr(mat, HANA3D_NAME).view_id == asset_data.view_id:
             inscene = True
-            material = m
+            material = mat
             break
     else:
         inscene = False
@@ -480,7 +479,7 @@ def append_asset(asset_data: SearchResult, **kwargs):
         download_threads.pop(asset_data.view_id)
 
     undo_push_context_op = getattr(bpy.ops.wm, f'{HANA3D_NAME}_undo_push_context')
-    undo_push_context_op(message='add %s to scene' % asset_data.name)
+    undo_push_context_op(message=f'add {asset_data.name} to scene')
 
 
 def append_asset_safe(asset_data: SearchResult, **kwargs):
@@ -488,15 +487,23 @@ def append_asset_safe(asset_data: SearchResult, **kwargs):
     append_tasks_queue.put(task)
 
 
-def check_asset_in_scene(asset_data: SearchResult):
-    '''checks if the asset is already in scene. If yes,
-    modifies asset data so the asset can be reached again.'''
-    wm = bpy.context.window_manager
-    au = wm.get(f'{HANA3D_NAME}_assets_used', {})
+def check_asset_in_scene(asset_data: SearchResult) -> str:
+    """Check if asset is already in scene.
 
-    id = asset_data.view_id
-    if id in au.keys():
-        ad = au[id]
+    If it is, modifies asset data so it can be reached again.
+    
+    Parameters:
+        asset_data: asset data
+
+    Returns:
+        'LINK' or 'APPEND'
+    """
+    wm = bpy.context.window_manager
+    assets_used = wm.get(f'{HANA3D_NAME}_assets_used', {})
+
+    view_id = asset_data.view_id
+    if view_id in assets_used.keys():
+        ad = assets_used[id]
         if ad.get('file_name') is not None:
 
             asset_data.file_name = ad['file_name']
@@ -511,12 +518,16 @@ def check_asset_in_scene(asset_data: SearchResult):
 
 
 def start_download(asset_data: SearchResult, **kwargs):
-    '''
-    check if file isn't downloading or doesn't exist, then start new download
-    '''
+    """
+    Check if file isn't downloading or doesn't exist, then start new download.
+
+    Parameters:
+        asset_data: asset data
+        **kwargs: additional parameters
+    """
     view_id = asset_data.view_id
     if view_id in download_threads and download_threads[view_id].is_alive():
-        if asset_data.asset_type in ('model', 'material'):
+        if asset_data.asset_type in {'model', 'material'}:
             thread = download_threads[view_id]
             add_import_params(thread, kwargs['model_location'], kwargs['model_rotation'])
         return
@@ -528,12 +539,12 @@ def start_download(asset_data: SearchResult, **kwargs):
         append_asset_safe(asset_data, **kwargs)
         return
 
-    if asset_data.asset_type in ('model', 'material'):
-        params = {
+    if asset_data.asset_type in {'model', 'material'}:
+        parameters = {
             'location': kwargs['model_location'],
             'rotation': kwargs['model_rotation'],
         }
-        download(asset_data, import_params=[params], **kwargs)
+        download(asset_data, import_params=[parameters], **kwargs)
 
     elif asset_data.asset_type == 'scene':
         download(asset_data, **kwargs)
@@ -637,7 +648,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
             context.window_manager[f'{HANA3D_NAME}_assets_used'] = {}
 
         atype = asset_data.asset_type
-        if (
+        if (  # noqa: WPS337
             bpy.context.mode != 'OBJECT'
             and (atype == 'model' or atype == 'material')
             and bpy.context.view_layer.objects.active is not None
@@ -709,12 +720,13 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     )
 
     def _get_location(self):
-        pos_x = pos_y = 0
+        pos_x, pos_y = 0
         dx = 0
         dy = -1
         for _ in range(self.object_count):  # noqa : WPS122
             if pos_x == pos_y or (pos_x < 0 and pos_x == -pos_y) or (pos_x > 0 and pos_x == 1 - pos_y):  # noqa : WPS220,WPS221
-                dx, dy = -dy, dx
+                dx = -dy
+                dy = dx
             pos_x, pos_y = pos_x + dx, pos_y + dy
         self.object_count += 1
         return (self.grid_distance * pos_x, self.grid_distance * pos_y, 0)
