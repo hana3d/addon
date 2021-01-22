@@ -88,6 +88,9 @@ def check_timers_timer():
     """Check if all timers are registered regularly.
 
     Prevents possible bugs from stopping the addon.
+
+    Returns:
+        float: time (?)
     """
     if not bpy.app.timers.is_registered(download.timer_update):
         bpy.app.timers.register(download.timer_update)

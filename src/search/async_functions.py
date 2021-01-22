@@ -43,7 +43,7 @@ async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[
         except Exception:
             # In case no search results found we don't do next page loading.
             options['get_next'] = False
-    if not options['get_next']:
+    else:
         query.save_last_query()
         urlquery = paths.get_api_url('search', query=query.to_dict())
 

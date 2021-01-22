@@ -139,14 +139,14 @@ def set_search_results(asset_type: AssetType, results_value: List[SearchResult])
     ]
 
 
-def get_original_search_results(asset_type: AssetType = None):
+def get_original_search_results(asset_type: AssetType = None) -> Dict:
     """Get original search results.
 
     Parameters:
         asset_type: type of the assets searched
 
     Returns:
-        List: original search results
+        Dict: original search results
     """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
