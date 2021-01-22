@@ -380,7 +380,6 @@ def import_model(window_manager, asset_data: SearchResult, file_names: list, **k
 
     if link:
         group = parent.instance_collection
-
         lib = group.library
         lib['asset_data'] = asdict(asset_data)
 
@@ -429,7 +428,7 @@ def set_library_props(asset_data, asset_props):
     for asset_library in asset_data.libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
-        if 'metadata' in asset_library and asset_library.metadata is not None:
+        if 'metadata' in asset_library and asset_library['metadata'] is not None:
             for view_prop in library.metadata['view_props']:
                 name = f'{library.name} {view_prop["name"]}'
                 slug = view_prop['slug']
@@ -448,7 +447,7 @@ def set_library_props(asset_data, asset_props):
 def set_asset_props(asset, asset_data):
     asset_props = getattr(asset, HANA3D_NAME)
     asset_props.clear_data()
-    asset['asset_data'] = asset_data
+    asset['asset_data'] = asdict(asset_data)
 
     set_thumbnail(asset_data, asset)
 
@@ -490,7 +489,7 @@ def append_asset(asset_data: SearchResult, **kwargs):
     if not file_names or not os.path.isfile(file_names[-1]):
         raise FileNotFoundError(f'Could not find file for asset {asset_name}')
 
-    kwargs['name'] = asset_data.name
+    kwargs['name'] = asset_name
     wm = bpy.context.window_manager
 
     if asset_data.asset_type == 'scene':
@@ -501,9 +500,10 @@ def append_asset(asset_data: SearchResult, **kwargs):
         asset = import_material(asset_data, file_names, **kwargs)
 
     wm[f'{HANA3D_NAME}_assets_used'] = wm.get(f'{HANA3D_NAME}_assets_used', {})
-    wm[f'{HANA3D_NAME}_assets_used'][asset_data.view_id] = asset_data.copy()
+    wm[f'{HANA3D_NAME}_assets_used'][asset_data.view_id] = asdict(asset_data)
 
     set_asset_props(asset, asset_data)
+
     if asset_data.view_id in download_threads:
         download_threads.pop(asset_data.view_id)
 

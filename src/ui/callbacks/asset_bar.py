@@ -511,8 +511,10 @@ def draw_callback3d(self, context):
         return
 
     ui = getattr(context.window_manager, HANA3D_UI)
+    logging.debug(f'CALLBACK3D')
+    logging.debug(f'CALLBACK3D ASSET_TYPE: {ui.asset_type}')
 
-    if ui.dragging and ui.asset_type == 'MODEL':
+    if ui.dragging and ui.asset_type.lower() == 'model':
         if ui.draw_snapped_bounds:
             bgl_helper.draw_bbox(
                 ui.snapped_location,
