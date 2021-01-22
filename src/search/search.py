@@ -1,5 +1,4 @@
 """Auxiliary search functions."""
-import json
 import logging
 import os
 from dataclasses import asdict, dataclass, field
@@ -8,6 +7,7 @@ from typing import Dict, List, Tuple
 import bpy
 
 from ..asset.asset_type import AssetType
+from ..metaclasses.singleton import Singleton
 from ... import paths, utils
 from ...config import (
     HANA3D_MATERIALS,
@@ -51,6 +51,26 @@ class SearchResult(object):
             SearchResult: copied object
         """
         return SearchResult(**asdict(self))
+
+
+class SearchData(object, metaclass=Singleton):
+    """Hana3D Blender Search Data singleton class."""
+
+    search_results: Dict[AssetType, List[SearchResult]]
+    original_search_results: Dict[AssetType, Dict]
+
+    def __init__(self) -> None:
+        """Create a new UI instance."""
+        self.search_results = {
+            AssetType.model: [],
+            AssetType.material: [],
+            AssetType.scene: [],
+        }
+        self.original_search_results = {
+            AssetType.model: {},
+            AssetType.material: {},
+            AssetType.scene: {},
+        }
 
 
 def load_previews(asset_type: AssetType, search_results: List[SearchResult]):
@@ -123,12 +143,7 @@ def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:
     """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
-    if f'{HANA3D_NAME}_{asset_type}_search' not in bpy.context.window_manager:
-        return []
-    return [
-        SearchResult(**json.loads(json.dumps(props.to_dict())))
-        for props in bpy.context.window_manager.get(f'{HANA3D_NAME}_{asset_type}_search')
-    ]
+    return SearchData().search_results[asset_type]
 
 
 def set_search_results(asset_type: AssetType, results_value: List[SearchResult]):
@@ -138,9 +153,7 @@ def set_search_results(asset_type: AssetType, results_value: List[SearchResult])
         asset_type: asset type
         results_value: search results
     """
-    bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search'] = [
-        search.__dict__ for search in results_value  # noqa: WPS609
-    ]
+    SearchData().search_results[asset_type] = results_value
 
 
 def get_original_search_results(asset_type: AssetType = None) -> Dict:
@@ -154,9 +167,7 @@ def get_original_search_results(asset_type: AssetType = None) -> Dict:
     """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
-    if f'{HANA3D_NAME}_{asset_type}_search_original' not in bpy.context.window_manager:
-        return {}
-    return bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original'].to_dict()
+    return SearchData().original_search_results[asset_type]
 
 
 def set_original_search_results(asset_type: AssetType, results_value: Dict):
@@ -166,9 +177,7 @@ def set_original_search_results(asset_type: AssetType, results_value: Dict):
         asset_type: asset type
         results_value: original search results
     """
-    if asset_type is None:
-        asset_type = _get_asset_type_from_ui()
-    bpy.context.window_manager[f'{HANA3D_NAME}_{asset_type}_search_original'] = results_value
+    SearchData().original_search_results[asset_type] = results_value
 
 
 def get_search_props(asset_type: AssetType = None):

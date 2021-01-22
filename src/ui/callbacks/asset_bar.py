@@ -188,9 +188,9 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
         bgl_helper.draw_text(author_line, xtext, ytext, fsize, tcol)
 
 
-def _load_tooltip_thumbnail(props, search_result, active_index):
+def _load_tooltip_thumbnail(search_result, active_index):
     image_name = utils.previmg_name(active_index, fullsize=True)
-    directory = paths.get_temp_dir(f'{props.asset_type.lower()}_search')
+    directory = paths.get_temp_dir(f'{search_result.asset_type}_search')
     thumbnail_path = os.path.join(directory, search_result.thumbnail)
 
     img = bpy.data.images.get(image_name)
@@ -273,13 +273,13 @@ def draw_callback2d_search(self, context):
     wm = context.window_manager
     ui_props = getattr(wm, HANA3D_UI)
 
-    search_result = self.region
     hc = (1, 1, 1, 0.07)
     white = (1, 1, 1, 0.2)
     green = (0.2, 1, 0.2, 0.7)
     highlight = bpy.context.preferences.themes[0].user_interface.wcol_menu_item.inner_sel  # noqa: WPS219, E501
     highlight = (1, 1, 1, 0.2)
     # background of asset bar
+    
     if not ui_props.dragging:
         search_results = search.get_search_results()
         len_search = len(search_results)
@@ -287,7 +287,6 @@ def draw_callback2d_search(self, context):
         if search_results is None:
             return
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))
-
 
         if ui_props.wcount > len_search:
             bar_width = len_search * (ui_props.thumb_size + ui_props.margin) + ui_props.margin
@@ -302,140 +301,136 @@ def draw_callback2d_search(self, context):
             hc,
         )
 
-        if search_results is not None:
-            count = ui_props.total_count
+        count = ui_props.total_count
 
-            if ui_props.scrolloffset > 0 or count < len_search:
-                ui_props.drawoffset = 35
-            else:
-                ui_props.drawoffset = 0
+        if ui_props.scrolloffset > 0 or count < len_search:
+            ui_props.drawoffset = 35
+        else:
+            ui_props.drawoffset = 0
 
-            if count < len_search:
-                page_start = ui_props.scrolloffset + 1
-                preferences = Preferences().get()
-                page_end = ui_props.scrolloffset + ui_props.wcount * preferences.max_assetbar_rows
-                pagination_text = (
-                    f'{page_start} - {page_end} of {search_results_orig["count"]}'
+        if count < len_search:
+            page_start = ui_props.scrolloffset + 1
+            preferences = Preferences().get()
+            page_end = ui_props.scrolloffset + ui_props.wcount * preferences.max_assetbar_rows
+            pagination_text = (
+                f'{page_start} - {page_end} of {search_results_orig["count"]}'
+            )
+
+            bgl_helper.draw_text(
+                pagination_text,
+                ui_props.bar_x + ui_props.bar_width - 125,
+                ui_props.bar_y - ui_props.bar_height - 25,
+                14,
+            )
+            # arrows
+            arrow_y = (
+                ui_props.bar_y
+                - int((ui_props.bar_height + ui_props.thumb_size) / 2)
+                + ui_props.margin
+            )
+            width = 25
+            if ui_props.scrolloffset > 0:
+
+                if ui_props.active_index == -2:
+                    bgl_helper.draw_rect(  # noqa: WPS220
+                        ui_props.bar_x,
+                        ui_props.bar_y - ui_props.bar_height,
+                        width,
+                        ui_props.bar_height,
+                        highlight,
+                    )
+                img = utils.get_thumbnail('arrow_left.png')
+                bgl_helper.draw_image(
+                    ui_props.bar_x,
+                    arrow_y,
+                    width,
+                    ui_props.thumb_size,
+                    img,
+                    1,
                 )
 
-                bgl_helper.draw_text(
-                    pagination_text,
-                    ui_props.bar_x + ui_props.bar_width - 125,
-                    ui_props.bar_y - ui_props.bar_height - 25,
-                    14,
+            if search_results_orig['count'] - ui_props.scrolloffset > count + 1:
+                if ui_props.active_index == -1:
+                    bgl_helper.draw_rect(  # noqa: WPS220
+                        ui_props.bar_x + ui_props.bar_width - width,
+                        ui_props.bar_y - ui_props.bar_height,
+                        width,
+                        ui_props.bar_height,
+                        highlight,
+                    )
+                img1 = utils.get_thumbnail('arrow_right.png')
+                bgl_helper.draw_image(
+                    ui_props.bar_x + ui_props.bar_width - width,
+                    arrow_y,
+                    width,
+                    ui_props.thumb_size,
+                    img1,
+                    1,
                 )
-                # arrows
-                arrow_y = (
-                    ui_props.bar_y
-                    - int((ui_props.bar_height + ui_props.thumb_size) / 2)
+
+        for row in range(0, h_draw):
+            w_draw = min(
+                ui_props.wcount,
+                len_search - row * ui_props.wcount - ui_props.scrolloffset,
+            )
+
+
+            y = ui_props.bar_y - (row + 1) * (row_height)  # noqa: WPS111
+            for column in range(0, w_draw):
+                x = (  # noqa: WPS111
+                    ui_props.bar_x
+                    + column * (ui_props.margin + ui_props.thumb_size)
                     + ui_props.margin
+                    + ui_props.drawoffset
                 )
-                width = 25
-                if ui_props.scrolloffset > 0:
 
-                    if ui_props.active_index == -2:
+                index = column + ui_props.scrolloffset + row * ui_props.wcount
+                iname = utils.previmg_name(index)
+                img = bpy.data.images.get(iname)
+
+                max_size = max(img.size[0], img.size[1])
+                width = int(ui_props.thumb_size * img.size[0] / max_size)
+                height = int(ui_props.thumb_size * img.size[1] / max_size)
+                crop = (0, 0, 1, 1)
+                if img.size[0] > img.size[1]:
+                    offset = (1 - img.size[1] / img.size[0]) / 2  # noqa: WPS220, WPS221
+                    crop = (offset, 0, 1 - offset, 1)  # noqa: WPS220
+                if img is not None:
+                    bgl_helper.draw_image(x, y, width, width, img, 1, crop=crop)  # noqa: WPS220
+                    if index == ui_props.active_index:  # noqa: WPS220
                         bgl_helper.draw_rect(  # noqa: WPS220
-                            ui_props.bar_x,
-                            ui_props.bar_y - ui_props.bar_height,
-                            width,
-                            ui_props.bar_height,
+                            x - ui_props.highlight_margin,
+                            y - ui_props.highlight_margin,
+                            width + 2 * ui_props.highlight_margin,
+                            width + 2 * ui_props.highlight_margin,
                             highlight,
                         )
-                    img = utils.get_thumbnail('arrow_left.png')
-                    bgl_helper.draw_image(
-                        ui_props.bar_x,
-                        arrow_y,
-                        width,
-                        ui_props.thumb_size,
+
+                else:
+                    bgl_helper.draw_rect(x, y, width, height, white)  # noqa: WPS220
+
+                search_result = search_results[index]
+                if search_result.downloaded > 0:
+                    width = int(width * search_result.downloaded / 100.0)  # noqa: WPS220
+                    bgl_helper.draw_rect(x, y - 2, width, 2, green)  # noqa: WPS220
+
+                v_icon = verification_icons[search_result.verification_status]  # noqa: E501
+                if v_icon is not None:
+                    img = utils.get_thumbnail(v_icon)  # noqa: WPS220
+                    bgl_helper.draw_image(  # noqa: WPS220
+                        x + ui_props.thumb_size - 26,
+                        y + 2,
+                        24,
+                        24,
                         img,
                         1,
                     )
 
-                if search_results_orig['count'] - ui_props.scrolloffset > count + 1:
-                    if ui_props.active_index == -1:
-                        bgl_helper.draw_rect(  # noqa: WPS220
-                            ui_props.bar_x + ui_props.bar_width - width,
-                            ui_props.bar_y - ui_props.bar_height,
-                            width,
-                            ui_props.bar_height,
-                            highlight,
-                        )
-                    img1 = utils.get_thumbnail('arrow_right.png')
-                    bgl_helper.draw_image(
-                        ui_props.bar_x + ui_props.bar_width - width,
-                        arrow_y,
-                        width,
-                        ui_props.thumb_size,
-                        img1,
-                        1,
-                    )
-
-            for row in range(0, h_draw):
-                w_draw = min(
-                    ui_props.wcount,
-                    len_search - row * ui_props.wcount - ui_props.scrolloffset,
-                )
-
-
-                y = ui_props.bar_y - (row + 1) * (row_height)  # noqa: WPS111
-                for column in range(0, w_draw):
-                    x = (  # noqa: WPS111
-                        ui_props.bar_x
-                        + column * (ui_props.margin + ui_props.thumb_size)
-                        + ui_props.margin
-                        + ui_props.drawoffset
-                    )
-
-                    index = column + ui_props.scrolloffset + row * ui_props.wcount
-                    iname = utils.previmg_name(index)
-                    img = bpy.data.images.get(iname)
-
-                    max_size = max(img.size[0], img.size[1])
-                    width = int(ui_props.thumb_size * img.size[0] / max_size)
-                    height = int(ui_props.thumb_size * img.size[1] / max_size)
-                    crop = (0, 0, 1, 1)
-                    if img.size[0] > img.size[1]:
-                        offset = (1 - img.size[1] / img.size[0]) / 2  # noqa: WPS220, WPS221
-                        crop = (offset, 0, 1 - offset, 1)  # noqa: WPS220
-                    if img is not None:
-                        bgl_helper.draw_image(x, y, width, width, img, 1, crop=crop)  # noqa: WPS220
-                        if index == ui_props.active_index:  # noqa: WPS220
-                            bgl_helper.draw_rect(  # noqa: WPS220
-                                x - ui_props.highlight_margin,
-                                y - ui_props.highlight_margin,
-                                width + 2 * ui_props.highlight_margin,
-                                width + 2 * ui_props.highlight_margin,
-                                highlight,
-                            )
-
-                    else:
-                        bgl_helper.draw_rect(x, y, width, height, white)  # noqa: WPS220
-
-                    search_result = search_results[index]
-                    if search_result.downloaded > 0:
-                        width = int(width * search_result.downloaded / 100.0)  # noqa: WPS220
-                        bgl_helper.draw_rect(x, y - 2, width, 2, green)  # noqa: WPS220
-
-                    v_icon = verification_icons[search_result.verification_status]  # noqa: E501
-                    if v_icon is not None:
-                        img = utils.get_thumbnail(v_icon)  # noqa: WPS220
-                        bgl_helper.draw_image(  # noqa: WPS220
-                            x + ui_props.thumb_size - 26,
-                            y + 2,
-                            24,
-                            24,
-                            img,
-                            1,
-                        )
-
-        props = getattr(wm, HANA3D_UI)
-        if props.draw_tooltip:
-            search_results = search_object.results
+        if ui_props.draw_tooltip:
             if search_results is not None and -1 < ui_props.active_index < len(search_results):
                 search_result = search_results[ui_props.active_index]
 
-                img = _load_tooltip_thumbnail(props, search_result, ui_props.active_index)
-
+                img = _load_tooltip_thumbnail(search_result, ui_props.active_index)
                 gimg, author = _load_tooltip_author(search_result)
 
                 draw_tooltip(
@@ -447,7 +442,7 @@ def draw_callback2d_search(self, context):
                     gravatar=gimg,
                 )
 
-    if ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):
+    elif ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):
         if ui_props.active_index > -1:
             iname = utils.previmg_name(ui_props.active_index)
             img = bpy.data.images.get(iname)
