@@ -279,7 +279,7 @@ def draw_callback2d_search(self, context):
     highlight = bpy.context.preferences.themes[0].user_interface.wcol_menu_item.inner_sel  # noqa: WPS219, E501
     highlight = (1, 1, 1, 0.2)
     # background of asset bar
-    
+
     if not ui_props.dragging:
         search_results = search.get_search_results()
         len_search = len(search_results)
@@ -373,7 +373,6 @@ def draw_callback2d_search(self, context):
                 ui_props.wcount,
                 len_search - row * ui_props.wcount - ui_props.scrolloffset,
             )
-
 
             y = ui_props.bar_y - (row + 1) * (row_height)  # noqa: WPS111
             for column in range(0, w_draw):

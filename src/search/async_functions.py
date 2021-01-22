@@ -84,25 +84,28 @@ async def download_thumbnail(image_path: str, url: str):
     request = Request()
 
     response = await request.get(url, stream=False)
-    if response.status_code == 200:  # noqa: WPS432
-        tmp_file_name = f'{image_path}_tmp'
-        with open(tmp_file_name, 'wb') as tmp_file:
-            total_length = response.headers.get('Content-Length')
+    if response.status_code != 200:  # noqa: WPS432
+        logging.error('Could not download thumbnail')
+        return
 
-            if total_length is None:  # no content length header
-                tmp_file.write(response.content)
-            else:
-                chunk_size = 500 * 1000  # noqa: WPS432
-                iterator = response.iter_content(chunk_size=chunk_size)
-                loop = asyncio.get_event_loop()
-                while True:
-                    download_data = await loop.run_in_executor(None, _read_chunk, iterator)
-                    if not download_data:
-                        tmp_file.close()
-                        break
-                    tmp_file.write(download_data)
-        
-        os.rename(tmp_file_name, image_path)
-        logging.debug('Download finished')
-        run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
-        run_assetbar_op()
+    tmp_file_name = f'{image_path}_tmp'
+    with open(tmp_file_name, 'wb') as tmp_file:
+        total_length = response.headers.get('Content-Length')
+
+        if total_length is None:  # no content length header
+            tmp_file.write(response.content)
+        else:
+            chunk_size = 500 * 1000  # noqa: WPS432
+            iterator = response.iter_content(chunk_size=chunk_size)
+            loop = asyncio.get_event_loop()
+            while True:
+                download_data = await loop.run_in_executor(None, _read_chunk, iterator)
+                if not download_data:
+                    tmp_file.close()
+                    break
+                tmp_file.write(download_data)
+
+    os.rename(tmp_file_name, image_path)
+    logging.debug('Download finished')
+    run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
+    run_assetbar_op()
