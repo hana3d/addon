@@ -60,7 +60,8 @@ class Hana3DRenderPanel(Panel):  # noqa: WPS214
         row.prop(render_props, 'asset', text='Asset', icon=icon)
 
     def _draw_main_panel(self, render_props, asset_props):
-        if 'jobs' not in asset_props.render_data or not asset_props.render_data['jobs']:
+        render_jobs = 'jobs' in asset_props.render_data and asset_props.render_data['jobs']
+        if not render_jobs or not asset_props.render_list:
             row = self.layout.row()
             row.label(text=f'This asset has no saved renders in {HANA3D_DESCRIPTION}')
             return
@@ -77,6 +78,7 @@ class Hana3DRenderPanel(Panel):  # noqa: WPS214
             item_dyntip_propname='not_working',
         )
         row = box.row()
+
         row.template_icon(
             icon_value=asset_props.render_list[asset_props.render_list_index]['icon_id'],
             scale=10,
