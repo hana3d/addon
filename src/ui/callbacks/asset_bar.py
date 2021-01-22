@@ -1,6 +1,7 @@
 """Asset bar callbacks."""
 import math
 import os
+from dataclasses import asdict
 
 import bpy
 
@@ -193,6 +194,10 @@ def _load_tooltip_thumbnail(props, search_result, active_index):
     directory = paths.get_temp_dir(f'{props.asset_type.lower()}_search')
     thumbnail_path = os.path.join(directory, search_result.thumbnail)
 
+    logging.debug(f'Loading thumbnail: {image_name} in {directory}')
+    logging.debug(f'Thumbnail_path: {thumbnail_path}')
+    logging.debug(f'Search result: {asdict(search_result)}')
+
     img = bpy.data.images.get(image_name)
     if img is None or img.filepath != thumbnail_path:
         if os.path.exists(thumbnail_path):
@@ -264,7 +269,7 @@ def draw_callback2d_upload_preview(self, context):
 
 
 def draw_callback2d_search(self, context):
-    """Draw upload preview.
+    """Draw search preview.
 
     Parameters:
         self: Asset Bar Operator

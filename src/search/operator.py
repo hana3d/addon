@@ -19,6 +19,7 @@ from .search import (
 from ..asset.asset_type import AssetType
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..preferences.preferences import Preferences
+from ..ui import colors
 from ..ui.main import UI
 from ... import hana3d_oauth, paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
@@ -140,7 +141,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             ui.add_report(text=text)
         else:
             logging.error(error)
-            ui = UI()
             ui.add_report(text=error, color=colors.RED)
             seach_props.search_error = True
 
@@ -322,7 +322,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
     async def _download_thumbnails(self, thumbnails: List[Tuple]):
         for imgpath, url in thumbnails:
-            if os.path.exists(imgpath):
+            if not os.path.exists(imgpath):
                 await download_thumbnail(imgpath, url)
 
 
