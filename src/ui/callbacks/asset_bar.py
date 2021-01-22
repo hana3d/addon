@@ -1,7 +1,6 @@
 """Asset bar callbacks."""
 import math
 import os
-from dataclasses import asdict
 
 import bpy
 
@@ -194,10 +193,6 @@ def _load_tooltip_thumbnail(props, search_result, active_index):
     directory = paths.get_temp_dir(f'{props.asset_type.lower()}_search')
     thumbnail_path = os.path.join(directory, search_result.thumbnail)
 
-    logging.debug(f'Loading thumbnail: {image_name} in {directory}')
-    logging.debug(f'Thumbnail_path: {thumbnail_path}')
-    logging.debug(f'Search result: {asdict(search_result)}')
-
     img = bpy.data.images.get(image_name)
     if img is None or img.filepath != thumbnail_path:
         if os.path.exists(thumbnail_path):
@@ -293,6 +288,7 @@ def draw_callback2d_search(self, context):
             return
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))
 
+
         if ui_props.wcount > len_search:
             bar_width = len_search * (ui_props.thumb_size + ui_props.margin) + ui_props.margin
         else:
@@ -308,6 +304,7 @@ def draw_callback2d_search(self, context):
 
         if search_results is not None:
             count = ui_props.total_count
+
             if ui_props.scrolloffset > 0 or count < len_search:
                 ui_props.drawoffset = 35
             else:
@@ -318,8 +315,9 @@ def draw_callback2d_search(self, context):
                 preferences = Preferences().get()
                 page_end = ui_props.scrolloffset + ui_props.wcount * preferences.max_assetbar_rows
                 pagination_text = (
-                    f'{page_start} - {page_end} of {search_object.results_orig["count"]}'
+                    f'{page_start} - {page_end} of {search_results_orig["count"]}'
                 )
+
                 bgl_helper.draw_text(
                     pagination_text,
                     ui_props.bar_x + ui_props.bar_width - 125,
@@ -378,6 +376,7 @@ def draw_callback2d_search(self, context):
                     len_search - row * ui_props.wcount - ui_props.scrolloffset,
                 )
 
+
                 y = ui_props.bar_y - (row + 1) * (row_height)  # noqa: WPS111
                 for column in range(0, w_draw):
                     x = (  # noqa: WPS111
@@ -417,7 +416,7 @@ def draw_callback2d_search(self, context):
                         width = int(width * search_result.downloaded / 100.0)  # noqa: WPS220
                         bgl_helper.draw_rect(x, y - 2, width, 2, green)  # noqa: WPS220
 
-                    v_icon = verification_icons[search_result.get('verification_status', 'validated')]  # noqa: E501
+                    v_icon = verification_icons[search_result.verification_status]  # noqa: E501
                     if v_icon is not None:
                         img = utils.get_thumbnail(v_icon)  # noqa: WPS220
                         bgl_helper.draw_image(  # noqa: WPS220

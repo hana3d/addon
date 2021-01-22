@@ -1,5 +1,6 @@
 """Auxiliary search functions."""
 import json
+import logging
 import os
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Tuple
@@ -63,16 +64,19 @@ def load_previews(asset_type: AssetType, search_results: List[SearchResult]):
     if search_results is None:
         return
 
+    logging.debug('Loading previews: search_results is not None')
     index = 0
     for search_result in search_results:
+        logging.debug(f'Thumbnail small is {search_result.thumbnail_small}')
         if search_result.thumbnail_small == '':
+            logging.debug('No small thumbnail, will load placeholder')
             load_placeholder_thumbnail(index, search_result.id)
             index += 1
             continue
 
         thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
-
         image_name = utils.previmg_name(index)
+        logging.debug(f'Loading {image_name} in {thumbnail_path}')
 
         if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
             img = bpy.data.images.get(image_name)
