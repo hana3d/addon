@@ -191,7 +191,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
 def _load_tooltip_thumbnail(props, search_result, active_index):
     image_name = utils.previmg_name(active_index, fullsize=True)
     directory = paths.get_temp_dir(f'{props.asset_type.lower()}_search')
-    thumbnail_path = os.path.join(directory, search_result['thumbnail'])
+    thumbnail_path = os.path.join(directory, search_result.thumbnail)
 
     img = bpy.data.images.get(image_name)
     if img is None or img.filepath != thumbnail_path:
@@ -220,7 +220,7 @@ def _load_tooltip_author(search_result):
 
     if bpy.context.window_manager.get(f'{HANA3D_NAME}_authors') is not None:
         author = bpy.context.window_manager[f'{HANA3D_NAME}_authors'].get(
-            search_result['author_id'],
+            search_result.author_id,
         )
         if author is not None and author != '':
             if author.get('gravatarImg') is not None:
@@ -408,8 +408,8 @@ def draw_callback2d_search(self, context):
                         bgl_helper.draw_rect(x, y, width, height, white)  # noqa: WPS220
 
                     search_result = search_results[index]
-                    if search_result['downloaded'] > 0:
-                        width = int(width * search_result['downloaded'] / 100.0)  # noqa: WPS220
+                    if search_result.downloaded > 0:
+                        width = int(width * search_result.downloaded / 100.0)  # noqa: WPS220
                         bgl_helper.draw_rect(x, y - 2, width, 2, green)  # noqa: WPS220
 
                     v_icon = verification_icons[search_result.get('verification_status', 'validated')]  # noqa: E501

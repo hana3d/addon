@@ -178,11 +178,11 @@ def get_search_props(asset_type: AssetType = None):
     """
     if asset_type is None:
         asset_type = _get_asset_type_from_ui()
-    if asset_type == 'model' and hasattr(bpy.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
+    if asset_type == AssetType.model and hasattr(bpy.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
         return getattr(bpy.context.window_manager, HANA3D_MODELS)
-    elif asset_type == 'scene' and hasattr(bpy.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
+    elif asset_type == AssetType.scene and hasattr(bpy.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
         return getattr(bpy.context.window_manager, HANA3D_SCENES)
-    elif asset_type == 'material' and hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
+    elif asset_type == AssetType.material and hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
         return getattr(bpy.context.window_manager, HANA3D_MATERIALS)
 
 

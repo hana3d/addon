@@ -1,14 +1,15 @@
 """Auxiliary search async functions."""
 import json
 import logging
-import os
 from typing import Dict, Set, Union
 
 import requests
 
 from .query import Query
+from .search import get_original_search_results
+from ..requests_async.requests_async import Request
 from ..ui.main import UI
-from ... import paths, rerequests
+from ... import paths
 
 
 async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[str]]:
@@ -25,48 +26,38 @@ async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[
     """
     ui.add_report(text='Searching...')
 
-    tempdir = paths.get_temp_dir(f'{query.asset_type}_search')
-    json_filepath = os.path.join(tempdir, f'{query.asset_type}_searchresult.json')
-
-    headers = rerequests.get_headers()
+    request = Request()
+    headers = request.get_headers()
 
     request_data: dict = {}
     request_data['results'] = []
 
     if options['get_next']:
-        with open(json_filepath, 'r') as infile:
-            try:
-                original_data = json.load(infile)
-                urlquery = original_data['next']
-                urlquery = urlquery.replace('False', 'false').replace('True', 'true')
+        try:
+            original_data = get_original_search_results()
+            urlquery = original_data['next']
+            urlquery = urlquery.replace('False', 'false').replace('True', 'true')
 
-                if urlquery is None:
-                    return {'CANCELLED'}
-            except Exception:
-                # In case no search results found on drive we don't do next page loading.
-                options['get_next'] = False
+            if urlquery is None:
+                return {'CANCELLED'}
+        except Exception:
+            # In case no search results found we don't do next page loading.
+            options['get_next'] = False
     if not options['get_next']:
         query.save_last_query()
         urlquery = paths.get_api_url('search', query=query.to_dict())
 
     try:
         logging.debug(urlquery)
-        request = rerequests.get(urlquery, headers=headers)
+        response = await request.get(urlquery, headers=headers)
+        dict_response = response.json()
     except requests.exceptions.RequestException as error:
         logging.error(error)
         ui.add_report(text=str(error))
         return {'CANCELLED'}
-    logging.debug('Response is back ')
-    try:
-        request_data = request.json()
-        request_data['status_code'] = request.status_code
-    except Exception as inst:
-        logging.error(inst)
-        ui.add_report(text=request.text)
-        return {'CANCELLED'}
 
-    logging.debug('SEARCH ASSETS FUNCTION DONE')
-    return request_data
+    logging.debug(f'Search assets result: {json.dumps(dict_response)}')
+    return dict_response
 
 
 async def download_thumbnail(image_path: str, url: str):
@@ -76,7 +67,9 @@ async def download_thumbnail(image_path: str, url: str):
         image_path: path for saving on the hard drive
         url: link for where the image is hosted
     """
-    request = rerequests.get(url, stream=False)
-    if request.status_code == 200:  # noqa: WPS432
+    request = Request()
+    response = await request.get(url, stream=False)
+    dict_response = response.json()
+    if dict_response['status_code'] == 200:  # noqa: WPS432
         with open(image_path, 'wb') as image_file:
-            image_file.write(request.content)
+            image_file.write(dict_response['content'])

@@ -40,10 +40,11 @@ from . import (  # noqa: WPS235
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from .src import async_loop, autothumb, download, search, upload
+from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder
+from .src.search import operator as search_op
 from .src.search.search import load_previews
 from .src.ui import render as ui_render
 from .src.ui.operators import render_image
@@ -62,6 +63,11 @@ bl_info = {
 
 @ persistent
 def scene_load(context):
+    """Load scene and initialize classes and menus.
+
+    Parameters:
+        context: Blender context
+    """
     load_previews()
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
@@ -79,9 +85,10 @@ def scene_load(context):
 
 @ bpy.app.handlers.persistent
 def check_timers_timer():
-    '''Checks if all timers are registered regularly.
+    """Check if all timers are registered regularly.
+
     Prevents possible bugs from stopping the addon.
-    '''
+    """
     if not bpy.app.timers.is_registered(download.timer_update):
         bpy.app.timers.register(download.timer_update)
     if not bpy.app.timers.is_registered(download.execute_append_tasks):
@@ -308,7 +315,7 @@ modules = (
     logger,
     render,
     render_image,
-    search,
+    search_op,
     tags,
     tasks_queue,
     thread_tools,

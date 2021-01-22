@@ -72,7 +72,7 @@ def draw_progress(x, y, text='', percent=0, color=colors.GREEN):  # noqa: WPS111
 
 def draw_callback_progress3d(self, context):  # noqa: D103
     for thread in download.download_threads.values():
-        if thread.asset_data.asset_type == 'model':
+        if thread.asset_data.asset_type == AssetType.model:
             for import_param in thread.passargs.get('import_params', []):
                 bgl_helper.draw_bbox(
                     import_param['location'],
