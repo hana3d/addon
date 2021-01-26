@@ -575,7 +575,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     asset_search_index = ui_props.active_index
                     # raycast here
                     ui_props.active_index = -3
-                    ui_props.asset_search_index = asset_search_index
 
                     if ui_props.asset_type == 'MODEL':
                         raycast = self._raycast_update_props(ui_props, context, mx, my)
