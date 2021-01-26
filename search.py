@@ -147,6 +147,7 @@ def timer_update():
                                     'description': r['description'] or '',
                                     'render_jobs': r.get('render_jobs', []),
                                     'workspace': r.get('workspace', ''),
+                                    'revision': r.get('revision'),
                                 }
                                 asset_data['downloaded'] = 0
 
@@ -211,7 +212,7 @@ def timer_update():
                 props.search_error = True
 
             mt('preview loading finished')
-    return 0.3 # noqa : WPS432
+    return 0.3  # noqa : WPS432
 
 
 def load_placeholder_thumbnail(index: int, asset_id: str):

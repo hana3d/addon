@@ -4,12 +4,12 @@ import os
 
 import bpy
 
-from .. import bgl_helper
+from .... import paths, utils
+from ....config import HANA3D_NAME, HANA3D_UI
 from ...preferences.preferences import Preferences
 from ...search.search import Search
 from ...upload import upload
-from .... import paths, utils
-from ....config import HANA3D_NAME, HANA3D_UI
+from .. import bgl_helper
 
 verification_icons = {
     'ready': 'vs_ready.png',
@@ -22,7 +22,15 @@ verification_icons = {
 }
 
 
-def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WPS111, WPS211
+def draw_tooltip(  # noqa: WPS111, WPS211
+    x,
+    y,
+    text='',
+    author='',
+    revision='',
+    img=None,
+    gravatar=None
+):
     """Draw tooltip.
 
     Parameters:
@@ -30,6 +38,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
         y: y-coordinate
         text: text to be displayed
         author: asset author
+        revision: view revision
         img: image
         gravatar: gravatar
     """
@@ -68,7 +77,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
 
         lines = text.split('\n')
 
-        texth = line_height * nlines + nameline_height
+        texth = line_height * nlines + nameline_height + line_height
         isizex = int(512 * scale * img.size[0] / max_dim)
         isizey = int(512 * scale * img.size[1] / max_dim)
 
@@ -128,6 +137,13 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
     xtext = x + textmargin
     fsize = name_height
     tcol = textcol
+
+    y_revision = (
+        y - (nlines - 1) * line_height - nameline_height - ttipmargin * 2 - isizey + texth
+    )
+    x_revision = xtext + int(isizex / ncolumns)
+
+    bgl_helper.draw_text(revision, x_revision, y_revision, font_height, tcol)
 
     for line in lines:
         ytext = (
@@ -440,6 +456,7 @@ def draw_callback2d_search(self, context):
                     ui_props.mouse_y,
                     text=ui_props.tooltip,
                     author=author,
+                    revision=search_result['revision'],
                     img=img,
                     gravatar=gimg,
                 )
