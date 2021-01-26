@@ -2,11 +2,11 @@
 import os
 import shutil
 
-from ..search.search import SearchResult
+from ..search.search import AssetData
 from ... import paths
 
 
-def newer_asset_in_server(asset_data: SearchResult, file_name: str) -> bool:
+def newer_asset_in_server(asset_data: AssetData, file_name: str) -> bool:
     """Check if there is a newer version of the asset in the server.
 
     Parameters:
@@ -33,7 +33,7 @@ def copy_file(source: str, target: str):
         shutil.copy(source, target)
 
 
-def check_existing(asset_data: SearchResult) -> bool:
+def check_existing(asset_data: AssetData) -> bool:
     """Check if the object exists on the hard drive.
 
     Parameters:

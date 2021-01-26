@@ -10,7 +10,7 @@ from bpy.props import BoolProperty, StringProperty
 from .async_functions import download_thumbnail, search_assets
 from .query import Query
 from .search import (
-    SearchResult,
+    AssetData,
     get_search_props,
     get_search_results,
     load_previews,
@@ -177,7 +177,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 return False, request_data.get('description', '')
         return True, ''
 
-    def _parse_response(self, asset_type: AssetType, request_data: Dict) -> List[SearchResult]:
+    def _parse_response(self, asset_type: AssetType, request_data: Dict) -> List[AssetData]:
         result_field = []
         for response in request_data['results']:
             if response['assetType'] != asset_type or not response['files']:
@@ -240,14 +240,14 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         small_thumbnail_name: str,
         download_url: str,
         response: Dict,
-    ) -> SearchResult:
+    ) -> AssetData:
         # Check for assetBaseId for backwards compatibility
         view_id = response.get('viewId') or response.get('assetBaseId') or ''
         tooltip = utils.generate_tooltip(
             response['name'],
             response['description'],
         )
-        asset_data = SearchResult(
+        asset_data = AssetData(
             thumbnail_name,
             small_thumbnail_name,
             download_url,

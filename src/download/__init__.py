@@ -42,7 +42,7 @@ from .lib import check_existing
 from ..async_loop import ensure_async_loop
 from ..preferences.profile import update_libraries_list, update_tags_list
 from ..search.query import Query
-from ..search.search import SearchResult, get_search_results
+from ..search.search import AssetData, get_search_results
 from ..ui import colors
 from ..ui.main import UI
 from ...config import (
@@ -252,7 +252,7 @@ def download(asset_data, **kwargs):
     # incoming data can be either directly dict from python, or blender id property
     # (recovering failed downloads on reload)
     if type(asset_data) == dict:
-        asset_data = SearchResult(**asset_data)
+        asset_data = AssetData(**asset_data)
 
     logging.debug(f'Downloading asset_data {json.dumps(asdict(asset_data))}')
     thread = Downloader(asset_data, **kwargs)
@@ -270,7 +270,7 @@ def add_import_params(thread: Downloader, location, rotation):
     thread.passargs['import_params'].append(params)
 
 
-def import_scene(asset_data: SearchResult, file_names: list):
+def import_scene(asset_data: AssetData, file_names: list):
     """
     Import scene.
 
@@ -290,7 +290,7 @@ def import_scene(asset_data: SearchResult, file_names: list):
     return scene
 
 
-def _import_model_with_params(asset_data: SearchResult, file_name: str, link: bool, **kwargs):
+def _import_model_with_params(asset_data: AssetData, file_name: str, link: bool, **kwargs):
     for import_param in kwargs['import_params']:
         if link is True:
             parent, newobs = append_link.link_collection(
@@ -322,7 +322,7 @@ def _import_model_with_params(asset_data: SearchResult, file_name: str, link: bo
     return parent
 
 
-def _import_model_with_location(asset_data: SearchResult, file_name: str, link: bool, **kwargs):
+def _import_model_with_location(asset_data: AssetData, file_name: str, link: bool, **kwargs):
     if link is True:
         parent, newobs = append_link.link_collection(
             file_name,
@@ -348,7 +348,7 @@ def _import_model_with_location(asset_data: SearchResult, file_name: str, link: 
     return parent
 
 
-def import_model(window_manager, asset_data: SearchResult, file_names: list, **kwargs):
+def import_model(window_manager, asset_data: AssetData, file_names: list, **kwargs):
     """Import model to scene.
 
     Parameters:
@@ -387,7 +387,7 @@ def import_model(window_manager, asset_data: SearchResult, file_names: list, **k
     return parent
 
 
-def import_material(asset_data: SearchResult, file_names: list, **kwargs):
+def import_material(asset_data: AssetData, file_names: list, **kwargs):
     """Import material.
 
     Parameters:
@@ -472,7 +472,7 @@ def set_asset_props(asset, asset_data):
         set_library_props(asset_data, asset_props)
 
 
-def append_asset(asset_data: SearchResult, **kwargs):
+def append_asset(asset_data: AssetData, **kwargs):
     """Append asset to scene.
 
     Parameters:
@@ -511,7 +511,7 @@ def append_asset(asset_data: SearchResult, **kwargs):
     undo_push_context_op(message=f'add {asset_data.name} to scene')
 
 
-def append_asset_safe(asset_data: SearchResult, **kwargs):
+def append_asset_safe(asset_data: AssetData, **kwargs):
     """Safely append asset.
 
     Creates append task and adds it to the task queue.
@@ -524,7 +524,7 @@ def append_asset_safe(asset_data: SearchResult, **kwargs):
     append_tasks_queue.put(task)
 
 
-def check_asset_in_scene(asset_data: SearchResult) -> str:
+def check_asset_in_scene(asset_data: AssetData) -> str:
     """Check if asset is already in scene.
 
     If it is, modifies asset data so it can be reached again.
@@ -554,7 +554,7 @@ def check_asset_in_scene(asset_data: SearchResult) -> str:
     return ''
 
 
-def start_download(asset_data: SearchResult, **kwargs):
+def start_download(asset_data: AssetData, **kwargs):
     """
     Check if file isn't downloading or doesn't exist, then start new download.
 

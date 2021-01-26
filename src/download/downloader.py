@@ -9,14 +9,14 @@ import requests
 
 from .lib import check_existing
 from ..async_loop import run_async_function
-from ..search.search import SearchResult
+from ..search.search import AssetData
 from ... import paths
 
 
 class Downloader(object):  # noqa: WPS214
     """Class responsible for downloading assets asynchronously."""
 
-    def __init__(self, asset_data: SearchResult, **passargs):
+    def __init__(self, asset_data: AssetData, **passargs):
         """Create a Downloader object.
 
         Parameters:

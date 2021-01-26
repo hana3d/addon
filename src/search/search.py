@@ -19,7 +19,7 @@ from ...config import (
 
 
 @dataclass
-class SearchResult(object):
+class AssetData(object):
     """Hana3D search result."""
 
     thumbnail: str
@@ -48,15 +48,15 @@ class SearchResult(object):
         """Create copy of object.
 
         Returns:
-            SearchResult: copied object
+            AssetData: copied object
         """
-        return SearchResult(**asdict(self))
+        return AssetData(**asdict(self))
 
 
 class SearchData(object, metaclass=Singleton):
     """Hana3D Blender Search Data singleton class."""
 
-    search_results: Dict[AssetType, List[SearchResult]]
+    search_results: Dict[AssetType, List[AssetData]]
     original_search_results: Dict[AssetType, Dict]
 
     def __init__(self) -> None:
@@ -73,7 +73,7 @@ class SearchData(object, metaclass=Singleton):
         }
 
 
-def load_previews(asset_type: AssetType, search_results: List[SearchResult]):
+def load_previews(asset_type: AssetType, search_results: List[AssetData]):
     """Load small preview thumbnails for search results.
 
     Parameters:
@@ -132,7 +132,7 @@ def load_placeholder_thumbnail(index: int, asset_id: str):
     fullsize_img.name = utils.previmg_name(index, fullsize=True)
 
 
-def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:
+def get_search_results(asset_type: AssetType = None) -> List[AssetData]:
     """Get search results.
 
     Parameters:
@@ -146,7 +146,7 @@ def get_search_results(asset_type: AssetType = None) -> List[SearchResult]:
     return SearchData().search_results[asset_type]
 
 
-def set_search_results(asset_type: AssetType, results_value: List[SearchResult]):
+def set_search_results(asset_type: AssetType, results_value: List[AssetData]):
     """Set search results for given asset type.
 
     Parameters:
