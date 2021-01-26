@@ -76,7 +76,6 @@ class RemoveTagSearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        # SEARCH REFACTOR VERIFY
         search_props = search.get_search_props()
         search_props.tags_list[self.tag].selected = False
         return {'INTERFACE'}

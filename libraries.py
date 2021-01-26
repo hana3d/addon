@@ -63,7 +63,6 @@ class RemoveLibrarySearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        # SEARCH REFACTOR VERIFY
         search_props = search.get_search_props()
         search_props.libraries_list[self.library].selected = False
         return {'INTERFACE'}
