@@ -515,7 +515,7 @@ def draw_callback3d(self, context):
             ui.snapped_rotation,
             ui.snapped_bbox_min,
             ui.snapped_bbox_max,
-            progress
+            progress,
         )
         if progress == 100.0:
             ui.asset_search_index = -1
