@@ -45,7 +45,6 @@ from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder
 from .src.search import operator as search_op
-from .src.search.search import load_previews
 from .src.ui import render as ui_render
 from .src.ui.operators import render_image
 
@@ -68,7 +67,6 @@ def scene_load(context):
     Parameters:
         context: Blender context
     """
-    load_previews()
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
     ui_props.turn_off = False

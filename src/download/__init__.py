@@ -757,7 +757,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     )
 
     def _get_location(self):
-        pos_x, pos_y = 0
+        pos_x, pos_y = 0, 0
         dx = 0
         dy = -1
         for _ in range(self.object_count):  # noqa : WPS122
@@ -803,7 +803,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
             self.object_count = 0
             self.last_query = last_query
 
-        n_assets_to_download = min(self.batch_size, len(search.results) - self.object_count)
+        n_assets_to_download = min(self.batch_size, len(search_results) - self.object_count)
         if n_assets_to_download == 0:
             ui.add_report('Fetch more results to continue downloading')
         else:
@@ -812,7 +812,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         ensure_async_loop()
         for _, asset_data in zip(  # noqa : WPS352
             range(self.batch_size),
-            search.get_search_results()[self.object_count:],
+            get_search_results()[self.object_count:],
         ):
             location = self._get_location()
             kwargs = {

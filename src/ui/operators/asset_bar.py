@@ -461,7 +461,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 ui_props.has_hit = False
                 ui_props.active_index = -3
                 ui_props.draw_drag_image = False
-                ui_props.draw_snapped_bounds = False
+                #ui_props.draw_snapped_bounds = False
                 ui_props.draw_tooltip = False
                 bpy.context.window.cursor_set('DEFAULT')
                 return {'PASS_THROUGH'}
@@ -500,7 +500,8 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             elif ui_props.dragging and mouse_in_region(region, mx, my):
                 self._raycast_update_props(ui_props, context, mx, my)
 
-            elif ui_props.has_hit and ui_props.asset_type == 'MODEL':
+
+            if ui_props.has_hit and ui_props.asset_type == 'MODEL':
                 # this condition is here to fix a bug for a scene
                 # submitted by a user, so this situation shouldn't
                 # happen anymore, but there might exists scenes
@@ -508,11 +509,11 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 if -1 < ui_props.active_index < len_search:
                     ui_props.draw_snapped_bounds = True  # noqa: WPS220
                     active_mod = search_results[ui_props.active_index]  # noqa: WPS220
-                    ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])  # noqa: WPS220
-                    ui_props.snapped_bbox_max = Vector(active_mod['bbox_max'])  # noqa: WPS220
+                    ui_props.snapped_bbox_min = Vector(active_mod.bbox_min)  # noqa: WPS220
+                    ui_props.snapped_bbox_max = Vector(active_mod.bbox_max)  # noqa: WPS220
 
             else:
-                ui_props.draw_snapped_bounds = False
+                #ui_props.draw_snapped_bounds = False
                 ui_props.draw_drag_image = True
 
             return {'RUNNING_MODAL'}
@@ -575,6 +576,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     asset_search_index = ui_props.active_index
                     # raycast here
                     ui_props.active_index = -3
+                    ui_props.asset_search_index = asset_search_index
 
                     if ui_props.asset_type == 'MODEL':
                         raycast = self._raycast_update_props(ui_props, context, mx, my)
@@ -702,7 +704,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props = getattr(context.window_manager, HANA3D_UI)
 
         if self.do_search:
-            search.async_execute()
+            search.run_operator()
 
         if ui_props.assetbar_on:
             # we don't want to run the assetbar many times,

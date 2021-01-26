@@ -283,7 +283,7 @@ def draw_callback2d_search(self, context):
     if not ui_props.dragging:
         search_results = search.get_search_results()
         len_search = len(search_results)
-        search_results_orig = search.get_original_search_results()
+        original_search_results = search.get_original_search_results()
         if search_results is None:
             return
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))
@@ -313,7 +313,7 @@ def draw_callback2d_search(self, context):
             preferences = Preferences().get()
             page_end = ui_props.scrolloffset + ui_props.wcount * preferences.max_assetbar_rows
             pagination_text = (
-                f'{page_start} - {page_end} of {search_results_orig["count"]}'
+                f'{page_start} - {page_end} of {original_search_results["count"]}'
             )
 
             bgl_helper.draw_text(
@@ -349,7 +349,7 @@ def draw_callback2d_search(self, context):
                     1,
                 )
 
-            if search_results_orig['count'] - ui_props.scrolloffset > count + 1:
+            if original_search_results['count'] - ui_props.scrolloffset > count + 1:
                 if ui_props.active_index == -1:
                     bgl_helper.draw_rect(  # noqa: WPS220
                         ui_props.bar_x + ui_props.bar_width - width,
@@ -506,11 +506,17 @@ def draw_callback3d(self, context):
 
     ui = getattr(context.window_manager, HANA3D_UI)
 
-    if ui.dragging and ui.asset_type.lower() == 'model':
-        if ui.draw_snapped_bounds:
-            bgl_helper.draw_bbox(
-                ui.snapped_location,
-                ui.snapped_rotation,
-                ui.snapped_bbox_min,
-                ui.snapped_bbox_max,
-            )
+    if ui.asset_type.lower() == 'model' and ui.draw_snapped_bounds:
+        progress = 0.0
+        if ui.asset_search_index >= 0:
+            progress = search.get_search_results()[ui.asset_search_index].downloaded
+        bgl_helper.draw_bbox(
+            ui.snapped_location,
+            ui.snapped_rotation,
+            ui.snapped_bbox_min,
+            ui.snapped_bbox_max,
+            progress
+        )
+        if progress == 100.0:
+            ui.asset_search_index = -1
+            ui.draw_snapped_bounds = False

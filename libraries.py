@@ -102,6 +102,7 @@ class RefreshLibraries(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
+        logging.debug('Refreshing libraries')
         unified_props = Unified(context).props
 
         search_props = search.get_search_props()
