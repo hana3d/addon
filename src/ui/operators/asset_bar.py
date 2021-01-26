@@ -725,8 +725,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props.assetbar_on = True
         ui_props.turn_off = False
 
-        search_results = search.get_search_results()
-
         if context.area.type != 'VIEW_3D':
             logging.warning('View3D not found, cannot run operator')
             return {'CANCELLED'}
