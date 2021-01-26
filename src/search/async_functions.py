@@ -32,8 +32,6 @@ async def search_assets(query: Query, options: Dict, ui: UI) -> Dict:
         Exception: When get_next flag is sent with no previous search results
         request_error: When cannot retrieve results from API
     """
-    ui.add_report(text='Searching...')
-
     request = Request()
     headers = request.get_headers()
 

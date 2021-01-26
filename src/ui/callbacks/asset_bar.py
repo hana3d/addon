@@ -332,7 +332,7 @@ def draw_callback2d_search(self, context):
             if ui_props.scrolloffset > 0:
 
                 if ui_props.active_index == -2:
-                    bgl_helper.draw_rect(  # noqa: WPS220
+                    bgl_helper.draw_rect(
                         ui_props.bar_x,
                         ui_props.bar_y - ui_props.bar_height,
                         width,
