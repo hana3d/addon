@@ -612,7 +612,7 @@ class Hana3DKillDownloadOperator(bpy.types.Operator):
         tasks = []
         while not append_tasks_queue.empty():
             task = append_tasks_queue.get()
-            if task.args[0]['view_id'] == self.view_id:
+            if task.args[0].view_id == self.view_id:
                 del task
                 break
             tasks.append(task)

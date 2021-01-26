@@ -12,6 +12,7 @@ from .query import Query
 from .search import (
     SearchResult,
     get_search_props,
+    get_search_results,
     load_previews,
     set_original_search_results,
     set_search_results,
@@ -106,15 +107,14 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         query.asset_type = asset_type
         logging.debug(f'Query object: {query.to_dict()}')
 
-        if search_props.is_searching and self.get_next:
-            return {'FINISHED'}
-
-        search_props.is_searching = True
-
         options = {'get_next': self.get_next}
+        logging.debug(f'Search options: {str(options)}')
         ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
-        request_data = await search_assets(query, options, ui)
+        try:
+            request_data = await search_assets(query, options, ui)
+        except Exception:
+            return {'CANCELED'}
 
         tempdir = paths.get_temp_dir(f'{asset_type}_search')
 
@@ -128,7 +128,13 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             result_field = self._parse_response(asset_type, request_data)
             logging.debug(f'Parsed results: {len(result_field)}')
 
-            set_search_results(asset_type, result_field)
+            if options['get_next']:
+                previous_results = get_search_results(asset_type)
+                result_field = previous_results + result_field
+                set_search_results(asset_type, result_field)
+            else:
+                set_search_results(asset_type, result_field)
+
             set_original_search_results(asset_type, request_data)
 
             load_previews(asset_type, result_field)
@@ -136,18 +142,13 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
             if len(result_field) < ui_props.scrolloffset:
                 ui_props.scrolloffset = 0
-            search_props.is_searching = False
+
             text = f'Found {request_data["count"]} results. '  # noqa #501
             ui.add_report(text=text)
         else:
             logging.error(error)
             ui.add_report(text=error, color=colors.RED)
             seach_props.search_error = True
-
-        # we save here because a missing thumbnail check is in the previous loop
-        # we can also prepend previous results. These have downloaded thumbnails already...
-        if options['get_next']:
-            request_data['results'][0] = request_data['results']
 
         small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
         await self._download_thumbnails(small_thumbnails)
@@ -158,6 +159,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         status = run_assetbar_op()
         logging.debug(f'Asset bar operator status: {status}')
 
+        search_props.is_searching = False
         return {'FINISHED'}
 
     def _check_errors(self, request_data: Dict) -> Tuple[bool, str]:
@@ -228,9 +230,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 )
                 all_thumbnails.append(thumbnail_name)
 
-            thumbnail_dict = {}
-            for index, thumbnail in enumerate(all_thumbnails):
-                thumbnail_dict[f'thumbnail_{index}'] = thumbnail
             if rfile['fileType'] == 'blend':
                 download_url = rfile['downloadUrl']
         return download_url, thumbnail_name, small_thumbnail_name

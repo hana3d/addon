@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 import os
-from typing import Dict, Set, Union
+from typing import Dict
 
 import bpy
 import requests
@@ -17,7 +17,7 @@ from ... import paths
 from ...config import HANA3D_NAME
 
 
-async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[str]]:
+async def search_assets(query: Query, options: Dict, ui: UI) -> Dict:
     """Send request to search assets.
 
     Arguments:
@@ -27,7 +27,10 @@ async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[
 
     Returns:
         Dict: Search results
-        {'CANCELLED'} if it fails
+
+    Raises:
+        Exception: When get_next flag is sent with no previous search results
+        request_error: When cannot retrieve results from API
     """
     ui.add_report(text='Searching...')
 
@@ -38,17 +41,15 @@ async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[
     request_data['results'] = []
 
     if options['get_next']:
-        try:
-            original_data = get_original_search_results()
-            urlquery = original_data['next']
+        original_data = get_original_search_results()
+        urlquery = original_data.get('next', None)
 
-            if urlquery is None:
-                return {'CANCELLED'}
-
-            urlquery = urlquery.replace('False', 'false').replace('True', 'true')
-        except Exception:
-            # In case no search results found we don't do next page loading.
+        if urlquery is None:
             options['get_next'] = False
+            logging.error('Could not retrieve url for next results')
+            raise Exception('No next url found')
+
+        urlquery = urlquery.replace('False', 'false').replace('True', 'true')
     else:
         query.save_last_query()
         urlquery = paths.get_api_url('search', query=query.to_dict())
@@ -57,10 +58,10 @@ async def search_assets(query: Query, options: Dict, ui: UI) -> Union[Dict, Set[
         logging.debug(urlquery)
         response = await request.get(urlquery, headers=headers)
         dict_response = response.json()
-    except requests.exceptions.RequestException as error:
-        logging.error(error)
-        ui.add_report(text=str(error), color=colors.RED)
-        return {'CANCELLED'}
+    except requests.exceptions.RequestException as request_error:
+        logging.error(request_error)
+        ui.add_report(text=str(request_error), color=colors.RED)
+        raise request_error
 
     logging.debug(f'Search assets result: {json.dumps(dict_response)}')
     return dict_response

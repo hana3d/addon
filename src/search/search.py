@@ -205,8 +205,12 @@ def run_operator(get_next=False):
     Parameters:
         get_next: get next batch of results
     """
-    search_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_search')
-    search_op(get_next=get_next)
+    search_props = get_search_props()
+    if not search_props.is_searching:
+        search_props.is_searching = True
+        logging.debug(f'Running search operator with get_next = {get_next}')
+        search_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_search')
+        search_op(get_next=get_next)
 
 
 def _get_asset_type_from_ui() -> AssetType:
