@@ -197,7 +197,6 @@ class Hana3DUIProps(PropertyGroup):
     drag_length: IntProperty(name="Drag length", default=0)
     draw_drag_image: BoolProperty(name="Draw Drag Image", default=False)
     draw_snapped_bounds: BoolProperty(name="Draw Snapped Bounds", default=False)
-    asset_search_index: IntProperty(name='Asset search index', default=-1)
 
     snapped_location: FloatVectorProperty(name="Snapped Location", default=(0, 0, 0))
     snapped_bbox_min: FloatVectorProperty(name="Snapped Bbox Min", default=(0, 0, 0))

@@ -461,6 +461,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 ui_props.has_hit = False
                 ui_props.active_index = -3
                 ui_props.draw_drag_image = False
+                ui_props.draw_snapped_bounds = False
                 ui_props.draw_tooltip = False
                 bpy.context.window.cursor_set('DEFAULT')
                 return {'PASS_THROUGH'}
@@ -511,6 +512,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     ui_props.snapped_bbox_max = Vector(active_mod.bbox_max)  # noqa: WPS220
 
             else:
+                ui_props.draw_snapped_bounds = False
                 ui_props.draw_drag_image = True
 
             return {'RUNNING_MODAL'}

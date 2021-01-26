@@ -25,6 +25,7 @@ from bpy_extras import view3d_utils
 from . import bg_blender, paths, render, utils
 from .config import HANA3D_NAME, HANA3D_UI
 from .src import download
+from .src.asset.asset_type import AssetType
 from .src.preferences.preferences import Preferences
 from .src.ui import bgl_helper, colors
 from .src.ui.main import UI

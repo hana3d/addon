@@ -507,16 +507,9 @@ def draw_callback3d(self, context):
     ui = getattr(context.window_manager, HANA3D_UI)
 
     if ui.asset_type.lower() == 'model' and ui.draw_snapped_bounds:
-        progress = 0.0
-        if ui.asset_search_index >= 0:
-            progress = search.get_search_results()[ui.asset_search_index].downloaded
         bgl_helper.draw_bbox(
             ui.snapped_location,
             ui.snapped_rotation,
             ui.snapped_bbox_min,
             ui.snapped_bbox_max,
-            progress,
         )
-        if progress == 100.0:
-            ui.asset_search_index = -1
-            ui.draw_snapped_bounds = False
