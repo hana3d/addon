@@ -56,13 +56,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         options={'SKIP_SAVE'},
     )
 
-    is_searching: BoolProperty(  # type: ignore
-        name='Next page',
-        description='Get next page from previous search',
-        default=False,
-        options={'SKIP_SAVE'},
-    )
-
     keywords: StringProperty(  # type: ignore
         name='Keywords',
         description='Keywords',
