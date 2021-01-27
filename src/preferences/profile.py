@@ -17,6 +17,7 @@ from ... import config, paths
 if TYPE_CHECKING:
     from ...hana3d_types import Props  # noqa: WPS433
 
+
 def configure_bugsnag(api_key: str):
     """Configure bugsnag.
 
