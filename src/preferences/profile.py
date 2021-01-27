@@ -119,6 +119,5 @@ class Profile(object):
         update_libraries_list(upload_props, bpy.context)
         update_tags_list(upload_props, bpy.context)
 
-        if config.HANA3D_NAME == 'hana3d_production':
-            configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
-            configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])
+        configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
+        configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])
