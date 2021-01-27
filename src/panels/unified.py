@@ -3,7 +3,7 @@ import bpy
 from bpy.types import Panel
 
 from .lib import draw_assetbar_show_hide
-from ..search.search import Search
+from ..search import search
 from ..unified_props import Unified
 from ..upload import upload
 from ... import utils
@@ -34,8 +34,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
 
         if ui_props.down_up == 'SEARCH':
             if utils.profile_is_validator():
-                search = Search(context)
-                search_props = search.props
+                search_props = search.get_search_props()
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type in {'MODEL', 'SCENE', 'MATERIAL'}:
                 self._draw_panel_common_search(context)
@@ -63,7 +62,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
                 if bpy.context.view_layer.objects.active is not None:
                     self._draw_panel_common_upload(context)
                 else:
-                    layout.label(text='selet object to upload')
+                    layout.label(text='select object to upload')
             elif ui_props.asset_type == 'SCENE':
                 self._draw_panel_common_upload(context)
             elif ui_props.asset_type == 'MATERIAL':
@@ -155,8 +154,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
 
-        search = Search(context)
-        search_props = search.props
+        search_props = search.get_search_props()
         unified_props = Unified(context).props
 
         row = layout.row()

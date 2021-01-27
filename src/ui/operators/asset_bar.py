@@ -11,9 +11,9 @@ from mathutils import Vector
 from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
 from ..main import UI
 from ...preferences.preferences import Preferences
-from ...search.search import Search
+from ...search import search
 from ...upload import upload
-from .... import search, utils
+from .... import utils
 from ....config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -34,9 +34,7 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
         int: index of the asset under the mouse
     """
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-
-    search_object = Search(bpy.context)
-    search_results = search_object.results
+    search_results = search.get_search_results()
     len_search = len(search_results)
     if search_results is not None:
 
@@ -229,8 +227,7 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
     ui.bar_width = region.width - ui.bar_x - ui.bar_end
     ui.wcount = math.floor((ui.bar_width - 2 * ui.drawoffset) / (ui.thumb_size + ui.margin))
 
-    search_object = Search(bpy.context)
-    search_results = search_object.results
+    search_results = search.get_search_results()
     if search_results is not None and ui.wcount > 0:
         ui.hcount = min(
             user_preferences.max_assetbar_rows,
@@ -280,10 +277,9 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
     def search_more(self):
         """Search more results."""
-        search_object = Search(bpy.context)
-        search_results_orig = search_object.results_orig
-        if search_results_orig is not None and search_results_orig.get('next') is not None:
-            search.search(get_next=True)
+        original_search_results = search.get_original_search_results()
+        if original_search_results is not None and original_search_results.get('next') is not None:
+            search.run_operator(get_next=True)
 
     def exit_modal(self):
         """Exit modal."""
@@ -401,9 +397,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         # TODO add one more condition here to take less performance.
         scene = bpy.context.scene
-        search_object = Search(context)
-        search_results = search_object.results
-        search_results_orig = search_object.results_orig
+        search_results = search.get_search_results()
         # If there aren't any results, we need no interaction(yet)
         if search_results is None:
             return {'PASS_THROUGH'}
@@ -472,8 +466,8 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 bpy.context.window.cursor_set('DEFAULT')
                 return {'PASS_THROUGH'}
 
-            search_object = Search(bpy.context)
-            search_results = search_object.results
+            search_results = search.get_search_results()
+            original_search_results = search.get_original_search_results()
             len_search = len(search_results)
 
             if not ui_props.dragging:  # noqa: WPS504
@@ -490,13 +484,13 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     asset_data = search_results[asset_search_index]
                     ui_props.draw_tooltip = True
 
-                    ui_props.tooltip = asset_data['tooltip']
+                    ui_props.tooltip = asset_data.tooltip
 
                 else:
                     ui_props.draw_tooltip = False
 
                 if mx > ui_props.bar_x + ui_props.bar_width - 50:
-                    if search_results_orig['count'] - ui_props.scrolloffset > ui_props.total_count + 1:  # noqa: E501
+                    if original_search_results['count'] - ui_props.scrolloffset > ui_props.total_count + 1:  # noqa: E501
                         ui_props.active_index = -1
                         return {'RUNNING_MODAL'}
                 if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
@@ -506,7 +500,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             elif ui_props.dragging and mouse_in_region(region, mx, my):
                 self._raycast_update_props(ui_props, context, mx, my)
 
-            elif ui_props.has_hit and ui_props.asset_type == 'MODEL':
+            if ui_props.has_hit and ui_props.asset_type == 'MODEL':
                 # this condition is here to fix a bug for a scene
                 # submitted by a user, so this situation shouldn't
                 # happen anymore, but there might exists scenes
@@ -514,8 +508,8 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 if -1 < ui_props.active_index < len_search:
                     ui_props.draw_snapped_bounds = True  # noqa: WPS220
                     active_mod = search_results[ui_props.active_index]  # noqa: WPS220
-                    ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])  # noqa: WPS220
-                    ui_props.snapped_bbox_max = Vector(active_mod['bbox_max'])  # noqa: WPS220
+                    ui_props.snapped_bbox_min = Vector(active_mod.bbox_min)  # noqa: WPS220
+                    ui_props.snapped_bbox_max = Vector(active_mod.bbox_max)  # noqa: WPS220
 
             else:
                 ui_props.draw_snapped_bounds = False
@@ -708,7 +702,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props = getattr(context.window_manager, HANA3D_UI)
 
         if self.do_search:
-            search.search()
+            search.run_operator()
 
         if ui_props.assetbar_on:
             # we don't want to run the assetbar many times,
@@ -731,12 +725,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props.dragging = False  # only for cases where assetbar ended with an error.
         ui_props.assetbar_on = True
         ui_props.turn_off = False
-
-        search_object = Search(bpy.context)
-        search_results = search_object.results
-        if search_results is None:
-            search_object = Search(bpy.context)
-            search_object.results = []  # noqa: WPS110
 
         if context.area.type != 'VIEW_3D':
             logging.warning('View3D not found, cannot run operator')

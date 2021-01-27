@@ -25,7 +25,7 @@ from . import paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.preferences.profile import update_libraries_list
-from .src.search.search import Search
+from .src.search import search
 from .src.unified_props import Unified
 from .src.upload import upload
 
@@ -63,8 +63,8 @@ class RemoveLibrarySearch(Operator):
 
     @execute_wrapper
     def execute(self, context):
-        search = Search(context)
-        search.props.libraries_list[self.library].selected = False
+        search_props = search.get_search_props()
+        search_props.libraries_list[self.library].selected = False
         return {'INTERFACE'}
 
 
@@ -101,10 +101,10 @@ class RefreshLibraries(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
+        logging.debug('Refreshing libraries')
         unified_props = Unified(context).props
 
-        search = Search(context)
-        search_props = search.props
+        search_props = search.get_search_props()
         update_libraries(unified_props.workspace)
         update_libraries_list(search_props, context)
 

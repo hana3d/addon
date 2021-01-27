@@ -72,13 +72,13 @@ def kick_async_loop() -> bool:  # noqa : WPS210,WPS213,WPS231
             # noinspection PyBroadException
             try:
                 res = task.result()
+                log.debug(f'   task #{task_idx}: result={res}')
             except asyncio.CancelledError:
                 # No problem, we want to stop anyway.
                 log.debug(f'   task #{task_idx}: cancelled')
             except Exception:
                 log.debug(f'{task}: resulted in exception')
                 traceback.print_exc()
-            log.debug(f'   task #{task_idx}: result={res}')
 
     loop.stop()
     loop.run_forever()
