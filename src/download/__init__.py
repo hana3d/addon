@@ -540,7 +540,7 @@ def check_asset_in_scene(asset_data: AssetData) -> str:
 
     view_id = asset_data.view_id
     if view_id in assets_used.keys():
-        ad = assets_used[id]
+        ad = assets_used[view_id]
         if ad.get('file_name') is not None:
 
             asset_data.file_name = ad['file_name']

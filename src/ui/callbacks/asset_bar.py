@@ -459,7 +459,6 @@ def draw_callback2d_search(self, context):
                 ui_props.mouse_y,
                 ui_props.mouse_x + linelength,
                 ui_props.mouse_y - linelength,
-                2,
                 white,
             )
 
