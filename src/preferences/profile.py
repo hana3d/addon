@@ -1,16 +1,45 @@
 """Hana3D Profile."""
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import bpy
 
+import bugsnag
+import sentry_sdk
+
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import Search
+from ..unified_props import Unified
 from ..upload.upload import get_upload_props
 from ... import config, paths
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props   # noqa: WPS433
+
+
+def configure_bugsnag(api_key: str):
+    """Configure bugsnag.
+
+    Arguments:
+        api_key: str
+    """
+    bugsnag.configure(
+        api_key=api_key,
+        project_root=Path(__file__).parent.parent.parent,
+    )
+
+
+def configure_sentry(url: str):
+    """Configure sentry.
+
+    Arguments:
+        url: str
+    """
+    sentry_sdk.init(
+        url,
+        traces_sample_rate=1.0,
+    )
 
 
 def update_tags_list(props: 'Props', context: bpy.types.Context):
@@ -20,8 +49,9 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
+    unified_props = Unified(context).props
     props.tags_list.clear()
-    current_workspace = props.workspace
+    current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for tag in workspace['tags']:
@@ -36,8 +66,13 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
+    unified_props = Unified(context).props
     props.libraries_list.clear()
-    current_workspace = props.workspace
+    if hasattr(props, 'custom_props'):  # noqa: WPS421
+        for name in props.custom_props.keys():
+            del props.custom_props[name]    # noqa: WPS420
+            del props.custom_props_info[name]   # noqa: WPS420
+    current_workspace = unified_props.workspace
     for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:
             for library in workspace['libraries']:
@@ -74,7 +109,8 @@ class Profile(object):
         if not response.ok:
             logging.error(f'Failed to get profile data: {response.text}')  # noqa: WPS421
 
-        bpy.context.window_manager[config.HANA3D_PROFILE] = response.json()
+        window_manager = bpy.context.window_manager
+        window_manager[config.HANA3D_PROFILE] = response.json()
 
         search = Search(bpy.context)
 
@@ -84,3 +120,6 @@ class Profile(object):
         upload_props = get_upload_props()
         update_libraries_list(upload_props, bpy.context)
         update_tags_list(upload_props, bpy.context)
+
+        configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
+        configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])

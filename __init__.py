@@ -26,7 +26,6 @@ from . import (  # noqa: WPS235
     append_link,
     asset,
     bg_blender,
-    download,
     hana3d_oauth,
     hana3d_types,
     icons,
@@ -42,7 +41,7 @@ from . import (  # noqa: WPS235
     utils,
 )
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from .src import async_loop, autothumb, upload
+from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder
@@ -52,7 +51,7 @@ from .src.ui.operators import render_image
 bl_info = {
     'name': 'Hana3D',
     'author': 'Vilem Duha, Petr Dlouhy, R2U',
-    'version': (0, 8, 3),
+    'version': (0, 8, 4),
     'blender': (2, 90, 0),
     'location': 'View3D > Properties > Hana3D',
     'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
@@ -61,7 +60,7 @@ bl_info = {
 }
 
 
-@persistent
+@ persistent
 def scene_load(context):
     search.load_previews()
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
@@ -78,7 +77,7 @@ def scene_load(context):
             bpy.app.timers.register(authentication.refresh_token_timer)
 
 
-@bpy.app.handlers.persistent
+@ bpy.app.handlers.persistent
 def check_timers_timer():
     '''Checks if all timers are registered regularly.
     Prevents possible bugs from stopping the addon.
@@ -102,7 +101,7 @@ def check_timers_timer():
     return 5.0
 
 
-@addon_updater_ops.make_annotations
+@ addon_updater_ops.make_annotations
 class Hana3DAddonPreferences(AddonPreferences):
     # this must match the addon name, use '__package__'
     # when defining this in a submodule of a python package.
@@ -336,12 +335,11 @@ def register():
 
 
 def unregister():
-    bpy.app.handlers.load_post.remove(scene_load)
-    bpy.app.timers.unregister(check_timers_timer)
-
     for module in reversed(modules):
         module.unregister()
 
+    bpy.app.timers.unregister(check_timers_timer)
+    bpy.app.handlers.load_post.remove(scene_load)
     bpy.utils.unregister_class(Hana3DAddonPreferences)
     addon_updater_ops.unregister()
 

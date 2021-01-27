@@ -106,7 +106,7 @@ def run_async_function(
     async_function: typing.Callable,
     done_callback: typing.Optional[typing.Callable] = None,
     **kwargs,
-):
+) -> asyncio.Future:
     """Start an asynchronous task from an async function.
 
     Args:
@@ -123,6 +123,7 @@ def run_async_function(
     if done_callback is not None:
         async_task.add_done_callback(done_callback)
     ensure_async_loop()
+    return async_task
 
 
 class AsyncLoopModalOperator(bpy.types.Operator):

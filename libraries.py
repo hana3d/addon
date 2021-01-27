@@ -26,6 +26,7 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.preferences.profile import update_libraries_list
 from .src.search.search import Search
+from .src.unified_props import Unified
 from .src.upload import upload
 
 
@@ -100,13 +101,15 @@ class RefreshLibraries(bpy.types.Operator):
 
     @execute_wrapper
     def execute(self, context):
+        unified_props = Unified(context).props
+
         search = Search(context)
         search_props = search.props
-        update_libraries(search_props.workspace)
+        update_libraries(unified_props.workspace)
         update_libraries_list(search_props, context)
 
         upload_props = upload.get_upload_props()
-        update_libraries(upload_props.workspace)
+        update_libraries(unified_props.workspace)
         update_libraries_list(upload_props, context)
 
         utils.show_popup('Libraries updated!')
