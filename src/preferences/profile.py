@@ -8,11 +8,11 @@ import bpy
 import bugsnag
 import sentry_sdk
 
+from ... import config, paths
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import Search
 from ..unified_props import Unified
 from ..upload.upload import get_upload_props
-from ... import config, paths
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props   # noqa: WPS433
@@ -121,6 +121,5 @@ class Profile(object):
         update_libraries_list(upload_props, bpy.context)
         update_tags_list(upload_props, bpy.context)
 
-        if config.HANA3D_NAME == 'hana3d_production':
-            configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
-            configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])
+        configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
+        configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])
