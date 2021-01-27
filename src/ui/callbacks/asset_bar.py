@@ -1,15 +1,16 @@
 """Asset bar callbacks."""
+import datetime
 import math
 import os
 
 import bpy
 
-from .... import paths, utils
-from ....config import HANA3D_NAME, HANA3D_UI
+from .. import bgl_helper
 from ...preferences.preferences import Preferences
 from ...search.search import Search
 from ...upload import upload
-from .. import bgl_helper
+from .... import paths, utils
+from ....config import HANA3D_NAME, HANA3D_UI
 
 verification_icons = {
     'ready': 'vs_ready.png',
@@ -27,6 +28,7 @@ def draw_tooltip(  # noqa: WPS111, WPS211
     y,
     text='',
     author='',
+    created='',
     revision='',
     img=None,
     gravatar=None
@@ -45,7 +47,7 @@ def draw_tooltip(  # noqa: WPS111, WPS211
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
 
-    ttipmargin = 5
+    ttipmargin = 10
     textmargin = 10
 
     font_height = int(12 * scale)
@@ -55,9 +57,9 @@ def draw_tooltip(  # noqa: WPS111, WPS211
     lines = text.split('\n')
     author_lines = author.split('\n')
     ncolumns = 2
-    nlines = max(len(lines) - 1, len(author_lines))
+    nlines = max(len(lines) - 1, len(author_lines), 2)
 
-    texth = line_height * nlines + nameline_height
+    texth = line_height * nlines + nameline_height * 2
 
     max_dim = max(img.size[0], img.size[1])
     if max_dim == 0:
@@ -77,7 +79,7 @@ def draw_tooltip(  # noqa: WPS111, WPS211
 
         lines = text.split('\n')
 
-        texth = line_height * nlines + nameline_height + line_height
+        texth = line_height * nlines + nameline_height * 2 + line_height
         isizex = int(512 * scale * img.size[0] / max_dim)
         isizey = int(512 * scale * img.size[1] / max_dim)
 
@@ -138,12 +140,32 @@ def draw_tooltip(  # noqa: WPS111, WPS211
     fsize = name_height
     tcol = textcol
 
-    y_revision = (
-        y - (nlines - 1) * line_height - nameline_height - ttipmargin * 2 - isizey + texth
+    y_created = (
+        y
+        - line_height
+        - nameline_height
+        - ttipmargin
+        - textmargin
+        - isizey
+        + texth
     )
-    x_revision = xtext + int(isizex / ncolumns)
+    x_created = xtext + int(isizex / ncolumns)
+    created_date = datetime.datetime.utcfromtimestamp(float(created)).strftime('%Y-%m-%dT%H:%M:%S')
+    text_created = f'Created: {created_date}'
+    bgl_helper.draw_text(text_created, x_created, y_created, font_height, tcol)
 
-    bgl_helper.draw_text(revision, x_revision, y_revision, font_height, tcol)
+    y_revision = (
+        y
+        - line_height * 2
+        - nameline_height
+        - ttipmargin
+        - textmargin
+        - isizey
+        + texth
+    )
+    x_revision = x_created
+    text_revision = f'Modified: {revision}'
+    bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
 
     for line in lines:
         ytext = (
@@ -456,6 +478,7 @@ def draw_callback2d_search(self, context):
                     ui_props.mouse_y,
                     text=ui_props.tooltip,
                     author=author,
+                    created=search_result['created'],
                     revision=search_result['revision'],
                     img=img,
                     gravatar=gimg,
