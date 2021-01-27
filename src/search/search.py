@@ -84,10 +84,9 @@ def load_previews(asset_type: AssetType, search_results: List[AssetData]):
     if search_results is None:
         return
 
-    logging.debug('Loading previews: search_results is not None')
+    logging.debug('Loading previews')
     index = 0
     for search_result in search_results:
-        logging.debug(f'Thumbnail small is {search_result.thumbnail_small}')
         if search_result.thumbnail_small == '':
             logging.debug('No small thumbnail, will load placeholder')
             load_placeholder_thumbnail(index, search_result.id)
@@ -110,6 +109,8 @@ def load_previews(asset_type: AssetType, search_results: List[AssetData]):
                 img.filepath = thumbnail_path
                 img.reload()
             img.colorspace_settings.name = 'Linear'
+        else:
+            logging.error('NO THUMBNAIL')
         index += 1
 
 

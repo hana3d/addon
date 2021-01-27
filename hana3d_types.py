@@ -71,7 +71,9 @@ thumbnail_resolutions = (
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        search.load_previews()
+        asset_type = self.asset_type.lower()
+        results = search.get_search_results(asset_type)
+        search.load_previews(asset_type, results)
 
     def switch_active_asset_type(self, context):
         self.asset_type = self.asset_type_render

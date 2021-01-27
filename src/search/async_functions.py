@@ -5,7 +5,6 @@ import logging
 import os
 from typing import Dict
 
-import bpy
 import requests
 
 from .query import Query
@@ -14,7 +13,6 @@ from ..requests_async.requests_async import Request
 from ..ui import colors
 from ..ui.main import UI
 from ... import paths
-from ...config import HANA3D_NAME
 
 
 async def search_assets(query: Query, options: Dict, ui: UI) -> Dict:
@@ -106,5 +104,3 @@ async def download_thumbnail(image_path: str, url: str):
 
     os.rename(tmp_file_name, image_path)
     logging.debug('Download finished')
-    run_assetbar_op = getattr(bpy.ops.object, f'{HANA3D_NAME}_run_assetbar_fix_context')
-    run_assetbar_op()
