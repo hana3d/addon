@@ -8,11 +8,11 @@ import bpy
 import bugsnag
 import sentry_sdk
 
-from ... import config, paths
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import Search
 from ..unified_props import Unified
 from ..upload.upload import get_upload_props
+from ... import config, paths
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props   # noqa: WPS433
