@@ -5,12 +5,12 @@ import os
 
 import bpy
 
-from .. import bgl_helper
+from .... import paths, utils
+from ....config import HANA3D_NAME, HANA3D_UI
 from ...preferences.preferences import Preferences
 from ...search import search
 from ...upload import upload
-from .... import paths, utils
-from ....config import HANA3D_NAME, HANA3D_UI
+from .. import bgl_helper
 
 verification_icons = {
     'ready': 'vs_ready.png',
@@ -524,12 +524,7 @@ def draw_callback2d(self, context):
     except Exception:
         go = False
     if go and area == self_area and context.window == self_window:
-
-        props = getattr(context.window_manager, HANA3D_UI)
-        if props.down_up == 'SEARCH':
-            draw_callback2d_search(self, context)
-        elif props.down_up == 'UPLOAD':
-            draw_callback2d_upload_preview(self, context)
+        draw_callback2d_search(self, context)
 
 
 def draw_callback3d(self, context):
@@ -544,7 +539,7 @@ def draw_callback3d(self, context):
 
     ui = getattr(context.window_manager, HANA3D_UI)
 
-    if ui.asset_type.lower() == 'model' and ui.draw_snapped_bounds:
+    if ui.asset_type_search.lower() == 'model' and ui.draw_snapped_bounds:
         bgl_helper.draw_bbox(
             ui.snapped_location,
             ui.snapped_rotation,

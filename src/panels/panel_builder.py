@@ -1,15 +1,16 @@
 """Panel builder."""
 import bpy
 
+from ... import addon_updater_ops, utils
+from ...config import HANA3D_NAME, HANA3D_UI
+from ..search import search
 from .download import Hana3DDownloadPanel
 from .lib import draw_assetbar_show_hide, draw_login_buttons  # noqa: F401
 from .login import Hana3DLoginPanel
 from .render import Hana3DRenderPanel
-from .unified import Hana3DUnifiedPanel
+from .search import Hana3DSearchPanel
 from .updater import Hana3DUpdaterPanel
-from ..search import search
-from ... import addon_updater_ops, utils
-from ...config import HANA3D_NAME, HANA3D_UI
+from .upload import Hana3DUploadPanel
 
 
 def header_search_draw(self, context):
@@ -25,7 +26,7 @@ def header_search_draw(self, context):
 
         if context.space_data.show_region_tool_header or context.mode[:4] not in {'EDIT', 'OBJE'}:
             layout.separator_spacer()
-        layout.prop(ui_props, 'asset_type', text='', icon='URL')
+        layout.prop(ui_props, 'asset_type_search', text='', icon='URL')
         layout.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
         draw_assetbar_show_hide(layout)
 
@@ -33,7 +34,8 @@ def header_search_draw(self, context):
 panels = (
     Hana3DUpdaterPanel,
     Hana3DLoginPanel,
-    Hana3DUnifiedPanel,
+    Hana3DSearchPanel,
+    Hana3DUploadPanel,
     Hana3DDownloadPanel,
     Hana3DRenderPanel,
 )

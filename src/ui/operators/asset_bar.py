@@ -8,11 +8,6 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
-from ..main import UI
-from ...preferences.preferences import Preferences
-from ...search import search
-from ...upload import upload
 from .... import utils
 from ....config import (
     HANA3D_DESCRIPTION,
@@ -21,6 +16,11 @@ from ....config import (
     HANA3D_UI,
 )
 from ....report_tools import execute_wrapper
+from ...preferences.preferences import Preferences
+from ...search import search
+from ...upload import upload
+from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
+from ..main import UI
 
 
 def get_asset_under_mouse(mousex: float, mousey: float) -> int:
@@ -238,11 +238,11 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
     ui.total_count = ui.wcount * ui.hcount
     ui.bar_height = (ui.thumb_size + ui.margin) * ui.hcount + ui.margin
     ui.bar_y = region.height - ui.bar_y_offset * ui_scale
-    if ui.down_up == 'UPLOAD':
-        ui.reports_y = ui.bar_y - 600
+    if ui.assetbar_on:
+        ui.reports_y = ui.bar_y - ui.bar_height - 100
         ui.reports_x = ui.bar_x
     else:
-        ui.reports_y = ui.bar_y - ui.bar_height - 100
+        ui.reports_y = ui.bar_y - 600
         ui.reports_x = ui.bar_x
 
 
@@ -382,18 +382,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         if context.region != self.region:
             return {'PASS_THROUGH'}  # noqa: WPS204
-
-        if ui_props.down_up == 'UPLOAD':
-
-            ui_props.mouse_x = 0
-            ui_props.mouse_y = self.region.height
-
-            mx = event.mouse_x
-            my = event.mouse_y
-
-            self._generate_tooltip(event, ui_props)
-
-            return {'PASS_THROUGH'}
 
         # TODO add one more condition here to take less performance.
         scene = bpy.context.scene

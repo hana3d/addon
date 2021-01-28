@@ -6,8 +6,6 @@ from typing import Dict, List, Tuple
 
 import bpy
 
-from ..asset.asset_type import AssetType
-from ..metaclasses.singleton import Singleton
 from ... import paths, utils
 from ...config import (
     HANA3D_MATERIALS,
@@ -16,6 +14,8 @@ from ...config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from ..asset.asset_type import AssetType
+from ..metaclasses.singleton import Singleton
 
 
 @dataclass
@@ -217,4 +217,4 @@ def run_operator(get_next=False):
 
 def _get_asset_type_from_ui() -> AssetType:
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
-    return uiprops.asset_type.lower()
+    return uiprops.asset_type_search.lower()

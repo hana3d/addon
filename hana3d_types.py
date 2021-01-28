@@ -68,66 +68,58 @@ thumbnail_resolutions = (
     ('2048', '2048', ''),
 )
 
+search_asset_type_items = (
+    (
+        'MODEL',
+        'Find Models',
+        f"Find models in the {HANA3D_DESCRIPTION} online database",
+        'OBJECT_DATAMODE',
+        0,
+    ),
+    (
+        'SCENE',
+        'Find Scenes',
+        f"Find scenes in the {HANA3D_DESCRIPTION} online database",
+        'SCENE_DATA',
+        1,
+    ),
+    (
+        'MATERIAL',
+        'Find Materials',
+        f"Find materials in the {HANA3D_DESCRIPTION} online database",
+        'MATERIAL',
+        2,
+    ),
+)
+
+upload_asset_type_items = (
+    ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0),  # noqa E501
+    ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1),  # noqa E501
+    ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2),  # noqa E501
+)
+
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        asset_type = self.asset_type.lower()
+        asset_type = self.asset_type_search.lower()
         search_results = search.get_search_results(asset_type)
         search.load_previews(asset_type, search_results)
 
     def switch_active_asset_type(self, context):
         self.asset_type = self.asset_type_render
 
-    def asset_type_callback(self, context):
-        if self.down_up == 'SEARCH':
-            items = (
-                (
-                    'MODEL',
-                    'Find Models',
-                    f"Find models in the {HANA3D_DESCRIPTION} online database",
-                    'OBJECT_DATAMODE',
-                    0,
-                ),
-                (
-                    'SCENE',
-                    'Find Scenes',
-                    f"Find scenes in the {HANA3D_DESCRIPTION} online database",
-                    'SCENE_DATA',
-                    1,
-                ),
-                (
-                    'MATERIAL',
-                    'Find Materials',
-                    f"Find materials in the {HANA3D_DESCRIPTION} online database",
-                    'MATERIAL',
-                    2,
-                ),
-                # ("HDR", "Find HDRs", f"Find HDRs in the {HANA3D_DESCRIPTION} online database", "WORLD_DATA", 3), # noqa E501
-            )
-        else:
-            items = (
-                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0),  # noqa E501
-                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1),  # noqa E501
-                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2),  # noqa E501
-                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3), # noqa : E800
-            )
-        return items
-
-    down_up: EnumProperty(
-        name="Download vs Upload",
-        items=(
-            ('SEARCH', 'Search', 'Activate searching', 'VIEWZOOM', 0),
-            ('UPLOAD', 'Upload', 'Activate uploading', 'COPYDOWN', 1),
-        ),
-        description="hana3d",
-        default="SEARCH",
-    )
-    asset_type: EnumProperty(
-        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
-        items=asset_type_callback,
-        description="Activate asset in UI",
+    asset_type_search: EnumProperty(
+        name=f"{HANA3D_DESCRIPTION} Search Asset Type",
+        items=search_asset_type_items,
+        description="Search for Asset Type",
         default=None,
         update=switch_search_results,
+    )
+    asset_type_upload: EnumProperty(
+        name=f"{HANA3D_DESCRIPTION} Upload Asset Type",
+        items=upload_asset_type_items,
+        description="Upload Asset Type",
+        default=None,
     )
     asset_type_render: EnumProperty(
         name=f"{HANA3D_DESCRIPTION} Active Asset Type",
@@ -298,8 +290,6 @@ def search_update(self, context):
     logging.debug('search updater')
     # if self.search_keywords != '':
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-    if ui_props.down_up != 'SEARCH':
-        ui_props.down_up = 'SEARCH'
     search.run_operator()
 
 

@@ -7,6 +7,13 @@ from typing import Dict, List, Tuple
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
+from ... import hana3d_oauth, paths, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ..asset.asset_type import AssetType
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..preferences.preferences import Preferences
+from ..ui import colors
+from ..ui.main import UI
 from .async_functions import download_thumbnail, search_assets
 from .query import Query
 from .search import (
@@ -17,13 +24,6 @@ from .search import (
     set_original_search_results,
     set_search_results,
 )
-from ..asset.asset_type import AssetType
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..preferences.preferences import Preferences
-from ..ui import colors
-from ..ui.main import UI
-from ... import hana3d_oauth, paths, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 Thumbnail = Tuple[str, str]
 
@@ -94,7 +94,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         logging.debug(f'Search_props: {search_props}')
         ui = UI()
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-        asset_type = ui_props.asset_type.lower()
+        asset_type = ui_props.asset_type_search.lower()
 
         query = Query(bpy.context, search_props)
         query.asset_type = asset_type
@@ -325,7 +325,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             if not os.path.exists(imgpath_large):
                 await download_thumbnail(imgpath_large, url_large)
             ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-            current_asset_type = ui_props.asset_type.lower()
+            current_asset_type = ui_props.asset_type_search.lower()
             if current_asset_type == asset_type:
                 load_previews(asset_type, result_field)
 

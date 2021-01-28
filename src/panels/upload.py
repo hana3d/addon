@@ -1,23 +1,20 @@
-"""Search/Upload Panel."""
+"""Upload Panel."""
 import bpy
 from bpy.types import Panel
 
-from .lib import draw_assetbar_show_hide
-from ..search import search
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from ..unified_props import Unified
 from ..upload import upload
-from ... import utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 
-class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
-    """Search/Upload Panel."""
+class Hana3DUploadPanel(Panel):  # noqa: WPS214
+    """Upload Panel."""
 
     bl_category = HANA3D_DESCRIPTION
-    bl_idname = f'VIEW3D_PT_{HANA3D_NAME}_unified'
+    bl_idname = f'VIEW3D_PT_{HANA3D_NAME}_upload'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = f'Find and Upload Assets to {HANA3D_DESCRIPTION}'
+    bl_label = f'Upload Assets to {HANA3D_DESCRIPTION}'
 
     @classmethod
     def poll(cls, context):  # noqa: D102
@@ -27,54 +24,43 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         scene = context.scene
         ui_props = getattr(context.window_manager, HANA3D_UI)
         layout = self.layout
+        layout.prop(ui_props, 'asset_type_upload', expand=False, text='')
 
-        row = layout.row()
-        row.prop(ui_props, 'down_up', expand=True, icon_only=False)
-        layout.prop(ui_props, 'asset_type', expand=False, text='')
+        if ui_props.assetbar_on:
+            text = 'Hide asset preview - ;'
+        else:
+            text = 'Show asset preview - ;'
+        op = layout.operator(f'view3d.{HANA3D_NAME}_asset_bar', text=text, icon='EXPORT')
+        op.keep_running = False
+        op.do_search = False
+        op.tooltip = 'Show/Hide asset preview'
 
-        if ui_props.down_up == 'SEARCH':
-            if utils.profile_is_validator():
-                search_props = search.get_search_props()
-                layout.prop(search_props, 'search_verification_status')
-            if ui_props.asset_type in {'MODEL', 'SCENE', 'MATERIAL'}:
-                self._draw_panel_common_search(context)
+        engine = scene.render.engine
+        if engine not in {'CYCLES', 'BLENDER_EEVEE'}:
+            rtext = (
+                'Only Cycles and EEVEE render engines are currently supported. '
+                + f'Please use Cycles for all assets you upload to {HANA3D_DESCRIPTION}.'
+            )
+            self._label_multiline(rtext, icon='ERROR', width=w)
+            return
 
-        elif ui_props.down_up == 'UPLOAD':
-            if ui_props.assetbar_on:
-                text = 'Hide asset preview - ;'
-            else:
-                text = 'Show asset preview - ;'
-            op = layout.operator(f'view3d.{HANA3D_NAME}_asset_bar', text=text, icon='EXPORT')
-            op.keep_running = False
-            op.do_search = False
-            op.tooltip = 'Show/Hide asset preview'
-
-            engine = scene.render.engine
-            if engine not in {'CYCLES', 'BLENDER_EEVEE'}:
-                rtext = (
-                    'Only Cycles and EEVEE render engines are currently supported. '
-                    + f'Please use Cycles for all assets you upload to {HANA3D_DESCRIPTION}.'
-                )
-                self._label_multiline(rtext, icon='ERROR', width=w)
-                return
-
-            if ui_props.asset_type == 'MODEL':
-                if bpy.context.view_layer.objects.active is not None:
-                    self._draw_panel_common_upload(context)
-                else:
-                    layout.label(text='select object to upload')
-            elif ui_props.asset_type == 'SCENE':
+        if ui_props.asset_type_upload == 'MODEL':
+            if bpy.context.view_layer.objects.active is not None:
                 self._draw_panel_common_upload(context)
-            elif ui_props.asset_type == 'MATERIAL':
-                active_object = bpy.context.view_layer.objects.active is not None
-                active_material = bpy.context.active_object.active_material is not None
-                if active_object and active_material:
-                    self._draw_panel_common_upload(context)
-                else:
-                    self._label_multiline(
-                        text='select object with material to upload materials',
-                        width=w,
-                    )
+            else:
+                layout.label(text='select object to upload')
+        elif ui_props.asset_type_upload == 'SCENE':
+            self._draw_panel_common_upload(context)
+        elif ui_props.asset_type_upload == 'MATERIAL':
+            active_object = bpy.context.view_layer.objects.active is not None
+            active_material = bpy.context.active_object.active_material is not None
+            if active_object and active_material:
+                self._draw_panel_common_upload(context)
+            else:
+                self._label_multiline(
+                    text='select object with material to upload materials',
+                    width=w,
+                )
 
     def _label_multiline(self, text='', icon='NONE', width=-1):  # noqa: WPS210
         """Draw a ui label, but try to split it in multiple lines.
@@ -100,7 +86,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
                 if index < 1:
                     index = threshold
                 l1 = line[:index]
-                layout.label(text=l1, icon=icon)
+                self.layout.label(text=l1, icon=icon)
                 icon = 'NONE'
                 line = line[index:].lstrip()
                 li += 1
@@ -149,46 +135,10 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
                 row.scale_y = 0.9
                 library_counter = 0
 
-    def _draw_panel_common_search(self, context):  # noqa: WPS210,WPS213
-        layout = self.layout
-        uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
-        asset_type = uiprops.asset_type
-
-        search_props = search.get_search_props()
-        unified_props = Unified(context).props
-
-        row = layout.row()
-        row.prop(search_props, 'search_keywords', text='', icon='VIEWZOOM')
-        draw_assetbar_show_hide(row)
-        layout.prop(unified_props, 'workspace', expand=False, text='Workspace')
-        row = layout.row()
-        row.prop_search(search_props, 'libraries_input', search_props, 'libraries_list', icon='VIEWZOOM')  # noqa: E501
-        row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
-        self._draw_selected_libraries(layout, search_props, f'object.{HANA3D_NAME}_remove_library_search')  # noqa: E501
-        layout.prop_search(search_props, 'tags_input', search_props, 'tags_list', icon='VIEWZOOM')
-        self._draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
-        layout.prop(search_props, 'public_only')
-        self._label_multiline(text=search_props.report)
-
-        if asset_type == 'MODEL':
-            layout.separator()
-            layout.label(text='Import method:')
-            layout.prop(search_props, 'append_method', expand=True, icon_only=False)
-            row = layout.row(align=True)
-            row.operator(f'scene.{HANA3D_NAME}_batch_download')
-        # elif asset_type == 'SCENE':  # TODO uncomment after fixing scene merge  # noqa: E800
-        #     layout.separator()  # noqa: E800
-        #     layout.label(text='Import method:')  # noqa: E800
-        #     layout.prop(props, 'merge_add', expand=True, icon_only=False)  # noqa: E800
-        #     if props.merge_add == 'MERGE':  # noqa: E800
-        #         layout.prop(props, 'import_world')  # noqa: E800
-        #         layout.prop(props, 'import_render')  # noqa: E800
-        #         layout.prop(props, 'import_compositing')  # noqa: E800
-
     def _draw_panel_common_upload(self, context):  # noqa: WPS210,WPS213
         layout = self.layout
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
-        asset_type = uiprops.asset_type
+        asset_type = uiprops.asset_type_upload
         props = upload.get_upload_props()
         unified_props = Unified(context).props
 
@@ -206,6 +156,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         box.label(text='Asset Info', icon='MESH_CUBE')
         row = self._prop_needed(box, props, 'name', props.name)
         row.operator(f'object.{HANA3D_NAME}_share_asset', text='', icon='LINKED')
+        box.prop(props, 'description')
         col = box.column()
         if props.is_generating_thumbnail:
             col.enabled = False
@@ -225,8 +176,6 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
                 op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text='', icon='CANCEL')
                 op.process_source = asset_type
                 op.process_type = 'THUMBNAILER'
-        box.prop(props, 'description')
-        # box.prop(props, 'is_public')  # Commented out until feature is needed  # noqa: E800
 
         box = layout.box()
         box.label(text='Tags', icon='COLOR')
