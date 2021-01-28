@@ -158,8 +158,11 @@ def draw_tooltip(   # noqa: WPS211
 
     y_revision = y_created - line_height
     x_revision = x_created
-    revision_datetime = datetime.datetime.strptime(revision, '%Y-%m-%dT%H:%M:%S')
-    revision_date = revision_datetime.strftime('%d/%m/%Y - %H:%M:%S')
+    try:
+        revision_datetime = datetime.datetime.strptime(revision, '%Y-%m-%dT%H:%M:%S')
+        revision_date = revision_datetime.strftime('%d/%m/%Y - %H:%M:%S')
+    except ValueError:
+        revision_date = revision
     text_revision = f'Modified: {revision_date}'
     bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
 
