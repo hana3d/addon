@@ -150,8 +150,8 @@ def draw_tooltip(   # noqa: WPS211
         + texth
     )
     x_created = xtext + int(isizex / ncolumns)
-    created_date = datetime.datetime.utcfromtimestamp(
-        float(created)).strftime('%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
+    created_utc = datetime.datetime.utcfromtimestamp(float(created))
+    created_date = created_utc.strftime('%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
     text_created = f'Created: {created_date}'
     bgl_helper.draw_text(text_created, x_created, y_created, font_height, tcol)
 
