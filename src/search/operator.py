@@ -7,13 +7,6 @@ from typing import Dict, List, Tuple
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
-from ... import hana3d_oauth, paths, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from ..asset.asset_type import AssetType
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..preferences.preferences import Preferences
-from ..ui import colors
-from ..ui.main import UI
 from .async_functions import download_thumbnail, search_assets
 from .query import Query
 from .search import (
@@ -24,6 +17,13 @@ from .search import (
     set_original_search_results,
     set_search_results,
 )
+from ..asset.asset_type import AssetType
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..preferences.preferences import Preferences
+from ..ui import colors
+from ..ui.main import UI
+from ... import hana3d_oauth, paths, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 Thumbnail = Tuple[str, str]
 

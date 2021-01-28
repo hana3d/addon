@@ -23,15 +23,15 @@ verification_icons = {
 }
 
 
-def draw_tooltip(  # noqa: WPS111, WPS211
-    x,
-    y,
+def draw_tooltip(   # noqa: WPS211
+    x,              # noqa: WPS111
+    y,              # noqa: WPS111
     text='',
     author='',
     created='',
     revision='',
     img=None,
-    gravatar=None
+    gravatar=None,
 ):
     """Draw tooltip.
 
@@ -150,7 +150,8 @@ def draw_tooltip(  # noqa: WPS111, WPS211
         + texth
     )
     x_created = xtext + int(isizex / ncolumns)
-    created_date = datetime.datetime.utcfromtimestamp(float(created)).strftime('%Y-%m-%dT%H:%M:%S')
+    created_date = datetime.datetime.utcfromtimestamp(
+        float(created)).strftime('%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
     text_created = f'Created: {created_date}'
     bgl_helper.draw_text(text_created, x_created, y_created, font_height, tcol)
 
