@@ -252,13 +252,14 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             response['description'] or '',
             response.get('render_jobs', []),
             response.get('workspace', ''),
-            response.get('revision'),
         )
 
         if 'metadata' in response and response['metadata'] is not None:
             asset_data.metadata = response['metadata']
         if 'created' in response and response['created'] is not None:
             asset_data.created = response['created']
+        if 'revision' in response and response['revision'] is not None:
+            asset_data.revision = response['revision']
         if 'libraries' in response and response['libraries'] is not None:
             asset_data.libraries = response['libraries']
         return asset_data

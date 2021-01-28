@@ -476,8 +476,8 @@ def draw_callback2d_search(self, context):
                     ui_props.mouse_y,
                     text=ui_props.tooltip,
                     author=author,
-                    created=search_result['created'],
-                    revision=search_result['revision'],
+                    created=search_result.created,
+                    revision=search_result.revision,
                     img=img,
                     gravatar=gimg,
                 )
