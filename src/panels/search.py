@@ -6,7 +6,12 @@ from ... import utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from ..search import search
 from ..unified_props import Unified
-from .lib import draw_assetbar_show_hide
+from .lib import (
+    draw_assetbar_show_hide,
+    draw_selected_libraries,
+    draw_selected_tags,
+    label_multiline,
+)
 
 
 class Hana3DSearchPanel(Panel):  # noqa: WPS214
@@ -34,79 +39,6 @@ class Hana3DSearchPanel(Panel):  # noqa: WPS214
         if ui_props.asset_type_search in {'MODEL', 'SCENE', 'MATERIAL'}:
             self._draw_panel_common_search(context)
 
-    def _label_multiline(self, text='', icon='NONE', width=-1):  # noqa: WPS210
-        """Draw a ui label, but try to split it in multiple lines.
-
-        Parameters:
-            text: Text to be displayed
-            icon: Icon to be used
-            width: Line width
-        """
-        if text.strip() == '':
-            return
-        lines = text.split('\n')
-        if width > 0:
-            scaling_factor = 5.5
-            threshold = int(width / scaling_factor)
-        else:
-            threshold = 35
-        maxlines = 8
-        li = 0
-        for line in lines:
-            while len(line) > threshold:
-                index = line.rfind(' ', 0, threshold)
-                if index < 1:
-                    index = threshold
-                l1 = line[:index]
-                self.layout.label(text=l1, icon=icon)
-                icon = 'NONE'
-                line = line[index:].lstrip()
-                li += 1
-                if li > maxlines:
-                    break
-            if li > maxlines:
-                break
-            self.layout.label(text=line, icon=icon)
-            icon = 'NONE'
-
-    def _prop_needed(self, layout, props, name, value, is_not_filled=''):  # noqa: WPS211,WPS110
-        row = layout.row()
-        if value == is_not_filled:
-            row.alert = True
-            row.prop(props, name)
-            row.alert = False
-        else:
-            row.prop(props, name)
-        return row
-
-    def _draw_selected_tags(self, layout, props, operator):
-        row = layout.row()
-        row.scale_y = 0.9
-        tag_counter = 0
-        for tag in props.tags_list.keys():
-            if props.tags_list[tag].selected is True:
-                op = row.operator(operator, text=tag, icon='X')
-                op.tag = tag
-                tag_counter += 1
-            if tag_counter == 3:
-                row = layout.row()
-                row.scale_y = 0.9
-                tag_counter = 0
-
-    def _draw_selected_libraries(self, layout, props, operator):
-        row = layout.row()
-        row.scale_y = 0.9
-        library_counter = 0
-        for library in props.libraries_list.keys():
-            if props.libraries_list[library].selected is True:
-                op = row.operator(operator, text=library, icon='X')
-                op.library = library
-                library_counter += 1
-            if library_counter == 3:
-                row = layout.row()
-                row.scale_y = 0.9
-                library_counter = 0
-
     def _draw_panel_common_search(self, context):  # noqa: WPS210,WPS213
         layout = self.layout
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
@@ -122,11 +54,11 @@ class Hana3DSearchPanel(Panel):  # noqa: WPS214
         row = layout.row()
         row.prop_search(search_props, 'libraries_input', search_props, 'libraries_list', icon='VIEWZOOM')  # noqa: E501
         row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
-        self._draw_selected_libraries(layout, search_props, f'object.{HANA3D_NAME}_remove_library_search')  # noqa: E501
+        draw_selected_libraries(layout, search_props, f'object.{HANA3D_NAME}_remove_library_search')  # noqa: E501
         layout.prop_search(search_props, 'tags_input', search_props, 'tags_list', icon='VIEWZOOM')
-        self._draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
+        draw_selected_tags(layout, search_props, f'object.{HANA3D_NAME}_remove_tag_search')
         layout.prop(search_props, 'public_only')
-        self._label_multiline(text=search_props.report)
+        label_multiline(layout, text=search_props.report)
 
         if asset_type == 'MODEL':
             layout.separator()

@@ -5,6 +5,7 @@ from bpy.types import Panel
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from ..unified_props import Unified
 from ..upload import upload
+from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
 
 
 class Hana3DUploadPanel(Panel):  # noqa: WPS214
@@ -41,7 +42,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
                 'Only Cycles and EEVEE render engines are currently supported. '
                 + f'Please use Cycles for all assets you upload to {HANA3D_DESCRIPTION}.'
             )
-            self._label_multiline(rtext, icon='ERROR', width=w)
+            label_multiline(layout, rtext, icon='ERROR')
             return
 
         if ui_props.asset_type_upload == 'MODEL':
@@ -53,49 +54,12 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
             self._draw_panel_common_upload(context)
         elif ui_props.asset_type_upload == 'MATERIAL':
             active_object = bpy.context.view_layer.objects.active is not None
-            active_material = bpy.context.active_object.active_material is not None
+            active_material = getattr(bpy.context.active_object,
+                                      'active_material', None) is not None
             if active_object and active_material:
                 self._draw_panel_common_upload(context)
             else:
-                self._label_multiline(
-                    text='select object with material to upload materials',
-                    width=w,
-                )
-
-    def _label_multiline(self, text='', icon='NONE', width=-1):  # noqa: WPS210
-        """Draw a ui label, but try to split it in multiple lines.
-
-        Parameters:
-            text: Text to be displayed
-            icon: Icon to be used
-            width: Line width
-        """
-        if text.strip() == '':
-            return
-        lines = text.split('\n')
-        if width > 0:
-            scaling_factor = 5.5
-            threshold = int(width / scaling_factor)
-        else:
-            threshold = 35
-        maxlines = 8
-        li = 0
-        for line in lines:
-            while len(line) > threshold:
-                index = line.rfind(' ', 0, threshold)
-                if index < 1:
-                    index = threshold
-                l1 = line[:index]
-                self.layout.label(text=l1, icon=icon)
-                icon = 'NONE'
-                line = line[index:].lstrip()
-                li += 1
-                if li > maxlines:
-                    break
-            if li > maxlines:
-                break
-            self.layout.label(text=line, icon=icon)
-            icon = 'NONE'
+                label_multiline(layout, text='select object with material to upload materials')
 
     def _prop_needed(self, layout, props, name, value, is_not_filled=''):  # noqa: WPS211,WPS110
         row = layout.row()
@@ -106,34 +70,6 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         else:
             row.prop(props, name)
         return row
-
-    def _draw_selected_tags(self, layout, props, operator):
-        row = layout.row()
-        row.scale_y = 0.9
-        tag_counter = 0
-        for tag in props.tags_list.keys():
-            if props.tags_list[tag].selected is True:
-                op = row.operator(operator, text=tag, icon='X')
-                op.tag = tag
-                tag_counter += 1
-            if tag_counter == 3:
-                row = layout.row()
-                row.scale_y = 0.9
-                tag_counter = 0
-
-    def _draw_selected_libraries(self, layout, props, operator):
-        row = layout.row()
-        row.scale_y = 0.9
-        library_counter = 0
-        for library in props.libraries_list.keys():
-            if props.libraries_list[library].selected is True:
-                op = row.operator(operator, text=library, icon='X')
-                op.library = library
-                library_counter += 1
-            if library_counter == 3:
-                row = layout.row()
-                row.scale_y = 0.9
-                library_counter = 0
 
     def _draw_panel_common_upload(self, context):  # noqa: WPS210,WPS213
         layout = self.layout
@@ -148,7 +84,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         row = box.row()
         row.prop_search(props, 'libraries_input', props, 'libraries_list', icon='VIEWZOOM')
         row.operator(f'object.{HANA3D_NAME}_refresh_libraries', text='', icon='FILE_REFRESH')
-        self._draw_selected_libraries(box, props, f'object.{HANA3D_NAME}_remove_library_upload')
+        draw_selected_libraries(box, props, f'object.{HANA3D_NAME}_remove_library_upload')
         for name in props.custom_props.keys():
             box.prop(props.custom_props, f'["{name}"]')
 
@@ -182,12 +118,12 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         row = box.row(align=True)
         row.prop_search(props, 'tags_input', props, 'tags_list', icon='VIEWZOOM')
         op = row.operator(f'object.{HANA3D_NAME}_add_tag', text='', icon='ADD')
-        self._draw_selected_tags(box, props, f'object.{HANA3D_NAME}_remove_tag_upload')
+        draw_selected_tags(box, props, f'object.{HANA3D_NAME}_remove_tag_upload')
 
         self._prop_needed(layout, props, 'publish_message', props.publish_message)
 
         if props.upload_state != '':
-            self._label_multiline(text=props.upload_state, width=context.region.width)
+            label_multiline(layout, text=props.upload_state, width=context.region.width)
         if props.uploading:
             op = layout.operator(f'object.{HANA3D_NAME}_kill_bg_process', text='', icon='CANCEL')
             op.process_source = asset_type
