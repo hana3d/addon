@@ -1,4 +1,5 @@
 """Asset bar callbacks."""
+import datetime
 import math
 import os
 
@@ -22,7 +23,16 @@ verification_icons = {
 }
 
 
-def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WPS111, WPS211
+def draw_tooltip(   # noqa: WPS211
+    x,              # noqa: WPS111
+    y,              # noqa: WPS111
+    text='',
+    author='',
+    created='',
+    revision='',
+    img=None,
+    gravatar=None,
+):
     """Draw tooltip.
 
     Parameters:
@@ -30,13 +40,15 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
         y: y-coordinate
         text: text to be displayed
         author: asset author
+        created: asset creation date in epoch
+        revision: view revision
         img: image
         gravatar: gravatar
     """
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
 
-    ttipmargin = 5
+    ttipmargin = 10
     textmargin = 10
 
     font_height = int(12 * scale)
@@ -46,9 +58,9 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
     lines = text.split('\n')
     author_lines = author.split('\n')
     ncolumns = 2
-    nlines = max(len(lines) - 1, len(author_lines))
+    nlines = max(len(lines) - 1, len(author_lines), 2)
 
-    texth = line_height * nlines + nameline_height
+    texth = line_height * nlines + nameline_height * 2
 
     max_dim = max(img.size[0], img.size[1])
     if max_dim == 0:
@@ -68,7 +80,7 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
 
         lines = text.split('\n')
 
-        texth = line_height * nlines + nameline_height
+        texth = line_height * nlines + nameline_height * 2 + line_height
         isizex = int(512 * scale * img.size[0] / max_dim)
         isizey = int(512 * scale * img.size[1] / max_dim)
 
@@ -128,6 +140,31 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):  # noqa: WP
     xtext = x + textmargin
     fsize = name_height
     tcol = textcol
+
+    y_created = (
+        y
+        - line_height
+        - nameline_height
+        - ttipmargin
+        - textmargin
+        - isizey
+        + texth
+    )
+    x_created = xtext + int(isizex / ncolumns)
+    created_utc = datetime.datetime.utcfromtimestamp(float(created))
+    created_date = created_utc.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
+    text_created = f'Created: {created_date}'
+    bgl_helper.draw_text(text_created, x_created, y_created, font_height, tcol)
+
+    y_revision = y_created - line_height
+    x_revision = x_created
+    try:
+        revision_parsed = datetime.datetime.strptime(revision, '%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
+        revision_date = revision_parsed.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
+    except ValueError:
+        revision_date = revision
+    text_revision = f'Modified: {revision_date}'
+    bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
 
     for line in lines:
         ytext = (
@@ -437,6 +474,8 @@ def draw_callback2d_search(self, context):
                     ui_props.mouse_y,
                     text=ui_props.tooltip,
                     author=author,
+                    created=search_result.created,
+                    revision=search_result.revision,
                     img=img,
                     gravatar=gimg,
                 )

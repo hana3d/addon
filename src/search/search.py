@@ -39,6 +39,7 @@ class AssetData(object):
     downloaded: float = 0
     metadata: Dict = field(default_factory=dict)
     created: str = ''
+    revision: str = ''
     libraries: List[Dict] = field(default_factory=list)
     bbox_min: Tuple[float, float, float] = (-0.5, -0.5, 0.0)
     bbox_max: Tuple[float, float, float] = (0.5, 0.5, 1.0)

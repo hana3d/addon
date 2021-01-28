@@ -138,7 +138,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         else:
             logging.error(error)
             ui.add_report(text=error, color=colors.RED)
-            seach_props.search_error = True
+            search_props.search_error = True
 
         small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
         await self._load_thumbnails(small_thumbnails, full_thumbnails, asset_type, result_field)
@@ -254,10 +254,11 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             response.get('workspace', ''),
         )
 
+        asset_data.created = str(response.get('created'))
+        asset_data.revision = str(response.get('revision'))
+
         if 'metadata' in response and response['metadata'] is not None:
             asset_data.metadata = response['metadata']
-        if 'created' in response and response['created'] is not None:
-            asset_data.created = response['created']
         if 'libraries' in response and response['libraries'] is not None:
             asset_data.libraries = response['libraries']
         return asset_data
