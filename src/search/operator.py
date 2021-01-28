@@ -254,8 +254,8 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             response.get('workspace', ''),
         )
 
-        asset_data.created = response.get('created')
-        asset_data.revision = response.get('revision')
+        asset_data.created = str(response.get('created'))
+        asset_data.revision = str(response.get('revision'))
 
         if 'metadata' in response and response['metadata'] is not None:
             asset_data.metadata = response['metadata']
