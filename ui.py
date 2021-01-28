@@ -25,6 +25,7 @@ from bpy_extras import view3d_utils
 from . import bg_blender, paths, render, utils
 from .config import HANA3D_NAME, HANA3D_UI
 from .src import download
+from .src.asset.asset_type import AssetType
 from .src.preferences.preferences import Preferences
 from .src.ui import bgl_helper, colors
 from .src.ui.main import UI
@@ -72,13 +73,13 @@ def draw_progress(x, y, text='', percent=0, color=colors.GREEN):  # noqa: WPS111
 
 def draw_callback_progress3d(self, context):  # noqa: D103
     for thread in download.download_threads.values():
-        if thread.asset_data['asset_type'] == 'model':
+        if thread.asset_data.asset_type == AssetType.model:
             for import_param in thread.passargs.get('import_params', []):
                 bgl_helper.draw_bbox(
                     import_param['location'],
                     import_param['rotation'],
-                    thread.asset_data['bbox_min'],
-                    thread.asset_data['bbox_max'],
+                    thread.asset_data.bbox_min,
+                    thread.asset_data.bbox_max,
                     progress=thread.progress(),
                 )
 
@@ -93,9 +94,9 @@ def draw_callback_progress2d(self, context):  # noqa: D103
     for download_thread in download.download_threads.values():
         asset_data = download_thread.asset_data
 
-        directory = paths.get_temp_dir(f'{asset_data["asset_type"]}_search')
-        tpath = os.path.join(directory, asset_data['thumbnail_small'])
-        img = utils.get_hidden_image(tpath, asset_data['id'])
+        directory = paths.get_temp_dir(f'{asset_data.asset_type}_search')
+        tpath = os.path.join(directory, asset_data.thumbnail_small)
+        img = utils.get_hidden_image(tpath, asset_data.id)
 
         if download_thread.passargs.get('import_params'):
             for import_param in download_thread.passargs['import_params']:
@@ -112,7 +113,7 @@ def draw_callback_progress2d(self, context):  # noqa: D103
             draw_progress(
                 x,
                 y - index * line_size,  # noqa: WPS204
-                text=f'downloading {asset_data["name"]}',
+                text=f'downloading {asset_data.name}',
                 percent=download_thread.progress(),
             )
             index += 1

@@ -1,5 +1,5 @@
 """Search Query."""
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
 from bpy.types import Context
 
@@ -7,11 +7,14 @@ from ..asset.asset_type import AssetType
 from ..unified_props import Unified
 from ...config import HANA3D_NAME
 
+if TYPE_CHECKING:
+    from ...hana3d_types import SearchProps  # noqa: WPS433
+
 
 class Query(object):  # noqa : WPS230,WPS214
     """Hana3D search query."""
 
-    def __init__(self, context: Context = None, search_props: Dict = None):
+    def __init__(self, context: Context, search_props: 'SearchProps' = None):
         """Create a Search Query object.
 
         Args:
@@ -39,7 +42,7 @@ class Query(object):  # noqa : WPS230,WPS214
             self._add_tags(search_props)
             self._add_libraries(search_props)
 
-    def _add_view_id_search_term(self, search_props: Dict):
+    def _add_view_id_search_term(self, search_props: 'SearchProps'):
         keywords = search_props.search_keywords
         if keywords != '':
             if keywords.startswith('view_id:'):
@@ -47,26 +50,26 @@ class Query(object):  # noqa : WPS230,WPS214
             else:
                 self.search_term = keywords
 
-    def _add_verification_status(self, search_props: Dict):
+    def _add_verification_status(self, search_props: 'SearchProps'):
         if search_props.search_verification_status != 'ALL':
             self.verification_status = search_props.search_verification_status.lower()
 
-    def _add_public(self, search_props: Dict):
+    def _add_public(self, search_props: 'SearchProps'):
         self.public = bool(search_props.public_only)
 
-    def _add_workspace(self, search_props: Dict):
+    def _add_workspace(self, search_props: 'SearchProps'):
         unified_props = Unified(self.context).props
         if unified_props.workspace != '' and not search_props.public_only:
             self.workspace = unified_props.workspace
 
-    def _add_tags(self, search_props: Dict):
+    def _add_tags(self, search_props: 'SearchProps'):
         tags = []
         for tag in search_props.tags_list.keys():
             if search_props.tags_list[tag].selected is True:
                 tags.append(tag)
         self.tags = ','.join(tags)
 
-    def _add_libraries(self, search_props: Dict):
+    def _add_libraries(self, search_props: 'SearchProps'):
         libraries = []
         for library in search_props.libraries_list.keys():
             if search_props.libraries_list[library].selected is True:

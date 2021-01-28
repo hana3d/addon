@@ -31,7 +31,6 @@ from .config import (
     HANA3D_URL,
 )
 from .src.asset.asset_type import AssetType
-from .src.search.query import Query
 
 _presets = os.path.join(bpy.utils.user_resource('SCRIPTS'), 'presets')
 HANA3D_SETTINGS_FILENAME = os.path.join(_presets, f'{HANA3D_NAME}.json')
@@ -186,7 +185,15 @@ def slugify(slug):
     return slug
 
 
-def extract_filename_from_url(url):
+def extract_filename_from_url(url: str) -> str:
+    """Get filename from url path.
+
+    Parameters:
+        url: str
+
+    Returns:
+        str: filename
+    """
     if url is None:
         return ''
     path = urllib.parse.urlsplit(url).path
@@ -195,13 +202,13 @@ def extract_filename_from_url(url):
 
 
 def get_download_filenames(asset_data):
-    dirs = get_download_dirs(asset_data['asset_type'])
+    dirs = get_download_dirs(asset_data.asset_type)
     file_names = []
     # fn = asset_data['file_name'].replace('blend_', '')
-    if asset_data.get('download_url') is not None:
+    if asset_data.download_url is not None:
         # this means asset is already in scene and we don't need to check
 
-        fn = extract_filename_from_url(asset_data['download_url'])
+        fn = extract_filename_from_url(asset_data.download_url)
         for d in dirs:
             file_name = os.path.join(d, fn)
             file_names.append(file_name)

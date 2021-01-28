@@ -1,10 +1,14 @@
-"""Search."""
-from dataclasses import dataclass
-from typing import List
+"""Auxiliary search functions."""
+import logging
+import os
+from dataclasses import asdict, dataclass, field
+from typing import Dict, List, Tuple
 
-from bpy.types import Context
+import bpy
 
 from ..asset.asset_type import AssetType
+from ..metaclasses.singleton import Singleton
+from ... import paths, utils
 from ...config import (
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -15,72 +19,201 @@ from ...config import (
 
 
 @dataclass
-class SearchResult(object):
+class AssetData(object):
     """Hana3D search result."""
 
-    view_id: str
-    file_name: str
+    thumbnail: str
+    thumbnail_small: str
     download_url: str
+    id: str  # noqa: WPS125
+    view_id: str
+    name: str
     asset_type: AssetType
+    tooltip: str
+    tags: List[str]
+    verification_status: str
+    author_id: str
+    description: str
+    render_jobs: List[str]
+    workspace: str
+    downloaded: float = 0
+    metadata: Dict = field(default_factory=dict)
+    created: str = ''
+    libraries: List[Dict] = field(default_factory=list)
+    bbox_min: Tuple[float, float, float] = (-0.5, -0.5, 0.0)
+    bbox_max: Tuple[float, float, float] = (0.5, 0.5, 1.0)
+    file_name: str = ''
 
-
-class Search(object):
-    """Hana3D search information."""
-
-    def __init__(self, context: Context, asset_type: AssetType = None):
-        """Create a Search object.
-
-        Args:
-            context: Blender context.
-            asset_type: Asset Type
-        """
-        self.context = context
-        self.asset_type = asset_type if asset_type else self._get_asset_type_from_ui()
-
-    @property  # noqa : WPS110
-    def results(self) -> List[SearchResult]:  # noqa : WPS110
-        """Get search results.
-
-        Returns:
-            List: search results
-        """
-        if f'{HANA3D_NAME}_search_results' not in self.context.window_manager:
-            return []
-        return self.context.window_manager[f'{HANA3D_NAME}_search_results']
-
-    @property
-    def props(self):
-        """Get search props.
+    def copy(self):
+        """Create copy of object.
 
         Returns:
-            Any | None: search props if available
+            AssetData: copied object
         """
-        if self.asset_type == 'model' and hasattr(self.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
-            return getattr(self.context.window_manager, HANA3D_MODELS)
-        elif self.asset_type == 'scene' and hasattr(self.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
-            return getattr(self.context.window_manager, HANA3D_SCENES)
-        elif self.asset_type == 'material' and hasattr(self.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
-            return getattr(self.context.window_manager, HANA3D_MATERIALS)
+        return AssetData(**asdict(self))
 
-    @property
-    def results_orig(self) -> List[SearchResult]:
-        """Get original search results (FIXME).
 
-        Returns:
-            List: original search results
-        """
-        if f'{HANA3D_NAME}_search_results_orig' not in self.context.window_manager:
-            return {}
-        return self.context.window_manager[f'{HANA3D_NAME}_search_results_orig']
+class SearchData(object, metaclass=Singleton):
+    """Hana3D Blender Search Data singleton class."""
 
-    @results.setter  # noqa : WPS110
-    def results(self, results_value: List[SearchResult]):  # noqa : WPS110
-        self.context.window_manager[f'{HANA3D_NAME}_search_results'] = results_value
+    search_results: Dict[AssetType, List[AssetData]]
+    original_search_results: Dict[AssetType, Dict]
 
-    @results_orig.setter
-    def results_orig(self, results_orig_value: List[SearchResult]):
-        self.context.window_manager[f'{HANA3D_NAME}_search_results_orig'] = results_orig_value
+    def __init__(self) -> None:
+        """Create a new UI instance."""
+        self.search_results = {
+            AssetType.model: [],
+            AssetType.material: [],
+            AssetType.scene: [],
+        }
+        self.original_search_results = {
+            AssetType.model: {},
+            AssetType.material: {},
+            AssetType.scene: {},
+        }
 
-    def _get_asset_type_from_ui(self) -> AssetType:
-        uiprops = getattr(self.context.window_manager, HANA3D_UI)
-        return uiprops.asset_type.lower()
+
+def load_previews(asset_type: AssetType, search_results: List[AssetData]):
+    """Load small preview thumbnails for search results.
+
+    Parameters:
+        asset_type: type of the asset
+        search_results: search results
+    """
+    directory = paths.get_temp_dir(f'{asset_type}_search')
+    if search_results is None:
+        return
+
+    logging.debug('Loading previews')
+    index = 0
+    for search_result in search_results:
+        if search_result.thumbnail_small == '':
+            logging.debug('No small thumbnail, will load placeholder')
+            load_placeholder_thumbnail(index, search_result.id)
+            index += 1
+            continue
+
+        thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
+        image_name = utils.previmg_name(index)
+        logging.debug(f'Loading {image_name} in {thumbnail_path}')
+
+        if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
+            img = bpy.data.images.get(image_name)
+            if img is None:
+                img = bpy.data.images.load(thumbnail_path)
+                img.name = image_name
+            elif img.filepath != thumbnail_path:
+                # had to add this check for autopacking files...
+                if img.packed_file is not None:
+                    img.unpack(method='USE_ORIGINAL')
+                img.filepath = thumbnail_path
+                img.reload()
+            img.colorspace_settings.name = 'Linear'
+        else:
+            logging.error('NO THUMBNAIL')
+        index += 1
+
+
+def load_placeholder_thumbnail(index: int, asset_id: str):
+    """Load placeholder thumbnail for assets without one.
+
+    Parameters:
+        index: index number of the asset in search results
+        asset_id: asset id
+    """
+    placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
+
+    img = bpy.data.images.load(placeholder_path)
+    img.name = utils.previmg_name(index)
+
+    hidden_img = bpy.data.images.load(placeholder_path)
+    hidden_img.name = f'.{asset_id}'
+
+    fullsize_img = bpy.data.images.load(placeholder_path)
+    fullsize_img.name = utils.previmg_name(index, fullsize=True)
+
+
+def get_search_results(asset_type: AssetType = None) -> List[AssetData]:
+    """Get search results.
+
+    Parameters:
+        asset_type: type of the assets searched
+
+    Returns:
+        List: search results
+    """
+    if asset_type is None:
+        asset_type = _get_asset_type_from_ui()
+    return SearchData().search_results[asset_type]
+
+
+def set_search_results(asset_type: AssetType, results_value: List[AssetData]):
+    """Set search results for given asset type.
+
+    Parameters:
+        asset_type: asset type
+        results_value: search results
+    """
+    SearchData().search_results[asset_type] = results_value
+
+
+def get_original_search_results(asset_type: AssetType = None) -> Dict:
+    """Get original search results.
+
+    Parameters:
+        asset_type: type of the assets searched
+
+    Returns:
+        Dict: original search results
+    """
+    if asset_type is None:
+        asset_type = _get_asset_type_from_ui()
+    return SearchData().original_search_results[asset_type]
+
+
+def set_original_search_results(asset_type: AssetType, results_value: Dict):
+    """Set original search results for given asset type.
+
+    Parameters:
+        asset_type: asset type
+        results_value: original search results
+    """
+    SearchData().original_search_results[asset_type] = results_value
+
+
+def get_search_props(asset_type: AssetType = None):
+    """Get search props.
+
+    Parameters:
+        asset_type: asset type currently being searched
+
+    Returns:
+        Dict | None: search props if available
+    """
+    if asset_type is None:
+        asset_type = _get_asset_type_from_ui()
+    if asset_type == AssetType.model and hasattr(bpy.context.window_manager, HANA3D_MODELS):  # noqa : WPS421
+        return getattr(bpy.context.window_manager, HANA3D_MODELS)
+    elif asset_type == AssetType.scene and hasattr(bpy.context.window_manager, HANA3D_SCENES):  # noqa : WPS421
+        return getattr(bpy.context.window_manager, HANA3D_SCENES)
+    elif asset_type == AssetType.material and hasattr(bpy.context.window_manager, HANA3D_MATERIALS):  # noqa : WPS421
+        return getattr(bpy.context.window_manager, HANA3D_MATERIALS)
+
+
+def run_operator(get_next=False):
+    """Run search operator.
+
+    Parameters:
+        get_next: get next batch of results
+    """
+    search_props = get_search_props()
+    if not search_props.is_searching:
+        search_props.is_searching = True
+        logging.debug(f'Running search operator with get_next = {get_next}')
+        search_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_search')
+        search_op(get_next=get_next)
+
+
+def _get_asset_type_from_ui() -> AssetType:
+    uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
+    return uiprops.asset_type.lower()

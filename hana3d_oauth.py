@@ -27,7 +27,6 @@ from .report_tools import execute_wrapper
 from .src.async_loop import run_async_function
 from .src.preferences.preferences import Preferences
 from .src.preferences.profile import Profile
-from .src.search.search import Search
 from .src.ui import colors
 from .src.ui.main import UI
 
