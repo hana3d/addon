@@ -152,21 +152,15 @@ def draw_tooltip(   # noqa: WPS211
     )
     x_created = xtext + int(isizex / ncolumns)
     created_utc = datetime.datetime.utcfromtimestamp(float(created))
-    created_date = created_utc.strftime('%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
+    created_date = created_utc.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
     text_created = f'Created: {created_date}'
     bgl_helper.draw_text(text_created, x_created, y_created, font_height, tcol)
 
-    y_revision = (
-        y
-        - line_height * 2
-        - nameline_height
-        - ttipmargin
-        - textmargin
-        - isizey
-        + texth
-    )
+    y_revision = y_created - line_height
     x_revision = x_created
-    text_revision = f'Modified: {revision}'
+    revision_datetime = datetime.datetime.strptime(revision, '%Y-%m-%dT%H:%M:%S')
+    revision_date = revision_datetime.strftime('%d/%m/%Y - %H:%M:%S')
+    text_revision = f'Modified: {revision_date}'
     bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
 
     for line in lines:
