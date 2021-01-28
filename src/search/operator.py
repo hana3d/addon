@@ -138,7 +138,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         else:
             logging.error(error)
             ui.add_report(text=error, color=colors.RED)
-            seach_props.search_error = True
+            search_props.search_error = True
 
         small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
         await self._load_thumbnails(small_thumbnails, full_thumbnails, asset_type, result_field)
