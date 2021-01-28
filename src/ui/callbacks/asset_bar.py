@@ -40,6 +40,7 @@ def draw_tooltip(   # noqa: WPS211
         y: y-coordinate
         text: text to be displayed
         author: asset author
+        created: asset creation date in epoch
         revision: view revision
         img: image
         gravatar: gravatar
