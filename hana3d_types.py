@@ -150,7 +150,7 @@ class Hana3DUIProps(PropertyGroup):
         name='Thumbnail Size',
         default=thumb_size_def,
         min=-1,     # noqa: WPS432
-        max=256     # noqa: WPS432
+        max=256,    # noqa: WPS432
     )
 
     margin: IntProperty(name='Margin', default=margin_def, min=-1, max=256)  # noqa: WPS432
