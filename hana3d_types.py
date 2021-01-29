@@ -73,30 +73,30 @@ search_asset_type_items = (
     (
         'MODEL',
         'Find Models',
-        f"Find models in the {HANA3D_DESCRIPTION} online database",
+        f'Find models in the {HANA3D_DESCRIPTION} online database',
         'OBJECT_DATAMODE',
         0,
     ),
     (
         'SCENE',
         'Find Scenes',
-        f"Find scenes in the {HANA3D_DESCRIPTION} online database",
+        f'Find scenes in the {HANA3D_DESCRIPTION} online database',
         'SCENE_DATA',
         1,
     ),
     (
         'MATERIAL',
         'Find Materials',
-        f"Find materials in the {HANA3D_DESCRIPTION} online database",
+        f'Find materials in the {HANA3D_DESCRIPTION} online database',
         'MATERIAL',
         2,
     ),
 )
 
 upload_asset_type_items = (
-    ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0),  # noqa E501
-    ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1),  # noqa E501
-    ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2),  # noqa E501
+    ('MODEL', 'Upload Model', f'Upload a model to {HANA3D_DESCRIPTION}', 'OBJECT_DATAMODE', 0),  # noqa E501
+    ('SCENE', 'Upload Scene', f'Upload a scene to {HANA3D_DESCRIPTION}', 'SCENE_DATA', 1),  # noqa E501
+    ('MATERIAL', 'Upload Material', f'Upload a material to {HANA3D_DESCRIPTION}', 'MATERIAL', 2),  # noqa E501
 )
 
 
@@ -946,11 +946,15 @@ class Hana3DUnifiedProps(PropertyGroup):
 class Hana3DEditAsset(PropertyGroup, Hana3DCommonUploadProps):
     """Hana3D Edit Asset Info."""
 
-    pass
+    pass    # noqa: WPS420, WPS604
 
 
-UploadProps = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps,
-                    Hana3DMaterialUploadProps, Hana3DEditAsset]
+UploadProps = Union[
+    Hana3DModelUploadProps,
+    Hana3DSceneUploadProps,
+    Hana3DMaterialUploadProps,
+    Hana3DEditAsset
+]
 SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMaterialSearchProps]
 Props = Union[UploadProps, SearchProps]
 

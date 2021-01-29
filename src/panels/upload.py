@@ -47,7 +47,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
     def _upload_asset(self, context, layout, unified_props, asset_type):
         props = upload.get_upload_props()
 
-        self._draw_workspace(context, layout, props, unified_props, asset_type)
+        self._draw_workspace(layout, props, unified_props)
 
         box = layout.box()
         box.label(text='Asset Info', icon='MESH_CUBE')
@@ -76,7 +76,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
 
         # TODO: Show thumbnail
 
-        self._draw_tags(context, layout, props, unified_props, asset_type)
+        self._draw_tags(layout, props)
 
         self._prop_needed(layout, props, 'publish_message', props.publish_message)
 
@@ -117,7 +117,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
     def _edit_asset(self, context, layout, unified_props, asset_type):
         props = upload.get_edit_props()
 
-        self._draw_workspace(context, layout, props, unified_props, asset_type)
+        self._draw_workspace(layout, props, unified_props)
 
         box = layout.box()
         box.label(text='Asset Info', icon='MESH_CUBE')
@@ -126,24 +126,22 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         box.prop(props, 'description')
         # TODO: Show thumbnail
 
-        self._draw_tags(context, layout, props, unified_props, asset_type)
+        self._draw_tags(layout, props)
 
         row = layout.row()
         row.scale_y = 2.0
-        optext = f'Edit Asset Info'
+        optext = 'Edit Asset Info'
         row.operator(f'object.{HANA3D_NAME}_edit', text=optext, icon='INFO')
 
         row = layout.row()
-        optext = f'Delete Asset'
+        optext = 'Delete Asset'
         row.operator(f'object.{HANA3D_NAME}_delete', text=optext, icon='CANCEL')
 
     def _draw_workspace(
         self,
-        context,
         layout,
         props,
         unified_props,
-        asset_type
     ):
         box = layout.box()
         box.label(text='Workspace and Lib', icon='ASSET_MANAGER')
@@ -155,46 +153,10 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         for name in props.custom_props.keys():
             box.prop(props.custom_props, f'["{name}"]')
 
-    def _draw_asset_info(
-        self,
-        context,
-        layout,
-        props,
-        unified_props,
-        asset_type
-    ):
-        box = layout.box()
-        box.label(text='Asset Info', icon='MESH_CUBE')
-        row = self._prop_needed(box, props, 'name', props.name)
-        row.operator(f'object.{HANA3D_NAME}_share_asset', text='', icon='LINKED')
-        box.prop(props, 'description')
-        col = box.column()
-        if props.is_generating_thumbnail:
-            col.enabled = False
-        row = col.row(align=True)
-        self._prop_needed(row, props, 'thumbnail', props.has_thumbnail, is_not_filled=False)
-        if context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE'}:
-            if asset_type == 'MODEL':
-                row.operator(f'object.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-            elif asset_type == 'SCENE':
-                row.operator(f'scene.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-            elif asset_type == 'MATERIAL':
-                row.operator(f'material.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-        if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
-            row = box.row()
-            row.label(text=props.thumbnail_generating_state)
-            if props.is_generating_thumbnail:
-                op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text='', icon='CANCEL')
-                op.process_source = asset_type
-                op.process_type = 'THUMBNAILER'
-
     def _draw_tags(
         self,
-        context,
         layout,
         props,
-        unified_props,
-        asset_type
     ):
         box = layout.box()
         box.label(text='Tags', icon='COLOR')
