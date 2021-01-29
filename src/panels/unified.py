@@ -49,13 +49,14 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
             op.do_search = False
             op.tooltip = 'Show/Hide asset preview'
 
+            width = context.region.width
             engine = scene.render.engine
             if engine not in {'CYCLES', 'BLENDER_EEVEE'}:
                 rtext = (
                     'Only Cycles and EEVEE render engines are currently supported. '
                     + f'Please use Cycles for all assets you upload to {HANA3D_DESCRIPTION}.'
                 )
-                self._label_multiline(rtext, icon='ERROR', width=w)
+                self._label_multiline(rtext, icon='ERROR', width=width)
                 return
 
             if ui_props.asset_type == 'MODEL':
@@ -73,7 +74,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
                 else:
                     self._label_multiline(
                         text='select object with material to upload materials',
-                        width=w,
+                        width=width,
                     )
 
     def _label_multiline(self, text='', icon='NONE', width=-1):  # noqa: WPS210
