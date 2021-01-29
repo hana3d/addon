@@ -110,20 +110,20 @@ class Hana3DUIProps(PropertyGroup):
         self.asset_type = self.asset_type_render
 
     asset_type_search: EnumProperty(
-        name=f"{HANA3D_DESCRIPTION} Search Asset Type",
+        name=f'{HANA3D_DESCRIPTION} Search Asset Type',
         items=search_asset_type_items,
-        description="Search for Asset Type",
+        description='Search for Asset Type',
         default=None,
         update=switch_search_results,
     )
     asset_type_upload: EnumProperty(
-        name=f"{HANA3D_DESCRIPTION} Upload Asset Type",
+        name=f'{HANA3D_DESCRIPTION} Upload Asset Type',
         items=upload_asset_type_items,
-        description="Upload Asset Type",
+        description='Upload Asset Type',
         default=None,
     )
     asset_type_render: EnumProperty(
-        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
+        name=f'{HANA3D_DESCRIPTION} Active Asset Type',
         items=(
             (
                 'MODEL',
@@ -134,80 +134,80 @@ class Hana3DUIProps(PropertyGroup):
             ),
             ('SCENE', 'Render Scene', 'Create render representing whole scene', 'SCENE_DATA', 1),
         ),
-        description="Activate asset in UI",
+        description='Activate asset in UI',
         update=switch_active_asset_type,
     )
     # these aren't actually used ( by now, seems to better use globals in UI module:
-    draw_tooltip: BoolProperty(name="Draw Tooltip", default=False)
-    tooltip: StringProperty(name="Tooltip", description="asset preview info", default="")
+    draw_tooltip: BoolProperty(name='Draw Tooltip', default=False)
+    tooltip: StringProperty(name='Tooltip', description='asset preview info', default='')
 
     ui_scale = 1
 
     thumb_size_def = 96
     margin_def = 0
 
-    thumb_size: IntProperty(name="Thumbnail Size", default=thumb_size_def, min=-1, max=256)
+    thumb_size: IntProperty(name='Thumbnail Size', default=thumb_size_def, min=-1, max=256)
 
-    margin: IntProperty(name="Margin", default=margin_def, min=-1, max=256)
+    margin: IntProperty(name='Margin', default=margin_def, min=-1, max=256)
     highlight_margin: IntProperty(
-        name="Highlight Margin",
+        name='Highlight Margin',
         default=int(margin_def / 2),
         min=-10,
         max=256
     )
 
     bar_height: IntProperty(
-        name="Bar Height",
+        name='Bar Height',
         default=thumb_size_def + 2 * margin_def,
         min=-1,
         max=2048
     )
-    bar_x_offset: IntProperty(name="Bar X Offset", default=20, min=0, max=5000)
-    bar_y_offset: IntProperty(name="Bar Y Offset", default=80, min=0, max=5000)
+    bar_x_offset: IntProperty(name='Bar X Offset', default=20, min=0, max=5000)
+    bar_y_offset: IntProperty(name='Bar Y Offset', default=80, min=0, max=5000)
 
-    bar_x: IntProperty(name="Bar X", default=100, min=0, max=5000)
-    bar_y: IntProperty(name="Bar Y", default=100, min=50, max=5000)
-    bar_end: IntProperty(name="Bar End", default=100, min=0, max=5000)
-    bar_width: IntProperty(name="Bar Width", default=100, min=0, max=5000)
+    bar_x: IntProperty(name='Bar X', default=100, min=0, max=5000)
+    bar_y: IntProperty(name='Bar Y', default=100, min=50, max=5000)
+    bar_end: IntProperty(name='Bar End', default=100, min=0, max=5000)
+    bar_width: IntProperty(name='Bar Width', default=100, min=0, max=5000)
 
-    wcount: IntProperty(name="Width Count", default=10, min=0, max=5000)
-    hcount: IntProperty(name="Rows", default=5, min=0, max=5000)
+    wcount: IntProperty(name='Width Count', default=10, min=0, max=5000)
+    hcount: IntProperty(name='Rows', default=5, min=0, max=5000)
     total_count: IntProperty(name='Total Count', default=5, min=0, max=5000)  # noqa: WPS432
 
-    reports_y: IntProperty(name="Reports Y", default=5, min=0, max=5000)
-    reports_x: IntProperty(name="Reports X", default=5, min=0, max=5000)
+    reports_y: IntProperty(name='Reports Y', default=5, min=0, max=5000)
+    reports_x: IntProperty(name='Reports X', default=5, min=0, max=5000)
 
-    assetbar_on: BoolProperty(name="Assetbar On", default=False)
-    turn_off: BoolProperty(name="Turn Off", default=False)
+    assetbar_on: BoolProperty(name='Assetbar On', default=False)
+    turn_off: BoolProperty(name='Turn Off', default=False)
 
-    mouse_x: IntProperty(name="Mouse X", default=0)
-    mouse_y: IntProperty(name="Mouse Y", default=0)
+    mouse_x: IntProperty(name='Mouse X', default=0)
+    mouse_y: IntProperty(name='Mouse Y', default=0)
 
-    active_index: IntProperty(name="Active Index", default=-3)
-    scrolloffset: IntProperty(name="Scroll Offset", default=0)
-    drawoffset: IntProperty(name="Draw Offset", default=0)
+    active_index: IntProperty(name='Active Index', default=-3)
+    scrolloffset: IntProperty(name='Scroll Offset', default=0)
+    drawoffset: IntProperty(name='Draw Offset', default=0)
 
-    dragging: BoolProperty(name="Dragging", default=False)
-    drag_init: BoolProperty(name="Drag Initialisation", default=False)
-    drag_length: IntProperty(name="Drag length", default=0)
-    draw_drag_image: BoolProperty(name="Draw Drag Image", default=False)
-    draw_snapped_bounds: BoolProperty(name="Draw Snapped Bounds", default=False)
+    dragging: BoolProperty(name='Dragging', default=False)
+    drag_init: BoolProperty(name='Drag Initialisation', default=False)
+    drag_length: IntProperty(name='Drag length', default=0)
+    draw_drag_image: BoolProperty(name='Draw Drag Image', default=False)
+    draw_snapped_bounds: BoolProperty(name='Draw Snapped Bounds', default=False)
 
-    snapped_location: FloatVectorProperty(name="Snapped Location", default=(0, 0, 0))
-    snapped_bbox_min: FloatVectorProperty(name="Snapped Bbox Min", default=(0, 0, 0))
-    snapped_bbox_max: FloatVectorProperty(name="Snapped Bbox Max", default=(0, 0, 0))
-    snapped_normal: FloatVectorProperty(name="Snapped Normal", default=(0, 0, 0))
+    snapped_location: FloatVectorProperty(name='Snapped Location', default=(0, 0, 0))
+    snapped_bbox_min: FloatVectorProperty(name='Snapped Bbox Min', default=(0, 0, 0))
+    snapped_bbox_max: FloatVectorProperty(name='Snapped Bbox Max', default=(0, 0, 0))
+    snapped_normal: FloatVectorProperty(name='Snapped Normal', default=(0, 0, 0))
 
     snapped_rotation: FloatVectorProperty(
-        name="Snapped Rotation",
+        name='Snapped Rotation',
         default=(0, 0, 0),
         subtype='QUATERNION'
     )
 
-    has_hit: BoolProperty(name="has_hit", default=False)
+    has_hit: BoolProperty(name='has_hit', default=False)
     thumbnail_image = StringProperty(
-        name="Thumbnail Image",
-        description="",
+        name='Thumbnail Image',
+        description='',
         default=paths.get_addon_thumbnail_path('thumbnail_notready.png'),
     )
 
