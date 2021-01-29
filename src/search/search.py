@@ -6,6 +6,8 @@ from typing import Dict, List, Tuple
 
 import bpy
 
+from ..asset.asset_type import AssetType
+from ..metaclasses.singleton import Singleton
 from ... import paths, utils
 from ...config import (
     HANA3D_MATERIALS,
@@ -14,8 +16,6 @@ from ...config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
-from ..asset.asset_type import AssetType
-from ..metaclasses.singleton import Singleton
 
 
 @dataclass

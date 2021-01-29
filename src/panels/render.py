@@ -1,8 +1,8 @@
 """Render Farm operations panel."""
 from bpy.types import Panel
 
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER, HANA3D_UI
 from ..upload import upload
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_RENDER, HANA3D_UI
 
 
 class Hana3DRenderPanel(Panel):  # noqa: WPS214

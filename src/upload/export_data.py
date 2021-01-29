@@ -3,8 +3,8 @@ from typing import List
 
 import bpy
 
-from ... import hana3d_types, utils
 from ..unified_props import Unified
+from ... import hana3d_types, utils
 
 
 def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210

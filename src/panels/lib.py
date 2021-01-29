@@ -1,8 +1,8 @@
 """Code used on multiple panels."""
 import bpy
 
-from ...config import HANA3D_NAME, HANA3D_UI
 from ..preferences.preferences import Preferences
+from ...config import HANA3D_NAME, HANA3D_UI
 
 
 def draw_assetbar_show_hide(layout: bpy.types.UILayout) -> None:

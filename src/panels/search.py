@@ -2,16 +2,16 @@
 import bpy
 from bpy.types import Panel
 
-from ... import utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from ..search import search
-from ..unified_props import Unified
 from .lib import (
     draw_assetbar_show_hide,
     draw_selected_libraries,
     draw_selected_tags,
     label_multiline,
 )
+from ..search import search
+from ..unified_props import Unified
+from ... import utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 
 class Hana3DSearchPanel(Panel):  # noqa: WPS214

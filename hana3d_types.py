@@ -146,9 +146,14 @@ class Hana3DUIProps(PropertyGroup):
     thumb_size_def = 96
     margin_def = 0
 
-    thumb_size: IntProperty(name='Thumbnail Size', default=thumb_size_def, min=-1, max=256)
+    thumb_size: IntProperty(
+        name='Thumbnail Size',
+        default=thumb_size_def,
+        min=-1,     # noqa: WPS432
+        max=256     # noqa: WPS432
+    )
 
-    margin: IntProperty(name='Margin', default=margin_def, min=-1, max=256)
+    margin: IntProperty(name='Margin', default=margin_def, min=-1, max=256)  # noqa: WPS432
     highlight_margin: IntProperty(
         name='Highlight Margin',
         default=int(margin_def / 2),
@@ -162,20 +167,20 @@ class Hana3DUIProps(PropertyGroup):
         min=-1,
         max=2048
     )
-    bar_x_offset: IntProperty(name='Bar X Offset', default=20, min=0, max=5000)
-    bar_y_offset: IntProperty(name='Bar Y Offset', default=80, min=0, max=5000)
+    bar_x_offset: IntProperty(name='Bar X Offset', default=20, min=0, max=5000)  # noqa: WPS432
+    bar_y_offset: IntProperty(name='Bar Y Offset', default=80, min=0, max=5000)  # noqa: WPS432
 
-    bar_x: IntProperty(name='Bar X', default=100, min=0, max=5000)
-    bar_y: IntProperty(name='Bar Y', default=100, min=50, max=5000)
-    bar_end: IntProperty(name='Bar End', default=100, min=0, max=5000)
-    bar_width: IntProperty(name='Bar Width', default=100, min=0, max=5000)
+    bar_x: IntProperty(name='Bar X', default=100, min=0, max=5000)  # noqa: WPS432
+    bar_y: IntProperty(name='Bar Y', default=100, min=50, max=5000)  # noqa: WPS432
+    bar_end: IntProperty(name='Bar End', default=100, min=0, max=5000)  # noqa: WPS432
+    bar_width: IntProperty(name='Bar Width', default=100, min=0, max=5000)  # noqa: WPS432
 
-    wcount: IntProperty(name='Width Count', default=10, min=0, max=5000)
-    hcount: IntProperty(name='Rows', default=5, min=0, max=5000)
+    wcount: IntProperty(name='Width Count', default=10, min=0, max=5000)    # noqa: WPS432
+    hcount: IntProperty(name='Rows', default=5, min=0, max=5000)    # noqa: WPS432
     total_count: IntProperty(name='Total Count', default=5, min=0, max=5000)  # noqa: WPS432
 
-    reports_y: IntProperty(name='Reports Y', default=5, min=0, max=5000)
-    reports_x: IntProperty(name='Reports X', default=5, min=0, max=5000)
+    reports_y: IntProperty(name='Reports Y', default=5, min=0, max=5000)    # noqa: WPS432
+    reports_x: IntProperty(name='Reports X', default=5, min=0, max=5000)    # noqa: WPS432
 
     assetbar_on: BoolProperty(name='Assetbar On', default=False)
     turn_off: BoolProperty(name='Turn Off', default=False)
@@ -953,7 +958,7 @@ UploadProps = Union[
     Hana3DModelUploadProps,
     Hana3DSceneUploadProps,
     Hana3DMaterialUploadProps,
-    Hana3DEditAsset
+    Hana3DEditAsset,
 ]
 SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMaterialSearchProps]
 Props = Union[UploadProps, SearchProps]
