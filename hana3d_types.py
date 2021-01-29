@@ -34,6 +34,7 @@ from bpy.types import PropertyGroup
 
 from . import paths, render, render_tools
 from .config import (
+    HANA3D_ASSET,
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -288,8 +289,6 @@ def workspace_items(self, context):
 
 def search_update(self, context):
     logging.debug('search updater')
-    # if self.search_keywords != '':
-    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     search.run_operator()
 
 
@@ -944,7 +943,14 @@ class Hana3DUnifiedProps(PropertyGroup):
     )
 
 
-UploadProps = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
+class Hana3DAssetInfo(PropertyGroup, Hana3DCommonUploadProps):
+    """Hana3D Asset Info."""
+
+    pass
+
+
+UploadProps = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps,
+                    Hana3DMaterialUploadProps, Hana3DAssetInfo]
 SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMaterialSearchProps]
 Props = Union[UploadProps, SearchProps]
 
@@ -954,6 +960,7 @@ classes = (
     Hana3DRenderItem,
     Hana3DUIProps,
     Hana3DRenderProps,
+    Hana3DAssetInfo,
     Hana3DModelSearchProps,
     Hana3DModelUploadProps,
     Hana3DSceneSearchProps,
@@ -971,6 +978,7 @@ def register():
     setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
     setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
     setattr(bpy.types.WindowManager, HANA3D_NAME, PointerProperty(type=Hana3DUnifiedProps))
+    setattr(bpy.types.WindowManager, HANA3D_ASSET, PointerProperty(type=Hana3DAssetInfo))
 
     # MODELS
     setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))
