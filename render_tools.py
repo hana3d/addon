@@ -84,7 +84,7 @@ def update_render_list(
         preview_collection.previews = []
 
     if set_jobs:
-        jobs = props.render_data['jobs']
+        jobs = props.render_data.get('jobs', None)
     else:
         jobs = get_render_jobs(props.asset_type, props.view_id)
         props.render_data['jobs'] = jobs

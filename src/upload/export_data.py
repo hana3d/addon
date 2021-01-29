@@ -3,8 +3,8 @@ from typing import List
 
 import bpy
 
-from ..unified_props import Unified
 from ... import hana3d_types, utils
+from ..unified_props import Unified
 
 
 def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210
@@ -55,6 +55,28 @@ def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210
     export_data['publish_message'] = props.publish_message
 
     return export_data, upload_data
+
+
+def get_edit_data(props: hana3d_types.UploadProps):
+    """Get data to edit asset and view.
+
+    Arguments:
+        props: Hana3D upload props
+
+    Returns:
+        asset_data, view_data
+    """
+    asset_data = {
+        'name': props.name,
+        'description': props.description,
+    }
+    view_data = {
+        'name': props.name,
+    }
+    view_data['tags'] = _get_tags(props)
+    view_data['libraries'] = _get_libraries(props)
+
+    return asset_data, view_data
 
 
 def _get_model_data(export_data: dict, props: hana3d_types.UploadProps):  # noqa: WPS210

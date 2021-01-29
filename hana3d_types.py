@@ -943,14 +943,14 @@ class Hana3DUnifiedProps(PropertyGroup):
     )
 
 
-class Hana3DAssetInfo(PropertyGroup, Hana3DCommonUploadProps):
-    """Hana3D Asset Info."""
+class Hana3DEditAsset(PropertyGroup, Hana3DCommonUploadProps):
+    """Hana3D Edit Asset Info."""
 
     pass
 
 
 UploadProps = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps,
-                    Hana3DMaterialUploadProps, Hana3DAssetInfo]
+                    Hana3DMaterialUploadProps, Hana3DEditAsset]
 SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMaterialSearchProps]
 Props = Union[UploadProps, SearchProps]
 
@@ -960,7 +960,7 @@ classes = (
     Hana3DRenderItem,
     Hana3DUIProps,
     Hana3DRenderProps,
-    Hana3DAssetInfo,
+    Hana3DEditAsset,
     Hana3DModelSearchProps,
     Hana3DModelUploadProps,
     Hana3DSceneSearchProps,
