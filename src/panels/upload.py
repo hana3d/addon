@@ -48,34 +48,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         props = upload.get_upload_props()
 
         self._draw_workspace(layout, props, unified_props)
-
-        box = layout.box()
-        box.label(text='Asset Info', icon='MESH_CUBE')
-        row = self._prop_needed(box, props, 'name', props.name)
-        row.operator(f'object.{HANA3D_NAME}_share_asset', text='', icon='LINKED')
-        box.prop(props, 'description')
-        col = box.column()
-        if props.is_generating_thumbnail:
-            col.enabled = False
-        row = col.row(align=True)
-        self._prop_needed(row, props, 'thumbnail', props.has_thumbnail, is_not_filled=False)
-        if context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE'}:
-            if asset_type == 'MODEL':
-                row.operator(f'object.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-            elif asset_type == 'SCENE':
-                row.operator(f'scene.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-            elif asset_type == 'MATERIAL':
-                row.operator(f'material.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
-        if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
-            row = box.row()
-            row.label(text=props.thumbnail_generating_state)
-            if props.is_generating_thumbnail:
-                op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text='', icon='CANCEL')
-                op.process_source = asset_type
-                op.process_type = 'THUMBNAILER'
-
-        # TODO: Show thumbnail
-
+        self._draw_asset_info(context, layout, props, asset_type)
         self._draw_tags(layout, props)
 
         self._prop_needed(layout, props, 'publish_message', props.publish_message)
@@ -152,6 +125,40 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         draw_selected_libraries(box, props, f'object.{HANA3D_NAME}_remove_library_upload')
         for name in props.custom_props.keys():
             box.prop(props.custom_props, f'["{name}"]')
+
+    def _draw_asset_info(
+        self,
+        context,
+        layout,
+        props,
+        asset_type,
+    ):
+        box = layout.box()
+        box.label(text='Asset Info', icon='MESH_CUBE')
+        row = self._prop_needed(box, props, 'name', props.name)
+        row.operator(f'object.{HANA3D_NAME}_share_asset', text='', icon='LINKED')
+        box.prop(props, 'description')
+        col = box.column()
+        if props.is_generating_thumbnail:
+            col.enabled = False
+        row = col.row(align=True)
+        self._prop_needed(row, props, 'thumbnail', props.has_thumbnail, is_not_filled=False)
+        if context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE'}:
+            if asset_type == 'MODEL':
+                row.operator(f'object.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
+            elif asset_type == 'SCENE':
+                row.operator(f'scene.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
+            elif asset_type == 'MATERIAL':
+                row.operator(f'material.{HANA3D_NAME}_thumbnail', text='', icon='IMAGE_DATA')
+        if props.is_generating_thumbnail or props.thumbnail_generating_state != '':
+            row = box.row()
+            row.label(text=props.thumbnail_generating_state)
+            if props.is_generating_thumbnail:
+                op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text='', icon='CANCEL')
+                op.process_source = asset_type
+                op.process_type = 'THUMBNAILER'
+
+        # TODO: Show thumbnail
 
     def _draw_tags(
         self,
