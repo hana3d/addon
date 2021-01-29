@@ -978,7 +978,7 @@ def register():
     setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
     setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
     setattr(bpy.types.WindowManager, HANA3D_NAME, PointerProperty(type=Hana3DUnifiedProps))
-    setattr(bpy.types.WindowManager, HANA3D_ASSET, PointerProperty(type=Hana3DAssetInfo))
+    setattr(bpy.types.WindowManager, HANA3D_ASSET, PointerProperty(type=Hana3DEditAsset))
 
     # MODELS
     setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))
