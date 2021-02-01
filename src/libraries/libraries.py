@@ -8,7 +8,7 @@ from ...config import HANA3D_PROFILE
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props, UploadProps  # noqa: WPS433
-    from ..search.search import AssetData
+    from ..search.search import AssetData  # noqa: WPS433
 
 
 def _get_custom_props(props: 'UploadProps', library_id: str):
