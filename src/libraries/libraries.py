@@ -8,6 +8,7 @@ from ...config import HANA3D_PROFILE
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props, UploadProps  # noqa: WPS433
+    from ..search.search import AssetData
 
 
 def _get_custom_props(props: 'UploadProps', library_id: str):
@@ -46,7 +47,22 @@ def get_libraries(props: 'UploadProps'):  # noqa: WPS210
     return libraries
 
 
-def set_library_props(asset_data, asset_props):
+def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, library: dict, metadata: dict):
+    name = f'{library.name} {view_prop["name"]}'
+    slug = view_prop['slug']
+    if name not in asset_props.custom_props:
+        asset_props.custom_props_info[name] = {
+            'slug': slug,
+            'library_name': library.name,
+            'library_id': library.id_,
+        }
+    if 'view_props' in metadata and slug in metadata['view_props']:
+        asset_props.custom_props[name] = metadata['view_props'][slug]
+    else:
+        asset_props.custom_props[name] = ''
+
+
+def set_library_props(asset_data: List['AssetData'], asset_props: 'UploadProps'):
     """Set libraries on asset props.
 
     Parameters:
@@ -59,21 +75,18 @@ def set_library_props(asset_data, asset_props):
         library = libraries_list[asset_library['name']]
         library.selected = True
         if 'metadata' not in asset_library or asset_library['metadata'] is None:
-            continue
-        for view_prop in library.metadata['view_props']:
-            name = f'{library.name} {view_prop["name"]}'
-            slug = view_prop['slug']
-            if name not in asset_props.custom_props:
-                asset_props.custom_props_info[name] = {
-                    'slug': slug,
-                    'library_name': library.name,
-                    'library_id': library.id_,
-                }
-            metadata = asset_library['metadata']
-            if 'view_props' in metadata and slug in metadata['view_props']:
-                asset_props.custom_props[name] = metadata['view_props'][slug]
-            else:
-                asset_props.custom_props[name] = ''
+            for view_prop in library.metadata['view_props']:
+                _set_view_prop(asset_props, view_prop, library, asset_library['metadata'])
+
+
+def _add_library(props: 'Props', library: dict):
+    new_library = props.libraries_list.add()
+    new_library['name'] = library['name']
+    new_library.id_ = library['id']
+    metadata = library['metadata']
+    if metadata is not None:
+        new_library.metadata['library_props'] = metadata['library_props']
+        new_library.metadata['view_props'] = metadata['view_props']
 
 
 def update_libraries_list(props: 'Props', context: bpy.types.Context):
@@ -94,10 +107,4 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
         if current_workspace != workspace['id']:
             continue
         for library in workspace['libraries']:
-            new_library = props.libraries_list.add()
-            new_library['name'] = library['name']
-            new_library.id_ = library['id']
-            metadata = library['metadata']
-            if metadata is not None:
-                new_library.metadata['library_props'] = metadata['library_props']
-                new_library.metadata['view_props'] = metadata['view_props']
+            _add_library(props, library)
