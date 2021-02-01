@@ -1,30 +1,22 @@
 """Upload functions."""
 import bpy
 
-from ..asset.asset_type import AssetType
 from ... import utils
 from ...config import HANA3D_ASSET, HANA3D_NAME
+from ..asset.asset_type import AssetType
 
 
 def get_upload_props():
     """Get upload props of the active asset.
+    If there's no active object returns edit props
 
     Returns:
-        upload props
+        upload props or edit props
     """
     active_asset = utils.get_active_asset()
     if active_asset is None:
-        return None
+        return getattr(bpy.context.window_manager, HANA3D_ASSET)
     return getattr(active_asset, HANA3D_NAME)
-
-
-def get_edit_props():
-    """Get edit props of the selected asset in search.
-
-    Returns:
-        edit props
-    """
-    return getattr(bpy.context.window_manager, HANA3D_ASSET)
 
 
 def get_upload_props_by_view_id(asset_type: AssetType, view_id: str):

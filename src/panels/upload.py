@@ -2,10 +2,11 @@
 import bpy
 from bpy.types import Panel
 
-from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ..edit_asset import edit
 from ..unified_props import Unified
 from ..upload import upload
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
 
 
 class Hana3DUploadPanel(Panel):  # noqa: WPS214
@@ -88,7 +89,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
             layout.label(text='asset has a version online.')
 
     def _edit_asset(self, context, layout, unified_props, asset_type):
-        props = upload.get_edit_props()
+        props = edit.get_edit_props()
 
         self._draw_workspace(layout, props, unified_props)
 

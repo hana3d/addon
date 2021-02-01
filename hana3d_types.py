@@ -44,8 +44,9 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
-from .src.preferences.profile import update_libraries_list, update_tags_list
+from .src.libraries.libraries import update_libraries_list
 from .src.search import search
+from .src.tags.tags import update_tags_list
 from .src.upload import upload
 
 thumbnail_angles = (

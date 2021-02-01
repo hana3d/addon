@@ -1,10 +1,10 @@
 """Auxiliary data manipulation functions."""
-from typing import List
-
 import bpy
 
-from ..unified_props import Unified
 from ... import hana3d_types, utils
+from ..libraries.libraries import get_libraries
+from ..tags.tags import get_tags
+from ..unified_props import Unified
 
 
 def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210
@@ -49,34 +49,12 @@ def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210
     if metadata:
         upload_data['metadata'] = metadata
 
-    upload_data['tags'] = _get_tags(props)
-    upload_data['libraries'] = _get_libraries(props)
+    upload_data['tags'] = get_tags(props)
+    upload_data['libraries'] = get_libraries(props)
 
     export_data['publish_message'] = props.publish_message
 
     return export_data, upload_data
-
-
-def get_edit_data(props: hana3d_types.UploadProps):
-    """Get data to edit asset and view.
-
-    Arguments:
-        props: Hana3D upload props
-
-    Returns:
-        asset_data, view_data
-    """
-    asset_data = {
-        'name': props.name,
-        'description': props.description,
-    }
-    view_data = {
-        'name': props.name,
-    }
-    view_data['tags'] = _get_tags(props)
-    view_data['libraries'] = _get_libraries(props)
-
-    return asset_data, view_data
 
 
 def _get_model_data(export_data: dict, props: hana3d_types.UploadProps):  # noqa: WPS210
@@ -136,33 +114,3 @@ def _get_scene_data(export_data: dict):
     upload_params: dict = {}
 
     return upload_data, upload_params
-
-
-def _get_tags(props: hana3d_types.UploadProps):
-    tags: List[str] = []
-    for tag in props.tags_list.keys():
-        if props.tags_list[tag].selected is True:
-            tags.append(tag)
-    return tags
-
-
-def _get_libraries(props: hana3d_types.UploadProps):  # noqa: WPS210
-    libraries: List[dict] = []
-    for library_name in props.libraries_list.keys():
-        if props.libraries_list[library_name].selected is True:
-            library_id = props.libraries_list[library_name].id_
-            library = {}
-            library.update({
-                'id': library_id,
-            })
-            if props.custom_props.keys():
-                custom_props = {}
-                for prop_name in props.custom_props.keys():
-                    prop_value = props.custom_props[prop_name]
-                    slug = props.custom_props_info[prop_name]['slug']
-                    prop_library_id = props.custom_props_info[prop_name]['library_id']
-                    if prop_library_id == library_id:
-                        custom_props.update({slug: prop_value})  # noqa: WPS220
-                library.update({'metadata': {'view_props': custom_props}})
-            libraries.append(library)
-    return libraries

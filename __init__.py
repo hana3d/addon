@@ -43,6 +43,7 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
+from .src.edit_asset import operators as edit_ops
 from .src.panels import panel_builder
 from .src.search import operator as search_op
 from .src.ui import render as ui_render
@@ -325,6 +326,7 @@ modules = (
     ui_render,
     panel_builder,
     upload,
+    edit_ops,
 )
 
 

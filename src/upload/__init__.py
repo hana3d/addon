@@ -11,7 +11,11 @@ from typing import List, Union
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 
-from . import edit
+from ... import hana3d_types, paths, render, utils
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
+from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..ui.main import UI
+from ..unified_props import Unified
 from .async_functions import (
     confirm_upload,
     create_asset,
@@ -22,11 +26,6 @@ from .async_functions import (
 )
 from .export_data import get_export_data
 from .upload import get_upload_props
-from ..async_loop.async_mixin import AsyncModalOperatorMixin
-from ..ui.main import UI
-from ..unified_props import Unified
-from ... import hana3d_types, paths, render, utils
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
@@ -312,12 +311,8 @@ def register():
     for class_ in classes:
         bpy.utils.register_class(class_)
 
-    edit.register()
-
 
 def unregister():
     """Upload unregister."""
-    edit.unregister()
-
     for class_ in reversed(classes):
         bpy.utils.unregister_class(class_)

@@ -24,7 +24,7 @@ from bpy.types import Operator
 from . import paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
-from .src.preferences.profile import update_libraries_list
+from .src.libraries.libraries import update_libraries_list
 from .src.search import search
 from .src.unified_props import Unified
 from .src.upload import upload
