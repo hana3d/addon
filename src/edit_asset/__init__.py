@@ -1,1 +1,1 @@
-"""Edit asset module"""
+"""Edit asset module."""

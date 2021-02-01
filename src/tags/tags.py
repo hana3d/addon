@@ -15,6 +15,8 @@ def get_tags(props: 'UploadProps'):
 
     Parameters:
         props: Upload Props
+    Returns:
+        libraries: List[str]
     """
     tags: List[str] = []
     for tag in props.tags_list.keys():

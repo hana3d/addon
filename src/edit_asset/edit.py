@@ -8,7 +8,7 @@ from ...config import HANA3D_ASSET
 
 
 def get_edit_props():
-    """Get edit props of the selected asset in search.
+    """Get edit props.
 
     Returns:
         edit props
@@ -17,6 +17,11 @@ def get_edit_props():
 
 
 def set_edit_props(asset_index: int):
+    """Set edit props for the selected asset in search.
+
+    Returns:
+        edit props
+    """
     asset_props = get_edit_props()
     search_results = get_search_results()
     asset_data = search_results[asset_index]
