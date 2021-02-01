@@ -19,8 +19,8 @@ def get_edit_props():
 def set_edit_props(asset_index: int):
     """Set edit props for the selected asset in search.
 
-    Returns:
-        edit props
+    Parameters:
+        asset_index: index of asset in search results
     """
     asset_props = get_edit_props()
     search_results = get_search_results()

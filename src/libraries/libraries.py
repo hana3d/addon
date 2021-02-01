@@ -15,6 +15,7 @@ def get_libraries(props: 'UploadProps'):  # noqa: WPS210
 
     Parameters:
         props: Upload Props
+
     Returns:
         libraries: List[dict]
     """
