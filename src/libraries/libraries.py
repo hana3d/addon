@@ -10,6 +10,17 @@ if TYPE_CHECKING:
     from ...hana3d_types import Props, UploadProps  # noqa: WPS433
 
 
+def _get_custom_props(props: 'UploadProps', library_id: str):
+    custom_props = {}
+    for prop_name in props.custom_props.keys():
+        prop_value = props.custom_props[prop_name]
+        slug = props.custom_props_info[prop_name]['slug']
+        prop_library_id = props.custom_props_info[prop_name]['library_id']
+        if prop_library_id == library_id:
+            custom_props.update({slug: prop_value})
+    return custom_props
+
+
 def get_libraries(props: 'UploadProps'):  # noqa: WPS210
     """Get libraries from asset props.
 
@@ -29,13 +40,7 @@ def get_libraries(props: 'UploadProps'):  # noqa: WPS210
             'id': library_id,
         })
         if props.custom_props.keys():
-            custom_props = {}
-            for prop_name in props.custom_props.keys():
-                prop_value = props.custom_props[prop_name]
-                slug = props.custom_props_info[prop_name]['slug']
-                prop_library_id = props.custom_props_info[prop_name]['library_id']
-                if prop_library_id == library_id:
-                    custom_props.update({slug: prop_value})
+            custom_props = _get_custom_props(props, library_id)
             library.update({'metadata': {'view_props': custom_props}})
         libraries.append(library)
     return libraries
