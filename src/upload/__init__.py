@@ -250,7 +250,10 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         skip_post_process = 'false'
         multiple_uv_models = [
             model for model in export_data.get('models', [])
-            if len(bpy.data.objects[model].data.uv_layers) > 1  # noqa: WPS219
+            if (
+                bpy.data.objects[model].data is not None
+                and len(bpy.data.objects[model].data.uv_layers) > 1  # noqa: WPS219
+            )
         ]
         if multiple_uv_models:
             ui.add_report(
