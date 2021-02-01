@@ -8,6 +8,12 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
+from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
+from ..main import UI
+from ...edit_asset.edit import set_edit_props
+from ...preferences.preferences import Preferences
+from ...search import search
+from ...upload import upload
 from .... import utils
 from ....config import (
     HANA3D_DESCRIPTION,
@@ -16,12 +22,6 @@ from ....config import (
     HANA3D_UI,
 )
 from ....report_tools import execute_wrapper
-from ...edit_asset.edit import set_edit_props
-from ...preferences.preferences import Preferences
-from ...search import search
-from ...upload import upload
-from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
-from ..main import UI
 
 
 def get_asset_under_mouse(mousex: float, mousey: float) -> int:

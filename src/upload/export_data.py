@@ -1,10 +1,10 @@
 """Auxiliary data manipulation functions."""
 import bpy
 
-from ... import hana3d_types, utils
 from ..libraries.libraries import get_libraries
 from ..tags.tags import get_tags
 from ..unified_props import Unified
+from ... import hana3d_types, utils
 
 
 def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210

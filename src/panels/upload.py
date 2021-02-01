@@ -2,11 +2,11 @@
 import bpy
 from bpy.types import Panel
 
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
 from ..edit_asset import edit
 from ..unified_props import Unified
 from ..upload import upload
-from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 
 
 class Hana3DUploadPanel(Panel):  # noqa: WPS214

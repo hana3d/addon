@@ -1,7 +1,7 @@
 """Auxiliary data manipulation functions."""
-from ... import hana3d_types
 from ..libraries.libraries import get_libraries
 from ..tags.tags import get_tags
+from ... import hana3d_types
 
 
 def get_edit_data(props: hana3d_types.UploadProps):

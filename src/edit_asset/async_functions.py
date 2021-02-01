@@ -3,9 +3,9 @@ import logging
 
 import requests
 
-from ... import paths
 from ..requests_async.requests_async import Request
 from ..ui.main import UI
+from ... import paths
 
 
 async def edit_asset(

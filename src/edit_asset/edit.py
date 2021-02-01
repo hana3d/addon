@@ -1,10 +1,10 @@
 """Edit functions."""
 import bpy
 
-from ...config import HANA3D_ASSET
 from ..libraries.libraries import set_library_props
 from ..search.search import get_search_results
 from ..tags.tags import update_tags_list
+from ...config import HANA3D_ASSET
 
 
 def get_edit_props():

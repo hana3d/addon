@@ -7,12 +7,12 @@ import bpy
 import bugsnag
 import sentry_sdk
 
-from ... import config, paths
 from ..libraries.libraries import update_libraries_list
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import get_search_props
 from ..tags.tags import update_tags_list
 from ..upload.upload import get_upload_props
+from ... import config, paths
 
 
 def configure_bugsnag(api_key: str):

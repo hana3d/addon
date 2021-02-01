@@ -34,13 +34,8 @@ from bpy.props import (
     StringProperty,
 )
 
-from ...config import (
-    HANA3D_DESCRIPTION,
-    HANA3D_MODELS,
-    HANA3D_NAME,
-    HANA3D_SCENES,
-)
-from ...report_tools import execute_wrapper
+from .downloader import Downloader
+from .lib import check_existing
 from ..async_loop import ensure_async_loop
 from ..libraries.libraries import set_library_props
 from ..search.query import Query
@@ -48,8 +43,13 @@ from ..search.search import AssetData, get_search_results
 from ..tags.tags import update_tags_list
 from ..ui import colors
 from ..ui.main import UI
-from .downloader import Downloader
-from .lib import check_existing
+from ...config import (
+    HANA3D_DESCRIPTION,
+    HANA3D_MODELS,
+    HANA3D_NAME,
+    HANA3D_SCENES,
+)
+from ...report_tools import execute_wrapper
 
 from ... import append_link, paths, render_tools, utils  # noqa E501 isort:skip
 
