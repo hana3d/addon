@@ -623,7 +623,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 # Click interaction
                 else:
                     asset_search_index = get_asset_under_mouse(mx, my)
-                    bpy.context.view_layer.object.active = None
+                    bpy.context.view_layer.objects.active = None
                     set_edit_props(asset_search_index)
 
                     return {'RUNNING_MODAL'}
