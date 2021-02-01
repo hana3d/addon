@@ -7,6 +7,7 @@ from .async_functions import delete_asset, edit_asset, edit_view
 from .edit import get_edit_props
 from .export_data import get_edit_data
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
+from ..search import search
 from ..ui.main import UI
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
@@ -32,7 +33,7 @@ class EditAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: W
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         ui = UI()
-        ui.add_report(text='Preparing upload')
+        ui.add_report(text='Editing asset')
 
         correlation_id = str(uuid.uuid4())
 
@@ -41,6 +42,10 @@ class EditAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: W
 
         await edit_asset(ui, correlation_id, props.id, asset_data)
         await edit_view(ui, correlation_id, props.view_id, view_data)
+
+        search.run_operator()
+
+        ui.add_report(text='Asset successfully edited')
 
         return {'FINISHED'}
 
@@ -64,10 +69,14 @@ class DeleteAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
         ui = UI()
-        ui.add_report(text='Preparing upload')
+        ui.add_report(text='Deleting asset')
 
         props = get_edit_props()
         await delete_asset(ui, props.id)
+
+        search.run_operator()
+
+        ui.add_report(text='Asset deleted')
 
         return {'FINISHED'}
 

@@ -18,6 +18,7 @@ class UserPreferences(object):
     max_assetbar_rows: int
     thumb_size: int
 
+
 class Preferences(object):
     """Hana3D addon preferences."""
 
