@@ -3,7 +3,7 @@ import bpy
 from bpy.types import Panel
 
 from .lib import draw_assetbar_show_hide
-from ..search.search import Search
+from ..search import search
 from ..unified_props import Unified
 from ..upload import upload
 from ... import utils
@@ -34,8 +34,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
 
         if ui_props.down_up == 'SEARCH':
             if utils.profile_is_validator():
-                search = Search(context)
-                search_props = search.props
+                search_props = search.get_search_props()
                 layout.prop(search_props, 'search_verification_status')
             if ui_props.asset_type in {'MODEL', 'SCENE', 'MATERIAL'}:
                 self._draw_panel_common_search(context)
@@ -50,20 +49,21 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
             op.do_search = False
             op.tooltip = 'Show/Hide asset preview'
 
+            width = context.region.width
             engine = scene.render.engine
             if engine not in {'CYCLES', 'BLENDER_EEVEE'}:
                 rtext = (
                     'Only Cycles and EEVEE render engines are currently supported. '
                     + f'Please use Cycles for all assets you upload to {HANA3D_DESCRIPTION}.'
                 )
-                self._label_multiline(rtext, icon='ERROR', width=w)
+                self._label_multiline(rtext, icon='ERROR', width=width)
                 return
 
             if ui_props.asset_type == 'MODEL':
                 if bpy.context.view_layer.objects.active is not None:
                     self._draw_panel_common_upload(context)
                 else:
-                    layout.label(text='selet object to upload')
+                    layout.label(text='select object to upload')
             elif ui_props.asset_type == 'SCENE':
                 self._draw_panel_common_upload(context)
             elif ui_props.asset_type == 'MATERIAL':
@@ -74,7 +74,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
                 else:
                     self._label_multiline(
                         text='select object with material to upload materials',
-                        width=w,
+                        width=width,
                     )
 
     def _label_multiline(self, text='', icon='NONE', width=-1):  # noqa: WPS210
@@ -155,8 +155,7 @@ class Hana3DUnifiedPanel(Panel):  # noqa: WPS214
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
         asset_type = uiprops.asset_type
 
-        search = Search(context)
-        search_props = search.props
+        search_props = search.get_search_props()
         unified_props = Unified(context).props
 
         row = layout.row()

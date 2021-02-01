@@ -19,7 +19,7 @@ CHUNK_SIZE = 1024 * 1024 * 2
 
 
 async def create_asset(
-    props: hana3d_types.Props,
+    props: hana3d_types.UploadProps,
     ui: UI,
     asset_id: str,
     upload_data: dict,
@@ -80,7 +80,7 @@ async def create_asset(
 
 
 async def create_blend_file(
-    props: hana3d_types.Props,
+    props: hana3d_types.UploadProps,
     ui: UI,
     datafile: str,
     clean_file_path: str,
@@ -124,7 +124,7 @@ async def create_blend_file(
 
 
 async def get_upload_url(
-    props: hana3d_types.Props,
+    props: hana3d_types.UploadProps,
     ui: UI,
     correlation_id: str,
     upload_data: dict,
@@ -206,7 +206,7 @@ async def upload_file(ui: UI, file_info: dict, upload_url: str) -> bool:
 
 
 async def confirm_upload(   # noqa: WPS210
-    props: hana3d_types.Props,
+    props: hana3d_types.UploadProps,
     ui: UI,
     correlation_id: str,
     upload_id: str,
@@ -250,7 +250,7 @@ async def confirm_upload(   # noqa: WPS210
 
 
 async def finish_asset_creation(
-    props: hana3d_types.Props,
+    props: hana3d_types.UploadProps,
     ui: UI,
     correlation_id: str,
     asset_id: str,

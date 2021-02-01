@@ -33,7 +33,6 @@ from . import (  # noqa: WPS235
     logger,
     paths,
     render,
-    search,
     tags,
     tasks_queue,
     thread_tools,
@@ -45,14 +44,15 @@ from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.panels import panel_builder
+from .src.search import operator as search_op
 from .src.ui import render as ui_render
 from .src.ui.operators import render_image
 
 bl_info = {
     'name': 'Hana3D',
     'author': 'Vilem Duha, Petr Dlouhy, R2U',
-    'version': (0, 8, 4),
-    'blender': (2, 90, 0),
+    'version': (0, 8, 5),
+    'blender': (2, 91, 0),
     'location': 'View3D > Properties > Hana3D',
     'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
     'warning': '',
@@ -62,7 +62,11 @@ bl_info = {
 
 @ persistent
 def scene_load(context):
-    search.load_previews()
+    """Load scene and initialize classes and menus.
+
+    Parameters:
+        context: Blender context
+    """
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
     ui_props.assetbar_on = False
     ui_props.turn_off = False
@@ -79,11 +83,13 @@ def scene_load(context):
 
 @ bpy.app.handlers.persistent
 def check_timers_timer():
-    '''Checks if all timers are registered regularly.
+    """Check if all timers are registered regularly.
+
     Prevents possible bugs from stopping the addon.
-    '''
-    if not bpy.app.timers.is_registered(search.timer_update):
-        bpy.app.timers.register(search.timer_update)
+
+    Returns:
+        float: time between executions
+    """
     if not bpy.app.timers.is_registered(download.timer_update):
         bpy.app.timers.register(download.timer_update)
     if not bpy.app.timers.is_registered(download.execute_append_tasks):
@@ -310,7 +316,7 @@ modules = (
     logger,
     render,
     render_image,
-    search,
+    search_op,
     tags,
     tasks_queue,
     thread_tools,

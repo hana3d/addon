@@ -21,7 +21,7 @@ HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
 
 
 def _common_setup(  # noqa: WPS211,WPS210
-    props: hana3d_types.Props,
+    props: hana3d_types.UploadProps,
     asset_name: str,
     asset_type: AssetType,
     json_data: dict,

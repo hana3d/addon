@@ -22,7 +22,7 @@ class Hana3DDownloadPanel(Panel):
         layout = self.layout
         for view_id, thread in download.download_threads.items():
             row = layout.row()
-            row.label(text=thread.asset_data['name'])
+            row.label(text=thread.asset_data.name)
             row.label(text=f'{int(thread.progress())}%')
             op = row.operator(f'scene.{HANA3D_NAME}_download_kill', text='', icon='CANCEL')
             op.view_id = view_id
