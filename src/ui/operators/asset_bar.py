@@ -441,7 +441,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
             if ui_props.drag_init:
                 ui_props.drag_length += 1
-                if ui_props.drag_length > 5:
+                if ui_props.drag_length > 2:
                     ui_props.dragging = True
                     ui_props.drag_init = False
 
