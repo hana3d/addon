@@ -66,7 +66,7 @@ def set_library_props(asset_data, asset_props):
                 }
             metadata = asset_library['metadata']
             if 'view_props' in metadata and slug in metadata['view_props']:
-                asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]
+                asset_props.custom_props[name] = metadata['view_props'][slug]
             else:
                 asset_props.custom_props[name] = ''
 
@@ -86,11 +86,13 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
             del props.custom_props_info[name]   # noqa: WPS420
     current_workspace = unified_props.workspace
     for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            for library in workspace['libraries']:
-                new_library = props.libraries_list.add()
-                new_library['name'] = library['name']
-                new_library.id_ = library['id']
-                if library['metadata'] is not None:
-                    new_library.metadata['library_props'] = library['metadata']['library_props']
-                    new_library.metadata['view_props'] = library['metadata']['view_props']
+        if current_workspace != workspace['id']:
+            continue
+        for library in workspace['libraries']:
+            new_library = props.libraries_list.add()
+            new_library['name'] = library['name']
+            new_library.id_ = library['id']
+            metadata = library['metadata']
+            if metadata is not None:
+                new_library.metadata['library_props'] = metadata['library_props']
+                new_library.metadata['view_props'] = metadata['view_props']
