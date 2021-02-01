@@ -16,6 +16,7 @@ def get_edit_data(props: hana3d_types.UploadProps):
     asset_data = {
         'name': props.name,
         'description': props.description,
+        'metadata_only': True,
     }
     view_data = {
         'name': props.name,
