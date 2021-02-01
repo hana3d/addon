@@ -1,4 +1,4 @@
-"""Auxiliary upload async functions."""
+"""Auxiliary edit async functions."""
 import logging
 
 import requests

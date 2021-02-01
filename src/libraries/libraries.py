@@ -53,7 +53,7 @@ def set_library_props(asset_data, asset_props):
     for asset_library in asset_data.libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
-        if 'metadata' in asset_library and asset_library['metadata'] is None:
+        if 'metadata' not in asset_library or asset_library['metadata'] is None:
             continue
         for view_prop in library.metadata['view_props']:
             name = f'{library.name} {view_prop["name"]}'
@@ -64,10 +64,8 @@ def set_library_props(asset_data, asset_props):
                     'library_name': library.name,
                     'library_id': library.id_,
                 }
-            if (
-                'view_props' in asset_library['metadata']
-                and slug in asset_library['metadata']['view_props']
-            ):
+            metadata = asset_library['metadata']
+            if 'view_props' in metadata and slug in metadata['view_props']:
                 asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]
             else:
                 asset_props.custom_props[name] = ''
