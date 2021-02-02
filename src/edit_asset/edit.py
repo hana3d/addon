@@ -39,10 +39,9 @@ def set_edit_props(asset_index: int):
     asset_props.description = asset_data.description
     asset_props.asset_type = asset_data.asset_type
 
-    if asset_data.tags:
-        update_tags_list(asset_props, bpy.context)
-        for tag in asset_data.tags:
-            asset_props.tags_list[tag].selected = True
+    update_tags_list(asset_props, bpy.context)
+    for tag in asset_data.tags:
+        asset_props.tags_list[tag].selected = True
 
     if asset_data.libraries:
         set_library_props(asset_data, asset_props)

@@ -74,7 +74,7 @@ def set_library_props(asset_data: List['AssetData'], asset_props: 'UploadProps')
     for asset_library in asset_data.libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
-        if 'metadata' not in asset_library or asset_library['metadata'] is None:
+        if 'metadata' in asset_library and asset_library['metadata'] is not None:
             for view_prop in library.metadata['view_props']:
                 _set_view_prop(asset_props, view_prop, library, asset_library['metadata'])
 
