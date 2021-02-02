@@ -954,9 +954,9 @@ class Hana3DUnifiedProps(PropertyGroup):
     )
 
     issue_key: StringProperty(
-        name='Related issue key', 
+        name='Related issue key',
         default='',
-        description=f'Key of the created issue on {HANA3D_NAME} Support Desk'
+        description=f'Key of the created issue on {HANA3D_NAME} Support Desk',
     )
 
 

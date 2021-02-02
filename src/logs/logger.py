@@ -9,26 +9,32 @@ from typing import Tuple
 
 import bpy
 
-from ..ui import colors
-from ..ui.main import UI
 from ...config import HANA3D_LOG_LEVEL, HANA3D_NAME
 from ...report_tools import execute_wrapper
 
 
 def get_log_file() -> str:
+    """Get logs filepath.
+
+    Returns:
+        str: log_file_path
+    """
     dir_path = os.path.join(expanduser('~'), 'hana3d_logs')
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
-    log_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_logs.log')
-    return log_file_path
+    return os.path.join(dir_path, f'{HANA3D_NAME}_logs.log')
 
 
 def get_report_file() -> str:
+    """Get reports filepath.
+
+    Returns:
+        str: report_file_path
+    """
     dir_path = os.path.join(expanduser('~'), 'hana3d_logs')
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)
-    report_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_report.log')
-    return report_file_path
+    return os.path.join(dir_path, f'{HANA3D_NAME}_report.log')
 
 
 def setup_logger(): # noqa WPS210,WPS213

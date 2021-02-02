@@ -37,7 +37,7 @@ panels = (
     Hana3DUnifiedPanel,
     Hana3DDownloadPanel,
     Hana3DRenderPanel,
-    Hana3DSendLogsPanel
+    Hana3DSendLogsPanel,
 )
 
 

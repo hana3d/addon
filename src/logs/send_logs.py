@@ -21,8 +21,10 @@ class SendLogsOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WP
 
     async def async_execute(self, context):
         """Send logs async execute.
+
         Parameters:
             context: Blender context
+
         Returns:
             enum set in {‘RUNNING_MODAL’, ‘CANCELLED’, ‘FINISHED’, ‘PASS_THROUGH’, ‘INTERFACE’}
         """
@@ -38,6 +40,7 @@ class SendLogsOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WP
         ui.add_report(text='Logs sent')
 
         return {'FINISHED'}
+
 
 classes = (
     SendLogsOperator,

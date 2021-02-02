@@ -1,25 +1,22 @@
 """Auxiliary edit async functions."""
 import logging
 
-import requests
+from requests.exceptions import RequestException
 
 from ..requests_async.requests_async import Request
 from ..ui.main import UI
 from ... import paths
 
 
-async def send_logs(
-    ui: UI,
-    correlation_id: str,
-    issue_key: str,
-    filepath: str,
-):
+async def send_logs(ui: UI, correlation_id: str, issue_key: str, filepath: str):
     """Send logs to backend.
-    Arguments:
+
+    Parameters:
         ui: UI object
         correlation_id: Correlation ID
         issue_key: Key of the issue on Hana3D Support Desk
         filepath: Path to log file
+
     Returns:
         {'CANCELLED'} if it fails
     """
@@ -32,12 +29,12 @@ async def send_logs(
     try:
         with open(filepath, 'rb') as log_file:
             file_content = log_file.read()
-            data = {
+            request_data = {
                 'data': str(file_content),
-                'issue_key': issue_key
+                'issue_key': issue_key,
             }
-            await request.post(url, json=data, headers=headers)
-    except Exception as error:#requests.exceptions.RequestException as error:
+            await request.post(url, json=request_data, headers=headers)
+    except RequestException as error:
         logging.error(error)
         ui.add_report(text=str(error))
         return {'CANCELLED'}
