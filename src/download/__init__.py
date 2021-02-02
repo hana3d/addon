@@ -53,7 +53,7 @@ from ...config import (
 )
 from ...report_tools import execute_wrapper
 
-from ... import append_link, hana3d_types, logger, paths, render_tools, utils  # noqa E501 isort:skip
+from ... import append_link, hana3d_types, paths, render_tools, utils  # noqa E501 isort:skip
 
 
 download_threads = {}
