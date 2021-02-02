@@ -9,10 +9,26 @@ from typing import Tuple
 
 import bpy
 
-from .config import HANA3D_LOG_LEVEL, HANA3D_NAME
-from .report_tools import execute_wrapper
-from .src.ui import colors
-from .src.ui.main import UI
+from ..ui import colors
+from ..ui.main import UI
+from ...config import HANA3D_LOG_LEVEL, HANA3D_NAME
+from ...report_tools import execute_wrapper
+
+
+def get_log_file() -> str:
+    dir_path = os.path.join(expanduser('~'), 'hana3d_logs')
+    if not os.path.isdir(dir_path):
+        os.mkdir(dir_path)
+    log_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_logs.log')
+    return log_file_path
+
+
+def get_report_file() -> str:
+    dir_path = os.path.join(expanduser('~'), 'hana3d_logs')
+    if not os.path.isdir(dir_path):
+        os.mkdir(dir_path)
+    report_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_report.log')
+    return report_file_path
 
 
 def setup_logger(): # noqa WPS210,WPS213
@@ -21,11 +37,8 @@ def setup_logger(): # noqa WPS210,WPS213
     logger = logging.getLogger('')
     logger.setLevel(logging.DEBUG)
 
-    dir_path = os.path.join(expanduser('~'), 'hana3d_logs')
-    log_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_logs.log')
-    report_file_path = os.path.join(dir_path, f'{HANA3D_NAME}_report.log')
-    if not os.path.isdir(dir_path):
-        os.mkdir(dir_path)
+    log_file_path = get_log_file()
+    report_file_path = get_report_file()
 
     report_file_handler = logging.FileHandler(report_file_path, mode='w')
     report_file_handler.setLevel(logging.DEBUG)
@@ -90,11 +103,11 @@ class AppendInfo(bpy.types.Operator):
     bl_label = 'Append Report'
     bl_options = {'REGISTER'}
 
-    level: bpy.props.StringProperty(
+    level: bpy.props.StringProperty(  # type: ignore
         name='type',
         default='',
     )
-    text: bpy.props.StringProperty(
+    text: bpy.props.StringProperty(  # type: ignore
         name='text',
         default='',
     )

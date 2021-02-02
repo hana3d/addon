@@ -121,4 +121,4 @@ class Profile(object):
         update_tags_list(upload_props, bpy.context)
 
         configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
-        configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])
+        #configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])

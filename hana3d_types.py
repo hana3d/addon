@@ -953,6 +953,12 @@ class Hana3DUnifiedProps(PropertyGroup):
         update=_on_workspace_update,
     )
 
+    issue_key: StringProperty(
+        name='Related issue key', 
+        default='',
+        description=f'Key of the created issue on {HANA3D_NAME} Support Desk'
+    )
+
 
 UploadProps = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
 SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMaterialSearchProps]
