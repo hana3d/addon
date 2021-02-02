@@ -42,5 +42,5 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
             for tag in workspace['tags']:
                 new_tag = props.tags_list.add()
                 new_tag['name'] = tag
-    for tag in previous_tags:
-        props.tags_list[tag].selected = True
+    for tag_name in previous_tags:
+        props.tags_list[tag_name].selected = True
