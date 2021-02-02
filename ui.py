@@ -245,10 +245,7 @@ def unregister():
     global handler2d, handler3d, addon_keymapitems  # noqa: WPS420
     pre_load(bpy.context)
 
-    try:
-        bpy.app.handlers.load_post.remove(default_name_handler)
-    except Exception:   # noqa: S110
-        pass  # noqa: WPS420
+    bpy.app.handlers.load_post.remove(default_name_handler)
 
     bpy.types.SpaceView3D.draw_handler_remove(handler2d, 'WINDOW')
     bpy.types.SpaceView3D.draw_handler_remove(handler3d, 'WINDOW')
