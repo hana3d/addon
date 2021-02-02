@@ -49,7 +49,6 @@ from .src.libraries.libraries import update_libraries_list
 from .src.search import search
 from .src.tags.tags import update_tags_list
 from .src.upload import upload
-from .utils import get_hidden_image
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
