@@ -48,6 +48,7 @@ from .src.libraries.libraries import update_libraries_list
 from .src.search import search
 from .src.tags.tags import update_tags_list
 from .src.upload import upload
+from .utils import get_hidden_image
 
 thumbnail_angles = (
     ('DEFAULT', 'default', ''),
@@ -450,7 +451,13 @@ class Hana3DCommonUploadProps:
         """Mark upload preview to be updated by draw calllback"""
         if self.remote_thumbnail:
             self.force_preview_reload = True
-        self.has_thumbnail = self.thumbnail != ''
+        if self.thumbnail != '':
+            self.has_thumbnail = True
+            img = get_hidden_image(self.thumbnail, 'upload_preview')
+            if '.upload_preview' not in bpy.data.textures:
+                bpy.data.textures.new('.upload_preview', type='IMAGE')
+            bpy.data.textures['.upload_preview'].image = img
+            context.area.tag_redraw()
 
     def clear_data(self):
         """Set all properties to their default values"""

@@ -2,11 +2,12 @@
 import bpy
 from bpy.types import Panel
 
-from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ...utils import get_hidden_image
 from ..edit_asset import edit
 from ..unified_props import Unified
 from ..upload import upload
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
 
 
 class Hana3DUploadPanel(Panel):  # noqa: WPS214
@@ -158,6 +159,8 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
                 op = row.operator(f'object.{HANA3D_NAME}_kill_bg_process', text='', icon='CANCEL')
                 op.process_source = asset_type
                 op.process_type = 'THUMBNAILER'
+        if props.has_thumbnail:
+            self._draw_thumbnail(context, box, props)
 
         # TODO: Show thumbnail
 
@@ -182,3 +185,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         else:
             row.prop(props, name)
         return row
+
+    def _draw_thumbnail(self, context, layout, props):
+        col = layout.box().column()
+        col.template_preview(bpy.data.textures['.upload_preview'])
