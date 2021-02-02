@@ -979,6 +979,12 @@ class Hana3DUnifiedProps(PropertyGroup):
         update=_on_workspace_update,
     )
 
+    issue_key: StringProperty(
+        name='Related issue key',
+        default='',
+        description=f'Key of the created issue on {HANA3D_NAME} Support Desk',
+    )
+
 
 class Hana3DEditAsset(PropertyGroup, Hana3DCommonUploadProps):
     """Hana3D Edit Asset Info."""

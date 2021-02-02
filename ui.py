@@ -257,7 +257,7 @@ def unregister():
     if not wm.keyconfigs.addon:
         return
 
-    km = wm.keyconfigs.addon.keymaps['Window']
+    km = wm.keyconfigs.addon.keymaps.get('Window', [])
     for kmi in addon_keymapitems:
         km.keymap_items.remove(kmi)
     addon_keymapitems = []  # noqa: WPS442
