@@ -101,21 +101,21 @@ upload_asset_type_items = (
         'Upload Model',
         f'Upload a model to {HANA3D_DESCRIPTION}',
         'OBJECT_DATAMODE',
-        0
+        0,
     ),
     (
         'SCENE',
         'Upload Scene',
         f'Upload a scene to {HANA3D_DESCRIPTION}',
         'SCENE_DATA',
-        1
+        1,
     ),
     (
         'MATERIAL',
         'Upload Material',
         f'Upload a material to {HANA3D_DESCRIPTION}',
         'MATERIAL',
-        2
+        2,
     ),
 )
 
