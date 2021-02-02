@@ -8,7 +8,6 @@ import bpy
 from .. import bgl_helper
 from ...preferences.preferences import Preferences
 from ...search import search
-from ...upload import upload
 from .... import paths, utils
 from ....config import HANA3D_NAME, HANA3D_UI
 
@@ -269,39 +268,6 @@ def _load_tooltip_author(search_result):
             author_tooltip = author['tooltip']
 
     return gimg, author_tooltip
-
-
-def draw_callback2d_upload_preview(self, context):
-    """Draw upload preview.
-
-    Parameters:
-        self: Asset Bar Operator
-        context: Blender context
-    """
-    ui_props = getattr(context.window_manager, HANA3D_UI)
-    props = upload.get_upload_props()
-
-    if props is not None and ui_props.draw_tooltip:
-        ui_props.thumbnail_image = props.thumbnail
-
-        if props.force_preview_reload:
-            force_reload = True
-            props.force_preview_reload = False
-        else:
-            force_reload = False
-
-        if props.remote_thumbnail:
-            default_image = 'thumbnail-in-progress.png'
-        else:
-            default_image = 'thumbnail_notready.png'
-
-        img = utils.get_hidden_image(
-            ui_props.thumbnail_image,
-            'upload_preview',
-            force_reload,
-            default_image,
-        )
-        draw_tooltip(ui_props.bar_x, ui_props.bar_y, text=ui_props.tooltip, img=img)
 
 
 def draw_callback2d_search(self, context):

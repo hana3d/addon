@@ -43,6 +43,7 @@ from ..search.search import AssetData, get_search_results
 from ..tags.tags import update_tags_list
 from ..ui import colors
 from ..ui.main import UI
+from ... import append_link, paths, render_tools, utils
 from ...config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -50,9 +51,6 @@ from ...config import (
     HANA3D_SCENES,
 )
 from ...report_tools import execute_wrapper
-
-from ... import append_link, paths, render_tools, utils  # noqa E501 isort:skip
-
 
 download_threads = {}
 append_tasks_queue: 'Queue[functools.partial]' = Queue()
