@@ -1,16 +1,13 @@
 """Libraries functions."""
-import copy
 from typing import TYPE_CHECKING, List
 
 import bpy
-from bpy.types import CLIP_OT_delete_proxy
 
 from ...config import HANA3D_PROFILE
 from ..unified_props import Unified
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props, UploadProps  # noqa: WPS433
-    from ..search.search import AssetData  # noqa: WPS433
 
 
 def _get_custom_props(props: 'UploadProps', library_id: str):
@@ -40,6 +37,7 @@ def get_libraries(props: 'UploadProps'):  # noqa: WPS210
         library_id = props.libraries_list[library_name].id_
         library = {}
         library.update({
+            'name': library_name,
             'id': library_id,
         })
         if props.custom_props.keys():
@@ -64,36 +62,20 @@ def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, library: dict, m
         asset_props.custom_props[name] = ''
 
 
-def set_library_props(asset_data: List['AssetData'], asset_props: 'UploadProps'):
+def set_library_props(libraries: List[dict], asset_props: 'UploadProps'):
     """Set libraries on asset props.
 
     Parameters:
         asset_data: Asset Data
         asset_props: Asset Props
     """
-    update_libraries_list(asset_props, bpy.context)
     libraries_list = asset_props.libraries_list
-    for asset_library in asset_data.libraries:
+    for asset_library in libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
         if 'metadata' in asset_library and asset_library['metadata'] is not None:
             for view_prop in library.metadata['view_props']:
                 _set_view_prop(asset_props, view_prop, library, asset_library['metadata'])
-
-
-def _write_previous_props(current_props: 'Props', previous_props: 'Props'):
-    current_libraries_list = current_props.libraries_list
-    for previous_library in previous_props.libraries_list:
-        if previous_library.selected is not True:
-            continue
-        if previous_library.name in current_libraries_list:
-            current_library = current_libraries_list[previous_library.name]
-            current_library.selected = True
-        else:
-            for prop_name in previous_props.custom_props_info.keys():
-
-    current_props.custom_props = copy.deepcopy(previous_props.custom_props)
-    current_props.custom_props_info = copy.deepcopy(previous_props.custom_props_info)
 
 
 def _add_library(props: 'Props', library: dict):
@@ -115,7 +97,7 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
     """
     unified_props = Unified(context).props
     current_workspace = unified_props.workspace
-    previous_props = copy.deepcopy(props)
+    previous_libraries = get_libraries(props)
     props.libraries_list.clear()
     if hasattr(props, 'custom_props'):  # noqa: WPS421
         for name in props.custom_props.keys():
@@ -126,4 +108,4 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
             continue
         for library in workspace['libraries']:
             _add_library(props, library)
-        _write_previous_props(props, previous_props)
+    set_library_props(previous_libraries, props)

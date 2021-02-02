@@ -34,15 +34,6 @@ from bpy.props import (
     StringProperty,
 )
 
-from .downloader import Downloader
-from .lib import check_existing
-from ..async_loop import ensure_async_loop
-from ..libraries.libraries import set_library_props
-from ..search.query import Query
-from ..search.search import AssetData, get_search_results
-from ..tags.tags import update_tags_list
-from ..ui import colors
-from ..ui.main import UI
 from ... import append_link, paths, render_tools, utils
 from ...config import (
     HANA3D_DESCRIPTION,
@@ -51,6 +42,15 @@ from ...config import (
     HANA3D_SCENES,
 )
 from ...report_tools import execute_wrapper
+from ..async_loop import ensure_async_loop
+from ..libraries.libraries import set_library_props, update_libraries_list
+from ..search.query import Query
+from ..search.search import AssetData, get_search_results
+from ..tags.tags import update_tags_list
+from ..ui import colors
+from ..ui.main import UI
+from .downloader import Downloader
+from .lib import check_existing
 
 download_threads = {}
 append_tasks_queue: 'Queue[functools.partial]' = Queue()
@@ -437,7 +437,8 @@ def set_asset_props(asset, asset_data):
             asset_props.tags_list[tag].selected = True
 
     if asset_data.libraries:
-        set_library_props(asset_data, asset_props)
+        update_libraries_list(asset_props, bpy.context)
+        set_library_props(asset_data.libraries, asset_props)
 
 
 def append_asset(asset_data: AssetData, **kwargs):
