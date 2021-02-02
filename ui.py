@@ -245,7 +245,10 @@ def unregister():
     global handler2d, handler3d, addon_keymapitems  # noqa: WPS420
     pre_load(bpy.context)
 
-    bpy.app.handlers.load_post.remove(default_name_handler)
+    try:
+        bpy.app.handlers.load_post.remove(default_name_handler)
+    except:
+        pass
 
     bpy.types.SpaceView3D.draw_handler_remove(handler2d, 'WINDOW')
     bpy.types.SpaceView3D.draw_handler_remove(handler3d, 'WINDOW')
@@ -257,7 +260,7 @@ def unregister():
     if not wm.keyconfigs.addon:
         return
 
-    km = wm.keyconfigs.addon.keymaps['Window']
+    km = wm.keyconfigs.addon.keymaps.get('Window', [])
     for kmi in addon_keymapitems:
         km.keymap_items.remove(kmi)
     addon_keymapitems = []  # noqa: WPS442
