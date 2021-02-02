@@ -2,12 +2,12 @@
 import bpy
 from bpy.types import Panel
 
-from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from ...utils import get_hidden_image
+from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
 from ..edit_asset import edit
 from ..unified_props import Unified
 from ..upload import upload
-from .lib import draw_selected_libraries, draw_selected_tags, label_multiline
+from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ...utils import get_hidden_image
 
 
 class Hana3DUploadPanel(Panel):  # noqa: WPS214
@@ -162,8 +162,6 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         if props.has_thumbnail:
             self._draw_thumbnail(context, box, props)
 
-        # TODO: Show thumbnail
-
     def _draw_tags(
         self,
         layout,
@@ -187,5 +185,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         return row
 
     def _draw_thumbnail(self, context, layout, props):
-        col = layout.box().column()
-        col.template_preview(bpy.data.textures['.upload_preview'])
+        layout.template_icon(
+            icon_value=props.thumbnail_icon_id,
+            scale=10,
+        )

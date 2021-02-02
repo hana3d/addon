@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import logging
 import math
+import uuid
 from typing import Union
 
 import bpy
@@ -400,6 +401,9 @@ class Hana3DCommonSearchProps:
     )
 
 
+thumbnail_preview = bpy.utils.previews.new()
+
+
 class Hana3DCommonUploadProps:
     def get_active_image(self, context):
         preview_collection = render.render_previews['active_images']
@@ -453,11 +457,9 @@ class Hana3DCommonUploadProps:
             self.force_preview_reload = True
         if self.thumbnail != '':
             self.has_thumbnail = True
-            img = get_hidden_image(self.thumbnail, 'upload_preview')
-            if '.upload_preview' not in bpy.data.textures:
-                bpy.data.textures.new('.upload_preview', type='IMAGE')
-            bpy.data.textures['.upload_preview'].image = img
-            context.area.tag_redraw()
+            name = str(uuid.uuid4())
+            thumbnail_preview.load(name, bpy.path.abspath(self.thumbnail), 'IMAGE')
+            self.thumbnail_icon_id = thumbnail_preview[name].icon_id
 
     def clear_data(self):
         """Set all properties to their default values"""
@@ -535,6 +537,11 @@ class Hana3DCommonUploadProps:
         subtype='FILE_PATH',
         default="",
         update=update_preview,
+    )
+
+    thumbnail_icon_id: IntProperty(
+        name='Thumbnail Icon Id',
+        description='Thumbnail icon to show preview in panel',
     )
 
     force_preview_reload: BoolProperty(
@@ -1011,6 +1018,7 @@ def register():
 
 
 def unregister():
+    bpy.utils.previews.remove(thumbnail_preview)
     delattr(bpy.types.Material, HANA3D_NAME)
     delattr(bpy.types.WindowManager, HANA3D_MATERIALS)
 

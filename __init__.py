@@ -312,7 +312,7 @@ modules = (
     bg_blender,
     download,
     hana3d_oauth,
-    icons,
+    # icons,
     libraries,
     logger,
     render,
