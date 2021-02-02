@@ -4,11 +4,11 @@ import shutil
 
 import bpy
 
-from ... import paths
-from ...config import HANA3D_ASSET
 from ..libraries.libraries import set_library_props, update_libraries_list
 from ..search.search import get_search_results
 from ..tags.tags import update_tags_list
+from ... import paths
+from ...config import HANA3D_ASSET
 
 
 def get_edit_props():
