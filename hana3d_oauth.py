@@ -21,7 +21,7 @@ import time
 import bpy
 import requests
 
-from . import logger, oauth, paths
+from . import oauth, paths
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.async_loop import run_async_function

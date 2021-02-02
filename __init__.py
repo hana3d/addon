@@ -29,7 +29,6 @@ from . import (  # noqa: WPS235
     hana3d_oauth,
     hana3d_types,
     libraries,
-    logger,
     paths,
     render,
     tags,
@@ -43,6 +42,7 @@ from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
 from .src.edit_asset import operators as edit_ops
+from .src.logs import logger, send_logs
 from .src.panels import panel_builder
 from .src.search import operator as search_op
 from .src.ui import render as ui_render
@@ -316,6 +316,7 @@ modules = (
     render,
     render_image,
     search_op,
+    send_logs,
     tags,
     tasks_queue,
     thread_tools,
