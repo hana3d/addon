@@ -10,6 +10,7 @@ from mathutils import Vector
 
 from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
 from ..main import UI
+from ...edit_asset.edit import set_edit_props
 from ...preferences.preferences import Preferences
 from ...search import search
 from ...upload import upload
@@ -238,11 +239,11 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
     ui.total_count = ui.wcount * ui.hcount
     ui.bar_height = (ui.thumb_size + ui.margin) * ui.hcount + ui.margin
     ui.bar_y = region.height - ui.bar_y_offset * ui_scale
-    if ui.down_up == 'UPLOAD':
-        ui.reports_y = ui.bar_y - 600
+    if ui.assetbar_on:
+        ui.reports_y = ui.bar_y - ui.bar_height - 100
         ui.reports_x = ui.bar_x
     else:
-        ui.reports_y = ui.bar_y - ui.bar_height - 100
+        ui.reports_y = ui.bar_y - 600
         ui.reports_x = ui.bar_x
 
 
@@ -308,8 +309,9 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             if active_obj is None:
                 return
 
-            model = ui_props.asset_type == 'MODEL'
-            material = ui_props.asset_type == 'MATERIAL' and active_obj.active_material is not None
+            model = ui_props.asset_type_search == 'MODEL'
+            if active_obj.active_material is not None:
+                material = ui_props.asset_type_search == 'MATERIAL'
             if model or material:
                 props = upload.get_upload_props()
                 asset_data = {
@@ -327,7 +329,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         has_hit, *_ = raycast
 
         # MODELS can be dragged on scene floor
-        if not has_hit and ui_props.asset_type == 'MODEL':
+        if not has_hit and ui_props.asset_type_search == 'MODEL':
             raycast = floor_raycast(context, mx, my)
 
         ui_props.has_hit = raycast[0]
@@ -382,18 +384,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         if context.region != self.region:
             return {'PASS_THROUGH'}  # noqa: WPS204
-
-        if ui_props.down_up == 'UPLOAD':
-
-            ui_props.mouse_x = 0
-            ui_props.mouse_y = self.region.height
-
-            mx = event.mouse_x
-            my = event.mouse_y
-
-            self._generate_tooltip(event, ui_props)
-
-            return {'PASS_THROUGH'}
 
         # TODO add one more condition here to take less performance.
         scene = bpy.context.scene
@@ -451,7 +441,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
             if ui_props.drag_init:
                 ui_props.drag_length += 1
-                if ui_props.drag_length > 0:
+                if ui_props.drag_length > 2:
                     ui_props.dragging = True
                     ui_props.drag_init = False
 
@@ -500,7 +490,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             elif ui_props.dragging and mouse_in_region(region, mx, my):
                 self._raycast_update_props(ui_props, context, mx, my)
 
-            if ui_props.has_hit and ui_props.asset_type == 'MODEL':
+            if ui_props.has_hit and ui_props.asset_type_search == 'MODEL':
                 # this condition is here to fix a bug for a scene
                 # submitted by a user, so this situation shouldn't
                 # happen anymore, but there might exists scenes
@@ -523,14 +513,13 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             my = event.mouse_y - region.y
 
         if event.type == 'LEFTMOUSE':
-
             region = self.region
             mx = event.mouse_x - region.x
             my = event.mouse_y - region.y
 
             ui_props = getattr(context.window_manager, HANA3D_UI)
             if event.value == 'PRESS' and ui_props.active_index > -1:
-                if ui_props.asset_type in {'MODEL', 'MATERIAL'}:
+                if ui_props.asset_type_search in {'MODEL', 'MATERIAL'}:
                     # check if asset is locked and let the user know in that case
                     asset_search_index = ui_props.active_index
                     asset_data = search_results[asset_search_index]
@@ -539,7 +528,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     bpy.context.window.cursor_set('NONE')
                     ui_props.draw_tooltip = False
                     ui_props.drag_length = 0
-                elif ui_props.asset_type == 'SCENE':
+                elif ui_props.asset_type_search == 'SCENE':
                     ui_props.drag_init = True
                     bpy.context.window.cursor_set('NONE')
                     ui_props.draw_tooltip = False
@@ -576,7 +565,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     # raycast here
                     ui_props.active_index = -3
 
-                    if ui_props.asset_type == 'MODEL':
+                    if ui_props.asset_type_search == 'MODEL':
                         raycast = self._raycast_update_props(ui_props, context, mx, my)
 
                         if not ui_props.has_hit:
@@ -588,7 +577,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                             target_object = obj_hit.name
                         target_slot = ''
 
-                    elif ui_props.asset_type == 'MATERIAL':
+                    elif ui_props.asset_type_search == 'MATERIAL':
                         raycast = mouse_raycast(context, mx, my)
 
                         ui_props.has_hit = raycast[0]
@@ -634,21 +623,17 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 # Click interaction
                 else:
                     asset_search_index = get_asset_under_mouse(mx, my)
+                    bpy.context.view_layer.objects.active = None
+                    set_edit_props(asset_search_index)
 
-                    if ui_props.asset_type in {'MATERIAL', 'MODEL'}:  # noqa: WPS220
-                        ao = bpy.context.active_object
-                        if ao is not None and not ao.is_library_indirect:
-                            target_object = bpy.context.active_object.name
-                            target_slot = bpy.context.active_object.active_material_index
-                        else:
-                            target_object = ''
-                            target_slot = ''
+                    return {'RUNNING_MODAL'}
+
                 # FIRST START SEARCH
 
                 if asset_search_index == -3:
                     return {'RUNNING_MODAL'}
                 if asset_search_index > -3:
-                    if ui_props.asset_type == 'MATERIAL':
+                    if ui_props.asset_type_search == 'MATERIAL':
                         if target_object != '':
                             # position is for downloader:
                             loc = ui_props.snapped_location
@@ -658,7 +643,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                             download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                             download_op(
                                 True,  # noqa: WPS425
-                                asset_type=ui_props.asset_type,
+                                asset_type=ui_props.asset_type_search,
                                 asset_index=asset_search_index,
                                 model_location=loc,
                                 model_rotation=rotation,
@@ -666,7 +651,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                                 material_target_slot=target_slot,
                             )
 
-                    elif ui_props.asset_type == 'MODEL':
+                    elif ui_props.asset_type_search == 'MODEL':
                         if ui_props.has_hit and ui_props.dragging:
                             loc = ui_props.snapped_location
                             rotation = ui_props.snapped_rotation
@@ -677,7 +662,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                         download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                         download_op(
                             True,  # noqa: WPS425
-                            asset_type=ui_props.asset_type,
+                            asset_type=ui_props.asset_type_search,
                             asset_index=asset_search_index,
                             model_location=loc,
                             model_rotation=rotation,
@@ -687,7 +672,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                     else:
                         download_op = getattr(bpy.ops.scene, f'{HANA3D_NAME}_download')
                         download_op(
-                            asset_type=ui_props.asset_type,
+                            asset_type=ui_props.asset_type_search,
                             asset_index=asset_search_index,
                         )
 

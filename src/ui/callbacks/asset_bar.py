@@ -8,7 +8,6 @@ import bpy
 from .. import bgl_helper
 from ...preferences.preferences import Preferences
 from ...search import search
-from ...upload import upload
 from .... import paths, utils
 from ....config import HANA3D_NAME, HANA3D_UI
 
@@ -161,13 +160,14 @@ def draw_tooltip(   # noqa: WPS211
 
     y_revision = y_created - line_height
     x_revision = x_created
-    revision_parsed = (
-        datetime.datetime.strptime(revision, '%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
-        if revision else datetime.datetime.utcnow()
-    )
-    revision_date = revision_parsed.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
-    text_revision = f'Modified: {revision_date}'
-    bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
+    if revision != '0':
+        revision_parsed = (
+            datetime.datetime.strptime(revision, '%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
+            if revision else datetime.datetime.utcnow()
+        )
+        revision_date = revision_parsed.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
+        text_revision = f'Modified: {revision_date}'
+        bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
 
     for line in lines:
         ytext = (
@@ -268,39 +268,6 @@ def _load_tooltip_author(search_result):
             author_tooltip = author['tooltip']
 
     return gimg, author_tooltip
-
-
-def draw_callback2d_upload_preview(self, context):
-    """Draw upload preview.
-
-    Parameters:
-        self: Asset Bar Operator
-        context: Blender context
-    """
-    ui_props = getattr(context.window_manager, HANA3D_UI)
-    props = upload.get_upload_props()
-
-    if props is not None and ui_props.draw_tooltip:
-        ui_props.thumbnail_image = props.thumbnail
-
-        if props.force_preview_reload:
-            force_reload = True
-            props.force_preview_reload = False
-        else:
-            force_reload = False
-
-        if props.remote_thumbnail:
-            default_image = 'thumbnail-in-progress.png'
-        else:
-            default_image = 'thumbnail_notready.png'
-
-        img = utils.get_hidden_image(
-            ui_props.thumbnail_image,
-            'upload_preview',
-            force_reload,
-            default_image,
-        )
-        draw_tooltip(ui_props.bar_x, ui_props.bar_y, text=ui_props.tooltip, img=img)
 
 
 def draw_callback2d_search(self, context):
@@ -527,12 +494,7 @@ def draw_callback2d(self, context):
     except Exception:
         go = False
     if go and area == self_area and context.window == self_window:
-
-        props = getattr(context.window_manager, HANA3D_UI)
-        if props.down_up == 'SEARCH':
-            draw_callback2d_search(self, context)
-        elif props.down_up == 'UPLOAD':
-            draw_callback2d_upload_preview(self, context)
+        draw_callback2d_search(self, context)
 
 
 def draw_callback3d(self, context):
@@ -547,7 +509,7 @@ def draw_callback3d(self, context):
 
     ui = getattr(context.window_manager, HANA3D_UI)
 
-    if ui.asset_type.lower() == 'model' and ui.draw_snapped_bounds:
+    if ui.asset_type_search.lower() == 'model' and ui.draw_snapped_bounds:
         bgl_helper.draw_bbox(
             ui.snapped_location,
             ui.snapped_rotation,

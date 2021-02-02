@@ -15,18 +15,15 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-import copy
 import functools
 import json
 import logging
 import os
 import shutil
-import threading
 from dataclasses import asdict
 from queue import Queue
 
 import bpy
-import requests
 from bpy.app.handlers import persistent
 from bpy.props import (
     BoolProperty,
@@ -40,11 +37,13 @@ from bpy.props import (
 from .downloader import Downloader
 from .lib import check_existing
 from ..async_loop import ensure_async_loop
-from ..preferences.profile import update_libraries_list, update_tags_list
+from ..libraries.libraries import set_library_props
 from ..search.query import Query
 from ..search.search import AssetData, get_search_results
+from ..tags.tags import update_tags_list
 from ..ui import colors
 from ..ui.main import UI
+from ... import append_link, paths, render_tools, utils
 from ...config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -52,9 +51,6 @@ from ...config import (
     HANA3D_SCENES,
 )
 from ...report_tools import execute_wrapper
-
-from ... import append_link, hana3d_types, paths, render_tools, utils  # noqa E501 isort:skip
-
 
 download_threads = {}
 append_tasks_queue: 'Queue[functools.partial]' = Queue()
@@ -414,34 +410,6 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
     else:
         target_object.material_slots[kwargs['material_target_slot']].material = material
     return material
-
-
-def set_library_props(asset_data, asset_props):
-    """Set libraries on asset props.
-
-    Parameters:
-        asset_data: Asset Data
-        asset_props: Asset Props
-    """
-    update_libraries_list(asset_props, bpy.context)
-    libraries_list = asset_props.libraries_list
-    for asset_library in asset_data.libraries:
-        library = libraries_list[asset_library['name']]
-        library.selected = True
-        if 'metadata' in asset_library and asset_library['metadata'] is not None:
-            for view_prop in library.metadata['view_props']:
-                name = f'{library.name} {view_prop["name"]}'
-                slug = view_prop['slug']
-                if name not in asset_props.custom_props:
-                    asset_props.custom_props_info[name] = {
-                        'slug': slug,
-                        'library_name': library.name,
-                        'library_id': library.id_,
-                    }
-                if 'view_props' in asset_library['metadata'] and slug in asset_library['metadata']['view_props']:  # noqa: E501
-                    asset_props.custom_props[name] = asset_library['metadata']['view_props'][slug]
-                else:
-                    asset_props.custom_props[name] = ''
 
 
 def set_asset_props(asset, asset_data):

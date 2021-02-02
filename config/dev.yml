@@ -1,5 +1,6 @@
 HANA3D_NAME: hana3d_dev
 HANA3D_UI: hana3d_dev_ui
+HANA3D_ASSET: hana3d_dev_asset
 HANA3D_RENDER: hana3d_dev_render
 HANA3D_MODELS: hana3d_dev_models
 HANA3D_SCENES: hana3d_dev_scenes

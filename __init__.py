@@ -28,7 +28,6 @@ from . import (  # noqa: WPS235
     bg_blender,
     hana3d_oauth,
     hana3d_types,
-    icons,
     libraries,
     paths,
     render,
@@ -42,6 +41,7 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
+from .src.edit_asset import operators as edit_ops
 from .src.logs import logger, send_logs
 from .src.panels import panel_builder
 from .src.search import operator as search_op
@@ -311,7 +311,6 @@ modules = (
     bg_blender,
     download,
     hana3d_oauth,
-    icons,
     libraries,
     logger,
     render,
@@ -326,6 +325,7 @@ modules = (
     ui_render,
     panel_builder,
     upload,
+    edit_ops,
 )
 
 

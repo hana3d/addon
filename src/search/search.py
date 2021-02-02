@@ -217,4 +217,4 @@ def run_operator(get_next=False):
 
 def _get_asset_type_from_ui() -> AssetType:
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
-    return uiprops.asset_type.lower()
+    return uiprops.asset_type_search.lower()

@@ -50,11 +50,11 @@ class Hana3DRenderPanel(Panel):  # noqa: WPS214
             self._draw_upload_panel(asset_props)
 
     def _draw_asset_name(self, ui_props, render_props):
-        if ui_props.asset_type == 'MODEL':
+        if ui_props.asset_type_upload == 'MODEL':
             icon = 'OBJECT_DATAMODE'
-        elif ui_props.asset_type == 'SCENE':
+        elif ui_props.asset_type_upload == 'SCENE':
             icon = 'SCENE_DATA'
-        elif ui_props.asset_type == 'MATERIAL':
+        elif ui_props.asset_type_upload == 'MATERIAL':
             icon = 'MATERIAL'
         row = self.layout.row()
         row.prop(render_props, 'asset', text='Asset', icon=icon)
