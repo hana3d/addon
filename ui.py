@@ -247,8 +247,8 @@ def unregister():
 
     try:
         bpy.app.handlers.load_post.remove(default_name_handler)
-    except:
-        pass
+    except Exception:   # noqa: S110
+        pass  # noqa: WPS420
 
     bpy.types.SpaceView3D.draw_handler_remove(handler2d, 'WINDOW')
     bpy.types.SpaceView3D.draw_handler_remove(handler3d, 'WINDOW')
