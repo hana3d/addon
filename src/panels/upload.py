@@ -98,7 +98,6 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         row = self._prop_needed(box, props, 'name', props.name)
         row.operator(f'object.{HANA3D_NAME}_share_asset', text='', icon='LINKED')
         box.prop(props, 'description')
-        # TODO: Show thumbnail
         if props.has_thumbnail:
             self._draw_thumbnail(context, box, props)
 
