@@ -42,8 +42,7 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
-from .src.logs import logger
-from .src.logs import send_logs as send_logs_op
+from .src.logs import logger, send_logs
 from .src.panels import panel_builder
 from .src.search import operator as search_op
 from .src.ui import render as ui_render
@@ -318,7 +317,7 @@ modules = (
     render,
     render_image,
     search_op,
-    send_logs_op,
+    send_logs,
     tags,
     tasks_queue,
     thread_tools,

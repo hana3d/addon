@@ -1,4 +1,4 @@
-"""Auxiliary edit async functions."""
+"""Auxiliary log async functions."""
 import logging
 
 from requests.exceptions import RequestException
@@ -30,7 +30,7 @@ async def send_logs(ui: UI, correlation_id: str, issue_key: str, filepath: str):
         with open(filepath, 'rb') as log_file:
             file_content = log_file.read()
             request_data = {
-                'data': str(file_content),
+                'data': file_content,
                 'issue_key': issue_key,
             }
             await request.post(url, json=request_data, headers=headers)
