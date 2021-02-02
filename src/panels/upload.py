@@ -7,7 +7,6 @@ from ..edit_asset import edit
 from ..unified_props import Unified
 from ..upload import upload
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
-from ...utils import get_hidden_image
 
 
 class Hana3DUploadPanel(Panel):  # noqa: WPS214
@@ -100,6 +99,8 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         row.operator(f'object.{HANA3D_NAME}_share_asset', text='', icon='LINKED')
         box.prop(props, 'description')
         # TODO: Show thumbnail
+        if props.has_thumbnail:
+            self._draw_thumbnail(context, box, props)
 
         self._draw_tags(layout, props)
 

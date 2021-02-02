@@ -1,9 +1,13 @@
 """Edit functions."""
+import os
+import shutil
+
 import bpy
 
 from ..libraries.libraries import set_library_props
 from ..search.search import get_search_results
 from ..tags.tags import update_tags_list
+from ... import paths
 from ...config import HANA3D_ASSET
 
 
@@ -42,3 +46,18 @@ def set_edit_props(asset_index: int):
 
     if asset_data.libraries:
         set_library_props(asset_data, asset_props)
+
+    _set_thumbnail(asset_data, asset_props)
+
+
+def _set_thumbnail(asset_data, asset_props):
+    if asset_data.thumbnail == '':
+        asset_props.thumbnail = ''
+    else:
+        thumbnail_name = asset_data.thumbnail.split(os.sep)[-1]  # noqa: WPS204
+        tempdir = paths.get_temp_dir(f'{asset_data.asset_type}_search')  # noqa: WPS204
+        thumbpath = os.path.join(tempdir, thumbnail_name)
+        asset_thumbs_dir = paths.get_download_dirs(asset_data.asset_type)[0]
+        asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
+        shutil.copy(thumbpath, asset_thumb_path)
+        asset_props.thumbnail = asset_thumb_path
