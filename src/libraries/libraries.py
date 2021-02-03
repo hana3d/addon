@@ -8,7 +8,6 @@ from ...config import HANA3D_PROFILE
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props, UploadProps  # noqa: WPS433
-    from ..search.search import AssetData  # noqa: WPS433
 
 
 def _get_custom_props(props: 'UploadProps', library_id: str):
@@ -38,6 +37,7 @@ def get_libraries(props: 'UploadProps'):  # noqa: WPS210
         library_id = props.libraries_list[library_name].id_
         library = {}
         library.update({
+            'name': library_name,
             'id': library_id,
         })
         if props.custom_props.keys():
@@ -62,16 +62,15 @@ def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, library: dict, m
         asset_props.custom_props[name] = ''
 
 
-def set_library_props(asset_data: List['AssetData'], asset_props: 'UploadProps'):
+def set_library_props(libraries: List[dict], asset_props: 'UploadProps'):
     """Set libraries on asset props.
 
     Parameters:
         asset_data: Asset Data
         asset_props: Asset Props
     """
-    update_libraries_list(asset_props, bpy.context)
     libraries_list = asset_props.libraries_list
-    for asset_library in asset_data.libraries:
+    for asset_library in libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
         if 'metadata' in asset_library and asset_library['metadata'] is not None:
@@ -97,14 +96,16 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
         context: Blender context
     """
     unified_props = Unified(context).props
+    current_workspace = unified_props.workspace
+    previous_libraries = get_libraries(props)
     props.libraries_list.clear()
     if hasattr(props, 'custom_props'):  # noqa: WPS421
         for name in props.custom_props.keys():
             del props.custom_props[name]    # noqa: WPS420
             del props.custom_props_info[name]   # noqa: WPS420
-    current_workspace = unified_props.workspace
     for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace != workspace['id']:
             continue
         for library in workspace['libraries']:
             _add_library(props, library)
+    set_library_props(previous_libraries, props)
