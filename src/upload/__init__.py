@@ -12,6 +12,7 @@ import bpy
 from bpy.props import BoolProperty, EnumProperty
 
 from .async_functions import (
+    cancel_upload,
     confirm_upload,
     create_asset,
     create_blend_file,
@@ -141,16 +142,10 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         files = self._get_files_info(upload_set, export_data, tempdir, filename)
 
-        for file_info in files:
-            upload = await get_upload_url(props, ui, correlation_id, upload_data, file_info)
-            uploaded = await upload_file(ui, file_info, upload['s3UploadUrl'])
-            if uploaded:
-                skip_post_process = self._check_uv_layers(ui, export_data)
-                await confirm_upload(props, ui, correlation_id, upload['id'], skip_post_process)
-            else:
-                ui.add_report(text='Failed to send file')
-                props.uploading = False
-                return {'CANCELLED'}
+        uploaded = await self._upload_files(files, correlation_id, upload_data, export_data)
+        if not uploaded:
+            props.uploading = False
+            return {'CANCELLED'}
 
         if props.remote_thumbnail:
             self._start_remote_thumbnail(props)
@@ -291,6 +286,27 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                 },
             )
         return files
+
+    async def _upload_files(self, files, correlation_id, upload_data, export_data):
+        ui = UI()
+        upload = {}
+        try:
+            for file_info in files:
+                upload = await get_upload_url(ui, correlation_id, upload_data, file_info)
+                uploaded = await upload_file(ui, file_info, upload['s3UploadUrl'])
+                if not uploaded:
+                    raise Exception('Failed to send file')
+                if file_info['type'] == 'blend':
+                    skip_post_process = self._check_uv_layers(ui, export_data)
+                    await confirm_upload(correlation_id, upload['id'], skip_post_process)
+            return True
+        except Exception as err:
+            logging.error(err)
+            ui.add_report(text=str(err))
+            upload_id = upload.get('id')
+            if upload_id is not None:
+                await cancel_upload(correlation_id, upload_id)
+            return False
 
     def _start_remote_thumbnail(self, props: hana3d_types.UploadProps):
         thread = render.RenderThread(
