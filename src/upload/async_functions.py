@@ -200,7 +200,7 @@ async def cancel_upload(   # noqa: WPS210
     correlation_id: str,
     upload_id: str,
 ):
-    """Confirm upload to backend.
+    """Cancel upload.
 
     Arguments:
         correlation_id: Correlation ID
