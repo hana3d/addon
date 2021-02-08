@@ -325,7 +325,10 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 await download_thumbnail(imgpath, url)
             if not os.path.exists(imgpath_large):
                 await download_thumbnail(imgpath_large, url_large)
-            load_preview(asset_type, result_field[index], index)
+            ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
+            current_asset_type = ui_props.asset_type_search.lower()
+            if current_asset_type == asset_type:
+                load_preview(asset_type, result_field[index], index)
             index += 1
 
 classes = (
