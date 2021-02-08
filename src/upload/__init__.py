@@ -247,6 +247,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             model for model in export_data.get('models', [])
             if (
                 bpy.data.objects[model].data is not None
+                and 'uv_layers' in bpy.data.objects[model].data
                 and len(bpy.data.objects[model].data.uv_layers) > 1  # noqa: WPS219
             )
         ]
