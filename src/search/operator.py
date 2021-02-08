@@ -13,7 +13,7 @@ from .search import (
     AssetData,
     get_search_props,
     get_search_results,
-    load_previews,
+    load_preview,
     set_original_search_results,
     set_search_results,
 )
@@ -94,7 +94,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         logging.debug(f'Search_props: {search_props}')
         ui = UI()
         ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-        asset_type = ui_props.asset_type_search.lower()
+        asset_type = self._get_asset_type_from_ui()
 
         query = Query(bpy.context, search_props)
         query.asset_type = asset_type
@@ -142,9 +142,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
         small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
         await self._load_thumbnails(small_thumbnails, full_thumbnails, asset_type, result_field)
-
-        load_previews(asset_type, result_field)
-        logging.debug('Loaded previews')
 
         status = run_assetbar_op()
         logging.debug(f'Asset bar operator status: {status}')
@@ -307,8 +304,8 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         return list(small_thumbnails), list(full_thumbnails)
 
     def _get_asset_type_from_ui(self) -> AssetType:
-        uiprops = getattr(self.context.window_manager, HANA3D_UI)
-        return uiprops.asset_type.lower()
+        uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
+        return uiprops.asset_type_search.lower()
 
     async def _load_thumbnails(
         self,
@@ -317,6 +314,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         asset_type: AssetType,
         result_field: List[AssetData],
     ):
+        index = 0
         for small, large in zip(small_thumbnails, large_thumbnails):
             imgpath, url = small
             imgpath_large, url_large = large
@@ -324,10 +322,10 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 await download_thumbnail(imgpath, url)
             if not os.path.exists(imgpath_large):
                 await download_thumbnail(imgpath_large, url_large)
-            ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-            current_asset_type = ui_props.asset_type_search.lower()
+            current_asset_type = self._get_asset_type_from_ui()
             if current_asset_type == asset_type:
-                load_previews(asset_type, result_field)
+                load_preview(asset_type, result_field[index], index)
+            index += 1
 
 
 classes = (

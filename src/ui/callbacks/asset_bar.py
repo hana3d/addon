@@ -288,7 +288,8 @@ def draw_callback2d_search(self, context):
     # background of asset bar
 
     if not ui_props.dragging:
-        search_results = search.get_search_results()
+        asset_type = ui_props.asset_type_search.lower()
+        search_results = search.get_search_results(asset_type)
         len_search = len(search_results)
         original_search_results = search.get_original_search_results()
         if search_results is None:
