@@ -13,7 +13,7 @@ from .search import (
     AssetData,
     get_search_props,
     get_search_results,
-    load_previews,
+    load_preview,
     set_original_search_results,
     set_search_results,
 )
@@ -317,6 +317,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         asset_type: AssetType,
         result_field: List[AssetData],
     ):
+        index = 0
         for small, large in zip(small_thumbnails, large_thumbnails):
             imgpath, url = small
             imgpath_large, url_large = large
@@ -324,11 +325,8 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 await download_thumbnail(imgpath, url)
             if not os.path.exists(imgpath_large):
                 await download_thumbnail(imgpath_large, url_large)
-            ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-            current_asset_type = ui_props.asset_type_search.lower()
-            if current_asset_type == asset_type:
-                load_previews(asset_type, result_field)
-
+            load_preview(asset_type, result_field[index], index)
+            index += 1
 
 classes = (
     SearchOperator,
