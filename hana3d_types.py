@@ -125,7 +125,7 @@ class Hana3DUIProps(PropertyGroup):
         asset_type = self.asset_type_search.lower()
         search_results = search.get_search_results(asset_type)
         for index, search_result in enumerate(search_results):
-            search.load_preview(asset_type, search_result[index], index)
+            search.load_preview(asset_type, search_result, index)
 
     def switch_active_asset_type(self, context):
         self.asset_type = self.asset_type_render
