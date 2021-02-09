@@ -17,6 +17,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = f'Upload Assets to {HANA3D_DESCRIPTION}'
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):  # noqa: D102
