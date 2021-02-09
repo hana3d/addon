@@ -124,16 +124,14 @@ async def create_blend_file(
 
 
 async def get_upload_url(
-    props: hana3d_types.UploadProps,
     ui: UI,
     correlation_id: str,
     upload_data: dict,
     file_info: dict,
-) -> Union[Set[str], dict]:
+) -> dict:
     """Get upload url from backend.
 
     Arguments:
-        props: Hana3D upload props
         ui: UI object
         correlation_id: Correlation ID
         upload_data: Upload data
@@ -141,7 +139,6 @@ async def get_upload_url(
 
     Returns:
         dict: Request response
-        {'CANCELLED'} if it fails
     """
     ui.add_report(text='Getting upload url')
     request = Request()
@@ -161,14 +158,8 @@ async def get_upload_url(
         upload_info['id_parent'] = upload_data.get('id_parent')
     upload_create_url = paths.get_api_url('uploads')
 
-    try:
-        response = await request.post(upload_create_url, json=upload_info, headers=headers)
-        return response.json()
-    except requests.exceptions.RequestException as error:
-        logging.error(error)
-        ui.add_report(text=str(error))
-        props.uploading = False
-        return {'CANCELLED'}
+    response = await request.post(upload_create_url, json=upload_info, headers=headers)
+    return response.json()
 
 
 async def upload_file(ui: UI, file_info: dict, upload_url: str) -> bool:
@@ -205,9 +196,27 @@ async def upload_file(ui: UI, file_info: dict, upload_url: str) -> bool:
     return uploaded
 
 
+async def cancel_upload(   # noqa: WPS210
+    correlation_id: str,
+    upload_id: str,
+):
+    """Cancel upload.
+
+    Arguments:
+        correlation_id: Correlation ID
+        upload_id: ID of the upload process
+    """
+    request = Request()
+    headers = request.get_headers(correlation_id)
+
+    upload_cancel_url = paths.get_api_url(
+        'uploads',
+        upload_id,
+    )
+    await request.delete(upload_cancel_url, headers=headers)
+
+
 async def confirm_upload(   # noqa: WPS210
-    props: hana3d_types.UploadProps,
-    ui: UI,
     correlation_id: str,
     upload_id: str,
     skip_post_process: str,
@@ -215,14 +224,10 @@ async def confirm_upload(   # noqa: WPS210
     """Confirm upload to backend.
 
     Arguments:
-        props: Hana3D upload props
         ui: UI object
         correlation_id: Correlation ID
         upload_id: ID of the upload process
         skip_post_process: Flag to skip the post process in backend
-
-    Returns:
-        {'CANCELLED'} if it fails
     """
     request = Request()
     headers = request.get_headers(correlation_id)
@@ -233,13 +238,7 @@ async def confirm_upload(   # noqa: WPS210
         'upload-file',
         query={'skip_post_process': skip_post_process},
     )
-    try:
-        upload_response = await request.post(upload_done_url, headers=headers)
-    except requests.exceptions.RequestException as error:
-        logging.error(error)
-        ui.add_report(text=str(error))
-        props.uploading = False
-        return {'CANCELLED'}
+    upload_response = await request.post(upload_done_url, headers=headers)
 
     dict_response = upload_response.json()
     if isinstance(dict_response, dict):

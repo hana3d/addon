@@ -30,8 +30,7 @@ class DefaultNamesOperator(bpy.types.Operator):
 
         props = getattr(asset, HANA3D_NAME)
 
-        if ui_props.down_up == 'UPLOAD':
-            self._upload(props, asset)
+        self._upload(props, asset)
 
         self._default_render_name(props, asset)
 

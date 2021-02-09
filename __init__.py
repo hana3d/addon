@@ -28,9 +28,7 @@ from . import (  # noqa: WPS235
     bg_blender,
     hana3d_oauth,
     hana3d_types,
-    icons,
     libraries,
-    logger,
     paths,
     render,
     tags,
@@ -43,6 +41,8 @@ from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from .src import async_loop, autothumb, download, upload
 from .src.application.application import Application
 from .src.authentication.authentication import Authentication
+from .src.edit_asset import operators as edit_ops
+from .src.logs import logger, send_logs
 from .src.panels import panel_builder
 from .src.search import operator as search_op
 from .src.ui import render as ui_render
@@ -51,7 +51,7 @@ from .src.ui.operators import render_image
 bl_info = {
     'name': 'Hana3D',
     'author': 'Vilem Duha, Petr Dlouhy, R2U',
-    'version': (0, 8, 5),
+    'version': (1, 0, 0),
     'blender': (2, 91, 0),
     'location': 'View3D > Properties > Hana3D',
     'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
@@ -311,12 +311,12 @@ modules = (
     bg_blender,
     download,
     hana3d_oauth,
-    icons,
     libraries,
     logger,
     render,
     render_image,
     search_op,
+    send_logs,
     tags,
     tasks_queue,
     thread_tools,
@@ -325,6 +325,7 @@ modules = (
     ui_render,
     panel_builder,
     upload,
+    edit_ops,
 )
 
 

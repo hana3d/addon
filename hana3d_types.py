@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import logging
 import math
+import uuid
 from typing import Union
 
 import bpy
@@ -34,6 +35,7 @@ from bpy.types import PropertyGroup
 
 from . import paths, render, render_tools
 from .config import (
+    HANA3D_ASSET,
     HANA3D_DESCRIPTION,
     HANA3D_MATERIALS,
     HANA3D_MODELS,
@@ -43,8 +45,9 @@ from .config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
-from .src.preferences.profile import update_libraries_list, update_tags_list
+from .src.libraries.libraries import update_libraries_list
 from .src.search import search
+from .src.tags.tags import update_tags_list
 from .src.upload import upload
 
 thumbnail_angles = (
@@ -68,69 +71,80 @@ thumbnail_resolutions = (
     ('2048', '2048', ''),
 )
 
+search_asset_type_items = (
+    (
+        'MODEL',
+        'Find Models',
+        f'Find models in the {HANA3D_DESCRIPTION} online database',
+        'OBJECT_DATAMODE',
+        0,
+    ),
+    (
+        'SCENE',
+        'Find Scenes',
+        f'Find scenes in the {HANA3D_DESCRIPTION} online database',
+        'SCENE_DATA',
+        1,
+    ),
+    (
+        'MATERIAL',
+        'Find Materials',
+        f'Find materials in the {HANA3D_DESCRIPTION} online database',
+        'MATERIAL',
+        2,
+    ),
+)
+
+upload_asset_type_items = (
+    (
+        'MODEL',
+        'Upload Model',
+        f'Upload a model to {HANA3D_DESCRIPTION}',
+        'OBJECT_DATAMODE',
+        0,
+    ),
+    (
+        'SCENE',
+        'Upload Scene',
+        f'Upload a scene to {HANA3D_DESCRIPTION}',
+        'SCENE_DATA',
+        1,
+    ),
+    (
+        'MATERIAL',
+        'Upload Material',
+        f'Upload a material to {HANA3D_DESCRIPTION}',
+        'MATERIAL',
+        2,
+    ),
+)
+
 
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
-        asset_type = self.asset_type.lower()
+        asset_type = self.asset_type_search.lower()
         search_results = search.get_search_results(asset_type)
-        search.load_previews(asset_type, search_results)
+        for index, search_result in enumerate(search_results):
+            search.load_preview(asset_type, search_result, index)
 
     def switch_active_asset_type(self, context):
         self.asset_type = self.asset_type_render
 
-    def asset_type_callback(self, context):
-        if self.down_up == 'SEARCH':
-            items = (
-                (
-                    'MODEL',
-                    'Find Models',
-                    f"Find models in the {HANA3D_DESCRIPTION} online database",
-                    'OBJECT_DATAMODE',
-                    0,
-                ),
-                (
-                    'SCENE',
-                    'Find Scenes',
-                    f"Find scenes in the {HANA3D_DESCRIPTION} online database",
-                    'SCENE_DATA',
-                    1,
-                ),
-                (
-                    'MATERIAL',
-                    'Find Materials',
-                    f"Find materials in the {HANA3D_DESCRIPTION} online database",
-                    'MATERIAL',
-                    2,
-                ),
-                # ("HDR", "Find HDRs", f"Find HDRs in the {HANA3D_DESCRIPTION} online database", "WORLD_DATA", 3), # noqa E501
-            )
-        else:
-            items = (
-                ("MODEL", "Upload Model", f"Upload a model to {HANA3D_DESCRIPTION}", "OBJECT_DATAMODE", 0),  # noqa E501
-                ("SCENE", "Upload Scene", f"Upload a scene to {HANA3D_DESCRIPTION}", "SCENE_DATA", 1),  # noqa E501
-                ("MATERIAL", "Upload Material", f"Upload a material to {HANA3D_DESCRIPTION}", "MATERIAL", 2),  # noqa E501
-                # ("HDR", "Upload HDR", f"Upload a HDR to {HANA3D_DESCRIPTION}", "WORLD_DATA", 3), # noqa : E800
-            )
-        return items
-
-    down_up: EnumProperty(
-        name="Download vs Upload",
-        items=(
-            ('SEARCH', 'Search', 'Activate searching', 'VIEWZOOM', 0),
-            ('UPLOAD', 'Upload', 'Activate uploading', 'COPYDOWN', 1),
-        ),
-        description="hana3d",
-        default="SEARCH",
-    )
-    asset_type: EnumProperty(
-        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
-        items=asset_type_callback,
-        description="Activate asset in UI",
+    asset_type_search: EnumProperty(
+        name=f'{HANA3D_DESCRIPTION} Search Asset Type',
+        items=search_asset_type_items,
+        description='Search for Asset Type',
         default=None,
         update=switch_search_results,
     )
+    asset_type_upload: EnumProperty(
+        name=f'{HANA3D_DESCRIPTION} Upload Asset Type',
+        items=upload_asset_type_items,
+        description='Upload Asset Type',
+        default=None,
+    )
     asset_type_render: EnumProperty(
-        name=f"{HANA3D_DESCRIPTION} Active Asset Type",
+        name=f'{HANA3D_DESCRIPTION} Active Asset Type',
         items=(
             (
                 'MODEL',
@@ -141,80 +155,85 @@ class Hana3DUIProps(PropertyGroup):
             ),
             ('SCENE', 'Render Scene', 'Create render representing whole scene', 'SCENE_DATA', 1),
         ),
-        description="Activate asset in UI",
+        description='Activate asset in UI',
         update=switch_active_asset_type,
     )
     # these aren't actually used ( by now, seems to better use globals in UI module:
-    draw_tooltip: BoolProperty(name="Draw Tooltip", default=False)
-    tooltip: StringProperty(name="Tooltip", description="asset preview info", default="")
+    draw_tooltip: BoolProperty(name='Draw Tooltip', default=False)
+    tooltip: StringProperty(name='Tooltip', description='asset preview info', default='')
 
     ui_scale = 1
 
     thumb_size_def = 96
     margin_def = 0
 
-    thumb_size: IntProperty(name="Thumbnail Size", default=thumb_size_def, min=-1, max=256)
+    thumb_size: IntProperty(
+        name='Thumbnail Size',
+        default=thumb_size_def,
+        min=-1,     # noqa: WPS432
+        max=256,    # noqa: WPS432
+    )
 
-    margin: IntProperty(name="Margin", default=margin_def, min=-1, max=256)
+    margin: IntProperty(name='Margin', default=margin_def, min=-1, max=256)  # noqa: WPS432
     highlight_margin: IntProperty(
-        name="Highlight Margin",
+        name='Highlight Margin',
         default=int(margin_def / 2),
         min=-10,
         max=256
     )
 
     bar_height: IntProperty(
-        name="Bar Height",
+        name='Bar Height',
         default=thumb_size_def + 2 * margin_def,
         min=-1,
         max=2048
     )
-    bar_x_offset: IntProperty(name="Bar X Offset", default=20, min=0, max=5000)
-    bar_y_offset: IntProperty(name="Bar Y Offset", default=80, min=0, max=5000)
+    bar_x_offset: IntProperty(name='Bar X Offset', default=20, min=0, max=5000)  # noqa: WPS432
+    bar_y_offset: IntProperty(name='Bar Y Offset', default=80, min=0, max=5000)  # noqa: WPS432
 
-    bar_x: IntProperty(name="Bar X", default=100, min=0, max=5000)
-    bar_y: IntProperty(name="Bar Y", default=100, min=50, max=5000)
-    bar_end: IntProperty(name="Bar End", default=100, min=0, max=5000)
-    bar_width: IntProperty(name="Bar Width", default=100, min=0, max=5000)
+    bar_x: IntProperty(name='Bar X', default=100, min=0, max=5000)  # noqa: WPS432
+    bar_y: IntProperty(name='Bar Y', default=100, min=50, max=5000)  # noqa: WPS432
+    bar_end: IntProperty(name='Bar End', default=100, min=0, max=5000)  # noqa: WPS432
+    bar_width: IntProperty(name='Bar Width', default=100, min=0, max=5000)  # noqa: WPS432
 
-    wcount: IntProperty(name="Width Count", default=10, min=0, max=5000)
-    hcount: IntProperty(name="Rows", default=5, min=0, max=5000)
+    wcount: IntProperty(name='Width Count', default=10, min=0, max=5000)    # noqa: WPS432
+    hcount: IntProperty(name='Rows', default=5, min=0, max=5000)    # noqa: WPS432
     total_count: IntProperty(name='Total Count', default=5, min=0, max=5000)  # noqa: WPS432
 
-    reports_y: IntProperty(name="Reports Y", default=5, min=0, max=5000)
-    reports_x: IntProperty(name="Reports X", default=5, min=0, max=5000)
+    reports_y: IntProperty(name='Reports Y', default=5, min=0, max=5000)    # noqa: WPS432
+    reports_x: IntProperty(name='Reports X', default=5, min=0, max=5000)    # noqa: WPS432
 
-    assetbar_on: BoolProperty(name="Assetbar On", default=False)
-    turn_off: BoolProperty(name="Turn Off", default=False)
+    assetbar_on: BoolProperty(name='Assetbar On', default=False)
+    turn_off: BoolProperty(name='Turn Off', default=False)
 
-    mouse_x: IntProperty(name="Mouse X", default=0)
-    mouse_y: IntProperty(name="Mouse Y", default=0)
+    mouse_x: IntProperty(name='Mouse X', default=0)
+    mouse_y: IntProperty(name='Mouse Y', default=0)
 
-    active_index: IntProperty(name="Active Index", default=-3)
-    scrolloffset: IntProperty(name="Scroll Offset", default=0)
-    drawoffset: IntProperty(name="Draw Offset", default=0)
+    active_index: IntProperty(name='Active Index', default=-3)
+    scrolloffset: IntProperty(name='Scroll Offset', default=0)
+    drawoffset: IntProperty(name='Draw Offset', default=0)
 
-    dragging: BoolProperty(name="Dragging", default=False)
-    drag_init: BoolProperty(name="Drag Initialisation", default=False)
-    drag_length: IntProperty(name="Drag length", default=0)
-    draw_drag_image: BoolProperty(name="Draw Drag Image", default=False)
-    draw_snapped_bounds: BoolProperty(name="Draw Snapped Bounds", default=False)
+    dragging: BoolProperty(name='Dragging', default=False)
+    drag_init: BoolProperty(name='Drag Initialisation', default=False)
+    drag_length: IntProperty(name='Drag length', default=0)
+    draw_drag_image: BoolProperty(name='Draw Drag Image', default=False)
+    draw_snapped_bounds: BoolProperty(name='Draw Snapped Bounds', default=False)
 
-    snapped_location: FloatVectorProperty(name="Snapped Location", default=(0, 0, 0))
-    snapped_bbox_min: FloatVectorProperty(name="Snapped Bbox Min", default=(0, 0, 0))
-    snapped_bbox_max: FloatVectorProperty(name="Snapped Bbox Max", default=(0, 0, 0))
-    snapped_normal: FloatVectorProperty(name="Snapped Normal", default=(0, 0, 0))
+    snapped_location: FloatVectorProperty(name='Snapped Location', default=(0, 0, 0))
+    snapped_bbox_min: FloatVectorProperty(name='Snapped Bbox Min', default=(0, 0, 0))
+    snapped_bbox_max: FloatVectorProperty(name='Snapped Bbox Max', default=(0, 0, 0))
+    snapped_normal: FloatVectorProperty(name='Snapped Normal', default=(0, 0, 0))
 
     snapped_rotation: FloatVectorProperty(
-        name="Snapped Rotation",
+        name='Snapped Rotation',
         default=(0, 0, 0),
         subtype='QUATERNION'
     )
 
-    has_hit: BoolProperty(name="has_hit", default=False)
+    has_hit: BoolProperty(name='has_hit', default=False)
     thumbnail_image = StringProperty(
-        name="Thumbnail Image",
-        description="",
+        name='Thumbnail Image',
+        description='',
         default=paths.get_addon_thumbnail_path('thumbnail_notready.png'),
     )
 
@@ -296,10 +315,6 @@ def workspace_items(self, context):
 
 def search_update(self, context):
     logging.debug('search updater')
-    # if self.search_keywords != '':
-    ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-    if ui_props.down_up != 'SEARCH':
-        ui_props.down_up = 'SEARCH'
     search.run_operator()
 
 
@@ -404,6 +419,9 @@ class Hana3DCommonSearchProps:
     )
 
 
+thumbnail_preview = bpy.utils.previews.new()
+
+
 class Hana3DCommonUploadProps:
     def get_active_image(self, context):
         preview_collection = render.render_previews['active_images']
@@ -455,7 +473,11 @@ class Hana3DCommonUploadProps:
         """Mark upload preview to be updated by draw calllback"""
         if self.remote_thumbnail:
             self.force_preview_reload = True
-        self.has_thumbnail = self.thumbnail != ''
+        if self.thumbnail != '':
+            self.has_thumbnail = True
+            name = str(uuid.uuid4())
+            thumbnail_preview.load(name, bpy.path.abspath(self.thumbnail), 'IMAGE')
+            self.thumbnail_icon_id = thumbnail_preview[name].icon_id
 
     def clear_data(self):
         """Set all properties to their default values"""
@@ -533,6 +555,11 @@ class Hana3DCommonUploadProps:
         subtype='FILE_PATH',
         default="",
         update=update_preview,
+    )
+
+    thumbnail_icon_id: IntProperty(
+        name='Thumbnail Icon Id',
+        description='Thumbnail icon to show preview in panel',
     )
 
     force_preview_reload: BoolProperty(
@@ -953,8 +980,25 @@ class Hana3DUnifiedProps(PropertyGroup):
         update=_on_workspace_update,
     )
 
+    issue_key: StringProperty(
+        name='Related issue key',
+        default='',
+        description=f'Key of the created issue on {HANA3D_NAME} Support Desk',
+    )
 
-UploadProps = Union[Hana3DModelUploadProps, Hana3DSceneUploadProps, Hana3DMaterialUploadProps]
+
+class Hana3DEditAsset(PropertyGroup, Hana3DCommonUploadProps):
+    """Hana3D Edit Asset Info."""
+
+    pass    # noqa: WPS420, WPS604
+
+
+UploadProps = Union[
+    Hana3DModelUploadProps,
+    Hana3DSceneUploadProps,
+    Hana3DMaterialUploadProps,
+    Hana3DEditAsset,
+]
 SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMaterialSearchProps]
 Props = Union[UploadProps, SearchProps]
 
@@ -964,6 +1008,7 @@ classes = (
     Hana3DRenderItem,
     Hana3DUIProps,
     Hana3DRenderProps,
+    Hana3DEditAsset,
     Hana3DModelSearchProps,
     Hana3DModelUploadProps,
     Hana3DSceneSearchProps,
@@ -981,6 +1026,7 @@ def register():
     setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
     setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
     setattr(bpy.types.WindowManager, HANA3D_NAME, PointerProperty(type=Hana3DUnifiedProps))
+    setattr(bpy.types.WindowManager, HANA3D_ASSET, PointerProperty(type=Hana3DEditAsset))
 
     # MODELS
     setattr(bpy.types.WindowManager, HANA3D_MODELS, PointerProperty(type=Hana3DModelSearchProps))
@@ -996,6 +1042,7 @@ def register():
 
 
 def unregister():
+    bpy.utils.previews.remove(thumbnail_preview)
     delattr(bpy.types.Material, HANA3D_NAME)
     delattr(bpy.types.WindowManager, HANA3D_MATERIALS)
 

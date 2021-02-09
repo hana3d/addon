@@ -1,21 +1,18 @@
 """Hana3D Profile."""
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import bpy
 
 import bugsnag
 import sentry_sdk
 
+from ..libraries.libraries import update_libraries_list
 from ..requests_async.basic_request import BasicRequest
 from ..search.search import get_search_props
-from ..unified_props import Unified
+from ..tags.tags import update_tags_list
 from ..upload.upload import get_upload_props
 from ... import config, paths
-
-if TYPE_CHECKING:
-    from ...hana3d_types import Props  # noqa: WPS433
 
 
 def configure_bugsnag(api_key: str):
@@ -40,48 +37,6 @@ def configure_sentry(url: str):
         url,
         traces_sample_rate=1.0,
     )
-
-
-def update_tags_list(props: 'Props', context: bpy.types.Context):
-    """Update tags list.
-
-    Arguments:
-        props: hana3d_types.Props,
-        context: Blender context
-    """
-    unified_props = Unified(context).props
-    props.tags_list.clear()
-    current_workspace = unified_props.workspace
-    for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            for tag in workspace['tags']:
-                new_tag = props.tags_list.add()
-                new_tag['name'] = tag
-
-
-def update_libraries_list(props: 'Props', context: bpy.types.Context):
-    """Update libraries list.
-
-    Arguments:
-        props: hana3d_types.Props,
-        context: Blender context
-    """
-    unified_props = Unified(context).props
-    props.libraries_list.clear()
-    if hasattr(props, 'custom_props'):  # noqa: WPS421
-        for name in props.custom_props.keys():
-            del props.custom_props[name]    # noqa: WPS420
-            del props.custom_props_info[name]   # noqa: WPS420
-    current_workspace = unified_props.workspace
-    for workspace in context.window_manager[config.HANA3D_PROFILE]['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            for library in workspace['libraries']:
-                new_library = props.libraries_list.add()
-                new_library['name'] = library['name']
-                new_library.id_ = library['id']
-                if library['metadata'] is not None:
-                    new_library.metadata['library_props'] = library['metadata']['library_props']
-                    new_library.metadata['view_props'] = library['metadata']['view_props']
 
 
 class Profile(object):

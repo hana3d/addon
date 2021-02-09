@@ -31,10 +31,10 @@ jobs:
         run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - run: scripts/tests/install-blender
         env:
-          BLENDER_VERSION: "2.90"
+          BLENDER_VERSION: "2.91"
       - run: scripts/tests/install-addon
         env:
-          BLENDER_VERSION: "2.90"
+          BLENDER_VERSION: "2.91"
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
       - run: make test
         env:

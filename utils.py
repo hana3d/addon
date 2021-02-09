@@ -116,14 +116,14 @@ def get_selected_models():
 
 def get_active_asset():
     ui_props = getattr(bpy.context.window_manager, HANA3D_UI)
-    if ui_props.asset_type == 'MODEL':
+    if ui_props.asset_type_upload == 'MODEL':
         if bpy.context.view_layer.objects.active is not None:
             ob = get_active_model(bpy.context)
             return ob
-    if ui_props.asset_type == 'SCENE':
+    if ui_props.asset_type_upload == 'SCENE':
         return bpy.context.scene
 
-    elif ui_props.asset_type == 'MATERIAL':
+    elif ui_props.asset_type_upload == 'MATERIAL':
         if (
             bpy.context.view_layer.objects.active is not None
             and bpy.context.active_object is not None
@@ -131,7 +131,6 @@ def get_active_asset():
         ):
             return bpy.context.active_object.active_material
     return None
-
 
 
 def previmg_name(index, fullsize=False):

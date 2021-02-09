@@ -74,45 +74,42 @@ class SearchData(object, metaclass=Singleton):
         }
 
 
-def load_previews(asset_type: AssetType, search_results: List[AssetData]):
+def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
     """Load small preview thumbnails for search results.
 
     Parameters:
         asset_type: type of the asset
-        search_results: search results
+        search_result: asset data
+        index: preview number
     """
     directory = paths.get_temp_dir(f'{asset_type}_search')
-    if search_results is None:
+    if search_result is None:
         return
 
-    logging.debug('Loading previews')
-    index = 0
-    for search_result in search_results:
-        if search_result.thumbnail_small == '':
-            logging.debug('No small thumbnail, will load placeholder')
-            load_placeholder_thumbnail(index, search_result.id)
-            index += 1
-            continue
+    logging.debug('Loading preview')
+    if search_result.thumbnail_small == '':
+        logging.debug('No small thumbnail, will load placeholder')
+        load_placeholder_thumbnail(index, search_result.id)
+        return
 
-        thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
-        image_name = utils.previmg_name(index)
-        logging.debug(f'Loading {image_name} in {thumbnail_path}')
+    thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
+    image_name = utils.previmg_name(index)
+    logging.debug(f'Loading {image_name} in {thumbnail_path}')
 
-        if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
-            img = bpy.data.images.get(image_name)
-            if img is None:
-                img = bpy.data.images.load(thumbnail_path)
-                img.name = image_name
-            elif img.filepath != thumbnail_path:
-                # had to add this check for autopacking files...
-                if img.packed_file is not None:
-                    img.unpack(method='USE_ORIGINAL')
-                img.filepath = thumbnail_path
-                img.reload()
-            img.colorspace_settings.name = 'Linear'
-        else:
-            logging.error('NO THUMBNAIL')
-        index += 1
+    if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
+        img = bpy.data.images.get(image_name)
+        if img is None:
+            img = bpy.data.images.load(thumbnail_path)
+            img.name = image_name
+        elif img.filepath != thumbnail_path:
+            # had to add this check for autopacking files...
+            if img.packed_file is not None:
+                img.unpack(method='USE_ORIGINAL')
+            img.filepath = thumbnail_path
+            img.reload()
+        img.colorspace_settings.name = 'Linear'
+    else:
+        logging.error('No thumbnail')
 
 
 def load_placeholder_thumbnail(index: int, asset_id: str):
@@ -217,4 +214,4 @@ def run_operator(get_next=False):
 
 def _get_asset_type_from_ui() -> AssetType:
     uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
-    return uiprops.asset_type.lower()
+    return uiprops.asset_type_search.lower()
