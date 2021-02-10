@@ -13,7 +13,6 @@ class Hana3DDownloadPanel(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = f'Downloads {HANA3D_DESCRIPTION}'
-    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):  # noqa: D102
