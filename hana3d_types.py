@@ -990,7 +990,18 @@ class Hana3DUnifiedProps(PropertyGroup):
 class Hana3DEditAsset(PropertyGroup, Hana3DCommonUploadProps):
     """Hana3D Edit Asset Info."""
 
-    pass    # noqa: WPS420, WPS604
+    asset_type: EnumProperty(  # type: ignore
+        name='Type',
+        items=search_asset_type_items,
+        description='Asset type',
+        default='MODEL',
+    )
+
+    asset_index: IntProperty(  # type: ignore
+        name='Asset Index',
+        description='asset index in search results',
+        default=-1,
+    )
 
 
 UploadProps = Union[

@@ -106,12 +106,18 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
 
         row = layout.row()
         row.scale_y = 2.0
-        optext = 'Edit Asset Info'
+        optext = 'Update Asset Info'
         row.operator(f'object.{HANA3D_NAME}_edit', text=optext, icon='INFO')
 
         row = layout.row()
         optext = 'Delete Asset'
         row.operator(f'object.{HANA3D_NAME}_delete', text=optext, icon='CANCEL')
+
+        row = layout.row()
+        optext = 'Download to Scene'
+        op = row.operator(f'scene.{HANA3D_NAME}_download', text=optext, icon='IMPORT')
+        op.asset_index = props.asset_index
+        op.asset_type = props.asset_type
 
     def _draw_workspace(
         self,
