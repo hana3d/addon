@@ -731,8 +731,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         dy = -1
         for _ in range(self.object_count):  # noqa : WPS122
             if pos_x == pos_y or (pos_x < 0 and pos_x == -pos_y) or (pos_x > 0 and pos_x == 1 - pos_y):  # noqa : WPS220,WPS221
-                dx = -dy
-                dy = dx
+                dx, dy = -dy, dx  # noqa: WPS434
             pos_x, pos_y = pos_x + dx, pos_y + dy
         self.object_count += 1
         return (self.grid_distance * pos_x, self.grid_distance * pos_y, 0)
@@ -781,7 +780,7 @@ class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
         ensure_async_loop()
         for _, asset_data in zip(  # noqa : WPS352
             range(self.batch_size),
-            get_search_results()[self.object_count:],
+            search_results[self.object_count:],
         ):
             location = self._get_location()
             kwargs = {
