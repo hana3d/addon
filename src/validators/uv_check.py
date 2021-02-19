@@ -6,8 +6,6 @@ from typing import List, Tuple
 import bpy
 
 from . import BaseValidator, Category
-from ..upload.export_data import get_export_data
-from ..upload.upload import get_upload_props
 
 
 def _get_multiple_uv_models(models: List[str]) -> List[str]:
@@ -21,11 +19,13 @@ def _get_multiple_uv_models(models: List[str]) -> List[str]:
     ]
 
 
-def fix_uv_layers():
-    """Remove all inactive UV layers from export data."""
-    props = get_upload_props()
-    export_data, _ = get_export_data(props)
-    logging.info(f'Export data: {export_data}')
+def fix_uv_layers(export_data: dict):
+    """Remove all inactive UV layers from export data.
+
+    Parameters:
+        export_data: dict containing objects to be uploaded info
+
+    """
     models = export_data.get('models', [])
     multiple_uv_models = _get_multiple_uv_models(models)
     for model in multiple_uv_models:
@@ -39,8 +39,11 @@ def fix_uv_layers():
             uv_layers.remove(unwanted_uvs.pop())
 
 
-def check_uv_layers() -> Tuple[bool, str]:
+def check_uv_layers(export_data: dict) -> Tuple[bool, str]:
     """Check for duplicated UV layers in a single mesh on export data.
+
+    Parameters:
+        export_data: dict containing objects to be uploaded info
 
     Returns:
         is_valid, message: if check passed and a report message
@@ -49,9 +52,6 @@ def check_uv_layers() -> Tuple[bool, str]:
     is_valid = True
     message = 'No duplicated UVs detected!'
 
-    props = get_upload_props()
-    export_data, _ = get_export_data(props)
-    logging.info(f'Export data: {export_data}')
     models = export_data.get('models', [])
     multiple_uv_models = _get_multiple_uv_models(models)
     if multiple_uv_models:

@@ -1,6 +1,10 @@
 """Upload validation module."""
+import logging
 from enum import Enum
 from typing import Callable, Tuple
+
+from ..upload.export_data import get_export_data
+from ..upload.upload import get_upload_props
 
 
 class Category(str, Enum):  # noqa : WPS600
@@ -9,16 +13,22 @@ class Category(str, Enum):  # noqa : WPS600
     error = 'ERROR'
 
 
-def dummy_fix_function():
+def dummy_fix_function(export_data: dict):
     """Fix validation error.
+
+    Parameters:
+        export_data: dict containing objects to be uploaded info
 
     Does nothing.
     """
     pass  # noqa: WPS420
 
 
-def dummy_validation_function() -> Tuple[bool, str]:
+def dummy_validation_function(export_data: dict) -> Tuple[bool, str]:
     """Check if validator passes test.
+
+    Parameters:
+        export_data: dict containing objects to be uploaded info
 
     Returns:
         is_valid, message: whether check passed and a report message
@@ -33,8 +43,8 @@ class BaseValidator(object):
     category: Category
     description: str
     validation_result: Tuple[bool, str]
-    validation_function: Callable[..., Tuple[bool, str]]
-    fix_function: Callable
+    validation_function: Callable[[dict], Tuple[bool, str]]
+    fix_function: Callable[[dict], None]
 
     def __init__(  # noqa: WPS211
         self,
@@ -70,11 +80,17 @@ class BaseValidator(object):
 
     def run_validation(self):
         """Run checks for this validator."""
-        self.validation_result = self.validation_function()
+        props = get_upload_props()
+        export_data, _ = get_export_data(props)
+        logging.info(f'Export data: {export_data}')
+        self.validation_result = self.validation_function(export_data)
 
     def run_fix(self):
         """Run fix function for this validator."""
-        self.fix_function()
+        props = get_upload_props()
+        export_data, _ = get_export_data(props)
+        logging.info(f'Export data: {export_data}')
+        self.fix_function(export_data)
         self.run_validation()
         if not self.validation_result[0]:
             logging.error(f'Could not fix {self.name} automatically')
