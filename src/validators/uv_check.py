@@ -1,4 +1,4 @@
-"""Search operator."""
+"""UV Check Validator."""
 
 import logging
 from typing import List, Tuple
