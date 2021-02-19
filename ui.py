@@ -32,9 +32,12 @@ from .src.ui.main import UI
 from .src.ui.operators import (
     AssetBarOperator,
     DefaultNamesOperator,
+    FixOperator,
+    IgnoreOperator,
     RunAssetBarWithContext,
     TransferHana3DData,
     UndoWithContext,
+    ValidationPanel,
 )
 
 
@@ -180,6 +183,9 @@ classes = (
     RunAssetBarWithContext,
     TransferHana3DData,
     UndoWithContext,
+    ValidationPanel,
+    FixOperator,
+    IgnoreOperator,
 )
 
 handler2d = None

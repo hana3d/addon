@@ -87,6 +87,8 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
             op.reupload = False
 
             layout.label(text='asset has a version online.')
+        
+        layout.operator(f'message.{HANA3D_NAME}_validation_panel', text='Validate')
 
     def _edit_asset(self, context, layout, unified_props, asset_type):
         props = edit.get_edit_props()
