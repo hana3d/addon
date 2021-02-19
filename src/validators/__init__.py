@@ -52,9 +52,6 @@ class BaseValidator(object):
             description: short description of what is begin checked
             validation_function: function that checks for issues - returns a boolean and a message
             fix_function: function that automatically corrects issues
-
-        Returns:
-            BaseValidator instance
         """
         self.name = name
         self.category = category
@@ -62,7 +59,6 @@ class BaseValidator(object):
         self.validation_function = validation_function  # type: ignore
         self.fix_function = fix_function  # type: ignore
         self.validation_result = (False, 'Validation has yet to be run')
-
 
     def get_validation_result(self) -> Tuple[bool, str]:
         """Get validation result.
@@ -72,18 +68,16 @@ class BaseValidator(object):
         """
         return self.validation_result
 
-
     def run_validation(self):
         """Run checks for this validator."""
         self.validation_result = self.validation_function()
-
 
     def run_fix(self):
         """Run fix function for this validator."""
         self.fix_function()
         self.run_validation()
-        assert self.validation_result[0], 'Could not fix the problem automatically'
-
+        if not self.validation_result[0]:
+            logging.error(f'Could not fix {self.name} automatically')
 
     def ignore(self):
         """Ignore validator result."""
