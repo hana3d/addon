@@ -5,6 +5,8 @@ from typing import Tuple
 import bpy
 from bpy.props import IntProperty
 
+from ...unified_props import Unified
+from ...upload.upload import get_upload_props
 from ...validators import BaseValidator
 from ...validators.uv_check import uv_checker
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
@@ -81,19 +83,22 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
         logging.info('Invoking validator')
         self.errors = 0
         self.warnings = 0
+        unified_props = Unified(context).props
+        unified_props.skip_post_process = False
         for validator in validators:
             validator.run_validation()
             valid, _ = validator.get_validation_result()
             if not valid:
                 if validator.category == 'WARNING':
                     self.warnings += 1
+                    unified_props.skip_post_process = True
                 elif validator.category == 'ERROR':
                     self.errors += 1
         return context.window_manager.invoke_props_dialog(self, width=900)  # noqa: WPS432
 
     def _get_asset_type_from_ui(self):
         uiprops = getattr(bpy.context.window_manager, HANA3D_UI)
-        return uiprops.asset_type_upload.lower()
+        return uiprops.asset_type_upload
 
     def draw(self, context):  # noqa: D102
         for index, validator in enumerate(validators):
@@ -106,7 +111,7 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
             return
         elif self.warnings > 0:
             self.layout.label(text=f'{self.warnings} warnings detected, conversions will not run.')
-        self._draw_upload_buttons()
+        self._draw_upload_buttons(context)
 
     def _draw_overview(self, box, index: int, validator: BaseValidator):
         box.label(text=validator.name)
@@ -128,27 +133,35 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
 
     def _draw_report(self, box, valid: bool, message: str):
         report = box.row()
-        
         icon = 'CHECKMARK' if valid else 'CANCEL'
         report.alert = not valid
         report.label(text=message, icon=icon)
 
-    def _draw_upload_buttons(self):
+    def _draw_upload_buttons(self, context):
         asset_type = self._get_asset_type_from_ui()
+        unified_props = Unified(context).props
+        upload_props = get_upload_props()
         row = self.layout.row()
-        op = row.operator(
-            f'object.{HANA3D_NAME}_upload',
-            text='Upload as New Version',
-            icon='RECOVER_LAST',
-        )
-        op.asset_type = asset_type
-        op.reupload = True
+        row.scale_y = 2.0
 
-        row = self.layout.row()
-        op = row.operator(
-            f'object.{HANA3D_NAME}_upload',
-            text='Upload as New Asset',
-            icon='PLUS',
-        )
-        op.asset_type = asset_type
-        op.reupload = False
+        if upload_props.view_id == '' or unified_props.workspace != upload_props.view_workspace:
+            optext = f'Upload {asset_type.lower()}'
+            op = row.operator(f'object.{HANA3D_NAME}_upload', text=optext, icon='EXPORT')
+            op.asset_type = asset_type
+
+        if upload_props.view_id != '' and unified_props.workspace == upload_props.view_workspace:
+            op = row.operator(
+                f'object.{HANA3D_NAME}_upload',
+                text='Upload as New Version',
+                icon='RECOVER_LAST',
+            )
+            op.asset_type = asset_type
+            op.reupload = True
+
+            op = row.operator(
+                f'object.{HANA3D_NAME}_upload',
+                text='Upload as New Asset',
+                icon='PLUS',
+            )
+            op.asset_type = asset_type
+            op.reupload = False

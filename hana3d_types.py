@@ -986,6 +986,12 @@ class Hana3DUnifiedProps(PropertyGroup):
         description=f'Key of the created issue on {HANA3D_NAME} Support Desk',
     )
 
+    skip_post_process: BoolProperty(
+        name='Skip post process',
+        default=False,
+        description=f'Whether conversions should be skipped',
+    )
+
 
 class Hana3DEditAsset(PropertyGroup, Hana3DCommonUploadProps):
     """Hana3D Edit Asset Info."""
