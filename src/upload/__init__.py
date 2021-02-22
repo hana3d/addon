@@ -102,62 +102,66 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         export_data, upload_data = get_export_data(props)
 
-        self._thumbnail_check(props, ui, upload_set, export_data)
-
-        asset_id = await create_asset(props, ui, props.id, upload_data, correlation_id)
-        props.id = asset_id  # noqa: WPS125
-
-        if upload_set == ['METADATA']:
+        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
+            ui.add_report(text='Thumbnail not found')
             props.uploading = False
-            ui.add_report(text='Upload finished successfully')
-            props.view_workspace = workspace
-            return {'FINISHED'}
-
-        if self.reupload:
-            upload_data['id_parent'] = props.view_id
-        props.view_id = str(uuid.uuid4())
-        upload_data['viewId'] = props.view_id
-        upload_data['id'] = props.id
-        filename = f'{upload_data["viewId"]}.blend'
-
-        source_filepath = self._save_blend_file(tempdir, ext)
-        clean_file_path = paths.get_clean_filepath()
-        datafile = self._write_json_file(
-            tempdir,
-            source_filepath,
-            clean_file_path,
-            export_data,
-            upload_data,
-            upload_set,
-            correlation_id,
-        )
+            return {'CANCELLED'}
 
         try:
+            asset_id = await create_asset(props, ui, props.id, upload_data, correlation_id)
+            props.id = asset_id  # noqa: WPS125
+
+            if upload_set == ['METADATA']:
+                props.uploading = False
+                ui.add_report(text='Upload finished successfully')
+                props.view_workspace = workspace
+                return {'FINISHED'}
+
+            if self.reupload:
+                upload_data['id_parent'] = props.view_id
+            props.view_id = str(uuid.uuid4())
+            upload_data['viewId'] = props.view_id
+            upload_data['id'] = props.id
+            filename = f'{upload_data["viewId"]}.blend'
+
+            source_filepath = self._save_blend_file(tempdir, ext)
+            clean_file_path = paths.get_clean_filepath()
+            datafile = self._write_json_file(
+                tempdir,
+                source_filepath,
+                clean_file_path,
+                export_data,
+                upload_data,
+                upload_set,
+                correlation_id,
+            )
+
             await create_blend_file(props, ui, datafile, clean_file_path, filename)
+
+            files = self._get_files_info(upload_set, export_data, tempdir, filename)
+
+            uploaded = await self._upload_files(files, correlation_id, upload_data, export_data)
+            if not uploaded:
+                props.uploading = False
+                return {'CANCELLED'}
+
+            if props.remote_thumbnail:
+                self._start_remote_thumbnail(props)
+
+            if 'MAINFILE' in upload_set:
+                await finish_asset_creation(props, ui, correlation_id, upload_data['id'])
+
+            props.view_workspace = workspace
+            props.uploading = False
+            ui.add_report(text='Upload finished successfully')
+
+            return {'FINISHED'}
+
         except Exception as error:
             logging.error(error)
             ui.add_report(text='Failed to create blend file')
             props.uploading = False
             return {'CANCELLED'}
-
-        files = self._get_files_info(upload_set, export_data, tempdir, filename)
-
-        uploaded = await self._upload_files(files, correlation_id, upload_data, export_data)
-        if not uploaded:
-            props.uploading = False
-            return {'CANCELLED'}
-
-        if props.remote_thumbnail:
-            self._start_remote_thumbnail(props)
-
-        if 'MAINFILE' in upload_set:
-            await finish_asset_creation(props, ui, correlation_id, upload_data['id'])
-
-        props.view_workspace = workspace
-        props.uploading = False
-        ui.add_report(text='Upload finished successfully')
-
-        return {'FINISHED'}
 
     def _get_basic_data(self):  # noqa: WPS210
         unified_props = Unified(bpy.context).props
@@ -191,18 +195,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             props.remote_thumbnail = False
         else:
             props.remote_thumbnail = True
-
-    def _thumbnail_check(
-        self,
-        props: hana3d_types.UploadProps,
-        ui: UI,
-        upload_set: List[str],
-        export_data: dict,
-    ):
-        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
-            ui.add_report(text='Thumbnail not found')
-            props.uploading = False
-            return {'CANCELLED'}
 
     def _save_blend_file(self, tempdir: Union[str, pathlib.Path], ext: str) -> str:
         source_filepath = os.path.join(tempdir, f'export_hana3d{ext}')
