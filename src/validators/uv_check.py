@@ -6,6 +6,7 @@ from typing import List, Tuple
 import bpy
 
 from . import BaseValidator, Category
+from ..asset.asset_type import AssetType
 
 
 def _get_multiple_uv_models(models: List[str]) -> List[str]:
@@ -19,14 +20,25 @@ def _get_multiple_uv_models(models: List[str]) -> List[str]:
     ]
 
 
-def fix_uv_layers(export_data: dict):
+def _get_object_list(asset_type: AssetType, export_data: dict):
+    if asset_type == AssetType.model:
+        return export_data.get('models', [])
+    elif asset_type == AssetType.scene:
+        scene_name = export_data.get('scene')
+        scene = bpy.data.scenes[scene_name]
+        return scene.objects.keys()
+    return []
+
+
+def fix_uv_layers(asset_type: AssetType, export_data: dict):
     """Remove all inactive UV layers from export data.
 
     Parameters:
+        asset_type: type of asset that will be uploaded
         export_data: dict containing objects to be uploaded info
 
     """
-    models = export_data.get('models', [])
+    models = _get_object_list(asset_type, export_data)
     multiple_uv_models = _get_multiple_uv_models(models)
     for model in multiple_uv_models:
         model_data = bpy.data.objects[model]
@@ -38,10 +50,11 @@ def fix_uv_layers(export_data: dict):
             uv_layers.remove(unwanted_uvs.pop())
 
 
-def check_uv_layers(export_data: dict) -> Tuple[bool, str]:
+def check_uv_layers(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     """Check for duplicated UV layers in a single mesh on export data.
 
     Parameters:
+        asset_type: type of asset that will be uploaded
         export_data: dict containing objects to be uploaded info
 
     Returns:
@@ -51,7 +64,7 @@ def check_uv_layers(export_data: dict) -> Tuple[bool, str]:
     is_valid = True
     message = 'No duplicated UVs detected!'
 
-    models = export_data.get('models', [])
+    models = _get_object_list(asset_type, export_data)
     multiple_uv_models = _get_multiple_uv_models(models)
     if multiple_uv_models:
         message = f'Meshes with more than 1 UV Map: {", ".join(multiple_uv_models)}'

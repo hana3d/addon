@@ -3,6 +3,7 @@ import logging
 from enum import Enum
 from typing import Callable, Tuple
 
+from ..asset.asset_type import AssetType
 from ..upload.export_data import get_export_data
 from ..upload.upload import get_upload_props
 
@@ -13,10 +14,11 @@ class Category(str, Enum):  # noqa : WPS600
     error = 'ERROR'
 
 
-def dummy_fix_function(export_data: dict):
+def dummy_fix_function(asset_type: AssetType, export_data: dict):
     """Fix validation error.
 
     Parameters:
+        asset_type: type of the asset that will be uploaded
         export_data: dict containing objects to be uploaded info
 
     Does nothing.
@@ -24,10 +26,11 @@ def dummy_fix_function(export_data: dict):
     pass  # noqa: WPS420
 
 
-def dummy_validation_function(export_data: dict) -> Tuple[bool, str]:
+def dummy_validation_function(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     """Check if validator passes test.
 
     Parameters:
+        asset_type: type of the asset that will be uploaded
         export_data: dict containing objects to be uploaded info
 
     Returns:
@@ -83,14 +86,14 @@ class BaseValidator(object):
         props = get_upload_props()
         export_data, _ = get_export_data(props)
         logging.info(f'Export data: {export_data}')
-        self.validation_result = self.validation_function(export_data)
+        self.validation_result = self.validation_function(props.asset_type.lower(), export_data)
 
     def run_fix(self):
         """Run fix function for this validator."""
         props = get_upload_props()
         export_data, _ = get_export_data(props)
         logging.info(f'Export data: {export_data}')
-        self.fix_function(export_data)
+        self.fix_function(props.asset_type.lower(), export_data)
         self.run_validation()
         if not self.validation_result[0]:
             logging.error(f'Could not fix {self.name} automatically')
