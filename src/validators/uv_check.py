@@ -32,8 +32,7 @@ def fix_uv_layers(export_data: dict):
         model_data = bpy.data.objects[model]
         uv_layers = model_data.data.uv_layers
         unwanted_uvs = [
-            uv for uv in uv_layers
-            if uv != uv_layers.active
+            uv for uv in uv_layers if not uv.active_render
         ]
         while unwanted_uvs:
             uv_layers.remove(unwanted_uvs.pop())
