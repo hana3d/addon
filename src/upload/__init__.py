@@ -141,7 +141,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             files = self._get_files_info(upload_set, export_data, tempdir, filename)
 
             uploaded = await self._upload_files(
-                context, files, correlation_id, upload_data, export_data
+                context, files, correlation_id, upload_data, export_data,
             )
             if not uploaded:
                 props.uploading = False
@@ -263,13 +263,14 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             )
         return files
 
-    async def _upload_files(self,
-        context, 
+    async def _upload_files(  # noqa: WPS211
+        self,
+        context,
         files: list,
         correlation_id: str,
         upload_data: dict,
-        export_data: dict
-        ):  # noqa: WPS211
+        export_data: dict,
+    ):
         ui = UI()
         upload = {}
         try:
