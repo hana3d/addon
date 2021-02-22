@@ -15,7 +15,7 @@ validators: Tuple[BaseValidator] = (
 )
 
 
-class IgnoreOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
+class IgnoreOperator(bpy.types.Operator):
     """Ignore warnings."""
 
     bl_idname = f'message.{HANA3D_NAME}_validation_ignore'
