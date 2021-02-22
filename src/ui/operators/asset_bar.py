@@ -611,7 +611,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                             target_object = obj_hit.name
                             # create final mesh to extract correct material slot
                             depsgraph = bpy.context.evaluated_depsgraph_get()
-                            object_eval = object.evaluated_get(depsgraph)
+                            object_eval = obj_hit.evaluated_get(depsgraph)
                             temp_mesh = object_eval.to_mesh()
                             target_slot = temp_mesh.polygons[face_index].material_index
                             object_eval.to_mesh_clear()
