@@ -140,7 +140,9 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
             files = self._get_files_info(upload_set, export_data, tempdir, filename)
 
-            uploaded = await self._upload_files(files, correlation_id, upload_data, export_data)
+            uploaded = await self._upload_files(
+                context, files, correlation_id, upload_data, export_data
+            )
             if not uploaded:
                 props.uploading = False
                 return {'CANCELLED'}
@@ -261,7 +263,13 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             )
         return files
 
-    async def _upload_files(self, context, files, correlation_id, upload_data, export_data):
+    async def _upload_files(self,
+        context, 
+        files: list,
+        correlation_id: str,
+        upload_data: dict,
+        export_data: dict
+        ):  # noqa: WPS211
         ui = UI()
         upload = {}
         try:

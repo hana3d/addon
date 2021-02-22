@@ -989,7 +989,7 @@ class Hana3DUnifiedProps(PropertyGroup):
     skip_post_process: BoolProperty(
         name='Skip post process',
         default=False,
-        description=f'Whether conversions should be skipped',
+        description='Whether conversions should be skipped',
     )
 
 

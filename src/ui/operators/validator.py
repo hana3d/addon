@@ -84,6 +84,7 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
         self.errors = 0
         self.warnings = 0
         unified_props = Unified(context).props
+        logging.info(f'Unified props: {unified_props}')
         unified_props.skip_post_process = False
         for validator in validators:
             validator.run_validation()

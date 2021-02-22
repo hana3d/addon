@@ -67,7 +67,6 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         if props.view_id != '' and unified_props.workspace == props.view_workspace:
             layout.label(text='Asset has a version online.')
 
-        
 
     def _edit_asset(self, context, layout, unified_props, asset_type):
         props = edit.get_edit_props()
