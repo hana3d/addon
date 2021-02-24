@@ -692,7 +692,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
                 start_download(asset_data, **kwargs)
             return {'FINISHED'}
 
-        target_object = self._get_target_object()
+        target_object = self._get_target_object(context)
         logging.debug(f'Using target object: {target_object}')
         kwargs = {
             'cast_parent': self.cast_parent,
