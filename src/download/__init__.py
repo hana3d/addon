@@ -394,6 +394,7 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
     Returns:
         imported material
     """
+    logging.debug(f'Importing material {asset_data.name} with args {str(kwargs)}')
     for mat in bpy.data.materials:
         if getattr(mat, HANA3D_NAME).view_id == asset_data.view_id:
             inscene = True
@@ -402,13 +403,19 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
     else:
         inscene = False
     if not inscene:
-        material = append_link.append_material(file_names[-1], link=False, fake_user=False)
-    target_object = bpy.data.objects[kwargs['target_object']]
+        logging.debug(f'Not in scene, will append {file_names[-1]}')
+        material = append_link.append_material(file_names[-1], asset_data.name, link=False, fake_user=False)
+    
+    if kwargs['target_object'] != '':
+        target_object = bpy.data.objects[kwargs['target_object']]
+        logging.debug(f'Target object: {target_object}')
 
-    if len(target_object.material_slots) == 0:
-        target_object.data.materials.append(material)
+        if len(target_object.material_slots) == 0:
+            target_object.data.materials.append(material)
+        else:
+            target_object.material_slots[kwargs['material_target_slot']].material = material
     else:
-        target_object.material_slots[kwargs['material_target_slot']].material = material
+        logging.info('Material downloaded but not added to scene')
     return material
 
 
@@ -504,6 +511,7 @@ def check_asset_in_scene(asset_data: AssetData) -> str:
     Returns:
         'LINK' or 'APPEND'
     """
+    logging.info(f'Checking if {asset_data.name} is already on scene')
     wm = bpy.context.window_manager
     assets_used = wm.get(f'{HANA3D_NAME}_assets_used', {})
 
@@ -531,6 +539,7 @@ def start_download(asset_data: AssetData, **kwargs):
         asset_data: asset data
         kwargs: additional parameters
     """
+    logging.info(f'Starting download {asset_data.name}')
     view_id = asset_data.view_id
     if view_id in download_threads and download_threads[view_id].is_alive():
         if asset_data.asset_type in {'model', 'material'}:
@@ -542,6 +551,7 @@ def start_download(asset_data: AssetData, **kwargs):
     asset_in_scene = check_asset_in_scene(asset_data)
 
     if fexists and asset_in_scene:
+        logging.debug(f'Will append asset {asset_data.name}, {str(kwargs)}')
         append_asset_safe(asset_data, **kwargs)
         return
 
@@ -677,6 +687,13 @@ class Hana3DDownloadOperator(bpy.types.Operator):
                 utils.delete_hierarchy(ob)
                 start_download(asset_data, **kwargs)
         else:
+            logging.debug(f'Drag and drop Target object: {self.target_object}')
+            if self.target_object == '':
+                logging.debug(f'No drag and drop target, will use selected object')
+                if len(context.selected_objects) > 0:
+                    self.target_object = context.selected_objects[0].name
+                    logging.debug(f'No drag and drop target, will use selected object {self.target_object}')
+
             kwargs = {
                 'cast_parent': self.cast_parent,
                 'target_object': self.target_object,
@@ -685,6 +702,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
                 'model_rotation': tuple(self.model_rotation),
                 'replace': False,
             }
+            self.target_object = ''
 
             start_download(asset_data, **kwargs)
         return {'FINISHED'}

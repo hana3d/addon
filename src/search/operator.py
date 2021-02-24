@@ -18,6 +18,7 @@ from .search import (
     set_search_results,
 )
 from ..asset.asset_type import AssetType
+from ..async_loop import ensure_async_loop, kick_async_loop
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..preferences.preferences import Preferences
 from ..ui import colors
