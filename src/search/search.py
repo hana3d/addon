@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 import bpy
 
 from ..asset.asset_type import AssetType
+from ..async_loop import kick_async_loop
 from ..metaclasses.singleton import Singleton
 from ... import paths, utils
 from ...config import (
@@ -204,6 +205,10 @@ def run_operator(get_next=False):
     Parameters:
         get_next: get next batch of results
     """
+    try:
+        kick_async_loop()
+    except:
+        pass
     search_props = get_search_props()
     if not search_props.is_searching:
         search_props.is_searching = True

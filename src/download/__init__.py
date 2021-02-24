@@ -411,7 +411,7 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
         )
 
     if kwargs['target_object'] == '':
-        logging.info('Material downloaded but not added to scene')
+        logging.info('Material will be downloaded but not applied to any object')
     else:
         target_object = bpy.data.objects[kwargs['target_object']]
         logging.debug(f'Target object: {target_object}')
