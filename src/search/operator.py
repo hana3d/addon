@@ -1,6 +1,5 @@
 """Search operator."""
 
-import json
 import logging
 import os
 from typing import Dict, List, Tuple
@@ -321,8 +320,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         result_field: List[AssetData],
     ):
         index = self.next_index
-        logging.debug(f'Loading thumbnails: {len(small_thumbnails)} small and {len(large_thumbnails)} large')
-        logging.debug(f'Number of assets: {len(result_field)}')
         for small, large in zip(small_thumbnails, large_thumbnails):
             imgpath, url = small
             imgpath_large, url_large = large
