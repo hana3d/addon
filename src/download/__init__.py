@@ -36,7 +36,7 @@ from bpy.props import (
 
 from .downloader import Downloader
 from .lib import check_existing
-from ..asset.asset import AssetType
+from ..asset.asset_type import AssetType
 from ..async_loop import ensure_async_loop
 from ..libraries.libraries import set_library_props, update_libraries_list
 from ..search.query import Query
