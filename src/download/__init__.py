@@ -36,6 +36,7 @@ from bpy.props import (
 
 from .downloader import Downloader
 from .lib import check_existing
+from ..asset.asset import AssetType
 from ..async_loop import ensure_async_loop
 from ..libraries.libraries import set_library_props, update_libraries_list
 from ..search.query import Query
@@ -394,7 +395,8 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
     Returns:
         imported material
     """
-    logging.debug(f'Importing material {asset_data.name} with args {str(kwargs)}')
+    asset_name = asset_data.name
+    logging.debug(f'Importing material {asset_name} with args {str(kwargs)}')
     for mat in bpy.data.materials:
         if getattr(mat, HANA3D_NAME).view_id == asset_data.view_id:
             inscene = True
@@ -404,18 +406,21 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
         inscene = False
     if not inscene:
         logging.debug(f'Not in scene, will append {file_names[-1]}')
-        material = append_link.append_material(file_names[-1], asset_data.name, link=False, fake_user=False)
-    
-    if kwargs['target_object'] != '':
+        material = append_link.append_material(
+            file_names[-1], asset_name, link=False, fake_user=False,
+        )
+
+    if kwargs['target_object'] == '':
+        logging.info('Material downloaded but not added to scene')
+    else:
         target_object = bpy.data.objects[kwargs['target_object']]
         logging.debug(f'Target object: {target_object}')
 
-        if len(target_object.material_slots) == 0:
+        if len(target_object.material_slots) == 0:  # noqa: WPS507
             target_object.data.materials.append(material)
         else:
             target_object.material_slots[kwargs['material_target_slot']].material = material
-    else:
-        logging.info('Material downloaded but not added to scene')
+
     return material
 
 
@@ -657,7 +662,6 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         """
         search_results = get_search_results()
 
-        # TODO CHECK ALL OCCURRENCES OF PASSING BLENDER ID PROPS TO THREADS!
         asset_data = search_results[self.asset_index]
         assets_used = context.window_manager.get(f'{HANA3D_NAME}_assets_used')
         if assets_used is None:
@@ -666,7 +670,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         atype = asset_data.asset_type
         if (  # noqa: WPS337
             bpy.context.mode != 'OBJECT'
-            and (atype == 'model' or atype == 'material')
+            and (atype == AssetType.model or atype == AssetType.material)
             and bpy.context.view_layer.objects.active is not None
         ):
             bpy.ops.object.mode_set(mode='OBJECT')
@@ -686,27 +690,27 @@ class Hana3DDownloadOperator(bpy.types.Operator):
                 }
                 utils.delete_hierarchy(ob)
                 start_download(asset_data, **kwargs)
-        else:
-            logging.debug(f'Drag and drop Target object: {self.target_object}')
-            if self.target_object == '':
-                logging.debug(f'No drag and drop target, will use selected object')
-                if len(context.selected_objects) > 0:
-                    self.target_object = context.selected_objects[0].name
-                    logging.debug(f'No drag and drop target, will use selected object {self.target_object}')
+            return {'FINISHED'}
 
-            kwargs = {
-                'cast_parent': self.cast_parent,
-                'target_object': self.target_object,
-                'material_target_slot': self.material_target_slot,
-                'model_location': tuple(self.model_location),
-                'model_rotation': tuple(self.model_rotation),
-                'replace': False,
-            }
-            self.target_object = ''
+        target_object = self._get_target_object()
+        logging.debug(f'Using target object: {target_object}')
+        kwargs = {
+            'cast_parent': self.cast_parent,
+            'target_object': target_object,
+            'material_target_slot': self.material_target_slot,
+            'model_location': tuple(self.model_location),
+            'model_rotation': tuple(self.model_rotation),
+            'replace': False,
+        }
+        self.target_object = ''
 
-            start_download(asset_data, **kwargs)
+        start_download(asset_data, **kwargs)
         return {'FINISHED'}
 
+    def _get_target_object(self, context):
+        if not self.target_object and context.selected_objects:
+            self.target_object = context.selected_objects[0].name
+        return self.target_object
 
 class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     """Download and link all searched preview assets to scene."""
