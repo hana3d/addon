@@ -670,7 +670,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         atype = asset_data.asset_type
         if (  # noqa: WPS337
             bpy.context.mode != 'OBJECT'
-            and (atype == AssetType.model or atype == AssetType.material)
+            and (atype in {AssetType.model, AssetType.material})
             and bpy.context.view_layer.objects.active is not None
         ):
             bpy.ops.object.mode_set(mode='OBJECT')
