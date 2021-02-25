@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, List
 
 import bpy
 
-from ...config import HANA3D_PROFILE
 from ..unified_props import Unified
+from ...config import HANA3D_PROFILE
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props, UploadProps  # noqa: WPS433
