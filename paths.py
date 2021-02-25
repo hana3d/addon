@@ -63,7 +63,6 @@ def get_api_url(*paths: str, query: dict = None) -> str:
     return f'{url}?{query_string}'
 
 
-
 def get_auth_url():
     return HANA3D_AUTH_URL
 
