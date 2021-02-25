@@ -104,7 +104,7 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
             return
         if error_dict[Category.warning] > 0:
             self.layout.label(
-                text=f'{error_dict[Category.error]} warnings detected, conversions will not run.',
+                text=f'{error_dict[Category.warning]} warnings detected, conversions will not run.',
             )
         self._draw_upload_buttons(context)
 
