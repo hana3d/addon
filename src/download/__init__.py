@@ -713,6 +713,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
             self.target_object = context.selected_objects[0].name
         return self.target_object
 
+
 class Hana3DBatchDownloadOperator(bpy.types.Operator):  # noqa : WPS338
     """Download and link all searched preview assets to scene."""
 
