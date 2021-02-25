@@ -1,4 +1,5 @@
 """Libraries functions."""
+from contextlib import suppress
 from typing import TYPE_CHECKING, List
 
 import bpy
@@ -40,12 +41,10 @@ def get_libraries(props: 'Props'):  # noqa: WPS210
             'name': library_name,
             'id': library_id,
         })
-        try:
+        with suppress(AttributeError):
             if props.custom_props.keys():
                 custom_props = _get_custom_props(props, library_id)
                 library.update({'metadata': {'view_props': custom_props}})
-        except AttributeError:
-            'SearchProps doesnt have custom_props'
         libraries.append(library)
     return libraries
 
@@ -104,12 +103,10 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
     current_workspace = unified_props.workspace
     previous_libraries = get_libraries(props)
     props.libraries_list.clear()
-    try:
+    with suppress(AttributeError):
         for name in props.custom_props.keys():
             del props.custom_props[name]    # noqa: WPS420
             del props.custom_props_info[name]   # noqa: WPS420
-    except AttributeError:
-        'SearchProps doesnt have custom_props'
     for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace != workspace['id']:
             continue
