@@ -4,6 +4,8 @@ from enum import Enum
 from typing import Callable, Tuple
 
 from ..asset.asset_type import AssetType
+from ..ui import colors
+from ..ui.main import UI
 from ..upload.export_data import get_export_data
 from ..upload.upload import get_upload_props
 
@@ -96,7 +98,10 @@ class BaseValidator(object):
         self.fix_function(props.asset_type.lower(), export_data)
         self.run_validation()
         if not self.validation_result[0]:
-            logging.error(f'Could not fix {self.name} automatically')
+            ui = UI()
+            error = f'Could not fix {self.name} automatically'
+            ui.add_report(text=error, color=colors.RED)
+            logging.error(error)
 
     def ignore(self):
         """Ignore validator result."""

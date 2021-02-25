@@ -102,7 +102,7 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
                 text=f'{error_dict[Category.error]} errors detected, cannot upload.',
             )
             return
-        elif error_dict[Category.warning] > 0:
+        if error_dict[Category.warning] > 0:
             self.layout.label(
                 text=f'{error_dict[Category.error]} warnings detected, conversions will not run.',
             )
