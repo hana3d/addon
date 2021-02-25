@@ -45,7 +45,7 @@ def setup_logger():  # noqa WPS210,WPS213
     log_file_path = get_log_file()
     report_file_path = get_report_file()
 
-    report_file_handler = logging.FileHandler(report_file_path, mode='w')
+    report_file_handler = logging.FileHandler(report_file_path, mode='w', encoding='utf-8')
     report_file_handler.setLevel(logging.DEBUG)
 
     log_file_handler = RotatingFileHandler(
@@ -53,6 +53,7 @@ def setup_logger():  # noqa WPS210,WPS213
         mode='a',
         maxBytes=5 * 1024 * 1024,
         backupCount=2,
+        encoding='utf-8',
     )
     log_file_handler.setLevel(logging.DEBUG)
 

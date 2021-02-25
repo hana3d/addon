@@ -24,7 +24,7 @@ class EditAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: W
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     async def async_execute(self, context):
-        """Upload async execute.
+        """Edit asset async execute.
 
         Parameters:
             context: Blender context
@@ -60,7 +60,7 @@ class DeleteAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     async def async_execute(self, context):
-        """Upload async execute.
+        """Delete asset async execute.
 
         Parameters:
             context: Blender context
