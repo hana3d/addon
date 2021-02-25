@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, List
 
 import bpy
 
-from ..unified_props import Unified
 from ...config import HANA3D_PROFILE
+from ..unified_props import Unified
 
 if TYPE_CHECKING:
     from ...hana3d_types import Props, UploadProps  # noqa: WPS433
@@ -21,11 +21,11 @@ def _get_custom_props(props: 'UploadProps', library_id: str):
     return custom_props
 
 
-def get_libraries(props: 'UploadProps'):  # noqa: WPS210
+def get_libraries(props: 'Props'):  # noqa: WPS210
     """Get libraries from asset props.
 
     Parameters:
-        props: Upload Props
+        props: Upload or Search Props
 
     Returns:
         libraries: List[dict]
@@ -40,7 +40,7 @@ def get_libraries(props: 'UploadProps'):  # noqa: WPS210
             'name': library_name,
             'id': library_id,
         })
-        if props.custom_props.keys():
+        if hasattr(props, 'custom_props') and props.custom_props.keys():
             custom_props = _get_custom_props(props, library_id)
             library.update({'metadata': {'view_props': custom_props}})
         libraries.append(library)
@@ -62,7 +62,7 @@ def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, library: dict, m
         asset_props.custom_props[name] = ''
 
 
-def set_library_props(libraries: List[dict], asset_props: 'UploadProps'):
+def set_library_props(libraries: List[dict], asset_props: 'Props'):
     """Set libraries on asset props.
 
     Parameters:
@@ -73,6 +73,8 @@ def set_library_props(libraries: List[dict], asset_props: 'UploadProps'):
     for asset_library in libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
+        if not hasattr(asset_props, 'custom_props'):
+            continue
         if 'metadata' in asset_library and asset_library['metadata'] is not None:
             for view_prop in library.metadata['view_props']:
                 _set_view_prop(asset_props, view_prop, library, asset_library['metadata'])
