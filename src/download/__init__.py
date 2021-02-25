@@ -405,7 +405,7 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
         material = append_link.append_material(file_names[-1], link=False, fake_user=False)
     target_object = bpy.data.objects[kwargs['target_object']]
 
-    if len(target_object.material_slots) == 0:
+    if len(target_object.material_slots) == 0:  # noqa: WPS507
         target_object.data.materials.append(material)
     else:
         target_object.material_slots[kwargs['material_target_slot']].material = material
@@ -656,7 +656,7 @@ class Hana3DDownloadOperator(bpy.types.Operator):
         atype = asset_data.asset_type
         if (  # noqa: WPS337
             bpy.context.mode != 'OBJECT'
-            and (atype == 'model' or atype == 'material')
+            and atype in ['model', 'material']
             and bpy.context.view_layer.objects.active is not None
         ):
             bpy.ops.object.mode_set(mode='OBJECT')
