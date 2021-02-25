@@ -6,8 +6,6 @@ from typing import Dict, List, Tuple
 
 import bpy
 
-from ..asset.asset_type import AssetType
-from ..metaclasses.singleton import Singleton
 from ... import paths, utils
 from ...config import (
     HANA3D_MATERIALS,
@@ -16,6 +14,8 @@ from ...config import (
     HANA3D_SCENES,
     HANA3D_UI,
 )
+from ..asset.asset_type import AssetType
+from ..metaclasses.singleton import Singleton
 
 
 @dataclass
@@ -87,7 +87,7 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
         return
 
     logging.debug('Loading preview')
-    if search_result.thumbnail_small == '' or search_result.thumbnail_small is None:
+    if search_result.thumbnail_small == '':
         logging.debug('No small thumbnail, will load placeholder')
         load_placeholder_thumbnail(index, search_result.id)
         return
