@@ -672,6 +672,12 @@ class Hana3DCommonUploadProps:
         type=PropertyGroup
     )
 
+    skip_post_process: BoolProperty(
+        name='Skip post process',
+        default=False,
+        description='Whether conversions should be skipped',
+    )
+
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     automap: BoolProperty(
@@ -984,12 +990,6 @@ class Hana3DUnifiedProps(PropertyGroup):
         name='Related issue key',
         default='',
         description=f'Key of the created issue on {HANA3D_NAME} Support Desk',
-    )
-
-    skip_post_process: BoolProperty(
-        name='Skip post process',
-        default=False,
-        description='Whether conversions should be skipped',
     )
 
 

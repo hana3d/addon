@@ -141,7 +141,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             files = self._get_files_info(upload_set, export_data, tempdir, filename)
 
             uploaded = await self._upload_files(
-                context, files, correlation_id, upload_data, export_data,
+                context, files, correlation_id, upload_data, export_data, props,
             )
             if not uploaded:
                 props.uploading = False
@@ -270,6 +270,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         correlation_id: str,
         upload_data: dict,
         export_data: dict,
+        props: hana3d_types.UploadProps,
     ):
         ui = UI()
         upload = {}
@@ -280,7 +281,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                 if not uploaded:
                     raise Exception('Failed to send file')
                 if file_info['type'] == 'blend':
-                    skip_post_process = Unified(context).props.skip_post_process
+                    skip_post_process = props.skip_post_process
                     await confirm_upload(correlation_id, upload['id'], skip_post_process)
             return True
         except Exception as err:

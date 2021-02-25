@@ -69,14 +69,13 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
 
     def invoke(self, context, event):  # noqa: D102
         logging.info('Invoking validator')
-        unified_props = Unified(context).props
-        logging.info(f'Unified props: {unified_props}')
-        unified_props.skip_post_process = False
+        upload_props = get_upload_props()
+        upload_props.skip_post_process = False
         for validator in validators:
             validator.run_validation()
             valid, _ = validator.get_validation_result()
             if not valid and validator.category == Category.warning:
-                unified_props.skip_post_process = True
+                upload_props.skip_post_process = True
         return context.window_manager.invoke_props_dialog(self, width=900)  # noqa: WPS432
 
     def _get_asset_type_from_ui(self):
