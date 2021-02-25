@@ -312,7 +312,8 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         asset_type: AssetType,
         result_field: List[AssetData],
     ):
-        for index, (small, large) in enumerate(zip(small_thumbnails, large_thumbnails)):
+        index = 0
+        for small, large in zip(small_thumbnails, large_thumbnails):
             imgpath, url = small
             imgpath_large, url_large = large
             if imgpath is not None and not os.path.exists(imgpath):
@@ -322,6 +323,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             current_asset_type = self._get_asset_type_from_ui()
             if current_asset_type == asset_type:
                 load_preview(asset_type, result_field[index], index)
+            index += 1
 
 
 classes = (
