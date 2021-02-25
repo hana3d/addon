@@ -86,7 +86,6 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
     if search_result is None:
         return
 
-    logging.debug('Loading preview')
     if search_result.thumbnail_small == '':
         logging.debug('No small thumbnail, will load placeholder')
         load_placeholder_thumbnail(index, search_result.id)
@@ -206,7 +205,6 @@ def run_operator(get_next=False):
     """
     search_props = get_search_props()
     if not search_props.is_searching:
-        search_props.is_searching = True
         logging.debug(f'Running search operator with get_next = {get_next}')
         search_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_search')
         search_op(get_next=get_next)

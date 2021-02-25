@@ -280,7 +280,12 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         """Search more results."""
         original_search_results = search.get_original_search_results()
         if original_search_results is not None and original_search_results.get('next') is not None:
-            search.run_operator(get_next=True)
+            len_search = len(search.get_search_results())
+            image_name = utils.previmg_name(len_search-1)
+            img = bpy.data.images.get(image_name)
+            if img:
+                logging.debug(f'{image_name} has already loaded, will continue search')
+                search.run_operator(get_next=True)
 
     def exit_modal(self):
         """Exit modal."""
@@ -392,7 +397,9 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         if search_results is None:
             return {'PASS_THROUGH'}
         len_search = len(search_results)
-        if len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
+        if ui_props.scrolloffset > len_search:
+            ui_props.scrolloffset = 0 
+        elif len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
             self.search_more()
         if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'TRACKPADPAN'}:
             # scrolling
@@ -419,7 +426,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 else:
                     ui_props.scrolloffset += 1
                 if len_search - ui_props.scrolloffset < ui_props.total_count:
-                    ui_props.scrolloffset = len_seach - ui_props.total_count
+                    ui_props.scrolloffset = len_search - ui_props.total_count
 
             if event.type == 'WHEELUPMOUSE' and ui_props.scrolloffset > 0:  # noqa: WPS204
                 if ui_props.hcount > 1:
@@ -687,6 +694,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props = getattr(context.window_manager, HANA3D_UI)
 
         if self.do_search:
+            ui_props.scrolloffset = 0
             search.run_operator()
 
         if ui_props.assetbar_on:
