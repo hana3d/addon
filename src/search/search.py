@@ -87,7 +87,7 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
         return
 
     logging.debug('Loading preview')
-    if search_result.thumbnail_small == '':
+    if search_result.thumbnail_small == '' or search_result.thumbnail_small is None:
         logging.debug('No small thumbnail, will load placeholder')
         load_placeholder_thumbnail(index, search_result.id)
         return

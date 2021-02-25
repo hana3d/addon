@@ -141,7 +141,12 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             search_props.search_error = True
 
         small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
-        await self._load_thumbnails(small_thumbnails, full_thumbnails, asset_type, result_field)
+        await self._load_thumbnails(small_thumbnails, full_thumbnails)
+
+        for index, result in enumerate(result_field):
+            current_asset_type = self._get_asset_type_from_ui()
+            if current_asset_type == asset_type:
+                load_preview(asset_type, result, index)
 
         status = run_assetbar_op()
         logging.debug(f'Asset bar operator status: {status}')
@@ -311,10 +316,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         self,
         small_thumbnails: List[Tuple],
         large_thumbnails: List[Tuple],
-        asset_type: AssetType,
-        result_field: List[AssetData],
     ):
-        index = 0
         for small, large in zip(small_thumbnails, large_thumbnails):
             imgpath, url = small
             imgpath_large, url_large = large
@@ -322,10 +324,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 await download_thumbnail(imgpath, url)
             if not os.path.exists(imgpath_large):
                 await download_thumbnail(imgpath_large, url_large)
-            current_asset_type = self._get_asset_type_from_ui()
-            if current_asset_type == asset_type:
-                load_preview(asset_type, result_field[index], index)
-            index += 1
 
 
 classes = (
