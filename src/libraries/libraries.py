@@ -45,7 +45,7 @@ def get_libraries(props: 'Props'):  # noqa: WPS210
                 custom_props = _get_custom_props(props, library_id)
                 library.update({'metadata': {'view_props': custom_props}})
         except AttributeError:
-            pass
+            """SearchProps doesn't have custom_props"""
         libraries.append(library)
     return libraries
 
@@ -109,7 +109,7 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
             del props.custom_props[name]    # noqa: WPS420
             del props.custom_props_info[name]   # noqa: WPS420
     except AttributeError:
-        pass
+        """SearchProps doesn't have custom_props"""
     for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace != workspace['id']:
             continue
