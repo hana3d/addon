@@ -143,10 +143,10 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
         await self._load_thumbnails(small_thumbnails, full_thumbnails)
 
-        for index, result in enumerate(result_field):
+        for index, search_result in enumerate(result_field):
             current_asset_type = self._get_asset_type_from_ui()
             if current_asset_type == asset_type:
-                load_preview(asset_type, result, index)
+                load_preview(asset_type, search_result, index)
 
         status = run_assetbar_op()
         logging.debug(f'Asset bar operator status: {status}')
