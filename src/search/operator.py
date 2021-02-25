@@ -141,12 +141,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             search_props.search_error = True
 
         small_thumbnails, full_thumbnails = self._get_thumbnails(tempdir, request_data)
-        await self._load_thumbnails(small_thumbnails, full_thumbnails)
-
-        for index, search_result in enumerate(result_field):
-            current_asset_type = self._get_asset_type_from_ui()
-            if current_asset_type == asset_type:
-                load_preview(asset_type, search_result, index)
+        await self._load_thumbnails(small_thumbnails, full_thumbnails, asset_type, result_field)
 
         status = run_assetbar_op()
         logging.debug(f'Asset bar operator status: {status}')
@@ -280,28 +275,26 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 # TODO move validation of published assets to server, too many checks here.
                 thumbnail = rfile['fileThumbnailLarge']
                 small_thumbnail = rfile['fileThumbnail']
-                if (  # noqa: WPS337
-                    rfile['fileType'] != 'thumbnail'
-                    or small_thumbnail is None
-                    or thumbnail is None
-                ):
+                if rfile['fileType'] != 'thumbnail':
                     continue
 
                 if small_thumbnail is None:
-                    small_thumbnail = 'NONE'
+                    thumb_small_urls.append(None)
+                    thumb_small_filepaths.append(None)
+                else:
+                    thumb_small_urls.append(small_thumbnail)
+                    imgname = paths.extract_filename_from_url(small_thumbnail)
+                    imgpath = os.path.join(tempdir, imgname)
+                    thumb_small_filepaths.append(imgpath)
+
                 if thumbnail is None:
-                    thumbnail = 'NONE'
-
-                thumb_small_urls.append(small_thumbnail)
-                thumb_full_urls.append(thumbnail)
-
-                imgname = paths.extract_filename_from_url(small_thumbnail)
-                imgpath = os.path.join(tempdir, imgname)
-                thumb_small_filepaths.append(imgpath)
-
-                imgname = paths.extract_filename_from_url(rfile['fileThumbnailLarge'])
-                imgpath = os.path.join(tempdir, imgname)
-                thumb_full_filepaths.append(imgpath)
+                    thumb_full_urls.append(None)
+                    thumb_full_filepaths.append(None)
+                else:
+                    thumb_full_urls.append(thumbnail)
+                    imgname = paths.extract_filename_from_url(rfile['fileThumbnailLarge'])
+                    imgpath = os.path.join(tempdir, imgname)
+                    thumb_full_filepaths.append(imgpath)
 
         small_thumbnails = zip(thumb_small_filepaths, thumb_small_urls)
         full_thumbnails = zip(thumb_full_filepaths, thumb_full_urls)
@@ -316,14 +309,19 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         self,
         small_thumbnails: List[Tuple],
         large_thumbnails: List[Tuple],
+        asset_type: AssetType,
+        result_field: List[AssetData],
     ):
-        for small, large in zip(small_thumbnails, large_thumbnails):
+        for index, (small, large) in enumerate(zip(small_thumbnails, large_thumbnails)):
             imgpath, url = small
             imgpath_large, url_large = large
-            if not os.path.exists(imgpath):
+            if imgpath is not None and not os.path.exists(imgpath):
                 await download_thumbnail(imgpath, url)
-            if not os.path.exists(imgpath_large):
+            if imgpath_large is not None and not os.path.exists(imgpath_large):
                 await download_thumbnail(imgpath_large, url_large)
+            current_asset_type = self._get_asset_type_from_ui()
+            if current_asset_type == asset_type:
+                load_preview(asset_type, result_field[index], index)
 
 
 classes = (
