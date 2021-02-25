@@ -470,9 +470,13 @@ class Hana3DCommonUploadProps:
                 self.custom_props[name] = ''
 
     def update_preview(self, context=None):
-        """Mark upload preview to be updated by draw calllback"""
-        if self.remote_thumbnail:
-            self.force_preview_reload = True
+        """Mark upload preview to be updated by draw callback.
+
+        Parameters:
+            context: Blender context
+        """
+        if self.force_preview_reload:
+            self.force_preview_reload = False
         if self.thumbnail != '':
             self.has_thumbnail = True
             name = str(uuid.uuid4())
@@ -564,7 +568,8 @@ class Hana3DCommonUploadProps:
 
     force_preview_reload: BoolProperty(
         description="True if upload preview image should be updated",
-        default=True,
+        default=False,
+        update=update_preview,
     )
 
     is_generating_thumbnail: BoolProperty(
