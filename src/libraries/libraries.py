@@ -1,4 +1,5 @@
 """Libraries functions."""
+from contextlib import suppress
 from typing import TYPE_CHECKING, List
 
 import bpy
@@ -21,11 +22,11 @@ def _get_custom_props(props: 'UploadProps', library_id: str):
     return custom_props
 
 
-def get_libraries(props: 'UploadProps'):  # noqa: WPS210
+def get_libraries(props: 'Props'):  # noqa: WPS210
     """Get libraries from asset props.
 
     Parameters:
-        props: Upload Props
+        props: Upload or Search Props
 
     Returns:
         libraries: List[dict]
@@ -40,9 +41,10 @@ def get_libraries(props: 'UploadProps'):  # noqa: WPS210
             'name': library_name,
             'id': library_id,
         })
-        if props.custom_props.keys():
-            custom_props = _get_custom_props(props, library_id)
-            library.update({'metadata': {'view_props': custom_props}})
+        with suppress(AttributeError):
+            if props.custom_props.keys():
+                custom_props = _get_custom_props(props, library_id)
+                library.update({'metadata': {'view_props': custom_props}})
         libraries.append(library)
     return libraries
 
@@ -62,7 +64,7 @@ def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, library: dict, m
         asset_props.custom_props[name] = ''
 
 
-def set_library_props(libraries: List[dict], asset_props: 'UploadProps'):
+def set_library_props(libraries: List[dict], asset_props: 'Props'):
     """Set libraries on asset props.
 
     Parameters:
@@ -73,6 +75,8 @@ def set_library_props(libraries: List[dict], asset_props: 'UploadProps'):
     for asset_library in libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
+        if not hasattr(asset_props, 'custom_props'):    # noqa: WPS421
+            continue
         if 'metadata' in asset_library and asset_library['metadata'] is not None:
             for view_prop in library.metadata['view_props']:
                 _set_view_prop(asset_props, view_prop, library, asset_library['metadata'])
@@ -99,7 +103,7 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
     current_workspace = unified_props.workspace
     previous_libraries = get_libraries(props)
     props.libraries_list.clear()
-    if hasattr(props, 'custom_props'):  # noqa: WPS421
+    with suppress(AttributeError):
         for name in props.custom_props.keys():
             del props.custom_props[name]    # noqa: WPS420
             del props.custom_props_info[name]   # noqa: WPS420
