@@ -5,7 +5,7 @@ import os
 from typing import Dict, List, Tuple
 
 import bpy
-from bpy.props import BoolProperty, StringProperty
+from bpy.props import BoolProperty, IntProperty, StringProperty
 
 from .async_functions import download_thumbnail, search_assets
 from .query import Query
@@ -63,6 +63,13 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         options={'SKIP_SAVE'},
     )
 
+    next_index: IntProperty(  # type: ignore
+        name='Next index',
+        description='Next index to fill with search results',
+        default=0,
+        options={'SKIP_SAVE'},
+    )
+
     @classmethod
     def poll(cls, context):
         """Search poll.
@@ -71,9 +78,11 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             context: Blender context
 
         Returns:
-            bool: can always search
+            bool: only search if no search operation is running
         """
-        return True
+        asset_type = self._get_asset_type_from_ui()
+        search_props = get_search_props(asset_type)
+        return not search_props.is_searching
 
     async def async_execute(self, context):
         """Search async execute.
@@ -104,6 +113,10 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         logging.debug(f'Search options: {str(options)}')
         ui.add_report(text=f'{HANA3D_DESCRIPTION} searching...', timeout=2)
 
+        if search_props.is_searching:
+            return {'FINISHED'}
+        search_props.is_searching = True
+
         try:
             request_data = await search_assets(query, options, ui)
         except Exception:
@@ -123,16 +136,17 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
             if options['get_next']:
                 previous_results = get_search_results(asset_type)
+                self.next_index = len(previous_results)
                 result_field = previous_results + result_field
                 set_search_results(asset_type, result_field)
             else:
+                self.next_index = 0
                 set_search_results(asset_type, result_field)
 
             set_original_search_results(asset_type, request_data)
 
             if len(result_field) < ui_props.scrolloffset:
                 ui_props.scrolloffset = 0
-
             text = f'Found {request_data["count"]} results. '  # noqa #501
             ui.add_report(text=text)
         else:
@@ -312,7 +326,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         asset_type: AssetType,
         result_field: List[AssetData],
     ):
-        index = 0
         for small, large in zip(small_thumbnails, large_thumbnails):
             imgpath, url = small
             imgpath_large, url_large = large
@@ -322,8 +335,9 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 await download_thumbnail(imgpath_large, url_large)
             current_asset_type = self._get_asset_type_from_ui()
             if current_asset_type == asset_type:
-                load_preview(asset_type, result_field[index], index)
-            index += 1
+                load_preview(asset_type, result_field[self.next_index], self.next_index)
+            self.next_index += 1
+
 
 
 classes = (
