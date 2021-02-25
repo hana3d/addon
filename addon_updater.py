@@ -606,8 +606,8 @@ class Singleton_updater(object):
         elif self._prefiltered_tag_count == 0 and self._include_branches is True:
             if not self._error:
                 self._tag_latest = self._tags[0]
-            branch = self._include_branch_list[0] # noqa WPS440
-            logging.debug(f'{branch} branch found, no releases {self._tags[0]}') # noqa WPS441
+            branch = self._include_branch_list[0]  # noqa WPS440
+            logging.debug(f'{branch} branch found, no releases {self._tags[0]}')  # noqa WPS441
         elif (
             (
                 len(self._tags) - len(self._include_branch_list) == 0
@@ -976,7 +976,7 @@ class Singleton_updater(object):
                         continue
                     shutil.rmtree(os.path.join(base, f))
                     logging.info('Clean removing folder and contents {0}'.format(
-                        os.path.join(base, f), # noqa WPS441
+                        os.path.join(base, f),  # noqa WPS441
                     ))
 
             except Exception as err:
@@ -994,9 +994,9 @@ class Singleton_updater(object):
                         try:
                             fl = os.path.join(path, file)
                             os.remove(fl)
-                            logging.debug(f'Pre-removed file {file}') # noqa WPS220
+                            logging.debug(f'Pre-removed file {file}')  # noqa WPS220
                         except OSError:
-                            logging.error(f'Failed to pre-remove {file}') # noqa WPS220
+                            logging.error(f'Failed to pre-remove {file}')  # noqa WPS220
 
         # Walk through the temp addon sub folder for replacements
         # this implements the overwrite rules, which apply after
@@ -1028,7 +1028,7 @@ class Singleton_updater(object):
                         os.rename(srcFile, destFile)
                         logging.debug(f'Overwrote file {os.path.basename(destFile)}')  # noqa WPS220
                     else:
-                        logging.debug( # noqa WPS220
+                        logging.debug(  # noqa WPS220
                             'Pattern not matched to '
                             + os.path.basename(destFile)
                             + ', not overwritten',

@@ -292,21 +292,23 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
                 if rfile['fileType'] != 'thumbnail':
                     continue
 
-                thumb_small_urls.append(small_thumbnail)
-                thumb_full_urls.append(thumbnail)
-
-                if small_thumbnail is not None:
+                if small_thumbnail is None:
+                    thumb_small_urls.append(None)
+                    thumb_small_filepaths.append(None)
+                else:
+                    thumb_small_urls.append(small_thumbnail)
                     imgname = paths.extract_filename_from_url(small_thumbnail)
                     imgpath = os.path.join(tempdir, imgname)
                     thumb_small_filepaths.append(imgpath)
+
+                if thumbnail is None:
+                    thumb_full_urls.append(None)
+                    thumb_full_filepaths.append(None)
                 else:
-                    thumb_small_filepaths.append('')
-                if thumbnail is not None:
+                    thumb_full_urls.append(thumbnail)
                     imgname = paths.extract_filename_from_url(rfile['fileThumbnailLarge'])
                     imgpath = os.path.join(tempdir, imgname)
                     thumb_full_filepaths.append(imgpath)
-                else:
-                    thumb_full_filepaths.append('')
 
         small_thumbnails = zip(thumb_small_filepaths, thumb_small_urls)
         full_thumbnails = zip(thumb_full_filepaths, thumb_full_urls)
@@ -327,9 +329,9 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         for small, large in zip(small_thumbnails, large_thumbnails):
             imgpath, url = small
             imgpath_large, url_large = large
-            if not os.path.exists(imgpath) and url is not None:
+            if imgpath is not None and not os.path.exists(imgpath):
                 await download_thumbnail(imgpath, url)
-            if not os.path.exists(imgpath_large) and url_large is not None:
+            if imgpath_large is not None and not os.path.exists(imgpath_large):
                 await download_thumbnail(imgpath_large, url_large)
             current_asset_type = self._get_asset_type_from_ui()
             if current_asset_type == asset_type:
