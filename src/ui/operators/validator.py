@@ -7,7 +7,7 @@ from bpy.props import IntProperty
 
 from ...unified_props import Unified
 from ...upload.upload import get_upload_props
-from ...validators import BaseValidator
+from ...validators import BaseValidator, Category
 from ...validators.uv_check import uv_checker
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from ....report_tools import execute_wrapper
@@ -48,18 +48,6 @@ class FixOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         description='Index',
     )
 
-    errors = IntProperty(
-        name='Errors',
-        description='Error count',
-        default=0,
-    )
-
-    warnings = IntProperty(
-        name='Warnings',
-        description='Warning count',
-        default=0,
-    )
-
     def execute(self, context):  # noqa: D102
         validator = validators[self.index]
         logging.info(f'Fixing validator {validator.name}')
@@ -81,20 +69,14 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
 
     def invoke(self, context, event):  # noqa: D102
         logging.info('Invoking validator')
-        self.errors = 0
-        self.warnings = 0
         unified_props = Unified(context).props
         logging.info(f'Unified props: {unified_props}')
         unified_props.skip_post_process = False
         for validator in validators:
             validator.run_validation()
             valid, _ = validator.get_validation_result()
-            if not valid:
-                if validator.category == 'WARNING':
-                    self.warnings += 1
-                    unified_props.skip_post_process = True
-                elif validator.category == 'ERROR':
-                    self.errors += 1
+            if not valid and validator.category == Category.warning:
+                unified_props.skip_post_process = True
         return context.window_manager.invoke_props_dialog(self, width=900)  # noqa: WPS432
 
     def _get_asset_type_from_ui(self):
@@ -102,16 +84,28 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
         return uiprops.asset_type_upload
 
     def draw(self, context):  # noqa: D102
+        error_dict = {
+            Category.warning: 0,
+            Category.error: 0,
+        }
+
         for index, validator in enumerate(validators):
             box = self.layout.box()
             self._draw_overview(box, index, validator)
             valid, message = validator.get_validation_result()
             self._draw_report(box, valid, message)
-        if self.errors > 0:
-            self.layout.label(text=f'{self.errors} errors detected, cannot upload.')
+            if not valid:
+                error_dict[validator.category] += 1
+
+        if error_dict[Category.error] > 0:
+            self.layout.label(
+                text=f'{error_dict[Category.error]} errors detected, cannot upload.',
+            )
             return
-        elif self.warnings > 0:
-            self.layout.label(text=f'{self.warnings} warnings detected, conversions will not run.')
+        elif error_dict[Category.warning] > 0:
+            self.layout.label(
+                text=f'{error_dict[Category.error]} warnings detected, conversions will not run.',
+            )
         self._draw_upload_buttons(context)
 
     def _draw_overview(self, box, index: int, validator: BaseValidator):

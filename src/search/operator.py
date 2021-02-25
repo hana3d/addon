@@ -279,10 +279,10 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         tempdir: str,
         request_data: Dict,
     ) -> Tuple[List[Thumbnail], List[Thumbnail]]:
-        thumb_small_urls = []
-        thumb_small_filepaths = []
-        thumb_full_urls = []
-        thumb_full_filepaths = []
+        thumb_small_urls: List = []
+        thumb_small_filepaths: List = []
+        thumb_full_urls: List = []
+        thumb_full_filepaths: List = []
         # END OF PARSING
         for rdata in request_data.get('results', []):
             for rfile in rdata['files']:
