@@ -80,6 +80,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
         Returns:
             bool: only search if no search operation is running
         """
+        # TODO: really check if search is running
         return True
 
     async def async_execute(self, context):
