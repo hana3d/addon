@@ -280,6 +280,7 @@ def draw_callback2d_search(self, context):
     """
     wm = context.window_manager
     ui_props = getattr(wm, HANA3D_UI)
+    asset_type = ui_props.asset_type_search.lower()
 
     hc = (1, 1, 1, 0.07)
     white = (1, 1, 1, 0.2)
@@ -289,7 +290,6 @@ def draw_callback2d_search(self, context):
     # background of asset bar
 
     if not ui_props.dragging:
-        asset_type = ui_props.asset_type_search.lower()
         search_results = search.get_search_results(asset_type)
         len_search = len(search_results)
         original_search_results = search.get_original_search_results()
