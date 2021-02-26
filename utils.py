@@ -134,17 +134,20 @@ def get_active_asset():
     return None
 
 
-def previmg_name(asset_type: AssetType, index: int, fullsize: bool = False):
+def previmg_name(asset_type: AssetType, index: int, fullsize: bool = False) -> str:
     """Get preview image name for asset_type and index.
 
     Parameters:
         asset_type: type of the asset
         index: index of the asset on the asset bar
         fullsize: whether it's a big thumbnail
+
+    Returns:
+        str: image name
     """
     if not fullsize:
         return f'.{HANA3D_NAME}_{asset_type}_preview_{str(index).zfill(2)}'
-    return f'.{HANA3D_NAME}_{asset_type}_preview_full_{str(index).zfill(2)}' 
+    return f'.{HANA3D_NAME}_{asset_type}_preview_full_{str(index).zfill(2)}'
 
 
 def load_prefs():
