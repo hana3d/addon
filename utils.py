@@ -29,6 +29,7 @@ from idprop.types import IDPropertyGroup
 
 from . import paths
 from .config import HANA3D_MATERIALS, HANA3D_NAME, HANA3D_PROFILE, HANA3D_UI
+from .src.asset.asset_type import AssetType
 from .src.ui import colors
 from .src.ui.main import UI
 
@@ -133,11 +134,11 @@ def get_active_asset():
     return None
 
 
-def previmg_name(index, fullsize=False):
+def previmg_name(asset_type: AssetType, index: int, fullsize: bool = False):
     if not fullsize:
-        return f'.{HANA3D_NAME}_preview_' + str(index).zfill(2)
+        return f'.{HANA3D_NAME}_{asset_type}_preview_' + str(index).zfill(2)
     else:
-        return f'.{HANA3D_NAME}_preview_full_' + str(index).zfill(2)
+        return f'.{HANA3D_NAME}_{asset_type}_preview_full_' + str(index).zfill(2)
 
 
 def load_prefs():
