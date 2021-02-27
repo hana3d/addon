@@ -21,7 +21,7 @@ def _get_large_textures(models: List[str]) -> List[str]:
                 for node in mat_slot.material.node_tree.nodes:
                     if node.type == 'TEX_IMAGE':
                         size = node.image.size[0]
-                        if size > 2048 or not ((size & (size - 1) == 0) and size != 0):
+                        if size > MAX_TEXTURE_SIZE or not ((size & (size - 1) == 0) and size != 0):
                             textures.append(node.image)
     return textures
 
@@ -49,7 +49,7 @@ def fix_textures_size(asset_type: AssetType, export_data: dict):
     for texture in large_textures:
         if texture.size[0] != texture.size[1]:
             continue
-        new_size = min(2**int(math.log(texture.size[0], 2)), 2048)
+        new_size = min(2**int(math.log(texture.size[0], 2)), MAX_TEXTURE_SIZE)
         texture.scale(new_size, new_size)
 
 
