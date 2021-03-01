@@ -279,14 +279,11 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
     def search_more(self, asset_type: AssetType):
         """Search more results."""
-        logging.debug('Trying to search MORE')
         original_search_results = search.get_original_search_results(asset_type)
-        logging.debug(original_search_results)
         if original_search_results is not None and original_search_results.get('next') is not None:
             len_search = len(search.get_search_results())
             image_name = utils.previmg_name(asset_type, len_search - 1)
             img = bpy.data.images.get(image_name)
-            logging.debug(len_search, img)
             if img:
                 logging.debug(f'{image_name} has already loaded, will continue search')
                 search.run_operator(get_next=True)
