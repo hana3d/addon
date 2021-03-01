@@ -401,7 +401,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         if ui_props.scrolloffset > len_search:
             ui_props.scrolloffset = 0
         elif len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
-            asset_type = ui_props.asset_type_search
+            asset_type = ui_props.asset_type_search.lower()
             self.search_more(asset_type)
         if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'TRACKPADPAN'}:
             # scrolling
