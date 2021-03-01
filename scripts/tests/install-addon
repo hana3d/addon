@@ -4,6 +4,5 @@ set -eux
 
 echo "BLENDER_VERSION=$BLENDER_VERSION"
 export BLENDER_SCRIPTS_PATH="/opt/blender/$BLENDER_VERSION/scripts"
-export BLENDER="/opt/blender/$BLENDER_VERSION/blender"
 
 make clean build install

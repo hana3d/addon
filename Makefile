@@ -58,7 +58,7 @@ unit-test: ## test code
 
 
 integration-test: ## test code
-	HANA3D_ENV=$(STAGE) blender -b -P tests/install.py -noaudio
+	HANA3D_ENV=$(STAGE) $(BLENDER) -b -P tests/install.py -noaudio
 
 
 clean: ## clean blender Hana3D addons
