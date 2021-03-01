@@ -90,5 +90,5 @@ textures_size = BaseValidator(
     Category.error,
     description,
     check_textures_size,
-    fix_textures_size
+    fix_textures_size,
 )
