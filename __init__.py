@@ -51,7 +51,7 @@ from .src.ui.operators import render_image
 bl_info = {
     'name': 'Hana3D',
     'author': 'Vilem Duha, Petr Dlouhy, R2U',
-    'version': (1, 0, 0),
+    'version': (1, 1, 0),
     'blender': (2, 91, 0),
     'location': 'View3D > Properties > Hana3D',
     'description': 'Online Hana3D library (materials, models, scenes and more). Connects to the internet.',  # noqa: E501
@@ -79,6 +79,19 @@ def scene_load(context):
     if not application.background():
         if not bpy.app.timers.is_registered(authentication.refresh_token_timer):
             bpy.app.timers.register(authentication.refresh_token_timer)
+
+
+@ persistent
+def thumbnail_load(context):
+    """Force thumbnails to load when opening a scene.
+
+    Parameters:
+        context: Blender context
+    """
+    for scene_obj in bpy.data.objects:
+        props = getattr(scene_obj, HANA3D_NAME)
+        if props.thumbnail != '':
+            props.force_preview_reload = True
 
 
 @ bpy.app.handlers.persistent
@@ -339,6 +352,7 @@ def register():
 
     bpy.app.timers.register(check_timers_timer, persistent=True)
     bpy.app.handlers.load_post.append(scene_load)
+    bpy.app.handlers.load_post.append(thumbnail_load)
 
 
 def unregister():
@@ -346,6 +360,7 @@ def unregister():
         module.unregister()
 
     bpy.app.timers.unregister(check_timers_timer)
+    bpy.app.handlers.load_post.remove(thumbnail_load)
     bpy.app.handlers.load_post.remove(scene_load)
     bpy.utils.unregister_class(Hana3DAddonPreferences)
     addon_updater_ops.unregister()

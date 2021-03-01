@@ -86,14 +86,13 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
     if search_result is None:
         return
 
-    logging.debug('Loading preview')
     if search_result.thumbnail_small == '':
         logging.debug('No small thumbnail, will load placeholder')
-        load_placeholder_thumbnail(index, search_result.id)
+        load_placeholder_thumbnail(asset_type, index, search_result.id)
         return
 
     thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
-    image_name = utils.previmg_name(index)
+    image_name = utils.previmg_name(asset_type, index)
     logging.debug(f'Loading {image_name} in {thumbnail_path}')
 
     if os.path.exists(thumbnail_path):  # sometimes we are unlucky...
@@ -112,23 +111,24 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
         logging.error('No thumbnail')
 
 
-def load_placeholder_thumbnail(index: int, asset_id: str):
+def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str):
     """Load placeholder thumbnail for assets without one.
 
     Parameters:
+        asset_type: asset type
         index: index number of the asset in search results
         asset_id: asset id
     """
     placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
 
     img = bpy.data.images.load(placeholder_path)
-    img.name = utils.previmg_name(index)
+    img.name = utils.previmg_name(asset_type, index)
 
     hidden_img = bpy.data.images.load(placeholder_path)
     hidden_img.name = f'.{asset_id}'
 
     fullsize_img = bpy.data.images.load(placeholder_path)
-    fullsize_img.name = utils.previmg_name(index, fullsize=True)
+    fullsize_img.name = utils.previmg_name(asset_type, index, fullsize=True)
 
 
 def get_search_results(asset_type: AssetType = None) -> List[AssetData]:
@@ -206,7 +206,6 @@ def run_operator(get_next=False):
     """
     search_props = get_search_props()
     if not search_props.is_searching:
-        search_props.is_searching = True
         logging.debug(f'Running search operator with get_next = {get_next}')
         search_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_search')
         search_op(get_next=get_next)

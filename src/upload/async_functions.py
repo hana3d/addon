@@ -36,7 +36,6 @@ async def create_asset(
 
     Returns:
         str: Asset ID
-        {'CANCELLED'} if it fails
     """
     ui.add_report(text='Uploading metadata')
     request = Request()
@@ -44,39 +43,27 @@ async def create_asset(
 
     if asset_id == '':
         url = paths.get_api_url('assets')
-        try:
-            headers = request.get_headers(include_id_token=True)
-            response = await request.post(
-                url,
-                json=upload_data,
-                headers=headers,
-            )
-            ui.add_report(text='Uploaded metadata')
+        headers = request.get_headers(include_id_token=True)
+        response = await request.post(
+            url,
+            json=upload_data,
+            headers=headers,
+        )
+        ui.add_report(text='Uploaded metadata')
 
-            dict_response = response.json()
-            logging.debug(dict_response)
-            return dict_response['id']
-        except requests.exceptions.RequestException as error:
-            logging.error(error)
-            ui.add_report(text=str(error))
-            props.uploading = False
-            return {'CANCELLED'}
+        dict_response = response.json()
+        logging.debug(dict_response)
+        return dict_response['id']
     else:
         url = paths.get_api_url('assets', asset_id)
-        try:
-            headers = request.get_headers(include_id_token=True)
-            await request.put(
-                url,
-                json=upload_data,
-                headers=headers,
-            )
-            ui.add_report(text='Uploaded metadata')
-            return asset_id
-        except requests.exceptions.RequestException as err:
-            logging.error(err)
-            ui.add_report(text=str(err))
-            props.uploading = False
-            return {'CANCELLED'}
+        headers = request.get_headers(include_id_token=True)
+        await request.put(
+            url,
+            json=upload_data,
+            headers=headers,
+        )
+        ui.add_report(text='Uploaded metadata')
+        return asset_id
 
 
 async def create_blend_file(
@@ -97,7 +84,6 @@ async def create_blend_file(
 
     Returns:
         Subprocess output
-        {'CANCELLED'} if it fails
     """
     ui.add_report(text='Creating upload file')
     binary_path = bpy.app.binary_path
@@ -261,9 +247,6 @@ async def finish_asset_creation(
         ui: UI object
         correlation_id: Correlation ID
         asset_id: Asset ID
-
-    Returns:
-        {'CANCELLED'} if it fails
     """
     request = Request()
 
@@ -272,10 +255,4 @@ async def finish_asset_creation(
     url = paths.get_api_url('assets', asset_id)
     headers = request.get_headers(correlation_id)
 
-    try:
-        await request.patch(url, json=confirm_data, headers=headers)
-    except requests.exceptions.RequestException as error:
-        logging.error(error)
-        ui.add_report(text=str(error))
-        props.uploading = False
-        return {'CANCELLED'}
+    await request.patch(url, json=confirm_data, headers=headers)

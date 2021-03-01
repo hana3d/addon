@@ -16,8 +16,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
     bl_idname = f'VIEW3D_PT_{HANA3D_NAME}_upload'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = f'Upload Assets to {HANA3D_DESCRIPTION}'
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label = f'Manage Assets in {HANA3D_DESCRIPTION}'
 
     @classmethod
     def poll(cls, context):  # noqa: D102
@@ -106,12 +105,20 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
 
         row = layout.row()
         row.scale_y = 2.0
-        optext = 'Edit Asset Info'
+        optext = 'Update Asset Info'
         row.operator(f'object.{HANA3D_NAME}_edit', text=optext, icon='INFO')
 
         row = layout.row()
         optext = 'Delete Asset'
         row.operator(f'object.{HANA3D_NAME}_delete', text=optext, icon='CANCEL')
+
+        row = layout.row()
+        row.scale_y = 2.0
+        row.enabled = props.asset_index >= 0
+        optext = 'Download to Scene'
+        op = row.operator(f'scene.{HANA3D_NAME}_download', text=optext, icon='IMPORT')
+        op.asset_index = props.asset_index
+        op.asset_type = props.asset_type
 
     def _draw_workspace(
         self,

@@ -228,8 +228,9 @@ def draw_tooltip(   # noqa: WPS211
         bgl_helper.draw_text(author_line, xtext, ytext, fsize, tcol)
 
 
-def _load_tooltip_thumbnail(search_result, active_index):
-    image_name = utils.previmg_name(active_index, fullsize=True)
+def _load_tooltip_thumbnail(search_result: search.AssetData, active_index: int):
+    asset_type = search_result.asset_type
+    image_name = utils.previmg_name(asset_type, active_index, fullsize=True)
     directory = paths.get_temp_dir(f'{search_result.asset_type}_search')
     thumbnail_path = os.path.join(directory, search_result.thumbnail)
 
@@ -247,7 +248,7 @@ def _load_tooltip_thumbnail(search_result, active_index):
                 img.reload()
                 img.name = image_name
         else:
-            image_name = utils.previmg_name(active_index)
+            image_name = utils.previmg_name(asset_type, active_index)
             img = bpy.data.images.get(image_name)
         img.colorspace_settings.name = 'Linear'
 
@@ -279,6 +280,7 @@ def draw_callback2d_search(self, context):
     """
     wm = context.window_manager
     ui_props = getattr(wm, HANA3D_UI)
+    asset_type = ui_props.asset_type_search.lower()
 
     hc = (1, 1, 1, 0.07)
     white = (1, 1, 1, 0.2)
@@ -288,7 +290,6 @@ def draw_callback2d_search(self, context):
     # background of asset bar
 
     if not ui_props.dragging:
-        asset_type = ui_props.asset_type_search.lower()
         search_results = search.get_search_results(asset_type)
         len_search = len(search_results)
         original_search_results = search.get_original_search_results()
@@ -392,7 +393,7 @@ def draw_callback2d_search(self, context):
                 )
 
                 index = column + ui_props.scrolloffset + row * ui_props.wcount
-                iname = utils.previmg_name(index)
+                iname = utils.previmg_name(asset_type, index)
                 img = bpy.data.images.get(iname)
 
                 max_size = max(img.size[0], img.size[1])
@@ -453,7 +454,7 @@ def draw_callback2d_search(self, context):
 
     elif ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):
         if ui_props.active_index > -1:
-            iname = utils.previmg_name(ui_props.active_index)
+            iname = utils.previmg_name(asset_type, ui_props.active_index)
             img = bpy.data.images.get(iname)
             linelength = 35
             bgl_helper.draw_image(

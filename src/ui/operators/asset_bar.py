@@ -10,6 +10,7 @@ from mathutils import Vector
 
 from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
 from ..main import UI
+from ...asset.asset_type import AssetType
 from ...edit_asset.edit import set_edit_props
 from ...preferences.preferences import Preferences
 from ...search import search
@@ -276,11 +277,16 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
     def description(cls, context, properties):  # noqa: D102
         return properties.tooltip
 
-    def search_more(self):
+    def search_more(self, asset_type: AssetType):
         """Search more results."""
         original_search_results = search.get_original_search_results()
         if original_search_results is not None and original_search_results.get('next') is not None:
-            search.run_operator(get_next=True)
+            len_search = len(search.get_search_results())
+            image_name = utils.previmg_name(asset_type, len_search - 1)
+            img = bpy.data.images.get(image_name)
+            if img:
+                logging.debug(f'{image_name} has already loaded, will continue search')
+                search.run_operator(get_next=True)
 
     def exit_modal(self):
         """Exit modal."""
@@ -392,8 +398,11 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         if search_results is None:
             return {'PASS_THROUGH'}
         len_search = len(search_results)
-        if len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
-            self.search_more()
+        if ui_props.scrolloffset > len_search:
+            ui_props.scrolloffset = 0
+        elif len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
+            asset_type = ui_props.asset_type_search
+            self.search_more(asset_type)
         if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'TRACKPADPAN'}:
             # scrolling
             mx = event.mouse_region_x
@@ -419,7 +428,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 else:
                     ui_props.scrolloffset += 1
                 if len_search - ui_props.scrolloffset < ui_props.total_count:
-                    ui_props.scrolloffset = len_seach - ui_props.total_count
+                    ui_props.scrolloffset = len_search - ui_props.total_count
 
             if event.type == 'WHEELUPMOUSE' and ui_props.scrolloffset > 0:  # noqa: WPS204
                 if ui_props.hcount > 1:
@@ -611,7 +620,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                             target_object = obj_hit.name
                             # create final mesh to extract correct material slot
                             depsgraph = bpy.context.evaluated_depsgraph_get()
-                            object_eval = object.evaluated_get(depsgraph)
+                            object_eval = obj_hit.evaluated_get(depsgraph)
                             temp_mesh = object_eval.to_mesh()
                             target_slot = temp_mesh.polygons[face_index].material_index
                             object_eval.to_mesh_clear()
@@ -687,6 +696,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props = getattr(context.window_manager, HANA3D_UI)
 
         if self.do_search:
+            ui_props.scrolloffset = 0
             search.run_operator()
 
         if ui_props.assetbar_on:

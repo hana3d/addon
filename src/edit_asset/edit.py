@@ -37,7 +37,8 @@ def set_edit_props(asset_index: int):
     asset_props.name = asset_data.name
     asset_props.tags = ','.join(asset_data.tags)
     asset_props.description = asset_data.description
-    asset_props.asset_type = asset_data.asset_type
+    asset_props.asset_type = asset_data.asset_type.upper()
+    asset_props.asset_index = asset_index
 
     update_tags_list(asset_props, bpy.context)
     for tag in asset_data.tags:

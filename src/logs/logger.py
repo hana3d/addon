@@ -5,7 +5,6 @@ import os
 import re
 from logging.handlers import RotatingFileHandler
 from os.path import expanduser
-from typing import Tuple
 
 import bpy
 
@@ -37,7 +36,7 @@ def get_report_file() -> str:
     return os.path.join(dir_path, f'{HANA3D_NAME}_report.log')
 
 
-def setup_logger(): # noqa WPS210,WPS213
+def setup_logger():  # noqa WPS210,WPS213
     """Logger setup."""
     log_level = HANA3D_LOG_LEVEL
     logger = logging.getLogger('')
@@ -46,7 +45,7 @@ def setup_logger(): # noqa WPS210,WPS213
     log_file_path = get_log_file()
     report_file_path = get_report_file()
 
-    report_file_handler = logging.FileHandler(report_file_path, mode='w')
+    report_file_handler = logging.FileHandler(report_file_path, mode='w', encoding='utf-8')
     report_file_handler.setLevel(logging.DEBUG)
 
     log_file_handler = RotatingFileHandler(
@@ -54,6 +53,7 @@ def setup_logger(): # noqa WPS210,WPS213
         mode='a',
         maxBytes=5 * 1024 * 1024,
         backupCount=2,
+        encoding='utf-8',
     )
     log_file_handler.setLevel(logging.DEBUG)
 
@@ -63,7 +63,7 @@ def setup_logger(): # noqa WPS210,WPS213
     blender_handler = BlenderHandler()
     blender_handler.setLevel(log_level)
 
-    log_format = '[%(asctime)s] %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s' # noqa WPS323
+    log_format = '[%(asctime)s] %(name)s (%(filename)s:%(lineno)s) %(levelname)s: %(message)s'  # noqa WPS323
     formatter = logging.Formatter(log_format)
     log_file_handler.setFormatter(formatter)
     report_file_handler.setFormatter(formatter)
@@ -98,8 +98,8 @@ class BlenderHandler(logging.StreamHandler):
                 stage = re.match(r'.*(hana3d_.*)\\.*', record.pathname)
                 hana = getattr(bpy.ops, stage.groups(0)[0])
                 hana.log_info(text=f'{level}: {text}')
-        except Exception: # noqa S110
-            pass # noqa WPS420
+        except Exception:  # noqa S110
+            pass  # noqa WPS420
 
 
 class AppendInfo(bpy.types.Operator):
@@ -130,7 +130,7 @@ class AppendInfo(bpy.types.Operator):
             state: blender state
         """
         # noqa E800 self.report({self.level}, self.text)
-        pass # noqa S110
+        pass  # noqa S110
         return {'FINISHED'}
 
 
