@@ -1,6 +1,6 @@
 """UV Check Validator."""
-from contextlib import suppress
 import logging
+from contextlib import suppress
 from typing import List, Tuple
 
 import bpy
@@ -13,11 +13,11 @@ def _get_rectangular_textures(models: List[str]) -> List[str]:
     textures = []
     for model in models:
         with suppress(AttributeError):
-            for mat_slot in model.material_slots:
+            for mat_slot in bpy.data.objects[model].material_slots:
                 for node in mat_slot.material.node_tree.nodes:
                     if node.type == 'TEX_IMAGE':
                         if node.image.size[0] != node.image.size[1]:
-                            textures.append(node.image)
+                            textures.append(node.image.name)
     return textures
 
 
@@ -57,4 +57,4 @@ def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[b
 
 name = 'Square Textures'
 description = 'Checks for textures dimension'
-uv_checker = BaseValidator(name, Category.error, description, check_texture_dimension)
+square_textures = BaseValidator(name, Category.error, description, check_texture_dimension)
