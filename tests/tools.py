@@ -43,12 +43,12 @@ class LoadModule(object):
             sys.stderr.write('There was an error when running the script:\n')
             sys.stederr.write(traceback.format_exc())
 
-    def get_paths(self):
+    def get_paths(self) -> Tuple[list, list]:
         """Find all the python paths surrounding the given filepath.
 
         Returns:
-            paths: dunno
-            filepaths: idk
+            paths: list of directory paths
+            filepaths: list of file paths
         """
         dirname = os.path.dirname(self.filepath)
 

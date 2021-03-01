@@ -5,7 +5,6 @@ import sys
 import unittest
 
 import tools
-from validation import uv_check  # noqa: E402
 
 tests_dir = os.path.dirname(__file__)
 addon_dir = os.path.dirname(tests_dir)
@@ -13,6 +12,8 @@ addon_dir = os.path.dirname(tests_dir)
 sys.path.insert(0, tests_dir)
 sys.path.insert(0, addon_dir)
 
+
+from validation import uv_check  # noqa: E402  #isort:skip
 
 if __name__ == '__main__':
     # Load the addon module
