@@ -1,7 +1,7 @@
 """Upload validation module."""
 import logging
 from enum import Enum
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 from ..asset.asset_type import AssetType
 from ..ui import colors
@@ -48,8 +48,8 @@ class BaseValidator(object):
     category: Category
     description: str
     validation_result: Tuple[bool, str]
-    validation_function: Callable[[dict], Tuple[bool, str]]
-    fix_function: Callable[[dict], None]
+    validation_function: Callable[[AssetType, dict], Tuple[bool, str]]
+    fix_function: Callable[[AssetType, dict], None]
 
     def __init__(  # noqa: WPS211
         self,
@@ -83,19 +83,23 @@ class BaseValidator(object):
         """
         return self.validation_result
 
-    def run_validation(self):
+    def run_validation(self, export_data: Optional[dict] = None):
         """Run checks for this validator."""
         props = get_upload_props()
-        export_data, _ = get_export_data(props)
+        if not export_data:
+            export_data, _ = get_export_data(props)
+        asset_type = export_data['type'].lower()
         logging.info(f'Export data: {export_data}')
-        self.validation_result = self.validation_function(props.asset_type.lower(), export_data)
+        self.validation_result = self.validation_function(asset_type, export_data)  # type: ignore
 
-    def run_fix(self):
+    def run_fix(self, export_data: Optional[dict] = None):
         """Run fix function for this validator."""
         props = get_upload_props()
-        export_data, _ = get_export_data(props)
+        if not export_data:
+            export_data, _ = get_export_data(props)
+        asset_type = export_data['type'].lower()
         logging.info(f'Export data: {export_data}')
-        self.fix_function(props.asset_type.lower(), export_data)
+        self.fix_function(asset_type, export_data)  # type: ignore
         self.run_validation()
         if not self.validation_result[0]:
             ui = UI()

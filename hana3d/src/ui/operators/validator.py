@@ -1,6 +1,6 @@
 """Shows validation panel before upload."""
 import logging
-from typing import Tuple
+from typing import List
 
 import bpy
 from bpy.props import IntProperty
@@ -14,11 +14,11 @@ from ...validators.uv_check import uv_checker
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from ....report_tools import execute_wrapper
 
-validators: Tuple[BaseValidator] = (
+validators: List[BaseValidator] = [
     square_textures,
     textures_size,
     uv_checker,
-)
+]
 
 
 class IgnoreOperator(bpy.types.Operator):

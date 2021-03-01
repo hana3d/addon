@@ -1,4 +1,6 @@
 """Auxiliary data manipulation functions."""
+from typing import Tuple
+
 import bpy
 
 from ..libraries.libraries import get_libraries
@@ -7,7 +9,7 @@ from ..unified_props import Unified
 from ... import hana3d_types, utils
 
 
-def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210
+def get_export_data(props: hana3d_types.UploadProps) -> Tuple[dict, dict]:  # noqa: WPS210
     """Get required data from Blender for upload.
 
     Arguments:
@@ -57,7 +59,7 @@ def get_export_data(props: hana3d_types.UploadProps):  # noqa: WPS210
     return export_data, upload_data
 
 
-def _get_model_data(export_data: dict, props: hana3d_types.UploadProps):  # noqa: WPS210
+def _get_model_data(export_data: dict, props: hana3d_types.UploadProps) -> Tuple[dict, dict]:
     mainmodel = utils.get_active_model(bpy.context)
 
     obs = utils.get_hierarchy(mainmodel)
@@ -101,7 +103,7 @@ def _get_material_data(export_data: dict):
     return upload_data, upload_params
 
 
-def _get_scene_data(export_data: dict):
+def _get_scene_data(export_data: dict) -> Tuple[dict, dict]:
     name = bpy.context.scene.name
 
     export_data['type'] = 'SCENE'

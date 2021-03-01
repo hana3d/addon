@@ -10,3 +10,4 @@ __pycache__
 hana3d_updater_status.json
 *.zip
 hana3d_*/
+*.blend1
