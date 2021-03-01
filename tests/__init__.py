@@ -14,8 +14,6 @@ sys.path.insert(0, tests_dir)
 sys.path.insert(0, addon_dir)
 
 
-
-
 if __name__ == '__main__':
     # Load the addon module
     tools.LoadModule(os.path.join(addon_dir, '__init__.py'))

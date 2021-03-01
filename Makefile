@@ -29,7 +29,7 @@ BLENDER_SCRIPTS_PATH ?= $(shell dirname $(shell readlink -f $(shell which blende
 STAGE ?= production
 HANA3D_DESCRIPTION=$(shell sed -e 's/HANA3D_DESCRIPTION: \(.*\)/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).yml)
 HANA3D_NAME=$(shell sed -e 's/HANA3D_NAME: \(.*\)/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).yml)
-BLENDER=/home/papu/Downloads/blender/blender-2.91.0-linux64/blender
+BLENDER ?= $(shell dirname $(shell readlink -f $(shell which blender)))/blender
 
 ###################################################################################################
 ## GENERAL COMMANDS
