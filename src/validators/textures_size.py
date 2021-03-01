@@ -12,16 +12,22 @@ from ..asset.asset_type import AssetType
 MAX_TEXTURE_SIZE = 2048
 
 
+def _check_node_for_wrong_texture(node: bpy.types.Node):
+    if node.type == 'TEX_IMAGE':
+        size = node.image.size[0]
+        if size > MAX_TEXTURE_SIZE or not ((size & (size - 1) == 0) and size != 0):
+            return True
+    return False
+
+
 def _get_large_textures(models: List[str]) -> List[str]:
     textures = []
     for model in models:
         with suppress(AttributeError):
             for mat_slot in bpy.data.objects[model].material_slots:
                 for node in mat_slot.material.node_tree.nodes:
-                    if node.type == 'TEX_IMAGE':
-                        size = node.image.size[0]
-                        if size > MAX_TEXTURE_SIZE or not ((size & (size - 1) == 0) and size != 0):
-                            textures.append(node.image.name)
+                    if _check_node_for_wrong_texture(node):
+                        textures.append(node.image.name)    # noqa: WPS220
     return textures
 
 
@@ -79,5 +85,10 @@ def check_textures_size(asset_type: AssetType, export_data: dict) -> Tuple[bool,
 
 name = 'Textures Size'
 description = 'Checks for textures size'
-textures_size = BaseValidator(name, Category.error, description,
-                              check_textures_size, fix_textures_size)
+textures_size = BaseValidator(
+    name,
+    Category.error,
+    description,
+    check_textures_size,
+    fix_textures_size
+)

@@ -15,9 +15,8 @@ def _get_rectangular_textures(models: List[str]) -> List[str]:
         with suppress(AttributeError):
             for mat_slot in bpy.data.objects[model].material_slots:
                 for node in mat_slot.material.node_tree.nodes:
-                    if node.type == 'TEX_IMAGE':
-                        if node.image.size[0] != node.image.size[1]:
-                            textures.append(node.image.name)
+                    if node.type == 'TEX_IMAGE' and node.image.size[0] != node.image.size[1]:
+                        textures.append(node.image.name)
     return textures
 
 
