@@ -12,10 +12,14 @@ from ..asset.asset_type import AssetType
 MAX_TEXTURE_SIZE = 2048
 
 
+def _check_potency_of_two(number: int):
+    return ((number & (number - 1) == 0) and number != 0)
+
+
 def _check_node_for_wrong_texture(node: bpy.types.Node):
     if node.type == 'TEX_IMAGE':
         size = node.image.size[0]
-        if size > MAX_TEXTURE_SIZE or not ((size & (size - 1) == 0) and size != 0):
+        if size > MAX_TEXTURE_SIZE or not _check_potency_of_two(size):
             return True
     return False
 
@@ -60,7 +64,7 @@ def fix_textures_size(asset_type: AssetType, export_data: dict):
 
 
 def check_textures_size(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
-    """Check if textures sizes are potency of 2 and below 2048.
+    """Check if textures sizes are potency of 2 and below or equal to 2048.
 
     Parameters:
         asset_type: type of asset that will be uploaded
@@ -71,7 +75,7 @@ def check_textures_size(asset_type: AssetType, export_data: dict) -> Tuple[bool,
     """
     logging.info('Running Texture Size Check...')
     is_valid = True
-    message = 'All textures sizes are potency of 2 and below 2048!'
+    message = 'All textures sizes are potency of 2 and below or equal to 2048!'
 
     models = _get_object_list(asset_type, export_data)
     large_textures = _get_large_textures(models)
