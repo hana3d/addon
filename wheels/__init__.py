@@ -59,5 +59,4 @@ def wheel_filename(fname_prefix: str) -> str:
 
 def load_wheels():
     """Load required wheels."""
-    load_wheel('bugsnag', 'bugsnag')
     load_wheel('sentry_sdk', 'sentry_sdk')
