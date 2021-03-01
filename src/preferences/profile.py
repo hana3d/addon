@@ -1,10 +1,8 @@
 """Hana3D Profile."""
 import logging
-from pathlib import Path
 
 import bpy
 
-import bugsnag
 import sentry_sdk
 
 from ..libraries.libraries import update_libraries_list
@@ -13,18 +11,6 @@ from ..search.search import get_search_props
 from ..tags.tags import update_tags_list
 from ..upload.upload import get_upload_props
 from ... import config, paths
-
-
-def configure_bugsnag(api_key: str):
-    """Configure bugsnag.
-
-    Arguments:
-        api_key: str
-    """
-    bugsnag.configure(
-        api_key=api_key,
-        project_root=Path(__file__).parent.parent.parent,
-    )
 
 
 def configure_sentry(url: str):
@@ -75,5 +61,4 @@ class Profile(object):
         update_libraries_list(upload_props, bpy.context)
         update_tags_list(upload_props, bpy.context)
 
-        configure_bugsnag(window_manager[config.HANA3D_PROFILE]['user']['bugsnag_key'])
         configure_sentry(window_manager[config.HANA3D_PROFILE]['user']['sentry_url'])

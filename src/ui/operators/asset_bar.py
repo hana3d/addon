@@ -10,6 +10,7 @@ from mathutils import Vector
 
 from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
 from ..main import UI
+from ...asset.asset_type import AssetType
 from ...edit_asset.edit import set_edit_props
 from ...preferences.preferences import Preferences
 from ...search import search
@@ -276,12 +277,12 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
     def description(cls, context, properties):  # noqa: D102
         return properties.tooltip
 
-    def search_more(self):
+    def search_more(self, asset_type: AssetType):
         """Search more results."""
         original_search_results = search.get_original_search_results()
         if original_search_results is not None and original_search_results.get('next') is not None:
             len_search = len(search.get_search_results())
-            image_name = utils.previmg_name(len_search - 1)
+            image_name = utils.previmg_name(asset_type, len_search - 1)
             img = bpy.data.images.get(image_name)
             if img:
                 logging.debug(f'{image_name} has already loaded, will continue search')
@@ -400,7 +401,8 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         if ui_props.scrolloffset > len_search:
             ui_props.scrolloffset = 0
         elif len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
-            self.search_more()
+            asset_type = ui_props.asset_type_search
+            self.search_more(asset_type)
         if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'TRACKPADPAN'}:
             # scrolling
             mx = event.mouse_region_x
