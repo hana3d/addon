@@ -279,7 +279,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
     def search_more(self, asset_type: AssetType):
         """Search more results."""
-        original_search_results = search.get_original_search_results()
+        original_search_results = search.get_original_search_results(asset_type)
         if original_search_results is not None and original_search_results.get('next') is not None:
             len_search = len(search.get_search_results())
             image_name = utils.previmg_name(asset_type, len_search - 1)
@@ -401,7 +401,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         if ui_props.scrolloffset > len_search:
             ui_props.scrolloffset = 0
         elif len_search - ui_props.scrolloffset < ui_props.total_count + 10:  # noqa: WPS221,WPS204
-            asset_type = ui_props.asset_type_search
+            asset_type = ui_props.asset_type_search.lower()
             self.search_more(asset_type)
         if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'TRACKPADPAN'}:
             # scrolling
