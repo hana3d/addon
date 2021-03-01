@@ -677,6 +677,12 @@ class Hana3DCommonUploadProps:
         type=PropertyGroup
     )
 
+    skip_post_process: BoolProperty(
+        name='Skip post process',
+        default=False,
+        description='Whether conversions should be skipped',
+    )
+
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     automap: BoolProperty(

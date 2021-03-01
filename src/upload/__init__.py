@@ -140,7 +140,9 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
             files = self._get_files_info(upload_set, export_data, tempdir, filename)
 
-            uploaded = await self._upload_files(files, correlation_id, upload_data, export_data)
+            uploaded = await self._upload_files(
+                context, files, correlation_id, upload_data, export_data, props,
+            )
             if not uploaded:
                 props.uploading = False
                 return {'CANCELLED'}
@@ -233,25 +235,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
 
         return datafile
 
-    def _check_uv_layers(self, ui: UI, export_data: dict) -> str:
-        skip_post_process = 'false'
-        multiple_uv_models = [
-            model for model in export_data.get('models', [])
-            if (
-                bpy.data.objects[model].data is not None
-                and 'uv_layers' in bpy.data.objects[model].data
-                and len(bpy.data.objects[model].data.uv_layers) > 1  # noqa: WPS219
-            )
-        ]
-        if multiple_uv_models:
-            ui.add_report(
-                'GLB and USDZ will not be generated: at least 1 mesh has more than 1 UV Map',
-            )
-            ui.add_report(f'Meshes with more than 1 UV Map: {", ".join(multiple_uv_models)}')
-            skip_post_process = 'true'
-
-        return skip_post_process
-
     def _get_files_info(
         self,
         upload_set: List[str],
@@ -280,7 +263,15 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             )
         return files
 
-    async def _upload_files(self, files, correlation_id, upload_data, export_data):
+    async def _upload_files(  # noqa: WPS211
+        self,
+        context,
+        files: list,
+        correlation_id: str,
+        upload_data: dict,
+        export_data: dict,
+        props: hana3d_types.UploadProps,
+    ):
         ui = UI()
         upload = {}
         try:
@@ -290,7 +281,7 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                 if not uploaded:
                     raise Exception('Failed to send file')
                 if file_info['type'] == 'blend':
-                    skip_post_process = self._check_uv_layers(ui, export_data)
+                    skip_post_process = props.skip_post_process
                     await confirm_upload(correlation_id, upload['id'], skip_post_process)
             return True
         except Exception as err:

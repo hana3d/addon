@@ -63,30 +63,10 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
 
         row = layout.row()
         row.scale_y = 2.0
-        if props.view_id == '' or unified_props.workspace != props.view_workspace:
-            optext = f'Upload {asset_type.lower()}'
-            op = row.operator(f'object.{HANA3D_NAME}_upload', text=optext, icon='EXPORT')
-            op.asset_type = asset_type
-
+        row.operator(f'message.{HANA3D_NAME}_validation_panel', text='Validate & upload')
         if props.view_id != '' and unified_props.workspace == props.view_workspace:
-            op = row.operator(
-                f'object.{HANA3D_NAME}_upload',
-                text='Upload as New Version',
-                icon='RECOVER_LAST',
-            )
-            op.asset_type = asset_type
-            op.reupload = True
+            layout.label(text='Asset has a version online.')
 
-            row = layout.row()
-            op = row.operator(
-                f'object.{HANA3D_NAME}_upload',
-                text='Upload as New Asset',
-                icon='PLUS',
-            )
-            op.asset_type = asset_type
-            op.reupload = False
-
-            layout.label(text='asset has a version online.')
 
     def _edit_asset(self, context, layout, unified_props, asset_type):
         props = edit.get_edit_props()

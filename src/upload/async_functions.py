@@ -205,7 +205,7 @@ async def cancel_upload(   # noqa: WPS210
 async def confirm_upload(   # noqa: WPS210
     correlation_id: str,
     upload_id: str,
-    skip_post_process: str,
+    skip_post_process: bool,
 ):
     """Confirm upload to backend.
 
