@@ -27,7 +27,7 @@ async def send_logs(ui: UI, correlation_id: str, issue_key: str, filepath: str):
     headers = request.get_headers(correlation_id)
 
     try:
-        with open(filepath, 'rb') as log_file:
+        with open(filepath, 'r') as log_file:
             file_content = log_file.read()
             request_data = {
                 'data': str(file_content),
