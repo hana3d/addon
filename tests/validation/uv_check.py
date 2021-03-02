@@ -15,7 +15,7 @@ class TestUVCheck(unittest.TestCase):  # noqa: D101
     def test_correct_model(self):
         """Test validation function on correct model."""
         export_data = {
-            'models': ['Cube'],
+            'models': ['Torus'],
             'type': 'MODEL',
         }
         expected_result = (True, 'No duplicated UVs detected!')
