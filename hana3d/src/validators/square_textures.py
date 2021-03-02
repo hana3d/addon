@@ -31,7 +31,8 @@ def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
         scene = bpy.data.scenes[scene_name]
         return _get_rectangular_textures(scene.objects.keys())
     elif asset_type == AssetType.material:
-        node = bpy.data.materials[export_data['material']].node_tree.nodes['Image Texture']
+        material = bpy.data.materials[export_data.get('material')]
+        node = material.node_tree.nodes['Image Texture']
         if _check_rectangular_image(node):
             return [node.image.name]
 

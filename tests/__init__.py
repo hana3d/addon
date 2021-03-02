@@ -34,7 +34,7 @@ if __name__ == '__main__':
     runner = unittest.TextTestRunner(verbosity=0)
     runner.run(suite)
 
-    print('All tests have passed')
-    
+    print('All tests have passed')  # noqa: WPS421
+
     # close blender process
     sys.exit()
