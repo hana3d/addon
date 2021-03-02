@@ -9,7 +9,7 @@ from ..unified_props import Unified
 from ... import hana3d_types, utils
 
 
-def get_export_data(props: hana3d_types.UploadProps) -> Tuple[dict, dict]:  # noqa: WPS210
+def get_export_data(props: hana3d_types.UploadProps) -> Tuple[dict, dict]:
     """Get required data from Blender for upload.
 
     Arguments:

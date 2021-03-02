@@ -29,7 +29,6 @@ BLENDER_SCRIPTS_PATH ?= $(shell dirname $(shell readlink -f $(shell which blende
 STAGE ?= production
 HANA3D_DESCRIPTION=$(shell sed -e 's/HANA3D_DESCRIPTION: \(.*\)/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).yml)
 HANA3D_NAME=$(shell sed -e 's/HANA3D_NAME: \(.*\)/\1/' -e 'tx' -e 'd' -e ':x' config/$(STAGE).yml)
-BLENDER ?= $(shell dirname $(shell readlink -f $(shell which blender)))/blender
 
 ###################################################################################################
 ## GENERAL COMMANDS
@@ -47,15 +46,15 @@ lint: ## lint code
 	xenon --max-absolute B --max-modules A --max-average A src/ --exclude src/ui/operators/asset_bar.py,src/ui/callbacks/asset_bar.py; \
 	# do not let old code get worse
 	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py; \
-	mypy ../hana3d | grep '../hana3d/src/' && exit 1 || exit 0
+	mypy hana3d | grep 'hana3d/src/' && exit 1 || exit 0
 
 
 unit-test: ## test code
-	HANA3D_ENV=$(STAGE) PYTHONPATH=$(PWD) $(BLENDER) -b -P tests/__init__.py -noaudio
+	HANA3D_ENV=$(STAGE) PYTHONPATH=$(PWD) blender -b -P tests/__init__.py -noaudio
 
 
 install-test: ## test installation
-	HANA3D_ENV=$(STAGE) $(BLENDER) -b -P tests/install.py -noaudio
+	HANA3D_ENV=$(STAGE) blender -b -P tests/install.py -noaudio
 
 
 clean: ## clean blender Hana3D addons

@@ -31,13 +31,13 @@ class LoadModule(object):
                 mod = types.ModuleType('__main__')
                 mod.__file__ = filepath
                 mod.__path__ = paths
-                mod.__package__ = mod_name
+                mod.__package__ = mod_name    # noqa: WPS125
 
                 # Add the module to the system module cache.
                 sys.modules[mod_name] = mod
 
                 # Fianally, execute the module.
-                exec(compile(file_ref.read(), filepath, 'exec'), mod.__dict__)
+                exec(compile(file_ref.read(), filepath, 'exec'), mod.__dict__)  # noqa: S102
         except IOError:
             print('Could not open script file.')
         except Exception:

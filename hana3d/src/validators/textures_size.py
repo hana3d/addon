@@ -38,14 +38,14 @@ def _get_large_textures(models: List[str]) -> List[str]:
 def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.model:
         return _get_large_textures(export_data.get('models', []))
-    elif asset_type == AssetType.scene:
+    if asset_type == AssetType.scene:
         scene_name = export_data.get('scene')
         scene = bpy.data.scenes[scene_name]
         return _get_large_textures(scene.objects.keys())
-    elif asset_type == AssetType.material:
+    if asset_type == AssetType.material:
         material = bpy.data.materials[export_data.get('material')]
-        node = material.node_tree.nodes['Image Texture']
-        if _check_node_for_wrong_texture(node):
+        node = material.node_tree.nodes.get('Image Texture', None)
+        if node and _check_node_for_wrong_texture(node):
             return [node.image.name]
 
 

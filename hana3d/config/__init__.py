@@ -18,7 +18,7 @@ for line in lines:
     config[key] = value
 
 
-HANA3D_NAME: str = config['HANA3D_NAME']
+HANA3D_NAME = config['HANA3D_NAME']
 HANA3D_UI = config['HANA3D_UI']
 HANA3D_ASSET = config['HANA3D_ASSET']
 HANA3D_RENDER = config['HANA3D_RENDER']
