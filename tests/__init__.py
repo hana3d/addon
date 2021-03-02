@@ -18,10 +18,8 @@ from validation import (  # noqa: E402 isort:skip
 )
 
 if __name__ == '__main__':
-    # Load the addon module
+    # load addon module and initialize test suite
     tools.LoadModule(os.path.join(addon_dir, '__init__.py'))
-
-    # initialize the test suite
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
 
@@ -30,10 +28,10 @@ if __name__ == '__main__':
     suite.addTests(loader.loadTestsFromModule(texture_size_check))
     suite.addTests(loader.loadTestsFromModule(texture_square_check))
 
-    # initialize a runner and run suite
+    # run suite
     runner = unittest.TextTestRunner(verbosity=0)
-    result = runner.run(suite)
+    test_result = runner.run(suite)
 
-    # exit
-    if not result.wasSuccessful():
-        exit(1)
+    # ensure a non zero exit code
+    if not test_result.wasSuccessful():
+        exit(1)  # noqa: WPS421
