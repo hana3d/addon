@@ -19,8 +19,8 @@ jobs:
       - run: make lint
         env:
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
-  unit-tests:
-    name: Unit Tests
+  tests:
+    name: Run tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
