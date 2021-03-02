@@ -57,7 +57,7 @@ unit-test: ## test code
     fi
 
 
-integration-test: ## test code
+install-test: ## test installation
 	HANA3D_ENV=$(STAGE) $(BLENDER) -b -P tests/install.py -noaudio
 
 

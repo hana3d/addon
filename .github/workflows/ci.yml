@@ -36,30 +36,10 @@ jobs:
         env:
           BLENDER_VERSION: "2.91"
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
-      - run: make integration-test
+      - run: make install-test
         env:
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
       - run: make unit-test
-        env:
-          STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: "3.7"
-      - name: Set stage
-        run: echo "STAGE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - run: scripts/tests/install-blender
-        env:
-          BLENDER_VERSION: "2.91"
-      - run: scripts/tests/install-addon
-        env:
-          BLENDER_VERSION: "2.91"
-          STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
-      - run: make integration-test
         env:
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
   release:
