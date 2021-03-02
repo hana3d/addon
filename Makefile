@@ -51,10 +51,7 @@ lint: ## lint code
 
 
 unit-test: ## test code
-	@$(eval RESULT=$(shell HANA3D_ENV=$(STAGE) PYTHONPATH=$(PWD) $(BLENDER) -b -P tests/__init__.py -noaudio))
-	@if [[ "$(RESULT)" != *"All tests have passed"* ]]; then\
-        exit 1;\
-    fi
+	HANA3D_ENV=$(STAGE) PYTHONPATH=$(PWD) $(BLENDER) -b -P tests/__init__.py -noaudio
 
 
 install-test: ## test installation

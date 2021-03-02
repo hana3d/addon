@@ -32,9 +32,8 @@ if __name__ == '__main__':
 
     # initialize a runner and run suite
     runner = unittest.TextTestRunner(verbosity=0)
-    runner.run(suite)
+    result = runner.run(suite)
 
-    print('All tests have passed')  # noqa: WPS421
-
-    # close blender process
-    sys.exit()
+    # exit
+    if not result.wasSuccessful():
+        exit(1)
