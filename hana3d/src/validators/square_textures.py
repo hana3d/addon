@@ -9,25 +9,31 @@ from . import BaseValidator, Category
 from ..asset.asset_type import AssetType
 
 
+def _check_rectangular_image(node: bpy.types.Node) -> bool:
+    return node.image.size[0] != node.image.size[1]
+
 def _get_rectangular_textures(models: List[str]) -> List[str]:
     textures = []
     for model in models:
         with suppress(AttributeError):
             for mat_slot in bpy.data.objects[model].material_slots:
                 for node in mat_slot.material.node_tree.nodes:
-                    if node.type == 'TEX_IMAGE' and node.image.size[0] != node.image.size[1]:
+                    if node.type == 'TEX_IMAGE' and _check_rectangular_image(node):
                         textures.append(node.image.name)    # noqa: WPS220
     return textures
 
 
-def _get_object_list(asset_type: AssetType, export_data: dict):
+def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.model:
-        return export_data.get('models', [])
+        return _get_rectangular_textures(export_data.get('models', []))
     elif asset_type == AssetType.scene:
         scene_name = export_data.get('scene')
         scene = bpy.data.scenes[scene_name]
-        return scene.objects.keys()
-    return []
+        return _get_rectangular_textures(scene.objects.keys())
+    elif asset_type == AssetType.material:
+        node = bpy.data.materials[export_data['material']].node_tree.nodes['Image Texture']
+        if _check_rectangular_image(node):
+            return [node.image.name]
 
 
 def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
@@ -44,8 +50,7 @@ def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[b
     is_valid = True
     message = 'All textures are square!'
 
-    models = _get_object_list(asset_type, export_data)
-    rectangular_textures = _get_rectangular_textures(models)
+    rectangular_textures = _get_incorrect_object_list(asset_type, export_data)
     if rectangular_textures:
         message = f'Rectangular textures: {", ".join(rectangular_textures)}'
         is_valid = False

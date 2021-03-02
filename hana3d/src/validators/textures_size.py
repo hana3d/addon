@@ -35,26 +35,28 @@ def _get_large_textures(models: List[str]) -> List[str]:
     return textures
 
 
-def _get_object_list(asset_type: AssetType, export_data: dict):
+def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.model:
-        return export_data.get('models', [])
+        return _get_large_textures(export_data.get('models', []))
     elif asset_type == AssetType.scene:
         scene_name = export_data.get('scene')
         scene = bpy.data.scenes[scene_name]
-        return scene.objects.keys()
-    return []
+        return _get_large_textures(scene.objects.keys())
+    elif asset_type == AssetType.material:
+        node = bpy.data.materials[export_data['material']].node_tree.nodes['Image Texture']
+        if _check_node_for_wrong_texture(node):
+            return [node.image.name]
 
 
 def fix_textures_size(asset_type: AssetType, export_data: dict):
-    """Resize textures to a potency of 2 below 2048.
+    """Resize textures to a potency of 2 below or equal to 2048.
 
     Parameters:
         asset_type: type of asset that will be uploaded
         export_data: dict containing objects to be uploaded info
 
     """
-    models = _get_object_list(asset_type, export_data)
-    large_textures = _get_large_textures(models)
+    large_textures = _get_incorrect_object_list(asset_type, export_data)
     for texture_name in large_textures:
         texture = bpy.data.images[texture_name]
         if texture.size[0] != texture.size[1]:
@@ -77,8 +79,7 @@ def check_textures_size(asset_type: AssetType, export_data: dict) -> Tuple[bool,
     is_valid = True
     message = 'All textures sizes are potency of 2 and below or equal to 2048!'
 
-    models = _get_object_list(asset_type, export_data)
-    large_textures = _get_large_textures(models)
+    large_textures = _get_incorrect_object_list(asset_type, export_data)
     if large_textures:
         message = f'Textures with wrong size: {", ".join(large_textures)}'
         is_valid = False

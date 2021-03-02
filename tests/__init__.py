@@ -1,10 +1,7 @@
 """Unit test module."""
-import logging
 import os
 import sys
 import unittest
-
-import tools
 
 tests_dir = os.path.dirname(__file__)
 addon_dir = os.path.dirname(tests_dir)
@@ -12,8 +9,13 @@ addon_dir = os.path.dirname(tests_dir)
 sys.path.insert(0, tests_dir)
 sys.path.insert(0, addon_dir)
 
+import tools  # noqa: E402 isort:skip
 
-from validation import uv_check  # noqa: E402  #isort:skip
+from validation import (  # noqa: E402 isort:skip
+    uv_check,
+    texture_size_check,
+    texture_square_check,
+)
 
 if __name__ == '__main__':
     # Load the addon module
@@ -25,11 +27,14 @@ if __name__ == '__main__':
 
     # add tests to the test suite
     suite.addTests(loader.loadTestsFromModule(uv_check))
+    suite.addTests(loader.loadTestsFromModule(texture_size_check))
+    suite.addTests(loader.loadTestsFromModule(texture_square_check))
 
-    # initialize a runner, pass it your suite and run it
+    # initialize a runner and run suite
     runner = unittest.TextTestRunner(verbosity=0)
     runner.run(suite)
 
-    logging.info('All tests have passed')
+    print('All tests have passed')
+    
     # close blender process
     sys.exit()

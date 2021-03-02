@@ -78,7 +78,7 @@ build: ## build addon according to stage
 	zip -rq hana3d_$(STAGE).zip hana3d_$(STAGE)
 	# copy to ~/Downloads for easy manual install
 	cp hana3d_$(STAGE).zip ~/Downloads || true
-	#rm -r hana3d_$(STAGE)
+	rm -r hana3d_$(STAGE)
 
 
 install: ## install the addon on blender

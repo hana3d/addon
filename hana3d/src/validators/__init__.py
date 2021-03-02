@@ -100,7 +100,7 @@ class BaseValidator(object):
         asset_type = export_data['type'].lower()
         logging.info(f'Export data: {export_data}')
         self.fix_function(asset_type, export_data)  # type: ignore
-        self.run_validation()
+        self.run_validation(export_data)
         if not self.validation_result[0]:
             ui = UI()
             error = f'Could not fix {self.name} automatically'

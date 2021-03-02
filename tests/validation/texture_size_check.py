@@ -18,7 +18,7 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
             'models': ['Cube'],
             'type': 'MODEL',
         }
-        expected_result = (True, 'All textures are potency of two and below or equal to 2048!')
+        expected_result = (True, 'All textures sizes are potency of 2 and below or equal to 2048!')
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -30,7 +30,7 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
             'type': 'MATERIAL',
         }
         # Correct size
-        expected_result = (True, 'All textures are potency of two and below or equal to 2048!')
+        expected_result = (True, 'All textures sizes are potency of 2 and below or equal to 2048!')
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -38,10 +38,10 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
     def test_incorrect_model(self):
         """Test validation functions on model with incorrect texture size."""
         export_data = {
-            'models': ['Cone'],
+            'models': ['Sphere'],
             'type': 'MODEL',
         }
-        expected_result = (False, 'Textures with wrong size: grass06 diffuse 4k.jpg')
+        expected_result = (False, 'Textures with wrong size: TexturesCom_Grass0197_3_M.jpg')
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -53,8 +53,8 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
             'type': 'SCENE',
         }
         expected_result = (
-            False, 
-            'Textures with wrong size: TexturesCom_Grass0197_3_M.jpg, grass06 diffuse 4k.jpg'
+            False,
+            'Textures with wrong size: TexturesCom_Grass0197_3_M.jpg, grass06  diffuse 4k.jpg',
         )
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
@@ -64,15 +64,15 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
         """Test validation and fix functions on material with incorrect texture size."""
         export_data = {
             'material': 'Material.002',
-            'type': 'MODEL',
+            'type': 'MATERIAL',
         }
-        expected_result = (False, 'Textures with wrong size: grass06 diffuse 4k.jpg')
+        expected_result = (False, 'Textures with wrong size: grass06  diffuse 4k.jpg')
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
         self.assertTrue(test_result == expected_result)
 
         # Fix
-        expected_result = (True, 'All textures are potency of two and below or equal to 2048!')
+        expected_result = (True, 'All textures sizes are potency of 2 and below or equal to 2048!')
         textures_size.run_fix(export_data)
         test_result = textures_size.get_validation_result()
         self.assertTrue(test_result == expected_result)

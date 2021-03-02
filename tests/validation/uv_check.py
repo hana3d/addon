@@ -58,7 +58,7 @@ class TestUVCheck(unittest.TestCase):  # noqa: D101
 
         # Run fix
         expected_result = (True, 'No duplicated UVs detected!')
-        uv_checker.run_fix()
+        uv_checker.run_fix(export_data)
         uv_checker.run_validation(export_data)
         test_result = uv_checker.get_validation_result()
         self.assertTrue(test_result == expected_result)

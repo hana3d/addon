@@ -3,6 +3,7 @@ import os
 import sys
 import traceback
 import types
+from typing import Tuple
 
 
 class LoadModule(object):
