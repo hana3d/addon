@@ -29,7 +29,6 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
             'material': 'Material',
             'type': 'MATERIAL',
         }
-        # Correct size
         expected_result = (True, 'All textures sizes are potency of 2 and below or equal to 2048!')
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
@@ -71,7 +70,7 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
         test_result = textures_size.get_validation_result()
         self.assertTrue(test_result == expected_result)
 
-        # Fix
+        # Run fix
         expected_result = (True, 'All textures sizes are potency of 2 and below or equal to 2048!')
         textures_size.run_fix(export_data)
         test_result = textures_size.get_validation_result()
