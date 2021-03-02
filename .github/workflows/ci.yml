@@ -36,6 +36,9 @@ jobs:
         env:
           BLENDER_VERSION: "2.91"
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
+      - run: make integration-test
+        env:
+          STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
       - run: make unit-test
         env:
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
