@@ -1,4 +1,4 @@
-"""UV Check tests."""
+"""Square texture tests."""
 import unittest
 from os.path import dirname, join
 
@@ -29,14 +29,13 @@ class TestTextureSquare(unittest.TestCase):  # noqa: D101
             'material': 'Material',
             'type': 'MATERIAL',
         }
-        # Correct size
         expected_result = (True, 'All textures are square!')
         square_textures.run_validation(export_data)
         test_result = square_textures.get_validation_result()
         self.assertTrue(test_result == expected_result)
 
     def test_incorrect_model(self):
-        """Test validation functions on model with incorrect texture size."""
+        """Test validation functions on model with rectangular texture."""
         export_data = {
             'models': ['Sphere'],
             'type': 'MODEL',
@@ -47,7 +46,7 @@ class TestTextureSquare(unittest.TestCase):  # noqa: D101
         self.assertTrue(test_result == expected_result)
 
     def test_incorrect_material(self):
-        """Test validation functions on model with incorrect texture size."""
+        """Test validation functions on model with rectangular texture."""
         export_data = {
             'material': 'Material.001',
             'type': 'MATERIAL',
@@ -58,7 +57,7 @@ class TestTextureSquare(unittest.TestCase):  # noqa: D101
         self.assertTrue(test_result == expected_result)
 
     def test_incorrect_scene(self):
-        """Test validation functions on scene with incorrect texture size."""
+        """Test validation functions on scene with rectangular texture."""
         export_data = {
             'scene': 'Scene',
             'type': 'SCENE',

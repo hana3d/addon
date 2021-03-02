@@ -1,4 +1,4 @@
-"""UV Check tests."""
+"""Texture size tests."""
 import unittest
 from os.path import dirname, join
 
