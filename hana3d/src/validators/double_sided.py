@@ -17,7 +17,7 @@ def _get_incorrect_materials_in_objects(models: List[str]) -> List[str]:
     materials = []
     for model in models:
         for mat_slot in bpy.data.objects[model].material_slots:
-            if _check_backface_culling(mat_slot.material):
+            if not _check_backface_culling(mat_slot.material):
                 materials.append(mat_slot.material.name)
     return materials
 
@@ -31,7 +31,7 @@ def _get_incorrect_materials(asset_type: AssetType, export_data: dict):
         return _get_incorrect_materials_in_objects(scene.objects.keys())
     if asset_type == AssetType.material:
         material = bpy.data.materials[export_data.get('material')]
-        if _check_backface_culling(material):
+        if not _check_backface_culling(material):
             return [material.name]
 
 
@@ -73,4 +73,10 @@ def check_double_sided(asset_type: AssetType, export_data: dict) -> Tuple[bool, 
 
 name = 'Double Sided Check'
 description = 'Checks for backface culling setting on materials'
-double_sided = BaseValidator(name, Category.error, description, check_double_sided, fix_double_sided)
+double_sided = BaseValidator(
+    name,
+    Category.error,
+    description,
+    check_double_sided,
+    fix_double_sided
+)
