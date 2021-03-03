@@ -1,4 +1,4 @@
-"""UV Check Validator."""
+"""Texture size Validator."""
 import logging
 import math
 from contextlib import suppress

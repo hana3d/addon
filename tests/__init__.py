@@ -14,6 +14,7 @@ from validation import (  # noqa: E402 isort:skip
     uv_check,
     texture_size_check,
     texture_square_check,
+    triangle_count_check,
 )
 
 if __name__ == '__main__':
@@ -24,6 +25,7 @@ if __name__ == '__main__':
     suite.addTests(loader.loadTestsFromModule(uv_check))
     suite.addTests(loader.loadTestsFromModule(texture_size_check))
     suite.addTests(loader.loadTestsFromModule(texture_square_check))
+    suite.addTests(loader.loadTestsFromModule(triangle_count_check))
 
     # run suite
     runner = unittest.TextTestRunner(verbosity=0)

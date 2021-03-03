@@ -1,4 +1,4 @@
-"""UV Check Validator."""
+"""Square texture Validator."""
 import logging
 from contextlib import suppress
 from typing import List, Tuple
