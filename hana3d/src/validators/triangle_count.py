@@ -33,12 +33,12 @@ def _get_triangle_count(object_name: str):
             decimate_index = modifier_index
 
         elif modifier.type == 'MIRROR' and modifier_index > decimate_index:
-            if modifier.use_x:
-                triangle_count *= 2
-            if modifier.use_y:
-                triangle_count *= 2
-            if modifier.use_z:
-                triangle_count *= 2
+            for axis in modifier.use_axis:
+                if axis:
+                    triangle_count *= 2
+            # TODO: Deal with bisect
+        
+        # TODO: Check if other modifiers affect triangle count
     return triangle_count
 
 
