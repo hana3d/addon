@@ -37,7 +37,6 @@ def _get_triangle_count(object_name: str):
                 if axis:
                     triangle_count *= 2
             # TODO: Deal with bisect
-        
         # TODO: Check if other modifiers affect triangle count
     return triangle_count
 
