@@ -11,6 +11,7 @@ sys.path.insert(0, addon_dir)
 
 
 from validation import (  # noqa: E402 isort:skip
+    double_sided_check,
     uv_check,
     texture_size_check,
     texture_square_check,
@@ -22,6 +23,7 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
 
     # add tests to the test suite
+    suite.addTests(loader.loadTestsFromModule(double_sided_check))
     suite.addTests(loader.loadTestsFromModule(uv_check))
     suite.addTests(loader.loadTestsFromModule(texture_size_check))
     suite.addTests(loader.loadTestsFromModule(texture_square_check))
