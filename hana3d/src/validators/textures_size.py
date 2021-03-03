@@ -45,8 +45,9 @@ def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
         material = bpy.data.materials[export_data.get('material')]
         wrong_textures = []
         for node in material.node_tree.nodes:
-            if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node):
-                wrong_textures.append(node.image.name)
+            with suppress(AttributeError):
+                if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node.image):
+                    wrong_textures.append(node.image.name)
         return wrong_textures
 
 

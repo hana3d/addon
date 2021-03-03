@@ -34,8 +34,9 @@ def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
         material = bpy.data.materials[export_data.get('material')]
         rectangular_images = []
         for node in material.node_tree.nodes:
-            if node.type == 'TEX_IMAGE' and _check_rectangular_image(node.image):
-                rectangular_images.append(node.image.name)
+            with suppress(AttributeError):
+                if node.type == 'TEX_IMAGE' and _check_rectangular_image(node.image):
+                    rectangular_images.append(node.image.name)
         return rectangular_images
 
 
