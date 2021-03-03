@@ -9,7 +9,6 @@ addon_dir = os.path.dirname(tests_dir)
 sys.path.insert(0, tests_dir)
 sys.path.insert(0, addon_dir)
 
-import tools  # noqa: E402 isort:skip
 
 from validation import (  # noqa: E402 isort:skip
     uv_check,
@@ -18,8 +17,6 @@ from validation import (  # noqa: E402 isort:skip
 )
 
 if __name__ == '__main__':
-    # load addon module and initialize test suite
-    tools.LoadModule(os.path.join(addon_dir, '__init__.py'))
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
 

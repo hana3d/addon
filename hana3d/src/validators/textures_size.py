@@ -16,11 +16,10 @@ def _check_potency_of_two(number: int):
     return ((number & (number - 1) == 0) and number != 0)
 
 
-def _check_node_for_wrong_texture(node: bpy.types.Node):
-    if node.type == 'TEX_IMAGE':
-        size = node.image.size[0]
-        if size > MAX_TEXTURE_SIZE or not _check_potency_of_two(size):
-            return True
+def _check_wrong_texture_size(image: bpy.types.Image):
+    size = image.size[0]
+    if size > MAX_TEXTURE_SIZE or not _check_potency_of_two(size):
+        return True
     return False
 
 
@@ -30,7 +29,7 @@ def _get_large_textures(models: List[str]) -> List[str]:
         with suppress(AttributeError):
             for mat_slot in bpy.data.objects[model].material_slots:
                 for node in mat_slot.material.node_tree.nodes:
-                    if _check_node_for_wrong_texture(node):
+                    if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node.image):
                         textures.append(node.image.name)    # noqa: WPS220
     return textures
 
@@ -44,9 +43,11 @@ def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
         return _get_large_textures(scene.objects.keys())
     if asset_type == AssetType.material:
         material = bpy.data.materials[export_data.get('material')]
-        node = material.node_tree.nodes.get('Image Texture', None)
-        if node and _check_node_for_wrong_texture(node):
-            return [node.image.name]
+        wrong_textures = []
+        for node in material.node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node):
+                wrong_textures.append(node.image.name)
+        return wrong_textures
 
 
 def fix_textures_size(asset_type: AssetType, export_data: dict):

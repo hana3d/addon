@@ -9,8 +9,8 @@ from . import BaseValidator, Category
 from ..asset.asset_type import AssetType
 
 
-def _check_rectangular_image(node: bpy.types.Node) -> bool:
-    return node.image.size[0] != node.image.size[1]
+def _check_rectangular_image(image: bpy.types.Image) -> bool:
+    return image.size[0] != image.size[1]
 
 def _get_rectangular_textures(models: List[str]) -> List[str]:
     textures = []
@@ -18,7 +18,7 @@ def _get_rectangular_textures(models: List[str]) -> List[str]:
         with suppress(AttributeError):
             for mat_slot in bpy.data.objects[model].material_slots:
                 for node in mat_slot.material.node_tree.nodes:
-                    if node.type == 'TEX_IMAGE' and _check_rectangular_image(node):
+                    if node.type == 'TEX_IMAGE' and _check_rectangular_image(node.image):
                         textures.append(node.image.name)    # noqa: WPS220
     return textures
 
@@ -32,9 +32,11 @@ def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
         return _get_rectangular_textures(scene.objects.keys())
     if asset_type == AssetType.material:
         material = bpy.data.materials[export_data.get('material')]
-        node = material.node_tree.nodes.get('Image Texture', None)
-        if node and _check_rectangular_image(node):
-            return [node.image.name]
+        rectangular_images = []
+        for node in material.node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and _check_rectangular_image(node.image):
+                rectangular_images.append(node.image.name)
+        return rectangular_images
 
 
 def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
