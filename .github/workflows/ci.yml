@@ -19,8 +19,8 @@ jobs:
       - run: make lint
         env:
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
-  integration-tests:
-    name: Integration Tests
+  tests:
+    name: Run tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -36,12 +36,15 @@ jobs:
         env:
           BLENDER_VERSION: "2.91"
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
-      - run: make test
+      - run: make install-test
+        env:
+          STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
+      - run: make unit-test
         env:
           STAGE: ${{ env.STAGE == 'production' && 'production' || 'dev' }}
   release:
     name: Release ${{ github.ref == 'refs/heads/production' && 'production' || 'dev' }}
-    needs: [lint, integration-tests]
+    needs: [lint, tests]
     if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     steps:
@@ -78,7 +81,7 @@ jobs:
           asset_content_type: application/zip
   e2e:
     name: Run E2E tests
-    needs: [lint, integration-tests]
+    needs: [lint, tests]
     if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     steps:

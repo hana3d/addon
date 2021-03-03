@@ -42,13 +42,18 @@ lint: ## lint code
 	git diff -U0 origin/$(STAGE).. | flake8 --diff
 	isort --recursive --check .
 	# new code should always get better
-	xenon --max-absolute B --max-modules A --max-average A src/ --exclude src/ui/operators/asset_bar.py,src/ui/callbacks/asset_bar.py
+	cd hana3d; \
+	xenon --max-absolute B --max-modules A --max-average A src/ --exclude src/ui/operators/asset_bar.py,src/ui/callbacks/asset_bar.py; \
 	# do not let old code get worse
-	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py
-	mypy ../hana3d | grep '../hana3d/src/' && exit 1 || exit 0
+	xenon --max-absolute C --max-modules B --max-average A *.py --exclude addon_updater.py,addon_updater_ops.py; \
+	mypy hana3d | grep 'hana3d/src/' && exit 1 || exit 0
 
 
-test: ## test code
+unit-test: ## test code
+	HANA3D_ENV=$(STAGE) PYTHONPATH=$(PWD) blender -b -P tests/__init__.py -noaudio
+
+
+install-test: ## test installation
 	HANA3D_ENV=$(STAGE) blender -b -P tests/install.py -noaudio
 
 
@@ -62,7 +67,7 @@ build: ## build addon according to stage
 	# create addon folder
 	mkdir hana3d_$(STAGE)
 	# copy relevant files to addon folder
-	find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' -o -name '*.yml' -o -name '*.whl' \) | xargs cp --parents -t hana3d_$(STAGE)
+	cd hana3d && find . \( -name '*.py' -o -name '*.png' -o -name '*.blend' -o -name '*.yml' -o -name '*.whl' \) | xargs cp --parents -t ../hana3d_$(STAGE)
 	# replace addon description strings: static properties are evaluated before runtime
 	LC_ALL=C sed -i "s/\(\'.*\)Hana3D\(.*\'\)/\1$(HANA3D_DESCRIPTION)\2/g" hana3d_$(STAGE)/__init__.py
 	# zip addon folder
