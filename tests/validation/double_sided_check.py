@@ -70,7 +70,7 @@ class TestDoubleSided(unittest.TestCase):  # noqa: D101
         }
         expected_result = (
             False,
-            'Materials with backface culling disabled: Material.002, Material.001'
+            'Materials with backface culling disabled: Material.002, Material.001',
         )
         double_sided.run_validation(export_data)
         test_result = double_sided.get_validation_result()

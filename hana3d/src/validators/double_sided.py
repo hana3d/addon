@@ -78,5 +78,5 @@ double_sided = BaseValidator(
     Category.error,
     description,
     check_double_sided,
-    fix_double_sided
+    fix_double_sided,
 )
