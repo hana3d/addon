@@ -23,32 +23,33 @@ def _check_wrong_texture_size(image: bpy.types.Image):
     return False
 
 
-def _get_large_textures(models: List[str]) -> List[str]:
+def _get_large_textures_in_objects(models: List[str]) -> List[str]:
     textures = []
-    for model in models:
-        with suppress(AttributeError):
+    with suppress(AttributeError):
+        for model in models:
             for mat_slot in bpy.data.objects[model].material_slots:
-                for node in mat_slot.material.node_tree.nodes:
-                    if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node.image):
-                        textures.append(node.image.name)    # noqa: WPS220
+                textures += _get_large_textures_in_material(mat_slot.material)
     return textures
 
 
-def _get_incorrect_object_list(asset_type: AssetType, export_data: dict):
+def _get_large_textures_in_material(material: bpy.types.Material) -> List[str]:
+    textures = []
+    for node in material.node_tree.nodes:
+        if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node.image):
+            textures.append(node.image.name)    # noqa: WPS220
+    return textures
+
+
+def _get_incorrect_texture_names(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.model:
-        return _get_large_textures(export_data.get('models', []))
+        return _get_large_textures_in_objects(export_data.get('models', []))
     if asset_type == AssetType.scene:
         scene_name = export_data.get('scene')
         scene = bpy.data.scenes[scene_name]
-        return _get_large_textures(scene.objects.keys())
+        return _get_large_textures_in_objects(scene.objects.keys())
     if asset_type == AssetType.material:
         material = bpy.data.materials[export_data.get('material')]
-        wrong_textures = []
-        for node in material.node_tree.nodes:
-            with suppress(AttributeError):
-                if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node.image):
-                    wrong_textures.append(node.image.name)
-        return wrong_textures
+        return _get_large_textures_in_material(material)
 
 
 def fix_textures_size(asset_type: AssetType, export_data: dict):
@@ -59,7 +60,7 @@ def fix_textures_size(asset_type: AssetType, export_data: dict):
         export_data: dict containing objects to be uploaded info
 
     """
-    large_textures = _get_incorrect_object_list(asset_type, export_data)
+    large_textures = _get_incorrect_texture_names(asset_type, export_data)
     for texture_name in large_textures:
         texture = bpy.data.images[texture_name]
         if texture.size[0] != texture.size[1]:
@@ -82,7 +83,7 @@ def check_textures_size(asset_type: AssetType, export_data: dict) -> Tuple[bool,
     is_valid = True
     message = 'All textures sizes are potency of 2 and below or equal to 2048!'
 
-    large_textures = _get_incorrect_object_list(asset_type, export_data)
+    large_textures = _get_incorrect_texture_names(asset_type, export_data)
     if large_textures:
         message = f'Textures with wrong size: {", ".join(large_textures)}'
         is_valid = False
