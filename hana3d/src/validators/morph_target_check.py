@@ -39,9 +39,11 @@ def fix_morph_target(asset_type: AssetType, export_data: dict):
     """
     meshes = _get_incorrect_meshes(asset_type, export_data)
     view_layer = bpy.context.view_layer
+    previous_selection = view_layer.objects.active
     for mesh in meshes:
         view_layer.objects.active = bpy.data.objects[mesh]
         bpy.ops.object.shape_key_remove(all=True)
+    view_layer.objects.active = previous_selection
 
 
 def check_morph_target(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
