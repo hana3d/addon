@@ -37,7 +37,7 @@ class TestMaterialCount(unittest.TestCase):  # noqa: D101
     def test_non_mesh_object(self):
         """Test validation function on non mesh object."""
         export_data = {
-            'models': ['Light'],
+            'models': ['Armature'],
             'type': 'MODEL',
         }
         expected_result = (True, 'Asset has 0 materials')
