@@ -51,7 +51,7 @@ def fix_uv_layers(asset_type: AssetType, export_data: dict):
 
 
 def check_uv_layers(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
-    """Check for duplicated UV layers in a single mesh on export data.
+    """Check for duplicated UV layers in all meshes on export data.
 
     Parameters:
         asset_type: type of asset that will be uploaded
