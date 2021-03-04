@@ -44,7 +44,7 @@ def _get_object_list(asset_type: AssetType, export_data: dict):
 
 
 def check_triangle_count(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
-    """Check if triangle count is less than 100k.
+    """Check if triangle count is less than MAX_TRIANGLE_COUNT.
 
     Parameters:
         asset_type: type of asset that will be uploaded
@@ -65,5 +65,5 @@ def check_triangle_count(asset_type: AssetType, export_data: dict) -> Tuple[bool
 
 
 name = 'Triangle count'
-description = 'Checks if asset has less than 100k triangles'
+description = f'Checks if asset has triangle count <= {MAX_TRIANGLE_COUNT}'
 triangle_count = BaseValidator(name, Category.warning, description, check_triangle_count)
