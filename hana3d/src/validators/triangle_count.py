@@ -28,7 +28,7 @@ def _get_triangle_count(object_name: str) -> int:
 
         object_eval = blend_object.evaluated_get(depsgraph)
         mesh_from_eval = bpy.data.meshes.new_from_object(object_eval)
-        triangle_count += _get_triangles_in_mesh(mesh_from_eval)
+        triangle_count = _get_triangles_in_mesh(mesh_from_eval)
         bpy.data.meshes.remove(mesh_from_eval)
     return triangle_count
 
