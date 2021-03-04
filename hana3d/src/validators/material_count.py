@@ -2,7 +2,7 @@
 
 import logging
 from contextlib import suppress
-from typing import List, Tuple
+from typing import Tuple
 
 import bpy
 
@@ -10,6 +10,7 @@ from . import BaseValidator, Category
 from ..asset.asset_type import AssetType
 
 MAX_MATERIAL_COUNT = 10
+
 
 def _get_material_count(object_name: str) -> int:
     material_count = 0
