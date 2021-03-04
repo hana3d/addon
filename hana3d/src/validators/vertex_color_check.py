@@ -45,7 +45,6 @@ def fix_vertex_color(asset_type: AssetType, export_data: dict):
             vertex_colors.remove(vertex_colors[0])
 
 
-
 def check_vertex_color(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     """Check for vertex color in all meshes on export data.
 
