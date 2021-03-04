@@ -24,6 +24,7 @@ from ....config import (
 )
 from ....report_tools import execute_wrapper
 
+NO_ASSET = -3
 
 def get_asset_under_mouse(mousex: float, mousey: float) -> int:
     """Return the asset under the mouse.
@@ -63,7 +64,7 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
                 if x < mousex < x + width and y < mousey < y + height:
                     return column + ui_props.wcount * row + ui_props.scrolloffset
 
-    return -3
+    return NO_ASSET
 
 
 def mouse_raycast(context: bpy.types.Context, mx: float, my: float) -> tuple:
@@ -299,7 +300,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         ui_props.dragging = False
         ui_props.tooltip = ''
-        ui_props.active_index = -3
+        ui_props.active_index = NO_ASSET
         ui_props.draw_drag_image = False
         ui_props.draw_snapped_bounds = False
         ui_props.has_hit = False
@@ -461,7 +462,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             if not mouse_dragging_in_region and not mouse_in_asset_bar(mx, my):
                 ui_props.dragging = False
                 ui_props.has_hit = False
-                ui_props.active_index = -3
+                ui_props.active_index = NO_ASSET
                 ui_props.draw_drag_image = False
                 ui_props.draw_snapped_bounds = False
                 ui_props.draw_tooltip = False
@@ -575,7 +576,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 if ui_props.dragging and mouse_in_region(region, mx, my):
                     asset_search_index = ui_props.active_index
                     # raycast here
-                    ui_props.active_index = -3
+                    ui_props.active_index = NO_ASSET
 
                     if ui_props.asset_type_search == 'MODEL':
                         raycast = self._raycast_update_props(ui_props, context, mx, my)
@@ -635,16 +636,17 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 # Click interaction
                 else:
                     asset_search_index = get_asset_under_mouse(mx, my)
-                    bpy.context.view_layer.objects.active = None
-                    set_edit_props(asset_search_index)
+                    if asset_search_index > NO_ASSET:
+                        bpy.context.view_layer.objects.active = None
+                        set_edit_props(asset_search_index)
 
                     return {'RUNNING_MODAL'}
 
                 # FIRST START SEARCH
 
-                if asset_search_index == -3:
+                if asset_search_index == NO_ASSET:
                     return {'RUNNING_MODAL'}
-                if asset_search_index > -3:
+                if asset_search_index > NO_ASSET:
                     if ui_props.asset_type_search == 'MATERIAL':
                         if target_object != '':
                             # position is for downloader:
