@@ -1,4 +1,4 @@
-"""Vertex Color Validator."""
+"""Morph target Validator."""
 
 import logging
 from typing import List, Tuple
