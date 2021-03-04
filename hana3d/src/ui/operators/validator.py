@@ -10,6 +10,7 @@ from ...upload.upload import get_upload_props
 from ...validators import BaseValidator, Category
 from ...validators.double_sided import double_sided
 from ...validators.material_count import material_count
+from ...validators.morph_target_check import morph_target_checker
 from ...validators.square_textures import square_textures
 from ...validators.textures_size import textures_size
 from ...validators.triangle_count import triangle_count
@@ -21,6 +22,7 @@ from ....report_tools import execute_wrapper
 validators: List[BaseValidator] = [
     double_sided,
     material_count,
+    morph_target_checker,
     square_textures,
     textures_size,
     triangle_count,
