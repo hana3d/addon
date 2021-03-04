@@ -57,7 +57,7 @@ class TestTriangleCount(unittest.TestCase):  # noqa: D101
         self.assertTrue(test_result == expected_result)
 
     def test_incorrect_model(self):
-        """Test validation functions on model with rectangular texture."""
+        """Test validation functions on incorrect model."""
         export_data = {
             'models': ['Sphere'],
             'type': 'MODEL',
@@ -68,7 +68,7 @@ class TestTriangleCount(unittest.TestCase):  # noqa: D101
         self.assertTrue(test_result == expected_result)
 
     def test_incorrect_scene(self):
-        """Test validation functions on scene with rectangular texture."""
+        """Test validation functions on incorrect scene."""
         export_data = {
             'scene': 'Scene',
             'type': 'SCENE',
