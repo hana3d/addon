@@ -357,8 +357,11 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         for window in context.window_manager.windows:
             areas.extend(window.screen.areas)
 
-        quad_views_differ = self.has_quad_views != bool(self.area.spaces[0].region_quadviews)
-        if self.area not in areas or self.area.type != 'VIEW_3D' or quad_views_differ:
+        if (  # noqa: WPS337
+            self.area not in areas
+            or self.area.type != 'VIEW_3D'
+            or self.has_quad_views != bool(self.area.spaces[0].region_quadviews)
+        ):
             # logging.info('search areas')   bpy.context.area.spaces[0].region_quadviews
             # stopping here model by now - because of:
             #   switching layouts or maximizing area now fails to assign new area throwing the bug
