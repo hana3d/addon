@@ -1,4 +1,4 @@
-"""Triangle count tests."""
+"""Material count tests."""
 import unittest
 from os.path import dirname, join
 
