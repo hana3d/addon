@@ -153,7 +153,12 @@ def default_name_handler(dummy):  # noqa: D103
     context_dict.update(region='WINDOW')
     if bpy.context.area is None or bpy.context.area.type != 'VIEW_3D':
         window, area, region = UI().get_largest_view3d()
-        override = {'window': window, 'screen': window.screen, 'area': area, 'region': region}
+        override = {
+            'window': window,
+            'screen': window.screen if window else None,
+            'area': area,
+            'region': region,
+        }
         context_dict.update(override)
     default_name_op = getattr(bpy.ops.view3d, f'{HANA3D_NAME}_default_name')
     default_name_op(context_dict, 'INVOKE_REGION_WIN')
