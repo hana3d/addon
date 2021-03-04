@@ -36,7 +36,7 @@ def _get_triangle_count(object_name: str) -> int:
 def _get_object_list(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.model:
         return export_data.get('models', [])
-    elif asset_type == AssetType.scene:
+    if asset_type == AssetType.scene:
         scene_name = export_data.get('scene')
         scene = bpy.data.scenes[scene_name]
         return scene.objects.keys()
