@@ -14,7 +14,7 @@ MAX_TRIANGLE_COUNT = 100000
 def _get_triangles_in_mesh(mesh: bpy.types.Mesh) -> int:
     triangle_count = 0
     for polygon in mesh.polygons:
-        count = polygon.loop_total
+        count = len(polygon.vertices)
         if count > 2:
             triangle_count += count - 2
     return triangle_count
