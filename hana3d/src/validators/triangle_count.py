@@ -1,7 +1,6 @@
 """Triangle count Validator."""
 
 import logging
-from contextlib import suppress
 from typing import Tuple
 
 import bpy
@@ -12,32 +11,25 @@ from ..asset.asset_type import AssetType
 MAX_TRIANGLE_COUNT = 100000
 
 
-def _get_triangles_in_polygons(blend_object: bpy.types.Object) -> int:
+def _get_triangles_in_mesh(mesh: bpy.types.Mesh) -> int:
     triangle_count = 0
-    with suppress(AttributeError):
-        for polygon in blend_object.data.polygons:
-            count = polygon.loop_total
-            if count > 2:
-                triangle_count += count - 2
+    for polygon in mesh.polygons:
+        count = polygon.loop_total
+        if count > 2:
+            triangle_count += count - 2
     return triangle_count
 
 
-def _get_triangle_count(object_name: str):
+def _get_triangle_count(object_name: str) -> int:
+    triangle_count = 0
     blend_object = bpy.data.objects[object_name]
-    triangle_count = _get_triangles_in_polygons(blend_object)
-    decimate_index = -1
+    if blend_object.type == 'MESH':
+        depsgraph = bpy.context.evaluated_depsgraph_get()
 
-    for modifier_index, modifier in enumerate(list(blend_object.modifiers)):
-        if modifier.type == 'DECIMATE':
-            triangle_count = modifier.face_count
-            decimate_index = modifier_index
-
-        elif modifier.type == 'MIRROR' and modifier_index > decimate_index:
-            for axis in modifier.use_axis:
-                if axis:
-                    triangle_count *= 2
-            # TODO: Deal with bisect
-        # TODO: Check if other modifiers affect triangle count
+        object_eval = blend_object.evaluated_get(depsgraph)
+        mesh_from_eval = bpy.data.meshes.new_from_object(object_eval)
+        triangle_count += _get_triangles_in_mesh(mesh_from_eval)
+        bpy.data.meshes.remove(mesh_from_eval)
     return triangle_count
 
 
@@ -64,8 +56,8 @@ def check_triangle_count(asset_type: AssetType, export_data: dict) -> Tuple[bool
     logging.info('Running triangle count...')
     triangle_count = 0
     object_list = _get_object_list(asset_type, export_data)
-    for blend_object in object_list:
-        triangle_count = triangle_count + _get_triangle_count(blend_object)
+    for object_name in object_list:
+        triangle_count = triangle_count + _get_triangle_count(object_name)
     message = f'Asset has {triangle_count} triangles'
 
     logging.info(message)

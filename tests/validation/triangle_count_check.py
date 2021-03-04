@@ -34,6 +34,17 @@ class TestTriangleCount(unittest.TestCase):  # noqa: D101
         test_result = triangle_count.get_validation_result()
         self.assertTrue(test_result == expected_result)
 
+    def test_correct_model_with_modifiers(self):
+        """Test validation function on correct model with modifiers."""
+        export_data = {
+            'models': ['Cone'],
+            'type': 'MODEL',
+        }
+        expected_result = (True, 'Asset has 3246 triangles')
+        triangle_count.run_validation(export_data)
+        test_result = triangle_count.get_validation_result()
+        self.assertTrue(test_result == expected_result)
+
     def test_non_mesh_object(self):
         """Test validation function on non mesh object."""
         export_data = {
@@ -62,7 +73,7 @@ class TestTriangleCount(unittest.TestCase):  # noqa: D101
             'scene': 'Scene',
             'type': 'SCENE',
         }
-        expected_result = (False, 'Asset has 261644 triangles')
+        expected_result = (False, 'Asset has 264890 triangles')
         triangle_count.run_validation(export_data)
         test_result = triangle_count.get_validation_result()
         self.assertTrue(test_result == expected_result)
