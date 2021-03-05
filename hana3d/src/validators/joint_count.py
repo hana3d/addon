@@ -43,7 +43,7 @@ def check_joint_count(asset_type: AssetType, export_data: dict) -> Tuple[bool, s
     logging.info('Running joint count...')
     object_list = _get_object_list(asset_type, export_data)
     joint_count = _get_joint_count(object_list)
-    message = f'Asset has {joint_count} joints'
+    message = f'Asset has {joint_count} bones'
 
     logging.info(message)
     return joint_count <= MAX_JOINT_COUNT, message

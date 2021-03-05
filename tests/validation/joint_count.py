@@ -20,7 +20,7 @@ class TestJointCount(unittest.TestCase):  # noqa: D101
             'models': ['Armature.001'],
             'type': 'MODEL',
         }
-        expected_result = (True, 'Asset has 9 joints')
+        expected_result = (True, 'Asset has 9 bones')
         joint_count.run_validation(export_data)
         test_result = joint_count.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -31,7 +31,7 @@ class TestJointCount(unittest.TestCase):  # noqa: D101
             'material': 'Material',
             'type': 'MATERIAL',
         }
-        expected_result = (True, 'Asset has 0 joints')
+        expected_result = (True, 'Asset has 0 bones')
         joint_count.run_validation(export_data)
         test_result = joint_count.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -42,7 +42,7 @@ class TestJointCount(unittest.TestCase):  # noqa: D101
             'models': ['Cube'],
             'type': 'MODEL',
         }
-        expected_result = (True, 'Asset has 0 joints')
+        expected_result = (True, 'Asset has 0 bones')
         joint_count.run_validation(export_data)
         test_result = joint_count.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -53,7 +53,7 @@ class TestJointCount(unittest.TestCase):  # noqa: D101
             'models': ['Armature'],
             'type': 'MODEL',
         }
-        expected_result = (False, 'Asset has 257 joints')
+        expected_result = (False, 'Asset has 257 bones')
         joint_count.run_validation(export_data)
         test_result = joint_count.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -64,7 +64,7 @@ class TestJointCount(unittest.TestCase):  # noqa: D101
             'scene': 'Scene',
             'type': 'SCENE',
         }
-        expected_result = (False, 'Asset has 266 joints')
+        expected_result = (False, 'Asset has 266 bones')
         joint_count.run_validation(export_data)
         test_result = joint_count.get_validation_result()
         self.assertTrue(test_result == expected_result)
