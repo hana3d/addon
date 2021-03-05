@@ -1,4 +1,4 @@
-"""Material count tests."""
+"""Animation count tests."""
 import unittest
 from os.path import dirname, join
 
@@ -10,7 +10,9 @@ from hana3d_dev.src.validators.animation_count import animation_count
 class TestAnimationCount(unittest.TestCase):  # noqa: D101
     def setUp(self):
         """Load test scene."""
-        bpy.ops.wm.open_mainfile(filepath=join(dirname(__file__), '../scenes/animation_check.blend'))
+        bpy.ops.wm.open_mainfile(
+            filepath=join(dirname(__file__), '../scenes/animation_check.blend'),
+        )
 
     def test_correct_model(self):
         """Test validation function on correct model."""
