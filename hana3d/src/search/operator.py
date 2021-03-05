@@ -179,7 +179,7 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
 
     def _parse_response(self, asset_type: AssetType, request_data: Dict) -> List[AssetData]:
         result_field = []
-        for response in request_data['results']:
+        for response in request_data.get('results', []):
             if response['assetType'] != asset_type or not response['files']:
                 continue
 
