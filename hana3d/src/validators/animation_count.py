@@ -1,4 +1,4 @@
-"""Material Count Validator."""
+"""Animation Count Validator."""
 
 import logging
 from typing import List, Tuple
