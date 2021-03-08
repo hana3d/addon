@@ -51,10 +51,10 @@ class IgnoreOperator(bpy.types.Operator):
             validator = validators[self.index]
             logging.info(f'Ignoring validator {validator.name}')
             validator.ignore()
-            return {'FINISHED'}
-        logging.info(f'Ignoring all validators')
-        for validator in validators:
-            validator.ignore()        
+        else:
+            logging.info('Ignoring all validators')
+            for validator in validators:  # noqa: WPS440
+                validator.ignore()
         return {'FINISHED'}
 
 
@@ -77,11 +77,10 @@ class FixOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             validator = validators[self.index]
             validator.run_fix()
             logging.info(f'Fixing validator {validator.name}')
-            return {'FINISHED'}
-        logging.info(f'Fixing all validators')
-        for validator in validators:
-            validator.run_fix()
-                
+        else:
+            logging.info('Fixing all validators')
+            for validator in validators:  # noqa: WPS440
+                validator.run_fix()
         return {'FINISHED'}
 
 
