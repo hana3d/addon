@@ -7,15 +7,12 @@ from bpy.props import IntProperty
 
 from ...unified_props import Unified
 from ...upload.upload import get_upload_props
-from ...validators import BaseValidator, Category
+from ...validators import BaseValidator, Category, dummy_fix_function
 from ...validators.animation_count import animation_count
-from ...validators.double_sided import double_sided
 from ...validators.joint_count import joint_count
-from ...validators.material_count import material_count
 from ...validators.morph_target_check import morph_target_checker
 from ...validators.square_textures import square_textures
 from ...validators.textures_size import textures_size
-from ...validators.triangle_count import triangle_count
 from ...validators.uv_check import uv_checker
 from ...validators.vertex_color_check import vertex_color_checker
 from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
@@ -23,13 +20,13 @@ from ....report_tools import execute_wrapper
 
 validators: List[BaseValidator] = [
     animation_count,
-    double_sided,
+    # double_sided,
     joint_count,
-    material_count,
+    # material_count,
     morph_target_checker,
     square_textures,
     textures_size,
-    triangle_count,
+    # triangle_count,
     uv_checker,
     vertex_color_checker,
 ]
@@ -45,12 +42,19 @@ class IgnoreOperator(bpy.types.Operator):
     index = IntProperty(
         name='Index',
         description='Index',
+        default=-1,
+        options={'SKIP_SAVE'},
     )
 
     def execute(self, context):  # noqa: D102
-        validator = validators[self.index]
-        logging.info(f'Ignoring validator {validator.name}')
-        validator.ignore()
+        if self.index > -1:
+            validator = validators[self.index]
+            logging.info(f'Ignoring validator {validator.name}')
+            validator.ignore()
+            return {'FINISHED'}
+        logging.info(f'Ignoring all validators')
+        for validator in validators:
+            validator.ignore()        
         return {'FINISHED'}
 
 
@@ -64,12 +68,20 @@ class FixOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
     index = IntProperty(
         name='Index',
         description='Index',
+        default=-1,
+        options={'SKIP_SAVE'},
     )
 
     def execute(self, context):  # noqa: D102
-        validator = validators[self.index]
-        logging.info(f'Fixing validator {validator.name}')
-        validator.run_fix()
+        if self.index > -1:
+            validator = validators[self.index]
+            validator.run_fix()
+            logging.info(f'Fixing validator {validator.name}')
+            return {'FINISHED'}
+        logging.info(f'Fixing all validators')
+        for validator in validators:
+            validator.run_fix()
+                
         return {'FINISHED'}
 
 
@@ -106,6 +118,18 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
             Category.error: 0,
         }
 
+        row = self.layout.row()
+        row.operator(
+            f'message.{HANA3D_NAME}_validation_fix',
+            text='Fix all',
+            icon='SETTINGS',
+        )
+        row.operator(
+            f'message.{HANA3D_NAME}_validation_ignore',
+            text='Ignore all',
+            icon='CANCEL',
+        )
+
         for index, validator in enumerate(validators):
             box = self.layout.box()
             self._draw_overview(box, index, validator)
@@ -130,13 +154,17 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
         overview = box.row()
         overview.label(text=validator.category)
         overview.label(text=validator.description)
-        fix = overview.operator(
+        fix_column = overview.column()
+        fix = fix_column.operator(
             f'message.{HANA3D_NAME}_validation_fix',
             text='Fix',
             icon='SETTINGS',
         )
         fix.index = index
-        ignore = overview.operator(
+        fix_column.enabled = validator.fix_function != dummy_fix_function
+
+        ignore_column = overview.column()
+        ignore = ignore_column.operator(
             f'message.{HANA3D_NAME}_validation_ignore',
             text='Ignore',
             icon='CANCEL',
