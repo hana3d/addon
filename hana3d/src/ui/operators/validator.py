@@ -8,7 +8,9 @@ from bpy.props import IntProperty
 from ...unified_props import Unified
 from ...upload.upload import get_upload_props
 from ...validators import BaseValidator, Category
+from ...validators.animation_count import animation_count
 from ...validators.double_sided import double_sided
+from ...validators.joint_count import joint_count
 from ...validators.material_count import material_count
 from ...validators.morph_target_check import morph_target_checker
 from ...validators.square_textures import square_textures
@@ -20,7 +22,9 @@ from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
 from ....report_tools import execute_wrapper
 
 validators: List[BaseValidator] = [
+    animation_count,
     double_sided,
+    joint_count,
     material_count,
     morph_target_checker,
     square_textures,

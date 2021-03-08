@@ -11,7 +11,9 @@ sys.path.insert(0, addon_dir)
 
 
 from validation import (  # noqa: E402 isort:skip
+    animation_count,
     double_sided_check,
+    joint_count,
     material_count,
     morph_target_check,
     texture_size_check,
@@ -26,7 +28,9 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
 
     # add tests to the test suite
+    suite.addTests(loader.loadTestsFromModule(animation_count))
     suite.addTests(loader.loadTestsFromModule(double_sided_check))
+    suite.addTests(loader.loadTestsFromModule(joint_count))
     suite.addTests(loader.loadTestsFromModule(material_count))
     suite.addTests(loader.loadTestsFromModule(morph_target_check))
     suite.addTests(loader.loadTestsFromModule(texture_size_check))
