@@ -51,13 +51,11 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
             'scene': 'Scene',
             'type': 'SCENE',
         }
-        expected_result = (
-            False,
-            'Textures with wrong size: TexturesCom_Grass0197_3_M.jpg, grass06  diffuse 4k.jpg',
-        )
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
-        self.assertTrue(test_result == expected_result)
+        self.assertFalse(test_result[0])
+        self.assertTrue('TexturesCom_Grass0197_3_M.jpg' in test_result[1])
+        self.assertTrue('grass06  diffuse 4k.jpg' in test_result[1])
 
     def test_and_fix_incorrect_material_size(self):
         """Test validation and fix functions on material with incorrect texture size."""

@@ -17,7 +17,7 @@ def _get_incorrect_materials_in_objects(models: List[str]) -> List[str]:
     materials = []
     for model in models:
         for mat_slot in bpy.data.objects[model].material_slots:
-            if not _check_backface_culling(mat_slot.material):
+            if mat_slot.material and not _check_backface_culling(mat_slot.material):
                 materials.append(mat_slot.material.name)
     return materials
 

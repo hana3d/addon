@@ -23,7 +23,7 @@ def _get_multiple_uv_models(models: List[str]) -> List[str]:
 def _get_object_list(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.model:
         return export_data.get('models', [])
-    elif asset_type == AssetType.scene:
+    if asset_type == AssetType.scene:
         scene_name = export_data.get('scene')
         scene = bpy.data.scenes[scene_name]
         return scene.objects.keys()
@@ -51,7 +51,7 @@ def fix_uv_layers(asset_type: AssetType, export_data: dict):
 
 
 def check_uv_layers(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
-    """Check for duplicated UV layers in a single mesh on export data.
+    """Check for duplicated UV layers in all meshes on export data.
 
     Parameters:
         asset_type: type of asset that will be uploaded
