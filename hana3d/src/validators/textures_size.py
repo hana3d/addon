@@ -93,7 +93,7 @@ def check_textures_size(asset_type: AssetType, export_data: dict) -> Tuple[bool,
 
 
 name = 'Textures Size'
-description = 'Checks for textures size'
+description = 'Checks if texture size is potency of 2 and <= 2048'
 textures_size = BaseValidator(
     name,
     Category.error,
