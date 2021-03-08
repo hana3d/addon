@@ -41,6 +41,7 @@ jobs:
 
   e2e:
     name: Run E2E tests
+    needs: [lint, tests]
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
