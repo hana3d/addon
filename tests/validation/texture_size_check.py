@@ -53,7 +53,7 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
         }
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()
-        self.assertTrue(test_result[0] == False)
+        self.assertFalse(test_result[0])
         self.assertTrue('TexturesCom_Grass0197_3_M.jpg' in test_result[1])
         self.assertTrue('grass06  diffuse 4k.jpg' in test_result[1])
 
