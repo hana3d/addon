@@ -1,7 +1,7 @@
 """Square texture Validator."""
 import logging
 from contextlib import suppress
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import bpy
 
@@ -13,24 +13,24 @@ def _check_rectangular_image(image: bpy.types.Image) -> bool:
     return image.size[0] != image.size[1]
 
 
-def _get_rectangular_textures_in_objects(models: List[str]) -> List[str]:
-    textures = []
+def _get_rectangular_textures_in_objects(models: List[str]) -> Set[str]:
+    textures: Set[str] = set()
     with suppress(AttributeError):
         for model in models:
             for mat_slot in bpy.data.objects[model].material_slots:
-                textures += _get_rectangular_textures_in_material(mat_slot.material)
+                textures = textures.union(_get_rectangular_textures_in_material(mat_slot.material))
     return textures
 
 
-def _get_rectangular_textures_in_material(material: bpy.types.Material) -> List[str]:
-    textures = []
+def _get_rectangular_textures_in_material(material: bpy.types.Material) -> Set[str]:
+    textures = set()
     for node in material.node_tree.nodes:
         if node.type == 'TEX_IMAGE' and _check_rectangular_image(node.image):
-            textures.append(node.image.name)    # noqa: WPS220
+            textures.add(node.image.name)    # noqa: WPS220
     return textures
 
 
-def _get_incorrect_texture_names(asset_type: AssetType, export_data: dict):
+def _get_incorrect_texture_names(asset_type: AssetType, export_data: dict) -> Set[str]:
     if asset_type == AssetType.model:
         return _get_rectangular_textures_in_objects(export_data.get('models', []))
     if asset_type == AssetType.scene:
@@ -40,7 +40,7 @@ def _get_incorrect_texture_names(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.material:
         material = bpy.data.materials[export_data.get('material')]
         return _get_rectangular_textures_in_material(material)
-
+    return set()
 
 def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     """Check if textures are square.
@@ -66,5 +66,5 @@ def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[b
 
 
 name = 'Square Textures'
-description = 'Checks for textures dimension'
+description = 'Checks if texture is square'
 square_textures = BaseValidator(name, Category.error, description, check_texture_dimension)
