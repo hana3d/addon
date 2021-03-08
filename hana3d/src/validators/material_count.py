@@ -2,7 +2,7 @@
 
 import logging
 from contextlib import suppress
-from typing import Tuple
+from typing import List, Tuple
 
 import bpy
 
@@ -12,14 +12,15 @@ from ..asset.asset_type import AssetType
 MAX_MATERIAL_COUNT = 10
 
 
-def _get_material_count(object_name: str) -> int:
-    material_count = 0
-    with suppress(AttributeError):
-        blend_object = bpy.data.objects[object_name]
-        for mat in blend_object.material_slots:
-            if mat.material:
-                material_count += 1
-    return material_count
+def _get_material_count(object_names: List[str]) -> int:
+    materials = set()
+    for object_name in object_names:
+        with suppress(AttributeError):
+            blend_object = bpy.data.objects[object_name]
+            for mat in blend_object.material_slots:
+                if mat.material:
+                    materials.add(mat.material)
+    return len(materials)
 
 
 def _get_object_list(asset_type: AssetType, export_data: dict):
@@ -45,8 +46,7 @@ def check_material_count(asset_type: AssetType, export_data: dict) -> Tuple[bool
     logging.info('Running material count...')
     material_count = 0
     object_list = _get_object_list(asset_type, export_data)
-    for object_name in object_list:
-        material_count = material_count + _get_material_count(object_name)
+    material_count = _get_material_count(object_list)
     message = f'Asset has {material_count} materials'
 
     logging.info(message)

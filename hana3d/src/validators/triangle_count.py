@@ -1,7 +1,7 @@
 """Triangle count Validator."""
 
 import logging
-from typing import Tuple
+from typing import List, Tuple
 
 import bpy
 
@@ -20,16 +20,18 @@ def _get_triangles_in_mesh(mesh: bpy.types.Mesh) -> int:
     return triangle_count
 
 
-def _get_triangle_count(object_name: str) -> int:
+def _get_triangle_count(object_names: List[str]) -> int:
+    object_data = set()
     triangle_count = 0
-    blend_object = bpy.data.objects[object_name]
-    if blend_object.type == 'MESH':
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-
-        object_eval = blend_object.evaluated_get(depsgraph)
-        mesh_from_eval = bpy.data.meshes.new_from_object(object_eval)
-        triangle_count = _get_triangles_in_mesh(mesh_from_eval)
-        bpy.data.meshes.remove(mesh_from_eval)
+    for object_name in object_names:
+        blend_object = bpy.data.objects[object_name]
+        if blend_object.type == 'MESH' and blend_object.data not in object_data:
+            object_data.add(blend_object.data)
+            depsgraph = bpy.context.evaluated_depsgraph_get()
+            object_eval = blend_object.evaluated_get(depsgraph)
+            mesh_from_eval = bpy.data.meshes.new_from_object(object_eval)
+            triangle_count += _get_triangles_in_mesh(mesh_from_eval)
+            bpy.data.meshes.remove(mesh_from_eval)
     return triangle_count
 
 
@@ -56,8 +58,7 @@ def check_triangle_count(asset_type: AssetType, export_data: dict) -> Tuple[bool
     logging.info('Running triangle count...')
     triangle_count = 0
     object_list = _get_object_list(asset_type, export_data)
-    for object_name in object_list:
-        triangle_count = triangle_count + _get_triangle_count(object_name)
+    triangle_count = _get_triangle_count(object_list)
     message = f'Asset has {triangle_count} triangles'
 
     logging.info(message)

@@ -53,7 +53,7 @@ class TestTextureSize(unittest.TestCase):  # noqa: D101
         }
         expected_result = (
             False,
-            'Textures with wrong size: TexturesCom_Grass0197_3_M.jpg, grass06  diffuse 4k.jpg',
+            'Textures with wrong size: grass06  diffuse 4k.jpg, TexturesCom_Grass0197_3_M.jpg',
         )
         textures_size.run_validation(export_data)
         test_result = textures_size.get_validation_result()

@@ -2,7 +2,7 @@
 import logging
 import math
 from contextlib import suppress
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import bpy
 
@@ -23,20 +23,20 @@ def _check_wrong_texture_size(image: bpy.types.Image):
     return False
 
 
-def _get_large_textures_in_objects(models: List[str]) -> List[str]:
-    textures = []
+def _get_large_textures_in_objects(models: List[str]) -> Set[str]:
+    textures: Set[str] = set()
     with suppress(AttributeError):
         for model in models:
             for mat_slot in bpy.data.objects[model].material_slots:
-                textures += _get_large_textures_in_material(mat_slot.material)
+                textures = textures.union(_get_large_textures_in_material(mat_slot.material))
     return textures
 
 
-def _get_large_textures_in_material(material: bpy.types.Material) -> List[str]:
-    textures = []
+def _get_large_textures_in_material(material: bpy.types.Material) -> Set[str]:
+    textures: Set[str] = set()
     for node in material.node_tree.nodes:
         if node.type == 'TEX_IMAGE' and _check_wrong_texture_size(node.image):
-            textures.append(node.image.name)    # noqa: WPS220
+            textures.add(node.image.name)    # noqa: WPS220
     return textures
 
 

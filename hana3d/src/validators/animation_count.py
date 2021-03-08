@@ -13,9 +13,15 @@ MAX_ANIMATION_COUNT = 1
 
 def _get_animation_count(object_names: List[str]) -> int:
     animation_count = 0
+    objects_seen = set()
     for object_name in object_names:
         blend_object = bpy.data.objects[object_name]
-        if blend_object.animation_data:
+        if (  # noqa: WPS337
+            blend_object.animation_data
+            and blend_object.animation_data.action
+            and blend_object.data not in objects_seen
+        ):
+            objects_seen.add(blend_object.data)
             animation_count += 1
     return animation_count
 
