@@ -20,7 +20,7 @@ jobs:
         run: |
           git config user.name 'Hana3D Bot'
           git config user.email 'bot@hana3d.com'
-          git commit -m "Bump version"
+          git commit -am "Bump version"
           git push
       - name: Build project
         run: make build
