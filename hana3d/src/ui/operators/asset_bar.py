@@ -474,7 +474,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             original_search_results = search.get_original_search_results()
             len_search = len(search_results)
 
-            if not ui_props.dragging and not ui_props.drag_init:  # noqa: WPS504
+            if not ui_props.dragging and not ui_props.drag_init:
                 bpy.context.window.cursor_set('DEFAULT')
 
                 if search_results is not None and ui_props.total_count > len_search:
