@@ -41,7 +41,6 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
     search_results = search.get_search_results()
     len_search = len(search_results)
     if search_results is not None:
-
         h_draw = min(ui_props.hcount, math.ceil(len_search / ui_props.wcount))
         for row in range(0, h_draw):
             w_draw = min(
@@ -63,7 +62,9 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
                 height = ui_props.thumb_size
 
                 if x < mousex < x + width and y < mousey < y + height:
-                    return column + ui_props.wcount * row + ui_props.scrolloffset
+                    asset_id = column + ui_props.wcount * row + ui_props.scrolloffset
+                    logging.debug(f'Get_asset_under_mouse: returning id {asset_id}')
+                    return asset_id
 
     return NO_ASSET
 
@@ -453,14 +454,15 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             ui_props.mouse_x = mx
             ui_props.mouse_y = my
 
+            mouse_dragging_in_region = ui_props.dragging and mouse_in_region(region, mx, my)
+
             if ui_props.drag_init:
                 ui_props.drag_length += 1
                 if ui_props.drag_length > 2:
                     ui_props.dragging = True
                     ui_props.drag_init = False
 
-            mouse_dragging_in_region = ui_props.dragging and mouse_in_region(region, mx, my)
-            if not mouse_dragging_in_region and not mouse_in_asset_bar(mx, my):
+            elif not mouse_dragging_in_region and not mouse_in_asset_bar(mx, my):
                 ui_props.dragging = False
                 ui_props.has_hit = False
                 ui_props.active_index = NO_ASSET
@@ -474,7 +476,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
             original_search_results = search.get_original_search_results()
             len_search = len(search_results)
 
-            if not ui_props.dragging:  # noqa: WPS504
+            if not ui_props.dragging and not ui_props.drag_init:  # noqa: WPS504
                 bpy.context.window.cursor_set('DEFAULT')
 
                 if search_results is not None and ui_props.total_count > len_search:
@@ -484,10 +486,8 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 asset_search_index = get_asset_under_mouse(mx, my)
                 ui_props.active_index = asset_search_index
                 if asset_search_index > -1:
-
                     asset_data = search_results[asset_search_index]
                     ui_props.draw_tooltip = True
-
                     ui_props.tooltip = asset_data.tooltip
 
                 else:
