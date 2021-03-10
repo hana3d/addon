@@ -1,7 +1,7 @@
 """Object count Validator."""
 
 import logging
-from typing import List, Tuple
+from typing import Tuple
 
 import bpy
 

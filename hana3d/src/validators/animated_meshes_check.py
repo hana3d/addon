@@ -1,4 +1,4 @@
-"""Animated meshes Validator."""
+"""Animated mesh Validator."""
 
 import logging
 from typing import List, Tuple
@@ -54,7 +54,7 @@ def check_animated_meshes(asset_type: AssetType, export_data: dict) -> Tuple[boo
     """
     logging.info('Running animated meshes check...')
     is_valid = True
-    message = f'Asset has no animated meshes wrongly parented'
+    message = 'Asset has no animated meshes wrongly parented.'
 
     object_list = _get_object_list(asset_type, export_data)
     incorrect_objects = _get_incorrect_animated_meshes(object_list)
@@ -68,5 +68,5 @@ def check_animated_meshes(asset_type: AssetType, export_data: dict) -> Tuple[boo
 
 
 name = 'Animated meshes check'
-description = f'Checks if only animated meshes are parented to armature'
+description = 'Checks if only animated meshes are parented to armature'
 animated_meshes_check = BaseValidator(name, Category.warning, description, check_animated_meshes)

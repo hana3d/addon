@@ -13,6 +13,7 @@ from ...validators.animation_count import animation_count
 from ...validators.joint_count import joint_count
 from ...validators.morph_target_check import morph_target_checker
 from ...validators.object_count import object_count
+from ...validators.scale_check import scale_check
 from ...validators.square_textures import square_textures
 from ...validators.textures_size import textures_size
 from ...validators.uv_check import uv_checker
@@ -28,6 +29,7 @@ validators: List[BaseValidator] = [
     # material_count,
     morph_target_checker,
     object_count,
+    scale_check,
     square_textures,
     textures_size,
     # triangle_count,
