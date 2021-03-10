@@ -1,4 +1,4 @@
-"""Animation count tests."""
+"""Scale check tests."""
 import unittest
 from os.path import dirname, join
 
@@ -20,7 +20,7 @@ class TestObjectCount(unittest.TestCase):  # noqa: D101
             'models': ['Cube'],
             'type': 'MODEL',
         }
-        expected_result = (True, 'All assets have (1,1,1) scale.')
+        expected_result = (True, 'All objects have (1,1,1) scale.')
         scale_check.run_validation(export_data)
         test_result = scale_check.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -31,7 +31,7 @@ class TestObjectCount(unittest.TestCase):  # noqa: D101
             'material': 'Material',
             'type': 'MATERIAL',
         }
-        expected_result = (True, 'All assets have (1,1,1) scale.')
+        expected_result = (True, 'All objects have (1,1,1) scale.')
         scale_check.run_validation(export_data)
         test_result = scale_check.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -42,7 +42,7 @@ class TestObjectCount(unittest.TestCase):  # noqa: D101
             'models': ['Armature'],
             'type': 'MODEL',
         }
-        expected_result = (True, 'All assets have (1,1,1) scale.')
+        expected_result = (True, 'All objects have (1,1,1) scale.')
         scale_check.run_validation(export_data)
         test_result = scale_check.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -70,7 +70,7 @@ class TestObjectCount(unittest.TestCase):  # noqa: D101
         self.assertTrue(test_result == expected_result)
 
         # Run fix
-        expected_result = (True, 'All assets have (1,1,1) scale.')
+        expected_result = (True, 'All objects have (1,1,1) scale.')
         scale_check.run_fix(export_data)
         test_result = scale_check.get_validation_result()
         self.assertTrue(test_result == expected_result)

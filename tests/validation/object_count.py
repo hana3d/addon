@@ -53,7 +53,10 @@ class TestObjectCount(unittest.TestCase):  # noqa: D101
             'scene': 'Scene',
             'type': 'SCENE',
         }
-        expected_result = (False, 'Asset has 313 objects')
+        expected_result = (
+            False,
+            'Asset has 313 objects. The AR may not work correctly on low memory devices',
+        )
         object_count.run_validation(export_data)
         test_result = object_count.get_validation_result()
         self.assertTrue(test_result == expected_result)

@@ -35,9 +35,13 @@ def check_object_count(asset_type: AssetType, export_data: dict) -> Tuple[bool, 
     object_list = _get_object_list(asset_type, export_data)
     object_count = len(object_list)
     message = f'Asset has {object_count} objects'
+    is_valid = object_count <= MAX_OBJECT_COUNT
+
+    if not is_valid:
+        message = f'{message}. The AR may not work correctly on low memory devices'
 
     logging.info(message)
-    return object_count <= MAX_OBJECT_COUNT, message
+    return is_valid, message
 
 
 name = 'Object count'

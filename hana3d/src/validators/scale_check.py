@@ -43,7 +43,7 @@ def check_scale(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     """
     logging.info('Running scale check...')
     is_valid = True
-    message = 'All assets have (1,1,1) scale.'
+    message = 'All objects have (1,1,1) scale.'
 
     object_list = _get_object_list(asset_type, export_data)
     incorrect_objects = _get_wrongly_scaled_objects(object_list)
