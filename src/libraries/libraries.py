@@ -92,6 +92,20 @@ def _add_library(props: 'Props', library: dict):
         new_library.metadata['view_props'] = metadata['view_props']
 
 
+def clear_libraries(props: 'Props'):
+    """Clear selected libraries.
+
+    Arguments:
+        props: hana3d_types.Props,
+        context: Blender context
+    """
+    props.libraries_list.clear()
+    with suppress(AttributeError):
+        for name in props.custom_props.keys():
+            del props.custom_props[name]    # noqa: WPS420
+            del props.custom_props_info[name]   # noqa: WPS420
+
+
 def update_libraries_list(props: 'Props', context: bpy.types.Context):
     """Update libraries list.
 
@@ -102,11 +116,7 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
     unified_props = Unified(context).props
     current_workspace = unified_props.workspace
     previous_libraries = get_libraries(props)
-    props.libraries_list.clear()
-    with suppress(AttributeError):
-        for name in props.custom_props.keys():
-            del props.custom_props[name]    # noqa: WPS420
-            del props.custom_props_info[name]   # noqa: WPS420
+    clear_libraries(props)
     for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace != workspace['id']:
             continue
