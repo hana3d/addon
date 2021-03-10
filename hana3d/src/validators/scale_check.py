@@ -71,7 +71,8 @@ def fix_scale(asset_type: AssetType, export_data: dict):
     view_layer = bpy.context.view_layer
     previous_selection = view_layer.objects.active
     for object_name in incorrect_objects:
-        view_layer.objects.active = bpy.data.objects[object_name]
+        logging.debug(f'Fixing {object_name}')
+        bpy.data.objects[object_name].select_set(True)
         bpy.ops.object.transform_apply(scale=True)
     view_layer.objects.active = previous_selection
 
