@@ -49,6 +49,7 @@ class Profile(object):
 
         if not response.ok:
             logging.error(f'Failed to get profile data: {response.text}')  # noqa: WPS421
+            return
 
         window_manager = bpy.context.window_manager
         window_manager[config.HANA3D_PROFILE] = response.json()
