@@ -53,7 +53,7 @@ class AnimatedMeshesCheck(unittest.TestCase):  # noqa: D101
             'models': ['Armature.001', 'Icosphere', 'Cone'],
             'type': 'MODEL',
         }
-        expected_result = (False, 'Meshes parented to wrong object: Icosphere, Cone')
+        expected_result = (False, 'Static meshes parented to armature: Icosphere, Cone')
         animated_meshes_check.run_validation(export_data)
         test_result = animated_meshes_check.get_validation_result()
         self.assertTrue(test_result == expected_result)
@@ -64,7 +64,7 @@ class AnimatedMeshesCheck(unittest.TestCase):  # noqa: D101
             'scene': 'Scene',
             'type': 'SCENE',
         }
-        expected_result = (False, 'Meshes parented to wrong object: Icosphere, Cone')
+        expected_result = (False, 'Static meshes parented to armature: Icosphere, Cone')
         animated_meshes_check.run_validation(export_data)
         test_result = animated_meshes_check.get_validation_result()
         self.assertTrue(test_result == expected_result)

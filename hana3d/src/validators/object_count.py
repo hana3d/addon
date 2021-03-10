@@ -38,7 +38,7 @@ def check_object_count(asset_type: AssetType, export_data: dict) -> Tuple[bool, 
     is_valid = object_count <= MAX_OBJECT_COUNT
 
     if not is_valid:
-        message = f'{message}. The AR may not work correctly on low memory devices'
+        message = f'{message}. The AR may not work correctly on low memory iOS devices'
 
     logging.info(message)
     return is_valid, message

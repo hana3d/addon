@@ -68,8 +68,12 @@ def fix_scale(asset_type: AssetType, export_data: dict):
     object_list = _get_object_list(asset_type, export_data)
     incorrect_objects = _get_wrongly_scaled_objects(object_list)
 
+    view_layer = bpy.context.view_layer
+    previous_selection = view_layer.objects.active
     for object_name in incorrect_objects:
-        bpy.data.objects[object_name].scale = CORRECT_SCALE
+        view_layer.objects.active = bpy.data.objects[object_name]
+        bpy.ops.object.transform_apply(scale=True)
+    view_layer.objects.active = previous_selection
 
 
 name = 'Scale check'

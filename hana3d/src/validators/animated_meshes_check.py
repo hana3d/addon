@@ -62,7 +62,7 @@ def check_animated_meshes(asset_type: AssetType, export_data: dict) -> Tuple[boo
     incorrect_objects = _get_incorrect_animated_meshes(object_list)
 
     if incorrect_objects:
-        message = f'Meshes parented to wrong object: {", ".join(incorrect_objects)}'
+        message = f'Static meshes parented to armature: {", ".join(incorrect_objects)}'
         is_valid = False
 
     logging.info(message)
