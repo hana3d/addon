@@ -29,7 +29,7 @@ def _get_incorrect_animated_meshes(models: List[str]) -> List[str]:
     meshes = []
     for model in models:
         blend_object = bpy.data.objects[model]
-        if _check_armature_parent(blend_object) and _check_animated(blend_object):
+        if _check_armature_parent(blend_object) and not _check_animated(blend_object):
             meshes.append(model)
     return meshes
 
