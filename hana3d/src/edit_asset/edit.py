@@ -1,6 +1,7 @@
 """Edit functions."""
 import os
 import shutil
+from contextlib import suppress
 
 import bpy
 
@@ -66,5 +67,6 @@ def _set_thumbnail(asset_data, asset_props):
         thumbpath = os.path.join(tempdir, thumbnail_name)
         asset_thumbs_dir = paths.get_download_dirs(asset_data.asset_type)[0]
         asset_thumb_path = os.path.join(asset_thumbs_dir, thumbnail_name)
-        shutil.copy(thumbpath, asset_thumb_path)
+        with suppress(FileNotFoundError):
+            shutil.copy(thumbpath, asset_thumb_path)
         asset_props.thumbnail = asset_thumb_path
