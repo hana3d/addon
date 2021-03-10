@@ -46,9 +46,9 @@ def update_libraries(workspace):
     if profile:
         workspaces = profile['user']['workspaces']
 
-        for k, v in enumerate(workspaces):
-            if v['id'] == workspace:
-                workspaces[k]['libraries'] = r.json()
+        for count, element in enumerate(workspaces):
+            if element['id'] == workspace:
+                workspaces[count]['libraries'] = r.json()
                 break
 
         profile['user']['workspaces'] = workspaces
