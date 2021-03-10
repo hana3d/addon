@@ -62,9 +62,7 @@ def get_asset_under_mouse(mousex: float, mousey: float) -> int:
                 height = ui_props.thumb_size
 
                 if x < mousex < x + width and y < mousey < y + height:
-                    asset_id = column + ui_props.wcount * row + ui_props.scrolloffset
-                    logging.debug(f'Get_asset_under_mouse: returning id {asset_id}')
-                    return asset_id
+                    return column + ui_props.wcount * row + ui_props.scrolloffset
 
     return NO_ASSET
 
