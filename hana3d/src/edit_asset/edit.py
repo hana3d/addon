@@ -4,9 +4,13 @@ import shutil
 
 import bpy
 
-from ..libraries.libraries import set_library_props, update_libraries_list
+from ..libraries.libraries import (
+    clear_libraries,
+    set_library_props,
+    update_libraries_list,
+)
 from ..search.search import get_search_results
-from ..tags.tags import update_tags_list
+from ..tags.tags import clear_tags, update_tags_list
 from ... import paths
 from ...config import HANA3D_ASSET
 
@@ -40,11 +44,13 @@ def set_edit_props(asset_index: int):
     asset_props.asset_type = asset_data.asset_type.upper()
     asset_props.asset_index = asset_index
 
+    clear_tags(asset_props)
     update_tags_list(asset_props, bpy.context)
     for tag in asset_data.tags:
         asset_props.tags_list[tag].selected = True
 
     if asset_data.libraries:
+        clear_libraries(asset_props)
         update_libraries_list(asset_props, bpy.context)
         set_library_props(asset_data.libraries, asset_props)
 

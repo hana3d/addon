@@ -26,6 +26,15 @@ def get_tags(props: 'UploadProps'):
     return tags
 
 
+def clear_tags(props: 'Props'):
+    """Clear tags.
+
+    Arguments:
+        props: hana3d_types.Props,
+    """
+    props.tags_list.clear()
+
+
 def update_tags_list(props: 'Props', context: bpy.types.Context):
     """Update tags list.
 
@@ -35,7 +44,7 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
     """
     unified_props = Unified(context).props
     previous_tags = get_tags(props)
-    props.tags_list.clear()
+    clear_tags(props)
     current_workspace = unified_props.workspace
     for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
         if current_workspace == workspace['id']:

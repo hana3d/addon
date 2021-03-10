@@ -338,7 +338,6 @@ class SearchOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: WPS2
             self.next_index += 1
 
 
-
 classes = (
     SearchOperator,
 )
