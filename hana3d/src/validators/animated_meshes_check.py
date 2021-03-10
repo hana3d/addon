@@ -9,26 +9,28 @@ from . import BaseValidator, Category
 from ..asset.asset_type import AssetType
 
 
+def _check_armature_parent(blend_object: bpy.types.Object) -> bool:
+    while blend_object.parent:
+        blend_object = blend_object.parent
+        if blend_object.type == 'ARMATURE':
+            return True
+    return False
+
+
+def _check_animated(blend_object: bpy.types.Object) -> bool:
+    if blend_object.type == 'MESH' and blend_object.modifiers:
+        for mod in blend_object.modifiers:
+            if mod.type == 'ARMATURE':
+                return True
+    return False
+
+
 def _get_incorrect_animated_meshes(models: List[str]) -> List[str]:
     meshes = []
     for model in models:
         blend_object = bpy.data.objects[model]
-        parent = blend_object.parent
-        armature_parent = False
-        while parent:
-            if parent.type == 'ARMATURE':
-                armature_parent = True
-                break
-            parent = parent.parent
-        if armature_parent:
-            is_animated = False
-            if blend_object.type == 'MESH' and blend_object.modifiers:
-                for mod in blend_object.modifiers:
-                    if mod.type == 'ARMATURE':
-                        is_animated = True
-                        break
-            if not is_animated:
-                meshes.append(model)
+        if _check_armature_parent(blend_object) and _check_animated(blend_object):
+            meshes.append(model)
     return meshes
 
 

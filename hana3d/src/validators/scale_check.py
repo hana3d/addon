@@ -11,13 +11,14 @@ from ..asset.asset_type import AssetType
 
 CORRECT_SCALE = Vector([1, 1, 1])
 
+
 def _get_wrongly_scaled_objects(models: List[str]) -> List[str]:
-    objects = []
+    wrong_objects = []
     for model in models:
         blend_object = bpy.data.objects[model]
         if blend_object.scale != CORRECT_SCALE:
-            objects.append(model)
-    return objects
+            wrong_objects.append(model)
+    return wrong_objects
 
 
 def _get_object_list(asset_type: AssetType, export_data: dict):
@@ -55,15 +56,12 @@ def check_scale(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     return is_valid, message
 
 
-def fix_scale(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
+def fix_scale(asset_type: AssetType, export_data: dict):
     """Set all objects scale to (1,1,1).
 
     Parameters:
         asset_type: type of asset that will be uploaded
         export_data: dict containing objects to be uploaded info
-
-    Returns:
-        is_valid, message: if check passed and a report message
     """
     logging.info('Fixing scale...')
 

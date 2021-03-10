@@ -4,7 +4,7 @@ from os.path import dirname, join
 
 import bpy
 
-from hana3d_dev.src.validators.animated_meshes_check import animated_meshes_check
+from hana3d_dev.src.validators.animated_meshes_check import animated_meshes_check  # isort:skip
 
 
 class AnimatedMeshesCheck(unittest.TestCase):  # noqa: D101
