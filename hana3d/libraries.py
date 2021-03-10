@@ -25,6 +25,7 @@ from . import paths, rerequests, utils
 from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
 from .report_tools import execute_wrapper
 from .src.libraries.libraries import update_libraries_list
+from .src.preferences.profile import Profile
 from .src.search import search
 from .src.unified_props import Unified
 from .src.upload import upload
@@ -41,15 +42,16 @@ def update_libraries(workspace):
     r = rerequests.get(url, headers=headers)
     assert r.ok, f'Failed to get library data: {r.text}'
 
-    profile = bpy.context.window_manager[HANA3D_PROFILE]
-    workspaces = profile['user']['workspaces']
+    profile = Profile().get()
+    if profile:
+        workspaces = profile['user']['workspaces']
 
-    for k, v in enumerate(workspaces):
-        if v['id'] == workspace:
-            workspaces[k]['libraries'] = r.json()
-            break
+        for k, v in enumerate(workspaces):
+            if v['id'] == workspace:
+                workspaces[k]['libraries'] = r.json()
+                break
 
-    profile['user']['workspaces'] = workspaces
+        profile['user']['workspaces'] = workspaces
 
 
 class RemoveLibrarySearch(Operator):
