@@ -1,0 +1,61 @@
+name: Create release
+
+on: workflow_dispatch
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: contains(github.ref, 'release')
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - name: Set version
+        run: echo "VERSION=$(echo $GITHUB_REF | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+$')" >> $GITHUB_ENV
+      - name: Bump version
+        run: python bump_version.py $VERSION
+      - name: Commit version
+        run: |
+          git config user.name 'Hana3D Bot'
+          git config user.email 'bot@hana3d.com'
+          git commit -am "Bump version"
+          git push
+      - name: Build project
+        run: make build
+        env:
+          STAGE: production
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            tag_name: ${{ env.VERSION }}
+            release_name: ${{ env.VERSION }}
+            body: ${{ github.event.head_commit.message }}
+            draft: false
+            prerelease: false
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_path: ./hana3d_production.zip
+            asset_name: hana3d_production.zip
+            asset_content_type: application/zip
+
+  e2e:
+    name: Run E2E tests
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: convictional/trigger-workflow-and-wait@v1.2.0
+        with:
+          owner: hana3d
+          repo: e2e-tests
+          github_token: ${{ secrets.HANA3D_BOT_ACCESS_TOKEN }}
+          event_type: production
+          workflow_file_name: webhook.yml
