@@ -26,6 +26,7 @@ from ....report_tools import execute_wrapper
 
 NO_ASSET = -3
 
+
 def get_asset_under_mouse(mousex: float, mousey: float) -> int:
     """Return the asset under the mouse.
 

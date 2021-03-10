@@ -2,6 +2,7 @@
 import datetime
 import math
 import os
+from contextlib import suppress
 
 import bpy
 
@@ -250,7 +251,8 @@ def _load_tooltip_thumbnail(search_result: search.AssetData, active_index: int):
         else:
             image_name = utils.previmg_name(asset_type, active_index)
             img = bpy.data.images.get(image_name)
-        img.colorspace_settings.name = 'Linear'
+        with suppress(AttributeError):
+            img.colorspace_settings.name = 'Linear'
 
     return img
 
@@ -396,6 +398,9 @@ def draw_callback2d_search(self, context):
                 iname = utils.previmg_name(asset_type, index)
                 img = bpy.data.images.get(iname)
 
+                if img is None:
+                    continue
+
                 max_size = max(img.size[0], img.size[1])
                 width = int(ui_props.thumb_size * img.size[0] / max_size)
                 height = int(ui_props.thumb_size * img.size[1] / max_size)
@@ -439,18 +444,19 @@ def draw_callback2d_search(self, context):
                 search_result = search_results[ui_props.active_index]
 
                 img = _load_tooltip_thumbnail(search_result, ui_props.active_index)
-                gimg, author = _load_tooltip_author(search_result)
+                if img is not None:
+                    gimg, author = _load_tooltip_author(search_result)
 
-                draw_tooltip(
-                    ui_props.mouse_x,
-                    ui_props.mouse_y,
-                    text=ui_props.tooltip,
-                    author=author,
-                    created=search_result.created,
-                    revision=search_result.revision,
-                    img=img,
-                    gravatar=gimg,
-                )
+                    draw_tooltip(
+                        ui_props.mouse_x,
+                        ui_props.mouse_y,
+                        text=ui_props.tooltip,
+                        author=author,
+                        created=search_result.created,
+                        revision=search_result.revision,
+                        img=img,
+                        gravatar=gimg,
+                    )
 
     elif ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):
         if ui_props.active_index > -1:

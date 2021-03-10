@@ -107,7 +107,8 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
             img.filepath = thumbnail_path
             img.reload()
         img.colorspace_settings.name = 'Linear'
-    else:
+
+    if bpy.data.images.get(image_name) is None:
         logging.error(f'No thumbnail in {thumbnail_path}, will load placeholder')
         load_placeholder_thumbnail(asset_type, index, search_result.id)
 
