@@ -97,7 +97,6 @@ def clear_libraries(props: 'Props'):
 
     Arguments:
         props: hana3d_types.Props,
-        context: Blender context
     """
     props.libraries_list.clear()
     with suppress(AttributeError):

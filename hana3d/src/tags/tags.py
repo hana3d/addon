@@ -27,6 +27,11 @@ def get_tags(props: 'UploadProps'):
 
 
 def clear_tags(props: 'Props'):
+    """Clear tags.
+
+    Arguments:
+        props: hana3d_types.Props,
+    """
     props.tags_list.clear()
 
 
