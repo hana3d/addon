@@ -257,8 +257,8 @@ class GenerateMaterialThumbnailOperator(bpy.types.Operator):
             self.props = getattr(material, HANA3D_NAME)
             self._generate_material_thumbnail(material)
         except Exception as error:
-            props.is_generating_thumbnail = False
-            props.thumbnail_generating_state = ''
+            self.props.is_generating_thumbnail = False
+            self.props.thumbnail_generating_state = ''
             logging.warning(f'Error while packing file: {str(error)}')
             return {'CANCELLED'}
         return {'FINISHED'}
