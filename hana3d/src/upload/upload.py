@@ -28,19 +28,26 @@ def get_upload_props_by_view_id(asset_type: AssetType, view_id: str):
 
     Returns:
         upload props
+
+    Raises:
+        Invalid asset type exception
     """
-    asset = None
-    if asset_type == 'model':
+    if asset_type.lower() == 'model':
         assets = bpy.context.blend_data.objects
-    elif asset_type == 'scene':
+    elif asset_type.lower() == 'scene':
         assets = bpy.data.scenes
-    elif asset_type == 'material':
+    elif asset_type.lower() == 'material':
         assets = bpy.data.materials
+    else:
+        raise Exception(f'Invalid asset type: {asset_type}')
 
     assets = [
         ob
         for ob in assets
         if getattr(ob, HANA3D_NAME) and getattr(ob, HANA3D_NAME).view_id == view_id
     ]
-    asset = assets[0]
-    return getattr(asset, HANA3D_NAME)
+
+    if not assets:
+        return None
+
+    return getattr(assets[0], HANA3D_NAME)
