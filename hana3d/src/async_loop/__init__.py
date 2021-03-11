@@ -146,7 +146,10 @@ class AsyncLoopModalOperator(bpy.types.Operator):
         (re)loads a file. The operator then doesn't get the chance to
         finish the async tasks, hence stop_after_this_kick is never True.
         """
-        self.loop_status.update_operator_status(False)
+        try:
+            self.loop_status.update_operator_status(False)
+        except Exception:
+            logging.info('Could not update loop status, has it been deleted?')
 
     def execute(self, context):
         """Modal execute just calls invoke.
