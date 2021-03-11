@@ -45,7 +45,7 @@ class IgnoreOperator(bpy.types.Operator):
     bl_label = f'{HANA3D_DESCRIPTION} Validation Ignore'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    index: IntProperty(
+    index: IntProperty(  # type: ignore
         name='Index',
         description='Index',
         default=-1,
@@ -71,7 +71,7 @@ class FixOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
     bl_label = f'{HANA3D_DESCRIPTION} Validation Fix'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
-    index: IntProperty(
+    index: IntProperty(  # type: ignore
         name='Index',
         description='Index',
         default=-1,
