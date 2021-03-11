@@ -64,7 +64,7 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         row = layout.row()
         row.scale_y = 2.0
         row.operator(f'message.{HANA3D_NAME}_validation_panel', text='Validate & upload')
-        row.enabled = not hasattr(props, 'asset_index')
+        row.enabled = not hasattr(props, 'asset_index')  # noqa: WPS421
         if props.view_id != '' and unified_props.workspace == props.view_workspace:
             layout.label(text='Asset has a version online.')
 
