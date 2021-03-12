@@ -136,11 +136,11 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
         )
 
         for index, validator in enumerate(validators):
-            box = self.layout.box()
-            self._draw_overview(box, index, validator)
             valid, message = validator.get_validation_result()
-            self._draw_report(box, valid, message)
             if not valid:
+                box = self.layout.box()
+                self._draw_overview(box, index, validator)
+                self._draw_report(box, valid, message)
                 error_dict[validator.category] += 1
 
         if error_dict[Category.error] > 0:
