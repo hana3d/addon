@@ -16,8 +16,8 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 import logging
-import time
 import threading
+import time
 
 import bpy
 import requests
