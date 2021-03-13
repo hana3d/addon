@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 import logging
 import time
+import threading
 
 import bpy
 import requests
@@ -29,6 +30,7 @@ from .src.preferences.preferences import Preferences
 from .src.preferences.profile import Profile
 from .src.ui import colors
 from .src.ui.main import UI
+from .tasks_queue import add_task
 
 AUTH_URL = paths.get_auth_url()
 PLATFORM_URL = paths.get_platform_url()
@@ -43,7 +45,7 @@ active_authenticator = None
 def login(authenticator: oauth.OAuthAuthenticator):
     oauth_response = authenticator.get_new_token(redirect_url=REDIRECT_URL)
     logging.debug('tokens retrieved')
-    write_tokens(oauth_response)
+    add_task(write_tokens, args=(oauth_response,))
 
 
 def refresh_token(immediate: bool = False) -> dict:
@@ -135,7 +137,8 @@ class RegisterLoginOnline(bpy.types.Operator):
         )
         # we store authenticator globally to be able to ping the server if connection fails.
         active_authenticator = authenticator
-        login(authenticator)
+        thread = threading.Thread(target=login, args=([authenticator]), daemon=True)
+        thread.start()
 
 
 class Logout(bpy.types.Operator):
