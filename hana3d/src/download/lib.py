@@ -1,6 +1,7 @@
 """Helper methods for asset download."""
 import os
 import shutil
+from datetime import datetime
 
 from ..search.search import AssetData
 from ... import paths
@@ -16,10 +17,15 @@ def newer_asset_in_server(asset_data: AssetData, file_name: str) -> bool:
     Returns:
         bool: True if there is a newer version, False otherwise
     """
-    return (
-        asset_data.created is not None
-        and float(asset_data.created) > float(os.path.getctime(file_name))
-    )
+    if asset_data.revision is not None and str(asset_data.revision) != '0':
+        revision_date = datetime.strptime(asset_data.revision, '%Y-%m-%dT%H:%M:%S').timestamp()
+        return float(revision_date) > float(os.path.getctime(file_name))
+    elif asset_data.created is not None and str(asset_data.created) != '0':
+        print(asset_data.created)
+        created_date = datetime.strptime(asset_data.created, '%Y-%m-%dT%H:%M:%S.%f').timestamp()
+        return float(created_date) > float(os.path.getctime(file_name))
+    else:
+        return False
 
 
 def copy_file(source: str, target: str):
