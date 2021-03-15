@@ -21,8 +21,6 @@ import queue
 import bpy
 from bpy.app.handlers import persistent
 
-from . import utils
-
 
 @persistent
 def scene_load(context):
