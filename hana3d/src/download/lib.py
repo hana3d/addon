@@ -17,7 +17,7 @@ def newer_asset_in_server(asset_data: AssetData, file_name: str) -> bool:
     Returns:
         bool: True if there is a newer version, False otherwise
     """
-    if asset_data.revision is not None and str(asset_data.revision) != '0':
+    if asset_data.revision is not None and asset_data.revision != '0':
         revision_date = datetime.strptime(asset_data.revision, '%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
         return float(revision_date.timestamp()) > float(os.path.getctime(file_name))
     return False
