@@ -99,7 +99,7 @@ def draw_callback_progress2d(self, context):  # noqa: D103
 
         directory = paths.get_temp_dir(f'{asset_data.asset_type}_search')
         tpath = os.path.join(
-            directory, asset_data.thumbnail_small
+            directory, asset_data.thumbnail_small,
         ) if asset_data.thumbnail_small else ''
         img = utils.get_hidden_image(tpath, asset_data.id)
 

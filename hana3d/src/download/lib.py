@@ -18,13 +18,9 @@ def newer_asset_in_server(asset_data: AssetData, file_name: str) -> bool:
         bool: True if there is a newer version, False otherwise
     """
     if asset_data.revision is not None and str(asset_data.revision) != '0':
-        revision_date = datetime.strptime(asset_data.revision, '%Y-%m-%dT%H:%M:%S').timestamp()
-        return float(revision_date) > float(os.path.getctime(file_name))
-    elif asset_data.created is not None and str(asset_data.created) != '0':
-        created_date = datetime.strptime(asset_data.created, '%Y-%m-%dT%H:%M:%S.%f').timestamp()
-        return float(created_date) > float(os.path.getctime(file_name))
-    else:
-        return False
+        revision_date = datetime.strptime(asset_data.revision, '%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
+        return float(revision_date.timestamp()) > float(os.path.getctime(file_name))
+    return False
 
 
 def copy_file(source: str, target: str):
