@@ -97,9 +97,12 @@ def draw_callback_progress2d(self, context):  # noqa: D103
     for download_thread in download.download_threads.values():
         asset_data = download_thread.asset_data
 
-        directory = paths.get_temp_dir(f'{asset_data.asset_type}_search')
-        tpath = os.path.join(directory, asset_data.thumbnail_small)
-        img = utils.get_hidden_image(tpath, asset_data.id)
+        # directory = paths.get_temp_dir(f'{asset_data.asset_type}_search')
+        # tpath = os.path.join(directory, asset_data.thumbnail_small)
+        # img = utils.get_hidden_image(tpath, asset_data.id)
+
+        iname = utils.previmg_name(asset_data.asset_type, asset_data.index)
+        img = bpy.data.images.get(iname)
 
         if download_thread.passargs.get('import_params'):
             for import_param in download_thread.passargs['import_params']:
