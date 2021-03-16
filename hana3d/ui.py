@@ -98,7 +98,9 @@ def draw_callback_progress2d(self, context):  # noqa: D103
         asset_data = download_thread.asset_data
 
         directory = paths.get_temp_dir(f'{asset_data.asset_type}_search')
-        tpath = os.path.join(directory, asset_data.thumbnail_small)
+        tpath = os.path.join(
+            directory, asset_data.thumbnail_small,
+        ) if asset_data.thumbnail_small else ''
         img = utils.get_hidden_image(tpath, asset_data.id)
 
         if download_thread.passargs.get('import_params'):
