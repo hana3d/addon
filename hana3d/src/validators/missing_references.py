@@ -10,15 +10,15 @@ from . import BaseValidator, Category
 from ..asset.asset_type import AssetType
 
 
-def _check_missing_reference(image: bpy.types.Image):
+def _has_missing_reference(image: bpy.types.Image):
     path = image.filepath_from_user()
-    return os.path.exists(path)
+    return not os.path.exists(path)
 
 
 def _get_missing_textures_in_material(material: bpy.types.Material) -> Set[str]:
     textures: Set[str] = set()
     for node in material.node_tree.nodes:
-        if node.type == 'TEX_IMAGE' and not _check_missing_reference(node.image):
+        if node.type == 'TEX_IMAGE' and _has_missing_reference(node.image):
             textures.add(node.image.name)    # noqa: WPS220
     return textures
 
