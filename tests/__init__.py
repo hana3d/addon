@@ -16,6 +16,7 @@ from validation import (  # noqa: E402 isort:skip
     double_sided_check,
     joint_count,
     material_count,
+    missing_references,
     morph_target_check,
     object_count,
     scale_check,
@@ -36,6 +37,7 @@ if __name__ == '__main__':
     suite.addTests(loader.loadTestsFromModule(double_sided_check))
     suite.addTests(loader.loadTestsFromModule(joint_count))
     suite.addTests(loader.loadTestsFromModule(material_count))
+    suite.addTests(loader.loadTestsFromModule(missing_references))
     suite.addTests(loader.loadTestsFromModule(morph_target_check))
     suite.addTests(loader.loadTestsFromModule(object_count))
     suite.addTests(loader.loadTestsFromModule(scale_check))
