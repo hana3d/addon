@@ -4,13 +4,17 @@ from os.path import dirname, join
 
 import bpy
 
-from hana3d_dev.src.validators.missing_references import missing_references_check
+from hana3d_dev.src.validators.missing_references import (
+    missing_references_check
+)
 
 
 class TestMissingReferences(unittest.TestCase):  # noqa: D101
     def setUp(self):
         """Load test scene."""
-        bpy.ops.wm.open_mainfile(filepath=join(dirname(__file__), '../scenes/missing_references.blend'))
+        bpy.ops.wm.open_mainfile(
+            filepath=join(dirname(__file__), '../scenes/missing_references.blend'),
+        )
 
     def test_correct_model(self):
         """Test validation function on correct model."""
