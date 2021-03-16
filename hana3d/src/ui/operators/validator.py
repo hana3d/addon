@@ -11,6 +11,7 @@ from ...validators import BaseValidator, Category, dummy_fix_function
 from ...validators.animated_meshes_check import animated_meshes_check
 from ...validators.animation_count import animation_count
 from ...validators.joint_count import joint_count
+from ...validators.missing_references import missing_references_check
 from ...validators.morph_target_check import morph_target_checker
 from ...validators.object_count import object_count
 from ...validators.scale_check import scale_check
@@ -27,6 +28,7 @@ validators: List[BaseValidator] = [
     # double_sided,
     joint_count,
     # material_count,
+    missing_references_check,
     morph_target_checker,
     object_count,
     scale_check,
