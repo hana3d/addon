@@ -4,9 +4,7 @@ from os.path import dirname, join
 
 import bpy
 
-from hana3d_dev.src.validators.missing_references import (
-    missing_references_check
-)
+from hana3d_dev.src.validators.missing_references import missing_references_check  # isort:skip
 
 
 class TestMissingReferences(unittest.TestCase):  # noqa: D101
