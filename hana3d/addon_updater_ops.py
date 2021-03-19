@@ -1012,7 +1012,7 @@ def update_settings_ui(self, context, element=None):
         if updater.include_branches is True and len(updater.include_branch_list) > 0:
             col.operator(
                 addon_updater_update_target.bl_idname,
-                text="Install another version",
+                text='Install another version',
             )
         else:
             col.operator(
