@@ -70,7 +70,7 @@ def generate_model_thumbnail(
         i += 1
 
     filepath = os.path.join(tempdir, "thumbnailer_" + HANA3D_NAME + ext)
-    tfpath = paths.get_thumbnailer_filepath()
+    tfpath = paths.get_thumbnailer_filepath('model')
     datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
     autopack = False
@@ -231,7 +231,7 @@ def generate_material_thumbnail(
         i += 1
 
     filepath = os.path.join(tempdir, "material_thumbnailer_cycles" + ext)
-    tfpath = paths.get_material_thumbnailer_filepath()
+    tfpath = paths.get_thumbnailer_filepath('material')
     datafile = os.path.join(tempdir, HANA3D_EXPORT_DATA_FILE)
 
     utils.save_file(filepath, compress=False, copy=True)

@@ -126,8 +126,8 @@ class GenerateModelThumbnailOperator(bpy.types.Operator):
             self.props = getattr(main_model, HANA3D_NAME)
             self._generate_model_thumbnail(main_model)
         except Exception as error:
-            props.is_generating_thumbnail = False
-            props.thumbnail_generating_state = ''
+            self.props.is_generating_thumbnail = False
+            self.props.thumbnail_generating_state = ''
             UI().add_report(f'Error in thumbnailer: {error}', color=colors.RED)
             return {'CANCELLED'}
         return {'FINISHED'}
