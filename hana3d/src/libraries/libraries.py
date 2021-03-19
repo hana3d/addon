@@ -112,13 +112,15 @@ def update_libraries_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
-    unified_props = Unified(context).props
-    current_workspace = unified_props.workspace
-    previous_libraries = get_libraries(props)
-    clear_libraries(props)
-    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
-        if current_workspace != workspace['id']:
-            continue
-        for library in workspace['libraries']:
-            _add_library(props, library)
-    set_library_props(previous_libraries, props)
+    with suppress(KeyError):
+        hana3d_profile = context.window_manager[HANA3D_PROFILE]
+        unified_props = Unified(context).props
+        current_workspace = unified_props.workspace
+        previous_libraries = get_libraries(props)
+        clear_libraries(props)
+        for workspace in hana3d_profile['user']['workspaces']:
+            if current_workspace != workspace['id']:
+                continue
+            for library in workspace['libraries']:
+                _add_library(props, library)
+        set_library_props(previous_libraries, props)

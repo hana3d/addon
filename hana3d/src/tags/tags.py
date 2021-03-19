@@ -1,4 +1,5 @@
 """Tags functions."""
+from contextlib import suppress
 from typing import TYPE_CHECKING, List
 
 import bpy
@@ -42,14 +43,16 @@ def update_tags_list(props: 'Props', context: bpy.types.Context):
         props: hana3d_types.Props,
         context: Blender context
     """
-    unified_props = Unified(context).props
-    previous_tags = get_tags(props)
-    clear_tags(props)
-    current_workspace = unified_props.workspace
-    for workspace in context.window_manager[HANA3D_PROFILE]['user']['workspaces']:
-        if current_workspace == workspace['id']:
-            for tag in workspace['tags']:
-                new_tag = props.tags_list.add()
-                new_tag['name'] = tag
-    for tag_name in previous_tags:
-        props.tags_list[tag_name].selected = True
+    with suppress(KeyError):
+        hana3d_profile = context.window_manager[HANA3D_PROFILE]
+        unified_props = Unified(context).props
+        previous_tags = get_tags(props)
+        clear_tags(props)
+        current_workspace = unified_props.workspace
+        for workspace in hana3d_profile['user']['workspaces']:
+            if current_workspace == workspace['id']:
+                for tag in workspace['tags']:
+                    new_tag = props.tags_list.add()
+                    new_tag['name'] = tag
+        for tag_name in previous_tags:
+            props.tags_list[tag_name].selected = True
