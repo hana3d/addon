@@ -23,7 +23,7 @@ def configure_sentry(url: str):
     sentry_sdk.init(
         url,
         traces_sample_rate=1.0,
-        release='.'.join(map(str, get_addon_version()))
+        release='.'.join(map(str, get_addon_version())),
     )
 
 
