@@ -11,6 +11,7 @@ from ..search.search import get_search_props
 from ..tags.tags import update_tags_list
 from ..upload.upload import get_upload_props
 from ... import config, paths
+from ...utils import get_addon_version
 
 
 def configure_sentry(url: str):
@@ -22,6 +23,7 @@ def configure_sentry(url: str):
     sentry_sdk.init(
         url,
         traces_sample_rate=1.0,
+        release='.'.join(map(str, get_addon_version())),
     )
 
 
