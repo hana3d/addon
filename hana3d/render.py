@@ -247,7 +247,7 @@ class RenderThread(UploadFileMixin, threading.Thread):
             self._set_running_flag(False)
             time.sleep(5)
             self.update_state(self.log_state_name, '')
-            # Can't run asyncio inside thread
+            # TODO: use asyncio (can't run asyncio inside thread)
             # profile = Profile()   # noqa: E800
             # run_async_function(profile.update_async)  # noqa: E800
 
