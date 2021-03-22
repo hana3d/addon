@@ -115,14 +115,14 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
         load_placeholder_thumbnail(asset_type, index, search_result.id)
 
 
-def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str):
+def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str) -> str:
     """Load placeholder thumbnail for assets without one.
 
     Parameters:
         asset_type: asset type
         index: index number of the asset in search results
         asset_id: asset id
-    
+
     Returns:
         placeholder_path: path to the placeholder thumbnail
     """
