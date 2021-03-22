@@ -1,4 +1,5 @@
 """Edit assets operators."""
+import logging
 import uuid
 
 import bpy
@@ -40,7 +41,10 @@ class EditAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa: W
         props = get_edit_props()
         asset_data, view_data = get_edit_data(props)
 
+        logging.debug(f'Editing asset: new data is {asset_data}')
         await edit_asset(ui, correlation_id, props.id, asset_data)
+
+        logging.debug(f'Editing view: new data is {view_data}')
         await edit_view(ui, correlation_id, props.view_id, view_data)
 
         search.run_operator()
