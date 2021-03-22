@@ -88,7 +88,9 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
 
     if search_result.thumbnail_small == '':
         logging.debug('No small thumbnail, will load placeholder')
-        load_placeholder_thumbnail(asset_type, index, search_result.id)
+        placeholder_path = load_placeholder_thumbnail(asset_type, index, search_result.id)
+        search_result.thumbnail_small = placeholder_path
+        search_result.thumbnail = placeholder_path
         return
 
     thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
@@ -113,13 +115,16 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
         load_placeholder_thumbnail(asset_type, index, search_result.id)
 
 
-def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str):
+def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str) -> str:
     """Load placeholder thumbnail for assets without one.
 
     Parameters:
         asset_type: asset type
         index: index number of the asset in search results
         asset_id: asset id
+
+    Returns:
+        str: placeholder_path
     """
     placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
 
@@ -131,6 +136,7 @@ def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str)
 
     fullsize_img = bpy.data.images.load(placeholder_path)
     fullsize_img.name = utils.previmg_name(asset_type, index, fullsize=True)
+    return placeholder_path
 
 
 def get_search_results(asset_type: AssetType = None) -> List[AssetData]:
