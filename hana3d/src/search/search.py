@@ -124,7 +124,7 @@ def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str)
         asset_id: asset id
 
     Returns:
-        placeholder_path: path to the placeholder thumbnail
+        str: placeholder_path
     """
     placeholder_path = paths.get_addon_thumbnail_path('thumbnail_notready.png')
 
