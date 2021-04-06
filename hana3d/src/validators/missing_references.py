@@ -11,8 +11,10 @@ from ..asset.asset_type import AssetType
 
 
 def _has_missing_reference(image: bpy.types.Image):
-    path = image.filepath_from_user()
-    return not os.path.exists(path)
+    if not image.packed_file:
+        path = image.filepath_from_user()
+        return not os.path.exists(path)
+    return False
 
 
 def _get_missing_textures_in_material(material: bpy.types.Material) -> Set[str]:
