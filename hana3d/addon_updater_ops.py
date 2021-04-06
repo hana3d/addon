@@ -435,6 +435,11 @@ class addon_updater_install_manually(bpy.types.Operator):
         row = layout.row()
 
         if updater.update_link is not None:
+            print(updater.update_link)
+            print(updater.json)
+            print(updater.use_releases)
+            print(updater.select_link)
+            print(updater.addon)
             row.operator("wm.url_open", text="Direct download").url = updater.update_link
         else:
             row.operator("wm.url_open", text="(failed to retrieve direct download)")
@@ -1215,8 +1220,10 @@ def select_link_function(self, tag):
     server, instead of downloading the default release/tag source code
     """
 
+    link = tag['assets'][0]['browser_download_url']
+
     # -- Default, universal case (and is the only option for GitLab/Bitbucket)
-    link = tag["zipball_url"]
+    # link = tag["zipball_url"]
 
     # -- Example: select the first (or only) asset instead source code --
     # if "assets" in tag and "browser_download_url" in tag["assets"][0]:
