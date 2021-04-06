@@ -707,8 +707,6 @@ class Singleton_updater(object):
     # create a working directory and download the new files
 
     def stage_repository(self, url):
-        print(url)
-
         local = os.path.join(self._updater_path, "update_staging")
         error = None
 

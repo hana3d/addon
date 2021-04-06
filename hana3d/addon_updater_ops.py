@@ -435,11 +435,6 @@ class addon_updater_install_manually(bpy.types.Operator):
         row = layout.row()
 
         if updater.update_link is not None:
-            print(updater.update_link)
-            print(updater.json)
-            print(updater.use_releases)
-            print(updater.select_link)
-            print(updater.addon)
             row.operator("wm.url_open", text="Direct download").url = updater.update_link
         else:
             row.operator("wm.url_open", text="(failed to retrieve direct download)")
