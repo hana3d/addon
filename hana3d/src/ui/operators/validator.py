@@ -110,7 +110,7 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
         for validator in validators:
             validator.run_validation()
             valid, _ = validator.get_validation_result()
-            if not valid and validator.category == Category.warning:
+            if not valid and validator.category == Category.error:
                 upload_props.skip_post_process = True
         return context.window_manager.invoke_props_dialog(self, width=900)  # noqa: WPS432
 
@@ -146,12 +146,11 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
 
         if error_dict[Category.error] > 0:
             self.layout.label(
-                text=f'{error_dict[Category.error]} errors detected, cannot upload.',
+                text=f'{error_dict[Category.error]} errors detected, conversions will not run.',
             )
-            return
         if error_dict[Category.warning] > 0:
             self.layout.label(
-                text=f'{error_dict[Category.warning]} warnings detected, conversions will not run.',
+                text=f'{error_dict[Category.warning]} warnings detected.',
             )
         self._draw_upload_buttons(context)
 
