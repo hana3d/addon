@@ -702,7 +702,7 @@ def post_update_callback(module_name, res=None):
         # this is the same code as in conditional at the end of the register function
         # ie if "auto_reload_post_update" is True, comment out this code
         logging.debug('{0} updater: Running post update callback'.format(updater.addon))
-        # bpy.app.handlers.depsgraph_update_post.append(updater_run_success_popup_handler)
+        # bpy.app.handlers.depsgraph_update_post.append(updater_run_success_popup_handler) # noqa: E800, E501
 
         atr = addon_updater_updated_successful.bl_idname.split(".")
         getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
