@@ -622,7 +622,7 @@ def updater_run_success_popup_handler(scene):
         return
 
     try:
-        bpy.app.handlers.scene_update_post.remove(updater_run_success_popup_handler)
+        bpy.app.handlers.depsgraph_update_post.remove(updater_run_success_popup_handler)
     except Exception:
         pass
 
@@ -640,7 +640,7 @@ def updater_run_install_popup_handler(scene):
         return
 
     try:
-        bpy.app.handlers.scene_update_post.remove(updater_run_install_popup_handler)
+        bpy.app.handlers.depsgraph_update_post.remove(updater_run_install_popup_handler)
     except Exception:
         pass
 
@@ -676,10 +676,10 @@ def background_update_callback(update_ready):
     if update_ready is not True:
         return
     if (
-        updater_run_install_popup_handler not in bpy.app.handlers.scene_update_post
+        updater_run_install_popup_handler not in bpy.app.handlers.depsgraph_update_post
         and ran_autocheck_install_popup is False
     ):
-        bpy.app.handlers.scene_update_post.append(updater_run_install_popup_handler)
+        bpy.app.handlers.depsgraph_update_post.append(updater_run_install_popup_handler)
         ran_autocheck_install_popup = True
 
 
@@ -702,7 +702,7 @@ def post_update_callback(module_name, res=None):
         # this is the same code as in conditional at the end of the register function
         # ie if "auto_reload_post_update" is True, comment out this code
         logging.debug('{0} updater: Running post update callback'.format(updater.addon))
-        # bpy.app.handlers.scene_update_post.append(updater_run_success_popup_handler)
+        # bpy.app.handlers.depsgraph_update_post.append(updater_run_success_popup_handler)
 
         atr = addon_updater_updated_successful.bl_idname.split(".")
         getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
@@ -811,10 +811,10 @@ def showReloadPopup():
             return
 
         if (
-            updater_run_success_popup_handler not in bpy.app.handlers.scene_update_post
+            updater_run_success_popup_handler not in bpy.app.handlers.depsgraph_update_post
             and ran_update_sucess_popup is False
         ):
-            bpy.app.handlers.scene_update_post.append(updater_run_success_popup_handler)
+            bpy.app.handlers.depsgraph_update_post.append(updater_run_success_popup_handler)
             ran_update_sucess_popup = True
 
 
