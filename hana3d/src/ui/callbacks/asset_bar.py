@@ -176,7 +176,7 @@ def draw_tooltip(   # noqa: WPS211
 
     y_sku = y_created
     x_sku = x_created
-    for sku_item in sku: 
+    for sku_item in sku:
         y_sku = y_sku + line_height
         text_sku = f'{sku[sku_item]} : {sku_item}'
         # text_sku = f'LIbrary: {sku[sku_item]}, Sku: {sku_item}'
@@ -460,10 +460,10 @@ def draw_callback2d_search(self, context):
                 img = _load_tooltip_thumbnail(search_result, ui_props.active_index)
                 if img is not None:
 
-                    sku.clear() 
-                    for instance in ui_props.sku.keys(): 
+                    sku.clear()
+                    for instance in ui_props.sku.keys():
                         sku[ui_props.sku[instance]['name']] = ui_props.sku[instance]['library']
-                    
+
                     gimg, author = _load_tooltip_author(search_result)
 
                     draw_tooltip(
