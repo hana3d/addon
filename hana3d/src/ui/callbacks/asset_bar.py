@@ -32,6 +32,8 @@ def draw_tooltip(   # noqa: WPS211
     revision='',
     img=None,
     gravatar=None,
+    sku_name='',
+    sku_lib='',
 ):
     """Draw tooltip.
 
@@ -44,6 +46,7 @@ def draw_tooltip(   # noqa: WPS211
         revision: view revision
         img: image
         gravatar: gravatar
+        sku_name: product sku
     """
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
@@ -159,6 +162,9 @@ def draw_tooltip(   # noqa: WPS211
     text_created = f'Created: {created_date}'
     bgl_helper.draw_text(text_created, x_created, y_created, font_height, tcol)
 
+    y_sku = y_created + line_height #if it has more than one sku, should add line height foreach one
+    x_sku = x_created
+
     y_revision = y_created - line_height
     x_revision = x_created
     if revision != '0':
@@ -169,6 +175,11 @@ def draw_tooltip(   # noqa: WPS211
         revision_date = revision_parsed.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
         text_revision = f'Modified: {revision_date}'
         bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
+        #y_sku = y_sku - line_height
+
+    #insert SKU below 'Created' or 'Revision' line
+    text_sku = f'Sku: {sku_lib}, {sku_name}'
+    bgl_helper.draw_text(text_sku, x_sku, y_sku, font_height, tcol)
 
     for line in lines:
         ytext = (
@@ -456,6 +467,8 @@ def draw_callback2d_search(self, context):
                         revision=search_result.revision,
                         img=img,
                         gravatar=gimg,
+                        sku_name=ui_props.sku_name,
+                        sku_lib=ui_props.sku_lib,
                     )
 
     elif ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):

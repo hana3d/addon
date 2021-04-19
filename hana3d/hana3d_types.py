@@ -120,6 +120,12 @@ upload_asset_type_items = (
 )
 
 
+class Hana3DSkuItem(PropertyGroup):
+    name: StringProperty(name="Product Sku", default="Unknown")
+    library: StringProperty(name="Product Library", default="Unknown")
+
+bpy.utils.register_class(Hana3DSkuItem)
+
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
         asset_type = self.asset_type_search.lower()
@@ -161,6 +167,9 @@ class Hana3DUIProps(PropertyGroup):
     # these aren't actually used ( by now, seems to better use globals in UI module:
     draw_tooltip: BoolProperty(name='Draw Tooltip', default=False)
     tooltip: StringProperty(name='Tooltip', description='asset preview info', default='')
+    #sku: CollectionProperty(type=Hana3DSkuItem)
+    sku_name: StringProperty(name='Product Sku', default='') 
+    sku_lib: StringProperty(name='Product Library', default='') 
 
     ui_scale = 1
 
