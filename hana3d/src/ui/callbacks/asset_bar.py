@@ -47,6 +47,7 @@ def draw_tooltip(   # noqa: WPS211
         img: image
         gravatar: gravatar
         sku_name: product sku
+        sku_lib: product lib
     """
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
@@ -175,9 +176,8 @@ def draw_tooltip(   # noqa: WPS211
         revision_date = revision_parsed.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
         text_revision = f'Modified: {revision_date}'
         bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
-        #y_sku = y_sku - line_height
 
-    #insert SKU below 'Created' or 'Revision' line
+    #insert SKU above 'Created' or 'Revision' line
     text_sku = f'Sku: {sku_lib}, {sku_name}'
     bgl_helper.draw_text(text_sku, x_sku, y_sku, font_height, tcol)
 

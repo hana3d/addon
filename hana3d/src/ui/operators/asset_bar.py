@@ -500,7 +500,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                      #   ui_props.sku = props.custom_props[name]    
 
                     for library in asset_data.libraries:
-                        #for name in ui_props.sku.keys(): 
                         ui_props.sku_name = library['metadata']['view_props']['sku'] or ''
                         ui_props.sku_lib  = library['name'] or ''
 
