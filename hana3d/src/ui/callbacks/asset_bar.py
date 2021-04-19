@@ -163,7 +163,8 @@ def draw_tooltip(   # noqa: WPS211
     text_created = f'Created: {created_date}'
     bgl_helper.draw_text(text_created, x_created, y_created, font_height, tcol)
 
-    y_sku = y_created + line_height #if it has more than one sku, should add line height foreach one
+    # if it has more than one sku, should add line height foreach one
+    y_sku = y_created + line_height
     x_sku = x_created
 
     y_revision = y_created - line_height
@@ -177,7 +178,7 @@ def draw_tooltip(   # noqa: WPS211
         text_revision = f'Modified: {revision_date}'
         bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
 
-    #insert SKU above 'Created' or 'Revision' line
+    # insert SKU above 'Created' line
     text_sku = f'Sku: {sku_lib}, {sku_name}'
     bgl_helper.draw_text(text_sku, x_sku, y_sku, font_height, tcol)
 
