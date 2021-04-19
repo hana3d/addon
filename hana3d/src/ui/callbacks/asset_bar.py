@@ -402,6 +402,10 @@ def draw_callback2d_search(self, context):
                     continue
 
                 max_size = max(img.size[0], img.size[1])
+                if max_size == 0:
+                    logging.error(f'Image with name {iname} has both sides equal to zero, skipping')
+                    continue
+
                 width = int(ui_props.thumb_size * img.size[0] / max_size)
                 height = int(ui_props.thumb_size * img.size[1] / max_size)
                 crop = (0, 0, 1, 1)
