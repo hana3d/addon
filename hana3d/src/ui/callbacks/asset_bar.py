@@ -176,9 +176,9 @@ def draw_tooltip(   # noqa: WPS211
 
     y_sku = y_created
     x_sku = x_created
-    for sku_item in sku.keys():
+    for sku_id, library in sku.items():
         y_sku += line_height
-        text_sku = f'{sku[sku_item]} : {sku_item}'
+        text_sku = f'{library} : {sku_id}'
         bgl_helper.draw_text(text_sku, x_sku, y_sku, font_height, tcol)
 
     for line in lines:

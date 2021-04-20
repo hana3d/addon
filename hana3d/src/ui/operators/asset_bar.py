@@ -305,8 +305,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
         ui_props.draw_snapped_bounds = False
         ui_props.has_hit = False
         ui_props.assetbar_on = False
-        ui_props.sku_name = ''
-        ui_props.sku_lib = ''
 
     def _generate_tooltip(self, event, ui_props):
         ui_props.draw_tooltip = True
@@ -323,10 +321,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 material = ui_props.asset_type_search == 'MATERIAL'
             if model or material:
                 props = upload.get_upload_props()
-
-                # belisa: when exactly this method is called?
-                for name in props.custom_props.keys():
-                    ui_props.sku = props.custom_props[name]
 
                 asset_data = {
                     'name': props.name,
@@ -502,7 +496,6 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
                     ui_props.draw_tooltip = True
                     ui_props.tooltip = asset_data.tooltip
-
 
                 else:
                     ui_props.draw_tooltip = False
