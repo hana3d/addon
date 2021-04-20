@@ -302,7 +302,7 @@ def draw_callback2d_search(self, context):
     highlight = (1, 1, 1, 0.2)
     # background of asset bar
 
-    sku = { }
+    sku = {}
 
     if not ui_props.dragging:
         search_results = search.get_search_results(asset_type)
