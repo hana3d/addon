@@ -32,6 +32,7 @@ def draw_tooltip(   # noqa: WPS211
     revision='',
     img=None,
     gravatar=None,
+    sku=None,
 ):
     """Draw tooltip.
 
@@ -44,6 +45,7 @@ def draw_tooltip(   # noqa: WPS211
         revision: view revision
         img: image
         gravatar: gravatar
+        sku: product sku and lib dict
     """
     region = bpy.context.region
     scale = bpy.context.preferences.view.ui_scale
@@ -170,6 +172,15 @@ def draw_tooltip(   # noqa: WPS211
         text_revision = f'Modified: {revision_date}'
         bgl_helper.draw_text(text_revision, x_revision, y_revision, font_height, tcol)
 
+    # if it has more than one sku, should add line height foreach one
+
+    y_sku = y_created
+    x_sku = x_created
+    for sku_id, library in sku.items():
+        y_sku += line_height
+        text_sku = f'{library} : {sku_id}'
+        bgl_helper.draw_text(text_sku, x_sku, y_sku, font_height, tcol)
+
     for line in lines:
         ytext = (
             y
@@ -290,6 +301,8 @@ def draw_callback2d_search(self, context):
     highlight = bpy.context.preferences.themes[0].user_interface.wcol_menu_item.inner_sel  # noqa: WPS219, E501
     highlight = (1, 1, 1, 0.2)
     # background of asset bar
+
+    sku = {}
 
     if not ui_props.dragging:
         search_results = search.get_search_results(asset_type)
@@ -447,8 +460,13 @@ def draw_callback2d_search(self, context):
             if search_results is not None and -1 < ui_props.active_index < len(search_results):
                 search_result = search_results[ui_props.active_index]
 
+                sku.clear()
+                for instance in ui_props.sku.keys():
+                    sku[ui_props.sku[instance]['name']] = ui_props.sku[instance]['library']
+
                 img = _load_tooltip_thumbnail(search_result, ui_props.active_index)
                 if img is not None:
+
                     gimg, author = _load_tooltip_author(search_result)
 
                     draw_tooltip(
@@ -460,6 +478,7 @@ def draw_callback2d_search(self, context):
                         revision=search_result.revision,
                         img=img,
                         gravatar=gimg,
+                        sku=sku,
                     )
 
     elif ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):

@@ -120,6 +120,13 @@ upload_asset_type_items = (
 )
 
 
+class Hana3DSkuItem(PropertyGroup):
+    """Property group of Sku."""
+
+    name: StringProperty(name='Product Sku', default='Unknown')
+    library: StringProperty(name='Product Library', default='Unknown')
+
+
 class Hana3DUIProps(PropertyGroup):
     def switch_search_results(self, context):
         asset_type = self.asset_type_search.lower()
@@ -161,6 +168,7 @@ class Hana3DUIProps(PropertyGroup):
     # these aren't actually used ( by now, seems to better use globals in UI module:
     draw_tooltip: BoolProperty(name='Draw Tooltip', default=False)
     tooltip: StringProperty(name='Tooltip', description='asset preview info', default='')
+    sku: CollectionProperty(type=Hana3DSkuItem)
 
     ui_scale = 1
 
@@ -1025,6 +1033,7 @@ SearchProps = Union[Hana3DModelSearchProps, Hana3DSceneSearchProps, Hana3DMateri
 Props = Union[UploadProps, SearchProps]
 
 classes = (
+    Hana3DSkuItem,
     Hana3DTagItem,
     Hana3DLibraryItem,
     Hana3DRenderItem,

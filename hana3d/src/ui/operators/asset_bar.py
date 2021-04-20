@@ -321,6 +321,7 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 material = ui_props.asset_type_search == 'MATERIAL'
             if model or material:
                 props = upload.get_upload_props()
+
                 asset_data = {
                     'name': props.name,
                     'description': props.description,
@@ -485,6 +486,14 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
                 ui_props.active_index = asset_search_index
                 if asset_search_index > -1:
                     asset_data = search_results[asset_search_index]
+
+                    ui_props.sku.clear()
+
+                    for library in asset_data.libraries:
+                        sku = ui_props.sku.add()
+                        sku['name'] = library['metadata']['view_props']['sku'] or ''
+                        sku['library'] = library['name'] or ''
+
                     ui_props.draw_tooltip = True
                     ui_props.tooltip = asset_data.tooltip
 
