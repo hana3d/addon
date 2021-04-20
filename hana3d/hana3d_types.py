@@ -121,8 +121,10 @@ upload_asset_type_items = (
 
 
 class Hana3DSkuItem(PropertyGroup):
-    name: StringProperty(name="Product Sku", default="Unknown")
-    library: StringProperty(name="Product Library", default="Unknown")
+    """Property group of Sku."""
+
+    name: StringProperty(name='Product Sku', default='Unknown')
+    library: StringProperty(name='Product Library', default='Unknown')
 
 
 class Hana3DUIProps(PropertyGroup):

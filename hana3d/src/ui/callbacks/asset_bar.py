@@ -176,10 +176,9 @@ def draw_tooltip(   # noqa: WPS211
 
     y_sku = y_created
     x_sku = x_created
-    for sku_item in sku:
-        y_sku = y_sku + line_height
+    for sku_item in sku.keys():
+        y_sku += line_height
         text_sku = f'{sku[sku_item]} : {sku_item}'
-        # text_sku = f'LIbrary: {sku[sku_item]}, Sku: {sku_item}'
         bgl_helper.draw_text(text_sku, x_sku, y_sku, font_height, tcol)
 
     for line in lines:
@@ -303,7 +302,7 @@ def draw_callback2d_search(self, context):
     highlight = (1, 1, 1, 0.2)
     # background of asset bar
 
-    sku = dict()
+    sku = { }
 
     if not ui_props.dragging:
         search_results = search.get_search_results(asset_type)
@@ -457,12 +456,12 @@ def draw_callback2d_search(self, context):
             if search_results is not None and -1 < ui_props.active_index < len(search_results):
                 search_result = search_results[ui_props.active_index]
 
+                sku.clear()
+                for instance in ui_props.sku.keys():
+                    sku[ui_props.sku[instance]['name']] = ui_props.sku[instance]['library']
+
                 img = _load_tooltip_thumbnail(search_result, ui_props.active_index)
                 if img is not None:
-
-                    sku.clear()
-                    for instance in ui_props.sku.keys():
-                        sku[ui_props.sku[instance]['name']] = ui_props.sku[instance]['library']
 
                     gimg, author = _load_tooltip_author(search_result)
 
@@ -475,7 +474,7 @@ def draw_callback2d_search(self, context):
                         revision=search_result.revision,
                         img=img,
                         gravatar=gimg,
-                        sku=sku
+                        sku=sku,
                     )
 
     elif ui_props.dragging and (ui_props.draw_drag_image or ui_props.draw_snapped_bounds):
