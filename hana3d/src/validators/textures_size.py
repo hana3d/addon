@@ -96,7 +96,7 @@ name = 'Textures Size'
 description = 'Checks if texture size is potency of 2 and <= 2048'
 textures_size = BaseValidator(
     name,
-    Category.error,
+    Category.warning,
     description,
     check_textures_size,
     fix_textures_size,

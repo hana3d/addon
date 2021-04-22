@@ -67,4 +67,4 @@ def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[b
 
 name = 'Square Textures'
 description = 'Checks if texture is square'
-square_textures = BaseValidator(name, Category.error, description, check_texture_dimension)
+square_textures = BaseValidator(name, Category.warning, description, check_texture_dimension)
