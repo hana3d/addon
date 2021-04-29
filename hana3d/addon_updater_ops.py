@@ -197,7 +197,7 @@ class addon_updater_update_now(bpy.types.Operator):
         elif updater.update_ready is None:
             (update_ready, version, link) = updater.check_for_update(now=True)
             # re-launch this dialog
-            atr = addon_updater_install_popup.bl_idname.split(".")
+            atr = addon_updater_update_now.bl_idname.split('.')
             getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
 
         elif updater.update_ready is False:
@@ -521,7 +521,6 @@ def updater_run_success_popup_handler(scene):
     getattr(getattr(bpy.ops, atr[0]), atr[1])('INVOKE_DEFAULT')
 
 
-
 def post_update_callback(module_name, res=None):
     """Callback for once the run_update function has completed
 
@@ -598,6 +597,16 @@ def check_for_update_background():
     logging.debug('{0} updater: Running background check for update'.format(updater.addon))
     updater.check_for_update_async()
     ran_background_check = True
+
+
+def clear_state_on_reload():
+    """For use in register only, clear the state if an update just happened."""
+    if updater.invalidupdater is True:
+        return
+    saved_state = updater.json
+
+    if saved_state is not None and saved_state.get('just_updated', False):
+        updater.json_reset_postupdate()
 
 
 # -----------------------------------------------------------------------------
@@ -1202,6 +1211,8 @@ def register(bl_info):
         make_annotations(cls)
         # comment out this line if using bpy.utils.register_module(__name__)
         bpy.utils.register_class(cls)
+
+    clear_state_on_reload()
 
 
 def unregister():
