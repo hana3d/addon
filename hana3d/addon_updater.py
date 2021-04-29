@@ -1126,7 +1126,8 @@ class Singleton_updater(object):
                 self._update_link = self._json["version_text"]["link"]
                 self._update_version = str(self._json["version_text"]["version"])
                 # cached update
-                callback(True)
+                if callback:
+                    callback(True)
                 return
 
         # do the check
