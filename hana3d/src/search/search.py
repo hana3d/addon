@@ -90,7 +90,7 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
         logging.debug('No small thumbnail, will load placeholder')
         placeholder_path = load_placeholder_thumbnail(asset_type, index, search_result.id)
         search_result.thumbnail_small = placeholder_path
-        search_result.thumbnail = placeholder_path
+        search_result.thumbnail = ''
         return
 
     thumbnail_path = os.path.join(directory, search_result.thumbnail_small)
@@ -110,9 +110,12 @@ def load_preview(asset_type: AssetType, search_result: AssetData, index: int):
             img.reload()
         img.colorspace_settings.name = 'Linear'
 
-    if bpy.data.images.get(image_name) is None:
+    img = bpy.data.images.get(image_name)
+    if img is None or img.size[0] == 0 or img.size[1] == 0:
         logging.error(f'No thumbnail in {thumbnail_path}, will load placeholder')
-        load_placeholder_thumbnail(asset_type, index, search_result.id)
+        placeholder_path = load_placeholder_thumbnail(asset_type, index, search_result.id)
+        search_result.thumbnail_small = placeholder_path
+        search_result.thumbnail = ''
 
 
 def load_placeholder_thumbnail(asset_type: AssetType, index: int, asset_id: str) -> str:
