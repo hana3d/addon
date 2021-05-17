@@ -174,7 +174,7 @@ class AsyncLoopModalOperator(bpy.types.Operator):
         """
         if self.loop_status.get_operator_status():
             self.log.debug('Another loop-kicking operator is already running.')
-            return {'PASS_THROUGH'}
+            return {'RUNNING_MODAL'}
 
         context.window_manager.modal_handler_add(self)
         self.loop_status.update_operator_status(True)
