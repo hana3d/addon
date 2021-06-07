@@ -53,8 +53,8 @@ def kick_async_loop() -> bool:  # noqa : WPS210,WPS213,WPS231
 
     try:
         all_tasks = asyncio.all_tasks(loop=loop)
-    except AttributeError as e:
-        log.debug(e)
+    except AttributeError as error:
+        log.debug(error)
         all_tasks = asyncio.Task.all_tasks()
 
     if not len(all_tasks):

@@ -295,7 +295,7 @@ class addon_updater_install_manually(bpy.types.Operator):
     bl_description = "Proceed to manually install update"
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    error: bpy.props.StringProperty(name="Error Occurred", default="", options={'HIDDEN'})
+    error: bpy.props.StringProperty(name='Error Occurred', default='', options={'HIDDEN'})
 
     def invoke(self, context, event):
         return context.window_manager.invoke_popup(self)
@@ -353,7 +353,7 @@ class addon_updater_updated_successful(bpy.types.Operator):
     bl_description = "Update installation response"
     bl_options = {'REGISTER', 'INTERNAL', 'UNDO'}
 
-    error: bpy.props.StringProperty(name="Error Occurred", default="", options={'HIDDEN'})
+    error: bpy.props.StringProperty(name='Error Occurred', default='', options={'HIDDEN'})
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_popup(self, event)
@@ -1208,7 +1208,6 @@ def register(bl_info):
     # in the addon, delete these lines (also from unregister)
     for cls in classes:
         # apply annotations to remove Blender 2.8 warnings, no effect on 2.7
-        # make_annotations(cls)
         # comment out this line if using bpy.utils.register_module(__name__)
         bpy.utils.register_class(cls)
 
