@@ -10,7 +10,7 @@ from .search import Hana3DSearchPanel
 from .updater import Hana3DUpdaterPanel
 from .upload import Hana3DUploadPanel
 from ..search import search
-from ... import addon_updater_ops, utils
+from ... import utils
 from ...config import HANA3D_NAME, HANA3D_UI
 
 
