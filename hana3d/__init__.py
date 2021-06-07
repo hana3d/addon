@@ -120,7 +120,6 @@ def check_timers_timer():
     return 5.0
 
 
-@ addon_updater_ops.make_annotations
 class Hana3DAddonPreferences(AddonPreferences):
     # this must match the addon name, use '__package__'
     # when defining this in a submodule of a python package.
@@ -261,32 +260,32 @@ class Hana3DAddonPreferences(AddonPreferences):
         update=utils.save_prefs,
     )
 
-    auto_check_update = bpy.props.BoolProperty(
+    auto_check_update: bpy.props.BoolProperty(
         name="Auto-check for Update",
         description="If enabled, auto-check for updates using an interval",
         default=False,
     )
-    updater_intrval_months = bpy.props.IntProperty(
+    updater_intrval_months: bpy.props.IntProperty(
         name='Months',
         description="Number of months between checking for updates",
         default=0,
         min=0
     )
-    updater_intrval_days = bpy.props.IntProperty(
+    updater_intrval_days: bpy.props.IntProperty(
         name='Days',
         description="Number of days between checking for updates",
         default=7,
         min=0,
         max=31,
     )
-    updater_intrval_hours = bpy.props.IntProperty(
+    updater_intrval_hours: bpy.props.IntProperty(
         name='Hours',
         description="Number of hours between checking for updates",
         default=0,
         min=0,
         max=23,
     )
-    updater_intrval_minutes = bpy.props.IntProperty(
+    updater_intrval_minutes: bpy.props.IntProperty(
         name='Minutes',
         description="Number of minutes between checking for updates",
         default=0,
