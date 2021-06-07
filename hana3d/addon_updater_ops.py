@@ -68,21 +68,6 @@ updater.addon = HANA3D_NAME
 # -----------------------------------------------------------------------------
 
 
-def make_annotations(cls):
-    """Add annotation attribute to class fields to avoid Blender 2.8 warnings"""
-    if not hasattr(bpy.app, "version") or bpy.app.version < (2, 80):
-        return cls
-    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
-    if bl_props:
-        if '__annotations__' not in cls.__dict__:
-            setattr(cls, '__annotations__', {})
-        annotations = cls.__dict__['__annotations__']
-        for k, v in bl_props.items():
-            annotations[k] = v
-            delattr(cls, k)
-    return cls
-
-
 def layout_split(layout, factor=0.0, align=False):
     """Intermediate method for pre and post blender 2.8 split UI function"""
     if not hasattr(bpy.app, "version") or bpy.app.version < (2, 80):
