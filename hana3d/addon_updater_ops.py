@@ -68,21 +68,6 @@ updater.addon = HANA3D_NAME
 # -----------------------------------------------------------------------------
 
 
-def make_annotations(cls):
-    """Add annotation attribute to class fields to avoid Blender 2.8 warnings"""
-    if not hasattr(bpy.app, "version") or bpy.app.version < (2, 80):
-        return cls
-    bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
-    if bl_props:
-        if '__annotations__' not in cls.__dict__:
-            setattr(cls, '__annotations__', {})
-        annotations = cls.__dict__['__annotations__']
-        for k, v in bl_props.items():
-            annotations[k] = v
-            delattr(cls, k)
-    return cls
-
-
 def layout_split(layout, factor=0.0, align=False):
     """Intermediate method for pre and post blender 2.8 split UI function"""
     if not hasattr(bpy.app, "version") or bpy.app.version < (2, 80):
@@ -158,7 +143,7 @@ class addon_updater_update_now(bpy.types.Operator):
     # if true, run clean install - ie remove all files before adding new
     # equivalent to deleting the addon and reinstalling, except the
     # updater folder/backup folder remains
-    clean_install = bpy.props.BoolProperty(
+    clean_install: bpy.props.BoolProperty(
         name="Clean install",
         description="If enabled, completely clear the addon's folder"
         " before installing new update, creating a fresh install",
@@ -226,7 +211,7 @@ class addon_updater_update_target(bpy.types.Operator):
             i += 1
         return ret
 
-    target = bpy.props.EnumProperty(
+    target: bpy.props.EnumProperty(
         name="Target version to install",
         description="Select the version to install",
         items=target_version,
@@ -235,7 +220,7 @@ class addon_updater_update_target(bpy.types.Operator):
     # if true, run clean install - ie remove all files before adding new
     # equivalent to deleting the addon and reinstalling, except the
     # updater folder/backup folder remains
-    clean_install = bpy.props.BoolProperty(
+    clean_install: bpy.props.BoolProperty(
         name="Clean install",
         description="If enabled, completely clear the addon's folder"
         " before installing new update, creating a fresh install",
@@ -295,7 +280,7 @@ class addon_updater_install_manually(bpy.types.Operator):
     bl_description = "Proceed to manually install update"
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    error = bpy.props.StringProperty(name="Error Occurred", default="", options={'HIDDEN'})
+    error: bpy.props.StringProperty(name='Error Occurred', default='', options={'HIDDEN'})
 
     def invoke(self, context, event):
         return context.window_manager.invoke_popup(self)
@@ -353,7 +338,7 @@ class addon_updater_updated_successful(bpy.types.Operator):
     bl_description = "Update installation response"
     bl_options = {'REGISTER', 'INTERNAL', 'UNDO'}
 
-    error = bpy.props.StringProperty(name="Error Occurred", default="", options={'HIDDEN'})
+    error: bpy.props.StringProperty(name='Error Occurred', default='', options={'HIDDEN'})
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_popup(self, event)
@@ -1208,7 +1193,6 @@ def register(bl_info):
     # in the addon, delete these lines (also from unregister)
     for cls in classes:
         # apply annotations to remove Blender 2.8 warnings, no effect on 2.7
-        make_annotations(cls)
         # comment out this line if using bpy.utils.register_module(__name__)
         bpy.utils.register_class(cls)
 
