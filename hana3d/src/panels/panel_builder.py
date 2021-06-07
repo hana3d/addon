@@ -45,7 +45,6 @@ panels = (
 
 def register():
     """Register panel in Blender."""
-    addon_updater_ops.make_annotations(Hana3DUpdaterPanel)
     for panel in panels:
         bpy.utils.register_class(panel)
     bpy.types.VIEW3D_MT_editor_menus.append(header_search_draw)
@@ -53,7 +52,6 @@ def register():
 
 def unregister():
     """Unregister panel in Blender."""
-    addon_updater_ops.make_annotations(Hana3DUpdaterPanel)
     for panel in reversed(panels):
         bpy.utils.unregister_class(panel)
     bpy.types.VIEW3D_MT_editor_menus.remove(header_search_draw)
