@@ -4,7 +4,7 @@ from .. import wheels
 
 wheels.load_wheels()
 
-config_dirname = os.path.dirname(os.path.realpath(__file__))
+config_dirname = os.path.dirname(os.path.abspath(__file__))
 addon_dirname = os.path.dirname(config_dirname)
 hana3d_stage = os.path.basename(addon_dirname)
 _, stage = hana3d_stage.split('_')
