@@ -282,7 +282,13 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                     raise Exception('Failed to send file')
                 if file_info['type'] == 'blend':
                     skip_post_process = props.skip_post_process
-                    await confirm_upload(correlation_id, upload['id'], skip_post_process)
+                    compression = props.draco_compression
+                    await confirm_upload(
+                        correlation_id,
+                        upload['id'],
+                        skip_post_process,
+                        compression,
+                    )
             return True
         except Exception as err:
             logging.error(err)

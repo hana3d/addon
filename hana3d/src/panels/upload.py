@@ -54,6 +54,8 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
 
         self._prop_needed(layout, props, 'publish_message', props.publish_message)
 
+        layout.prop(props, 'draco_compression')
+
         if props.upload_state != '':
             label_multiline(layout, text=props.upload_state, width=context.region.width)
         if props.uploading:
@@ -67,7 +69,6 @@ class Hana3DUploadPanel(Panel):  # noqa: WPS214
         row.enabled = not hasattr(props, 'asset_index')  # noqa: WPS421
         if props.view_id != '' and unified_props.workspace == props.view_workspace:
             layout.label(text='Asset has a version online.')
-
 
     def _edit_asset(self, context, layout, unified_props, asset_type):
         props = edit.get_edit_props()

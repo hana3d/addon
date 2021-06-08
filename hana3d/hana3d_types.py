@@ -691,6 +691,12 @@ class Hana3DCommonUploadProps:
         description='Whether conversions should be skipped',
     )
 
+    draco_compression: BoolProperty(
+        name='Draco compression',
+        default=True,
+        description='Use Draco compression in the GLB',
+    )
+
 
 class Hana3DMaterialSearchProps(PropertyGroup, Hana3DCommonSearchProps):
     automap: BoolProperty(
