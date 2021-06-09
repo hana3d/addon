@@ -7,7 +7,6 @@ import time
 from typing import Set, Union
 
 import bpy
-import requests
 
 from ..requests_async.requests_async import Request, UploadInChunks
 from ..subprocess_async.subprocess_async import Subprocess  # noqa: S404
@@ -206,6 +205,7 @@ async def confirm_upload(   # noqa: WPS210
     correlation_id: str,
     upload_id: str,
     skip_post_process: bool,
+    compression: bool = False,
 ):
     """Confirm upload to backend.
 
@@ -222,7 +222,10 @@ async def confirm_upload(   # noqa: WPS210
         'uploads_s3',
         upload_id,
         'upload-file',
-        query={'skip_post_process': skip_post_process},
+        query={
+            'skip_post_process': skip_post_process,
+            'compression': compression,
+        },
     )
     upload_response = await request.post(upload_done_url, headers=headers)
 
