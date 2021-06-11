@@ -427,7 +427,6 @@ def import_material(asset_data: AssetData, file_names: list, **kwargs):
 
 def set_asset_props(asset, asset_data):
     asset_props = getattr(asset, HANA3D_NAME)
-    asset_props.clear_data()
     asset['asset_data'] = asdict(asset_data)
 
     set_thumbnail(asset_data, asset)
