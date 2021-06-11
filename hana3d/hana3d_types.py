@@ -491,15 +491,6 @@ class Hana3DCommonUploadProps:
             thumbnail_preview.load(name, bpy.path.abspath(self.thumbnail), 'IMAGE')
             self.thumbnail_icon_id = thumbnail_preview[name].icon_id
 
-    def clear_data(self):
-        """Set all properties to their default values"""
-        for cls in self.__class__.mro():
-            if not hasattr(cls, '__annotations__'):
-                continue
-            for attr, (type_, kwargs) in cls.__annotations__.items():
-                if 'default' in kwargs:
-                    setattr(self, attr, kwargs['default'])
-
     id: StringProperty(
         name="Asset Id",
         description="ID of the asset (hidden)",

@@ -34,7 +34,6 @@ def set_edit_props(asset_index: int):
     asset_props = get_edit_props()
     search_results = get_search_results()
     asset_data = search_results[asset_index]
-    asset_props.clear_data()
 
     asset_props.id = asset_data.id  # noqa: WPS125
     asset_props.view_id = asset_data.view_id
