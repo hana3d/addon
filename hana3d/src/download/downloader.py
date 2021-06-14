@@ -5,10 +5,9 @@ import os
 import threading
 from typing import Optional
 
-import requests
-
 from .lib import check_existing
 from ..async_loop import run_async_function
+from ..requests_async.requests_async import Request
 from ..search.search import AssetData
 from ... import paths
 
@@ -110,7 +109,8 @@ class Downloader(object):  # noqa: WPS214
         with open(tmp_file_name, 'wb') as tmp_file:
             logging.info(f'Downloading {file_name}')
 
-            response = requests.get(asset_data.download_url, stream=True)
+            request = Request()
+            response = await request.get(asset_data.download_url, stream=True)
             total_length = response.headers.get('Content-Length')
 
             if total_length is None:  # no content length header
