@@ -5,6 +5,8 @@ import logging
 import uuid
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 from ..preferences.preferences import Preferences
 from ..ui import colors
@@ -17,11 +19,21 @@ class BasicRequest(object):  # noqa : WPS214
     def __init__(self):
         """Create a Requests object."""
         self.preferences = Preferences()
+        retry_strategy = Retry(
+            total=5,
+            status_forcelist=[429, 500, 502, 503, 504],
+            method_whitelist=['DELETE', 'GET', 'POST', 'PUT', 'PATCH'],
+            backoff_factor=0.1,
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session = requests.Session()
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
 
     async def _request(self, method: str, url: str, **kwargs) -> requests.Response:    # noqa : WPS210
         loop = asyncio.get_event_loop()
 
-        partial = functools.partial(requests.request, method, url, **kwargs)
+        partial = functools.partial(self.session.request, method, url, **kwargs)
         response = await loop.run_in_executor(None, partial)
 
         logging.debug(f'{method.upper()} {url} ({response.status_code})')  # noqa : WPS221

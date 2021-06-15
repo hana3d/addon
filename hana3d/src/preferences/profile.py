@@ -24,6 +24,7 @@ def configure_sentry(url: str):
         url,
         traces_sample_rate=1.0,
         release='.'.join(map(str, get_addon_version())),
+        send_default_pii=True,
     )
 
 
