@@ -7,6 +7,7 @@ import pathlib
 import tempfile
 import uuid
 from typing import List, Union
+from contextlib import suppress
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty
@@ -205,7 +206,8 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             bpy.ops.file.autopack_toggle()
         bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
         if autopack:
-            bpy.ops.file.autopack_toggle()
+            with suppress(RuntimeError):
+                bpy.ops.file.autopack_toggle()
 
         return source_filepath
 
