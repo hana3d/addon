@@ -6,8 +6,8 @@ import os
 import pathlib
 import tempfile
 import uuid
-from typing import List, Union
 from contextlib import suppress
+from typing import List, Union
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty
