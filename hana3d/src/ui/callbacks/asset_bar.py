@@ -154,7 +154,7 @@ def draw_tooltip(   # noqa: WPS211
     )
     x_created = xtext + int(isizex / ncolumns)
     created_parsed = (
-        datetime.datetime.strptime(created, '%Y-%m-%dT%H:%M:%S.%f')  # noqa: WPS323
+        datetime.datetime.strptime(created.split('.')[0], '%Y-%m-%dT%H:%M:%S')  # noqa: WPS323
         if created else datetime.datetime.utcnow()
     )
     created_date = created_parsed.strftime('%d/%m/%Y - %H:%M:%S')  # noqa: WPS323
