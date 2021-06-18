@@ -6,6 +6,7 @@ import os
 import pathlib
 import tempfile
 import uuid
+from contextlib import suppress
 from typing import List, Union
 
 import bpy
@@ -205,7 +206,8 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             bpy.ops.file.autopack_toggle()
         bpy.ops.wm.save_as_mainfile(filepath=source_filepath, compress=False, copy=True)
         if autopack:
-            bpy.ops.file.autopack_toggle()
+            with suppress(RuntimeError):
+                bpy.ops.file.autopack_toggle()
 
         return source_filepath
 
