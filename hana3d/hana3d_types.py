@@ -266,13 +266,6 @@ class Hana3DRenderProps(PropertyGroup):
         if self.cameras in ('ALL_CAMERAS', 'VISIBLE_CAMERAS'):
             self.frame_animation = 'FRAME'
 
-    render_ui_mode: EnumProperty(
-        name='Render UI mode',
-        items=(
-            ('GENERATE', 'Generate', 'Generate new render', 'SCENE', 0),
-            ('UPLOAD', 'Upload', 'Upload render from computer', 'EXPORT', 1),
-        ),
-    )
     balance: StringProperty(
         name="Balance",
         description="",

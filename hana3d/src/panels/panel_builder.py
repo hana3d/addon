@@ -5,7 +5,6 @@ from .download import Hana3DDownloadPanel
 from .lib import draw_assetbar_show_hide, draw_login_buttons  # noqa: F401
 from .login import Hana3DLoginPanel
 from .logs import Hana3DSendLogsPanel
-from .render import Hana3DRenderPanel
 from .search import Hana3DSearchPanel
 from .updater import Hana3DUpdaterPanel
 from .upload import Hana3DUploadPanel
@@ -38,7 +37,6 @@ panels = (
     Hana3DSearchPanel,
     Hana3DUploadPanel,
     Hana3DDownloadPanel,
-    Hana3DRenderPanel,
     Hana3DSendLogsPanel,
 )
 
