@@ -30,7 +30,6 @@ from . import (  # noqa: WPS235
     hana3d_types,
     libraries,
     paths,
-    render,
     tags,
     tasks_queue,
     thread_tools,
@@ -45,8 +44,6 @@ from .src.edit_asset import operators as edit_ops
 from .src.logs import logger, send_logs
 from .src.panels import panel_builder
 from .src.search import operator as search_op
-from .src.ui import render as ui_render
-from .src.ui.operators import render_image
 
 bl_info = {
     'name': 'Hana3D',
@@ -111,8 +108,6 @@ def check_timers_timer():
         bpy.app.timers.register(tasks_queue.queue_worker)
     if not bpy.app.timers.is_registered(bg_blender.bg_update):
         bpy.app.timers.register(bg_blender.bg_update)
-    if not bpy.app.timers.is_registered(render.threads_cleanup):
-        bpy.app.timers.register(render.threads_cleanup)
     if not bpy.app.timers.is_registered(thread_tools.threads_state_update):
         bpy.app.timers.register(thread_tools.threads_state_update)
     if not bpy.app.timers.is_registered(ui.redraw_regions):
@@ -325,8 +320,6 @@ modules = (
     hana3d_oauth,
     libraries,
     logger,
-    render,
-    render_image,
     search_op,
     send_logs,
     tags,
@@ -334,7 +327,6 @@ modules = (
     thread_tools,
     hana3d_types,
     ui,
-    ui_render,
     panel_builder,
     upload,
     edit_ops,

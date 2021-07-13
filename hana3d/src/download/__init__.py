@@ -44,7 +44,7 @@ from ..search.search import AssetData, get_search_results
 from ..tags.tags import update_tags_list
 from ..ui import colors
 from ..ui.main import UI
-from ... import append_link, paths, render_tools, utils
+from ... import append_link, paths, utils
 from ...config import (
     HANA3D_DESCRIPTION,
     HANA3D_MODELS,
@@ -438,10 +438,6 @@ def set_asset_props(asset, asset_data):
     asset_props.tags = ','.join(asset_data.tags)
     asset_props.description = asset_data.description
     asset_props.asset_type = asset_data.asset_type
-
-    jobs = render_tools.get_render_jobs(asset_data.asset_type, asset_data.view_id)
-    asset_props.render_data['jobs'] = jobs
-    render_tools.update_render_list(asset_props)
 
     if asset_data.tags:
         update_tags_list(asset_props, bpy.context)
