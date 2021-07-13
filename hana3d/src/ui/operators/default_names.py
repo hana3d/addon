@@ -32,8 +32,6 @@ class DefaultNamesOperator(bpy.types.Operator):
 
         self._upload(props, asset)
 
-        self._default_render_name(props, asset)
-
         return {'PASS_THROUGH'}
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> Set[str]:  # noqa: D102
@@ -43,16 +41,3 @@ class DefaultNamesOperator(bpy.types.Operator):
     def _upload(self, props, asset):
         if props.name == '' and props.name != asset.name:
             props.name = asset.name
-
-    def _default_render_name(self, props, asset):
-        if props.render_job_name == '':
-            if 'jobs' not in props.render_data:
-                previous_names = []
-            else:
-                previous_names = [job['job_name'] for job in props.render_data['jobs']]
-            base_name = props.name or asset.name or 'Render'
-            for n in range(1000):  # noqa: WPS111
-                new_name = f'{base_name}_{n:03d}'
-                if new_name not in previous_names:
-                    break
-            props.render_job_name = new_name
