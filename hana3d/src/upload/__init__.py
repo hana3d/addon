@@ -98,12 +98,12 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         props, workspace, correlation_id, basename, ext, tempdir = self._get_basic_data()
         props.uploading = True
 
-        upload_set = ['METADATA', 'MAINFILE']
+        upload_set = ['METADATA', 'MAINFILE', 'THUMBNAIL']
         self._update_props(props, upload_set)
 
         export_data, upload_data = get_export_data(props)
 
-        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
+        if not os.path.exists(export_data['thumbnail_path']):
             ui.add_report(text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
@@ -186,9 +186,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         if not self.reupload:
             props.view_id = ''
             props.id = ''   # noqa: WPS125
-
-        if 'jobs' not in props.render_data:
-            props.render_data['jobs'] = []
 
     def _save_blend_file(self, tempdir: Union[str, pathlib.Path], ext: str) -> str:
         source_filepath = os.path.join(tempdir, f'export_hana3d{ext}')
