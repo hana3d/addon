@@ -26,7 +26,7 @@ from .upload import get_upload_props
 from ..async_loop.async_mixin import AsyncModalOperatorMixin
 from ..ui.main import UI
 from ..unified_props import Unified
-from ... import hana3d_types, paths, render, utils
+from ... import hana3d_types, paths, utils
 from ...config import HANA3D_DESCRIPTION, HANA3D_NAME
 
 HANA3D_EXPORT_DATA_FILE = f'{HANA3D_NAME}_data.json'
@@ -98,12 +98,12 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         props, workspace, correlation_id, basename, ext, tempdir = self._get_basic_data()
         props.uploading = True
 
-        upload_set = ['METADATA', 'MAINFILE']
+        upload_set = ['METADATA', 'MAINFILE', 'THUMBNAIL']
         self._update_props(props, upload_set)
 
         export_data, upload_data = get_export_data(props)
 
-        if 'THUMBNAIL' in upload_set and not os.path.exists(export_data['thumbnail_path']):
+        if not os.path.exists(export_data['thumbnail_path']):
             ui.add_report(text='Thumbnail not found')
             props.uploading = False
             return {'CANCELLED'}
@@ -148,9 +148,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
                 props.uploading = False
                 return {'CANCELLED'}
 
-            if props.remote_thumbnail:
-                self._start_remote_thumbnail(props)
-
             if 'MAINFILE' in upload_set:
                 await finish_asset_creation(props, ui, correlation_id, upload_data['id'])
 
@@ -189,15 +186,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
         if not self.reupload:
             props.view_id = ''
             props.id = ''   # noqa: WPS125
-
-        if 'jobs' not in props.render_data:
-            props.render_data['jobs'] = []
-
-        if props.has_thumbnail:
-            upload_set.append('THUMBNAIL')
-            props.remote_thumbnail = False
-        else:
-            props.remote_thumbnail = True
 
     def _save_blend_file(self, tempdir: Union[str, pathlib.Path], ext: str) -> str:
         source_filepath = os.path.join(tempdir, f'export_hana3d{ext}')
@@ -299,17 +287,6 @@ class UploadAssetOperator(AsyncModalOperatorMixin, bpy.types.Operator):  # noqa:
             if upload_id is not None:
                 await cancel_upload(correlation_id, upload_id)
             return False
-
-    def _start_remote_thumbnail(self, props: hana3d_types.UploadProps):
-        thread = render.RenderThread(
-            props,
-            engine='CYCLES',
-            frame_start=1,
-            frame_end=1,
-            is_thumbnail=True,
-        )
-        thread.start()
-        render.render_threads.append(thread)
 
 
 classes = (

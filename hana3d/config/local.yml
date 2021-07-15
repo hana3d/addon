@@ -1,7 +1,6 @@
 HANA3D_NAME: hana3d_local
 HANA3D_UI: hana3d_local_ui
 HANA3D_ASSET: hana3d_local_asset
-HANA3D_RENDER: hana3d_local_render
 HANA3D_MODELS: hana3d_local_models
 HANA3D_SCENES: hana3d_local_scenes
 HANA3D_MATERIALS: hana3d_local_materials

@@ -1,7 +1,6 @@
 HANA3D_NAME: hana3d_production
 HANA3D_UI: hana3d_production_ui
 HANA3D_ASSET: hana3d_production_asset
-HANA3D_RENDER: hana3d_production_render
 HANA3D_MODELS: hana3d_production_models
 HANA3D_SCENES: hana3d_production_scenes
 HANA3D_MATERIALS: hana3d_production_materials

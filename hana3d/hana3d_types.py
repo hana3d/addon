@@ -33,7 +33,7 @@ from bpy.props import (
 )
 from bpy.types import PropertyGroup
 
-from . import paths, render, render_tools
+from . import paths
 from .config import (
     HANA3D_ASSET,
     HANA3D_DESCRIPTION,
@@ -41,7 +41,6 @@ from .config import (
     HANA3D_MODELS,
     HANA3D_NAME,
     HANA3D_PROFILE,
-    HANA3D_RENDER,
     HANA3D_SCENES,
     HANA3D_UI,
 )
@@ -246,69 +245,6 @@ class Hana3DUIProps(PropertyGroup):
     )
 
 
-class Hana3DRenderProps(PropertyGroup):
-    def get_render_asset_name(self) -> str:
-        props = upload.get_upload_props()
-        if props is not None:
-            return props.name
-        return ''
-
-    def get_balance(self) -> str:
-        profile = bpy.context.window_manager.get(HANA3D_PROFILE)
-        if not profile:
-            return 'N/A'
-        balance = profile['user'].get('nrf_balance')
-        if balance is None:
-            return 'N/A'
-        return f'${balance:.2f}'
-
-    def update_cameras(self, context):
-        if self.cameras in ('ALL_CAMERAS', 'VISIBLE_CAMERAS'):
-            self.frame_animation = 'FRAME'
-
-    render_ui_mode: EnumProperty(
-        name='Render UI mode',
-        items=(
-            ('GENERATE', 'Generate', 'Generate new render', 'SCENE', 0),
-            ('UPLOAD', 'Upload', 'Upload render from computer', 'EXPORT', 1),
-        ),
-    )
-    balance: StringProperty(
-        name="Balance",
-        description="",
-        default='N/A',
-        get=get_balance,
-    )
-    asset: StringProperty(name="Asset", description="", get=get_render_asset_name)
-    engine: EnumProperty(
-        name="Engine",
-        items=(
-             ("CYCLES", "Cycles", ""),
-             ("BLENDER_EEVEE", "Eevee", "")
-        ),
-        description="",
-        get=lambda self: 0  # TODO: Remove getter when both available at notRenderFarm
-    )
-    frame_animation: EnumProperty(
-        name="Frame vs Animation",
-        items=(
-            ("FRAME", "Single Frame", "Render a single frame", "RENDER_STILL", 0),
-            ("ANIMATION", "Animation", "Render a range of frames", "RENDER_ANIMATION", 1),
-        ),
-        description="",
-    )
-    cameras: EnumProperty(
-        name="Cameras",
-        items=(
-            ("ACTIVE_CAMERA", "Active camera", "Render with only the active camera"),
-            ("VISIBLE_CAMERAS", "Visible cameras", "Render with visible cameras"),
-            ("ALL_CAMERAS", "All cameras", "Render with all cameras"),
-        ),
-        description="",
-        update=update_cameras,
-    )
-
-
 def workspace_items(self, context):
     profile = bpy.context.window_manager.get(HANA3D_PROFILE)
     if profile is not None:
@@ -329,18 +265,6 @@ def search_update(self, context):
 class Hana3DTagItem(PropertyGroup):
     name: StringProperty(name="Tag Name", default="Unknown")
     selected: BoolProperty(name="Tag Selected", default=False)
-
-
-class Hana3DRenderItem(PropertyGroup):
-    """Property group of Render Item."""
-
-    name: StringProperty(name='Render Name', default='')
-    job_id: StringProperty(name='Render Job Id', default='')
-    icon_id: IntProperty(name='Render Icon Id')
-    file_path: StringProperty(name='Render File Path', default='')
-    index: IntProperty(name='Render Index')
-    # the next property is only to show a custom text on hover label
-    not_working: StringProperty(name='Not Working', default='Not working')
 
 
 class Hana3DLibraryItem(PropertyGroup):
@@ -578,12 +502,6 @@ class Hana3DCommonUploadProps:
         update=update_preview,
     )
 
-    remote_thumbnail: BoolProperty(
-        name="Generating thumbnail on notrenderfarm",
-        default=False,
-        update=update_preview,
-    )
-
     has_thumbnail: BoolProperty(
         name="Has Thumbnail",
         description="True when thumbnail was checked and loaded",
@@ -624,34 +542,10 @@ class Hana3DCommonUploadProps:
         default="",
     )
 
-    uploading_render: BoolProperty(
-        name="Uploading Render",
-        default=False,
-    )
-
-    render_data: PointerProperty(
-        type=PropertyGroup,
-        description='Container for holding data of completed render jobs',
-    )
-
     active_image: EnumProperty(
         name="Local Images",
         description='Images in .blend file',
         items=get_active_image,
-    )
-
-    render_list: CollectionProperty(type=Hana3DRenderItem)
-
-    render_list_index: IntProperty(
-        name='Render of the asset',
-        description='Index of the active render',
-        default=0,
-    )
-
-    render_job_name: StringProperty(
-        name="Name",
-        description="Name of render job",
-        default=""
     )
 
     tags_list: CollectionProperty(type=Hana3DTagItem)
@@ -986,7 +880,6 @@ class Hana3DUnifiedProps(PropertyGroup):
         if upload_props is not None:
             update_libraries_list(upload_props, context)
             update_tags_list(upload_props, context)
-            render_tools.update_render_list(upload_props)
 
     workspace: EnumProperty(
         items=workspace_items,
@@ -1033,9 +926,7 @@ classes = (
     Hana3DSkuItem,
     Hana3DTagItem,
     Hana3DLibraryItem,
-    Hana3DRenderItem,
     Hana3DUIProps,
-    Hana3DRenderProps,
     Hana3DEditAsset,
     Hana3DModelSearchProps,
     Hana3DModelUploadProps,
@@ -1052,7 +943,6 @@ def register():
         bpy.utils.register_class(cls)
 
     setattr(bpy.types.WindowManager, HANA3D_UI, PointerProperty(type=Hana3DUIProps))
-    setattr(bpy.types.WindowManager, HANA3D_RENDER, PointerProperty(type=Hana3DRenderProps))
     setattr(bpy.types.WindowManager, HANA3D_NAME, PointerProperty(type=Hana3DUnifiedProps))
     setattr(bpy.types.WindowManager, HANA3D_ASSET, PointerProperty(type=Hana3DEditAsset))
 
@@ -1080,7 +970,6 @@ def unregister():
     delattr(bpy.types.Object, HANA3D_NAME)
     delattr(bpy.types.WindowManager, HANA3D_MODELS)
 
-    delattr(bpy.types.WindowManager, HANA3D_RENDER)
     delattr(bpy.types.WindowManager, HANA3D_UI)
 
     for cls in reversed(classes):

@@ -22,7 +22,7 @@ import bpy
 from bpy.app.handlers import persistent
 from bpy_extras import view3d_utils
 
-from . import bg_blender, paths, render, utils
+from . import bg_blender, paths, utils
 from .config import HANA3D_NAME, HANA3D_UI
 from .src import download
 from .src.asset.asset_type import AssetType
@@ -126,21 +126,6 @@ def draw_callback_progress2d(self, context):  # noqa: D103
         tcom = process[1]
         draw_progress(x, y - index * line_size, f'{tcom.lasttext}', tcom.progress)  # noqa: WPS221
         index += 1
-    for render_thread in render.render_threads:
-        percentage_progress = 0
-        if render_thread.uploading:
-            percentage_progress = int(render_thread.upload_progress * 100)
-        elif render_thread.job_running:
-            percentage_progress = int(render_thread.job_progress * 100)
-        text = render_thread.render_state
-        draw_progress(x, y - index * line_size, text, percentage_progress)
-        index += 1
-    for upload_thread in render.upload_threads:
-        if upload_thread.uploading_render:
-            text = upload_thread.upload_state
-            percentage_progress = int(upload_thread.upload_progress * 100)
-            draw_progress(x, y - index * line_size, text, percentage_progress)
-            index += 1
     ui = UI()
     for report in ui.reports:
         report.draw(x, y - index * line_size)
