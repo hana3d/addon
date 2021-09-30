@@ -391,6 +391,17 @@ class Hana3DCommonUploadProps:
             return
 
         self.libraries_list[self.libraries_input].selected = True
+
+        if self.asset_type == 'MATERIAL':
+            name = f'{self.libraries_list[self.libraries_input].name} Slug'
+            if name not in self.custom_props:
+                self.custom_props_info[name] = {
+                    'slug': 'slug',
+                    'library_name': self.libraries_list[self.libraries_input].name,
+                    'library_id': self.libraries_list[self.libraries_input].id_
+                }
+                self.custom_props[name] = ''
+            return
         for view_prop in self.libraries_list[self.libraries_input].metadata['view_props']:
             name = f'{self.libraries_list[self.libraries_input].name} {view_prop["name"]}'
             if name not in self.custom_props:

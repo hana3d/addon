@@ -22,7 +22,7 @@ from bpy.props import StringProperty
 from bpy.types import Operator
 
 from . import paths, rerequests, utils
-from .config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_PROFILE
+from .config import HANA3D_DESCRIPTION, HANA3D_NAME
 from .report_tools import execute_wrapper
 from .src.libraries.libraries import update_libraries_list
 from .src.preferences.profile import Profile
