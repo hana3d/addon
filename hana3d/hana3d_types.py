@@ -398,7 +398,7 @@ class Hana3DCommonUploadProps:
                 self.custom_props_info[name] = {
                     'slug': 'slug',
                     'library_name': self.libraries_list[self.libraries_input].name,
-                    'library_id': self.libraries_list[self.libraries_input].id_
+                    'library_id': self.libraries_list[self.libraries_input].id_,
                 }
                 self.custom_props[name] = ''
             return

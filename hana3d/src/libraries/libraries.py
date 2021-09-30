@@ -53,7 +53,7 @@ def get_libraries(props: 'Props'):  # noqa: WPS210
     return libraries
 
 
-def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, content: str, library: dict):
+def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, prop_value: str, library: dict):
     name = f'{library.name} {view_prop["name"]}'
     slug = view_prop['slug']
     if name not in asset_props.custom_props:
@@ -62,7 +62,7 @@ def _set_view_prop(asset_props: 'UploadProps', view_prop: dict, content: str, li
             'library_name': library.name,
             'library_id': library.id_,
         }
-    asset_props.custom_props[name] = content
+    asset_props.custom_props[name] = prop_value
 
 
 def set_library_props(libraries: List[dict], asset_props: 'Props'):
@@ -72,7 +72,6 @@ def set_library_props(libraries: List[dict], asset_props: 'Props'):
         libraries: Library dict list
         asset_props: Asset Props
     """
-    print(asset_props)
     libraries_list = asset_props.libraries_list
     for asset_library in libraries:
         library = libraries_list[asset_library['name']]
@@ -80,7 +79,7 @@ def set_library_props(libraries: List[dict], asset_props: 'Props'):
         if asset_props.asset_type.lower() == 'material':
             view_prop = {
                 'name': 'Slug',
-                'slug': 'slug'
+                'slug': 'slug',
             }
             _set_view_prop(asset_props, view_prop, asset_library['slug'], library)
             continue

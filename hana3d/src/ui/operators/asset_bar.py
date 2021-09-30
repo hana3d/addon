@@ -491,10 +491,10 @@ class AssetBarOperator(bpy.types.Operator):  # noqa: WPS338, WPS214
 
                     for library in asset_data.libraries:
                         sku = ui_props.sku.add()
-                        sku['name'] = library.get('metadata', {}).get(
-                            'view_props', {}).get('sku') or ''
+                        metadata = library.get('metadata', {})
+                        sku['name'] = metadata.get('view_props', {}).get('sku') or ''
                         sku['library'] = library.get('name') or ''
-                        if ui_props.asset_type_search == 'MATERIAL':
+                        if ui_props.asset_type_search.lower() == 'material':
                             sku['name'] = library.get('slug') or ''
 
                     ui_props.draw_tooltip = True
