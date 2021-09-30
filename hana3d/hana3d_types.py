@@ -392,7 +392,7 @@ class Hana3DCommonUploadProps:
 
         self.libraries_list[self.libraries_input].selected = True
 
-        if self.asset_type == 'MATERIAL':
+        if self.asset_type.lower() == 'material':
             name = f'{self.libraries_list[self.libraries_input].name} Slug'
             if name not in self.custom_props:
                 self.custom_props_info[name] = {

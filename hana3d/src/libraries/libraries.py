@@ -43,7 +43,7 @@ def get_libraries(props: 'Props'):  # noqa: WPS210
             'name': library_name,
             'id': library_id,
         })
-        if props.asset_type == 'MATERIAL':
+        if props.asset_type.lower() == 'material':
             library.update({'slug': props.custom_props[f'{library_name} Slug']})
         with suppress(AttributeError):
             if props.custom_props.keys():
@@ -77,7 +77,7 @@ def set_library_props(libraries: List[dict], asset_props: 'Props'):
     for asset_library in libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
-        if asset_props.asset_type == 'material':
+        if asset_props.asset_type.lower() == 'material':
             view_prop = {
                 'name': 'Slug',
                 'slug': 'slug'
