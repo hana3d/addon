@@ -90,7 +90,7 @@ def set_library_props(libraries: List[dict], asset_props: 'Props'):
                 _set_view_prop(
                     asset_props,
                     view_prop,
-                    asset_library['metadata'].get('view_props', {}).get('slug', ''),
+                    asset_library['metadata'].get('view_props', {}).get(view_prop['slug'], ''),
                     library,
                 )
 
