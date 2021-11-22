@@ -14,6 +14,7 @@ from ...validators.joint_count import joint_count
 from ...validators.missing_references import missing_references_check
 from ...validators.morph_target_check import morph_target_checker
 from ...validators.object_count import object_count
+from ...validators.scale_check import scale_check
 from ...validators.square_textures import square_textures
 from ...validators.textures_size import textures_size
 from ...validators.uv_check import uv_checker
@@ -30,7 +31,7 @@ validators: List[BaseValidator] = [
     missing_references_check,
     morph_target_checker,
     object_count,
-    # scale_check,
+    scale_check,
     square_textures,
     textures_size,
     # triangle_count,
@@ -197,7 +198,7 @@ class ValidationPanel(bpy.types.Operator):  # noqa: WPS338, WPS214
         if upload_props.view_id != '' and unified_props.workspace == upload_props.view_workspace:
             op = row.operator(
                 f'object.{HANA3D_NAME}_upload',
-                text='Upload as New Version',
+                text='Reupload',
                 icon='RECOVER_LAST',
             )
             op.asset_type = asset_type
