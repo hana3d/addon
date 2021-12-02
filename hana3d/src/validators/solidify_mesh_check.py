@@ -19,7 +19,7 @@ def _check_solidify(blend_object: bpy.types.Object) -> bool:
 
 
 def _get_solidify_modifiers(models: List[str]) -> List[str]:
-    objects = [] # noqa: WPS110
+    objects = []  # noqa: WPS110
     for model in models:
         blend_object = bpy.data.objects[model]
         if _check_solidify(blend_object):
@@ -38,7 +38,7 @@ def _get_object_list(asset_type: AssetType, export_data: dict):
 
 
 def check_solidify_meshes(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
-    """Checks if there are meshes with solidify.
+    """Check if there are meshes with solidify.
 
     Parameters:
         asset_type: type of asset that will be uploaded
