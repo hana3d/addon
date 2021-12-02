@@ -22,8 +22,8 @@ from ...validators.square_textures import square_textures
 from ...validators.textures_size import textures_size
 from ...validators.uv_check import uv_checker
 from ...validators.vertex_color_check import vertex_color_checker
-from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI # noqa
-from ....report_tools import execute_wrapper # noqa
+from ....config import HANA3D_DESCRIPTION, HANA3D_NAME, HANA3D_UI
+from ....report_tools import execute_wrapper
 
 validators: List[BaseValidator] = [
     animated_meshes_check,
