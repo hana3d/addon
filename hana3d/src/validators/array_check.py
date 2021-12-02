@@ -10,19 +10,22 @@ from ..asset.asset_type import AssetType
 
 MODIFIER_NAME = 'ARRAY'
 
+
 def _check_array(blend_object: bpy.types.Object) -> bool:
     for mod in blend_object.modifiers:
         if mod.type == MODIFIER_NAME:
             return True
     return False
 
+
 def _get_array_modifiers(models: List[str]) -> List[str]:
-    objects = []
+    objects = [] # noqa: WPS110
     for model in models:
         blend_object = bpy.data.objects[model]
         if _check_array(blend_object):
             objects.append(model)
     return objects
+
 
 def _get_object_list(asset_type: AssetType, export_data: dict):
     if asset_type == AssetType.model:
@@ -32,6 +35,7 @@ def _get_object_list(asset_type: AssetType, export_data: dict):
         scene = bpy.data.scenes[scene_name]
         return scene.objects.keys()
     return []
+
 
 def check_array_objects(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     """Checks if objects has array modifiers.
@@ -56,6 +60,7 @@ def check_array_objects(asset_type: AssetType, export_data: dict) -> Tuple[bool,
 
     logging.info(message)
     return is_valid, message
+
 
 name = 'Array object check'
 description = 'Checks if has an array of objects'

@@ -42,7 +42,7 @@ validators: List[BaseValidator] = [
     vertex_color_checker,
     mirror_check,
     solidify_mesh_check,
-    array_check
+    array_check,
 ]
 
 
