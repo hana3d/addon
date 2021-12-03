@@ -42,6 +42,7 @@ def _get_incorrect_texture_names(asset_type: AssetType, export_data: dict) -> Se
         return _get_rectangular_textures_in_material(material)
     return set()
 
+
 def check_texture_dimension(asset_type: AssetType, export_data: dict) -> Tuple[bool, str]:
     """Check if textures are square.
 

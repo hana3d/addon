@@ -10,11 +10,14 @@ from ...upload.upload import get_upload_props
 from ...validators import BaseValidator, Category, dummy_fix_function
 from ...validators.animated_meshes_check import animated_meshes_check
 from ...validators.animation_count import animation_count
+from ...validators.array_check import array_check
 from ...validators.joint_count import joint_count
+from ...validators.mirror_check import mirror_check
 from ...validators.missing_references import missing_references_check
 from ...validators.morph_target_check import morph_target_checker
 from ...validators.object_count import object_count
 from ...validators.scale_check import scale_check
+from ...validators.solidify_mesh_check import solidify_mesh_check
 from ...validators.square_textures import square_textures
 from ...validators.textures_size import textures_size
 from ...validators.uv_check import uv_checker
@@ -37,6 +40,9 @@ validators: List[BaseValidator] = [
     # triangle_count,
     uv_checker,
     vertex_color_checker,
+    mirror_check,
+    solidify_mesh_check,
+    array_check,
 ]
 
 
