@@ -77,13 +77,14 @@ def set_library_props(libraries: List[dict], asset_props: 'Props'):
     for asset_library in libraries:
         library = libraries_list[asset_library['name']]
         library.selected = True
-        if asset_props.asset_type.lower() == 'material':
-            view_prop = {
-                'name': 'Slug',
-                'slug': 'slug',
-            }
-            _set_view_prop(asset_props, view_prop, asset_library['slug'], library)
-            continue
+        with suppress(AttributeError):
+            if asset_props.asset_type.lower() == 'material':
+                view_prop = {
+                    'name': 'Slug',
+                    'slug': 'slug',
+                }
+                _set_view_prop(asset_props, view_prop, asset_library['slug'], library)
+                continue
         if not hasattr(asset_props, 'custom_props'):    # noqa: WPS421
             continue
         if 'metadata' in asset_library and asset_library['metadata'] is not None:

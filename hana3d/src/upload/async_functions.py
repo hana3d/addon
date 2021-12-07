@@ -104,6 +104,7 @@ async def create_blend_file(
     blender_subprocess = Subprocess()
 
     output = await blender_subprocess.subprocess(cmd)
+    logging.debug(output)
     ui.add_report(text='Created upload file')
     return output
 
