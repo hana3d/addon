@@ -96,6 +96,8 @@ if __name__ == '__main__':
         bpy.ops.wm.save_as_mainfile(filepath=fpath, compress=True, copy=False)
         os.remove(data_file['source_filepath'])
 
+        sys.exit(0)
+
     except Exception as error:
         logging.exception(error)
         sys.exit(1)
