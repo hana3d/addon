@@ -142,6 +142,8 @@ if __name__ == '__main__':
             context.scene.render.filepath = HANA3D_THUMBNAIL_PATH
             bpy.ops.render.render(write_still=True, animation=False)
 
+        sys.exit(0)
+
     except Exception as error:
         logging.error(error)
 
