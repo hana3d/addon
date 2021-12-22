@@ -26,7 +26,7 @@ class Subprocess(object):  # noqa : WPS214
             Exception: Subprocess exited in error
         """
         loop = asyncio.get_event_loop()
-        partial = functools.partial(subprocess.run, cmd, capture_output=True)
+        partial = functools.partial(subprocess.run, cmd, capture_output=False)
         output = await loop.run_in_executor(None, partial)
 
         if output.returncode != 0:
