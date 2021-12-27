@@ -1,9 +1,7 @@
 """Hana3D subprocess async."""
 
 import asyncio
-import functools
 import logging
-import subprocess  # noqa: S404
 from typing import List
 
 
@@ -13,7 +11,15 @@ class Subprocess(object):  # noqa : WPS214
     def __init__(self):
         """Create a Subprocess object."""
 
-    async def subprocess(self, cmd: List[str]) -> subprocess.CompletedProcess:    # noqa : WPS210
+    async def _read_stream(self, stream, cb):
+        while True:
+            line = await stream.readline()
+            if line:
+                cb(line)
+            else:
+                break
+
+    async def subprocess(self, cmd: List[str]):    # noqa : WPS210
         """Run a command in a non-blocking subprocess.
 
         Parameters:
@@ -25,13 +31,14 @@ class Subprocess(object):  # noqa : WPS214
         Raises:
             Exception: Subprocess exited in error
         """
-        loop = asyncio.get_event_loop()
-        partial = functools.partial(subprocess.run, cmd, capture_output=False)
-        output = await loop.run_in_executor(None, partial)
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE)
 
-        if output.returncode != 0:
-            error_msg = output.stderr
-            raise Exception(f'Subprocess raised error:\n{error_msg}')
+        await asyncio.wait([
+            self._read_stream(proc.stdout, lambda x: logging.debug(f'[stdout]\n{x.decode()}')),
+            self._read_stream(proc.stderr, lambda x: logging.debug(f'[stderr]\n{x.decode()}')),
+        ])
 
-        logging.debug(f'Subprocess {cmd}: {output.stdout}')
-        return output
+        return await proc.wait()
