@@ -38,7 +38,7 @@ class Subprocess(object):  # noqa : WPS214
 
         await asyncio.wait([
             self._read_stream(proc.stdout, lambda x: logging.debug(f'[stdout]\n{x.decode()}')),
-            self._read_stream(proc.stderr, lambda x: logging.debug(f'[stderr]\n{x.decode()}'))
+            self._read_stream(proc.stderr, lambda x: logging.debug(f'[stderr]\n{x.decode()}')),
         ])
 
         return await proc.wait()
