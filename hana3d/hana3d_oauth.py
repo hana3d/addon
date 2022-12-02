@@ -83,7 +83,7 @@ def write_tokens(oauth_response: dict):
     preferences = bpy.context.preferences.addons[HANA3D_NAME].preferences
     preferences.api_key_refresh = oauth_response['refresh_token']
     preferences.api_key = oauth_response['access_token']
-    preferences.api_key_timeout = time.time() + oauth_response['expires_in']
+    preferences.api_key_timeout = int(time.time() + oauth_response['expires_in'])
     preferences.api_key_life = oauth_response['expires_in']
     preferences.id_token = oauth_response['id_token']
     preferences.login_attempt = False
