@@ -195,7 +195,7 @@ def extract_filename_from_url(url: str) -> str:
     """
     if url is None:
         return ''
-    path = urllib.parse.urlsplit(url).path
+    path = urllib.parse.urlsplit(url).path.replace(':', '')
 
     return path.rpartition('/')[2]
 

@@ -8,21 +8,16 @@ from bpy.props import BoolProperty, StringProperty
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
-from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
-from ..main import UI
+from .... import utils
+from ....config import HANA3D_DESCRIPTION, HANA3D_MODELS, HANA3D_NAME, HANA3D_UI
+from ....report_tools import execute_wrapper
 from ...asset.asset_type import AssetType
 from ...edit_asset.edit import set_edit_props
 from ...preferences.preferences import Preferences
 from ...search import search
 from ...upload import upload
-from .... import utils
-from ....config import (
-    HANA3D_DESCRIPTION,
-    HANA3D_MODELS,
-    HANA3D_NAME,
-    HANA3D_UI,
-)
-from ....report_tools import execute_wrapper
+from ..callbacks.asset_bar import draw_callback2d, draw_callback3d
+from ..main import UI
 
 NO_ASSET = -3
 
@@ -214,8 +209,8 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
     user_preferences = Preferences().get()
     ui_scale = bpy.context.preferences.view.ui_scale
 
-    ui.margin = ui.bl_rna.properties['margin'].default * ui_scale
-    ui.thumb_size = user_preferences.thumb_size * ui_scale
+    ui.margin = int(ui.bl_rna.properties['margin'].default * ui_scale)
+    ui.thumb_size = int(user_preferences.thumb_size * ui_scale)
 
     reg_multiplier = 1
     if not bpy.context.preferences.system.use_region_overlap:
@@ -223,11 +218,11 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
 
     for re in area.regions:
         if re.type == 'TOOLS':
-            ui.bar_x = re.width * reg_multiplier + ui.margin + ui.bar_x_offset * ui_scale
+            ui.bar_x = int(re.width * reg_multiplier + ui.margin + ui.bar_x_offset * ui_scale)
         elif re.type == 'UI':
-            ui.bar_end = re.width * reg_multiplier + 100 * ui_scale
+            ui.bar_end = int(re.width * reg_multiplier + 100 * ui_scale)
 
-    ui.bar_width = region.width - ui.bar_x - ui.bar_end
+    ui.bar_width = int(region.width - ui.bar_x - ui.bar_end)
     ui.wcount = math.floor((ui.bar_width - 2 * ui.drawoffset) / (ui.thumb_size + ui.margin))
 
     search_results = search.get_search_results()
@@ -239,8 +234,8 @@ def update_ui_size(area: bpy.types.Area, region: bpy.types.Region) -> None:
     else:
         ui.hcount = 1
     ui.total_count = ui.wcount * ui.hcount
-    ui.bar_height = (ui.thumb_size + ui.margin) * ui.hcount + ui.margin
-    ui.bar_y = region.height - ui.bar_y_offset * ui_scale
+    ui.bar_height = int((ui.thumb_size + ui.margin) * ui.hcount + ui.margin)
+    ui.bar_y = int(region.height - ui.bar_y_offset * ui_scale)
     if ui.assetbar_on:
         ui.reports_y = ui.bar_y - ui.bar_height - 100
         ui.reports_x = ui.bar_x
