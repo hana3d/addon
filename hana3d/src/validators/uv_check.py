@@ -76,4 +76,4 @@ def check_uv_layers(asset_type: AssetType, export_data: dict) -> Tuple[bool, str
 
 name = 'UV Check'
 description = 'Checks for multiple UVs in a mesh'
-uv_checker = BaseValidator(name, Category.error, description, check_uv_layers, fix_uv_layers)
+uv_checker = BaseValidator(name, Category.warning, description, check_uv_layers, fix_uv_layers)
